@@ -38,7 +38,7 @@ import { InteractiveMap } from "./InteractiveMap";
 import { ScreenCard } from "./ScreenCard";
 import { DesignSystemAuditView } from "./DesignSystemAuditView";
 import { SitemapSeoView } from "./SitemapSeoView";
-import { MetricCard } from "./MetricCard";
+import { MetricCard } from "@/src/components/cards/MetricCard";
 import { Skeleton } from "@/src/components/ui/skeleton";
 import { Button } from "@/src/components/ui/button";
 import { Input } from "@/src/components/ui/input";

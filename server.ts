@@ -2,6 +2,7 @@ import express, { Request, Response } from "express";
 import path from "path";
 import dotenv from "dotenv";
 import { GoogleGenAI, Type } from "@google/genai";
+import pg from "pg";
 
 dotenv.config();
 
@@ -46,6 +47,73 @@ const leads: Lead[] = [
   { id: "4", name: "Diego Torres", email: "diego@growthlabs.co", company: "GrowthLabs", source: "Onboarding Quiz", status: "closed", date: "2026-07-21T11:20:00Z", value: 5000 },
 ];
 
+// Database client configuration using 'pg'
+const dbUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+let pool: pg.Pool | null = null;
+
+if (dbUrl) {
+  // Use SSL for hosted cloud databases (like Vercel Postgres, Supabase, Neon) unless running on localhost
+  const useSsl = !dbUrl.includes("localhost") && !dbUrl.includes("127.0.0.1");
+  pool = new pg.Pool({
+    connectionString: dbUrl,
+    ssl: useSsl ? { rejectUnauthorized: false } : false,
+  });
+  console.log("[SmartWeb Database] Initializing PostgreSQL connection pool...");
+} else {
+  console.log("[SmartWeb Database] No database connection URL found. Operating with temporary in-memory storage.");
+}
+
+// Automatically bootstrap database schema on startup if connected to PostgreSQL
+async function initDb() {
+  if (!pool) return;
+  try {
+    const client = await pool.connect();
+    try {
+      // Create leads table if it doesn't exist
+      await client.query(`
+        CREATE TABLE IF NOT EXISTS leads (
+          id SERIAL PRIMARY KEY,
+          name VARCHAR(255) NOT NULL,
+          email VARCHAR(255) NOT NULL,
+          company VARCHAR(255),
+          source VARCHAR(255),
+          status VARCHAR(50) DEFAULT 'new',
+          date VARCHAR(255),
+          value NUMERIC DEFAULT 0
+        )
+      `);
+      console.log("[SmartWeb Database] PostgreSQL 'leads' table verified.");
+
+      // If the table is empty, seed it with the default template records
+      const countRes = await client.query("SELECT COUNT(*) FROM leads");
+      const rowCount = parseInt(countRes.rows[0].count, 10);
+      if (rowCount === 0) {
+        console.log("[SmartWeb Database] Seeding initial template leads...");
+        const defaultLeads = [
+          { name: "Sofía Rodríguez", email: "sofia@acme.com", company: "Acme Corp", source: "Landing Form", status: "new", date: "2026-07-25T14:32:00Z", value: 1200 },
+          { name: "Mateo Silva", email: "mateo@silva.io", company: "Silva Consulting", source: "Onboarding Quiz", status: "qualified", date: "2026-07-24T09:15:00Z", value: 3500 },
+          { name: "Lucía Fernández", email: "lfernandez@techflow.net", company: "TechFlow Ltd", source: "Landing Form", status: "contacted", date: "2026-07-23T18:45:00Z", value: 800 },
+          { name: "Diego Torres", email: "diego@growthlabs.co", company: "GrowthLabs", source: "Onboarding Quiz", status: "closed", date: "2026-07-21T11:20:00Z", value: 5000 },
+        ];
+        for (const item of defaultLeads) {
+          await client.query(
+            "INSERT INTO leads (name, email, company, source, status, date, value) VALUES ($1, $2, $3, $4, $5, $6, $7)",
+            [item.name, item.email, item.company, item.source, item.status, item.date, item.value]
+          );
+        }
+        console.log("[SmartWeb Database] Seeding completed successfully.");
+      }
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    console.error("[SmartWeb Database] Error during database initialization:", error);
+  }
+}
+
+// Trigger async database migration/seeding check
+initDb();
+
 // Helper to secure AI calling
 async function callGemini(prompt: string, responseSchema?: any) {
   if (!ai) {
@@ -73,31 +141,81 @@ async function callGemini(prompt: string, responseSchema?: any) {
 // --- REST API ENDPOINTS ---
 
 // Get all leads
-app.get("/api/leads", (req: Request, res: Response) => {
-  res.json({ success: true, data: leads });
+app.get("/api/leads", async (req: Request, res: Response) => {
+  if (pool) {
+    try {
+      const result = await pool.query("SELECT * FROM leads ORDER BY id DESC");
+      const dbLeads = result.rows.map((row: any) => ({
+        id: String(row.id),
+        name: row.name,
+        email: row.email,
+        company: row.company || "",
+        source: row.source || "",
+        status: row.status || "new",
+        date: row.date || new Date().toISOString(),
+        value: row.value ? Number(row.value) : 0
+      }));
+      res.json({ success: true, data: dbLeads });
+    } catch (error: any) {
+      console.error("[SmartWeb Database] Error fetching leads:", error);
+      res.status(500).json({ success: false, error: error.message });
+    }
+  } else {
+    res.json({ success: true, data: leads });
+  }
 });
 
 // Create a lead (from Form or Quiz)
-app.post("/api/leads", (req: Request, res: Response) => {
+app.post("/api/leads", async (req: Request, res: Response) => {
   const { name, email, company, source, status, value } = req.body;
   if (!name || !email) {
     res.status(400).json({ success: false, error: "Name and Email are required." });
     return;
   }
 
-  const newLead: Lead = {
-    id: String(leads.length + 1),
-    name,
-    email,
-    company: company || "Freelancer / Indiv",
-    source: source || "Formulario Web",
-    status: status || "new",
-    date: new Date().toISOString(),
-    value: Number(value) || 0,
-  };
+  const companyVal = company || "Freelancer / Indiv";
+  const sourceVal = source || "Formulario Web";
+  const statusVal = status || "new";
+  const dateVal = new Date().toISOString();
+  const numValue = Number(value) || 0;
 
-  leads.unshift(newLead);
-  res.json({ success: true, data: newLead });
+  if (pool) {
+    try {
+      const result = await pool.query(
+        "INSERT INTO leads (name, email, company, source, status, date, value) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *",
+        [name, email, companyVal, sourceVal, statusVal, dateVal, numValue]
+      );
+      const row = result.rows[0];
+      const newLead = {
+        id: String(row.id),
+        name: row.name,
+        email: row.email,
+        company: row.company || "",
+        source: row.source || "",
+        status: row.status || "new",
+        date: row.date || dateVal,
+        value: row.value ? Number(row.value) : 0
+      };
+      res.json({ success: true, data: newLead });
+    } catch (error: any) {
+      console.error("[SmartWeb Database] Error creating lead:", error);
+      res.status(500).json({ success: false, error: error.message });
+    }
+  } else {
+    const newLead: Lead = {
+      id: String(leads.length + 1),
+      name,
+      email,
+      company: companyVal,
+      source: sourceVal,
+      status: statusVal as any,
+      date: dateVal,
+      value: numValue,
+    };
+
+    leads.unshift(newLead);
+    res.json({ success: true, data: newLead });
+  }
 });
 
 // AI Route: Generate Landing Page content based on industry & tone
@@ -299,9 +417,15 @@ async function startServer() {
     });
   }
 
-  app.listen(PORT, "0.0.0.0", () => {
-    console.log(`[SmartWeb Server] Running at http://localhost:${PORT}`);
-  });
+  if (process.env.VERCEL !== "1") {
+    app.listen(PORT, "0.0.0.0", () => {
+      console.log(`[SmartWeb Server] Running at http://localhost:${PORT}`);
+    });
+  }
 }
 
-startServer();
+if (process.env.VERCEL !== "1") {
+  startServer();
+}
+
+export default app;

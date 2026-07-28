@@ -29,14 +29,27 @@ import {
   EyeOff,
   Edit,
   Save,
-  Undo
+  Undo,
+  Layers,
+  DollarSign
 } from "lucide-react";
 import { LandingView } from "./LandingView";
 import { InteractiveMap } from "./InteractiveMap";
 import { ScreenCard } from "./ScreenCard";
+import { DesignSystemAuditView } from "./DesignSystemAuditView";
+import { SitemapSeoView } from "./SitemapSeoView";
+import { MetricCard } from "./MetricCard";
 import { Skeleton } from "@/src/components/ui/skeleton";
 import { Button } from "@/src/components/ui/button";
 import { Input } from "@/src/components/ui/input";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardFooter
+} from "@/src/components/ui/card";
 
 export const DashboardView: React.FC = () => {
   const {
@@ -245,6 +258,8 @@ export const DashboardView: React.FC = () => {
               { id: "commercial-map", label: "Mapa Comercial", icon: Map },
               { id: "brand-kit", label: "MediaKit & Assets", icon: Download },
               { id: "automations", label: "Automatizaciones", icon: Sliders },
+              { id: "design-system", label: "Sistema de Diseño & Auditoría", icon: Shield },
+              { id: "sitemap-seo", label: "Sitemap Multipage & SEO", icon: Layers },
             ].map((tab) => {
               const Icon = tab.icon;
               const isActive = currentDashboardTab === tab.id;
@@ -305,6 +320,8 @@ export const DashboardView: React.FC = () => {
             <option value="commercial-map">Mapa</option>
             <option value="brand-kit">MediaKit</option>
             <option value="automations">Automatizaciones</option>
+            <option value="design-system">Sistema de Diseño & Auditoría</option>
+            <option value="sitemap-seo">Sitemap & SEO</option>
           </select>
           <button
             onClick={() => setActiveView("landing")}
@@ -359,52 +376,78 @@ export const DashboardView: React.FC = () => {
                   {/* Left Side: CMS Form Fields */}
                   <div className="lg:col-span-6 space-y-6">
                     {/* Hero copy editor */}
-                    <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm space-y-4">
-                      <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                        <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                          <Sliders className="h-4.5 w-4.5 text-slate-500" />
+                    <Card className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+                      <CardHeader className="border-b border-slate-100 pb-4 flex flex-row items-center justify-between space-y-0">
+                        <CardTitle className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                          <Sliders className="h-4 w-4 text-slate-500" />
                           Sección Principal (Hero)
-                        </h2>
-                        <button
-                          onClick={handleSaveHero}
-                          className="bg-slate-900 hover:bg-slate-800 text-white font-bold text-[10px] uppercase tracking-wider px-3 py-1.5 rounded"
-                        >
-                          Guardar Hero
-                        </button>
-                      </div>
+                        </CardTitle>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] bg-emerald-500/10 text-emerald-600 px-2 py-0.5 rounded-md font-mono animate-pulse">
+                            Auto-sync activo
+                          </span>
+                          <Button
+                            onClick={handleSaveHero}
+                            className="bg-slate-900 hover:bg-slate-800 text-white font-bold text-[10px] uppercase tracking-wider px-3 py-1.5 h-auto rounded"
+                          >
+                            Forzar Guardado
+                          </Button>
+                        </div>
+                      </CardHeader>
 
-                      <div className="space-y-3.5">
+                      <CardContent className="pt-5 space-y-3.5">
                         <div>
-                          <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
-                            Badge Superior
-                          </label>
+                          <div className="flex justify-between items-center mb-1">
+                            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                              Badge Superior
+                            </label>
+                            <span className="text-[8px] text-slate-400 font-medium">Sincronización instantánea</span>
+                          </div>
                           <input
                             type="text"
                             value={localHero.badge}
-                            onChange={(e) => setLocalHero({ ...localHero, badge: e.target.value })}
-                            className="w-full px-3 py-1.5 text-sm border border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900 focus:border-slate-900"
+                            onChange={(e) => {
+                              const updated = { ...localHero, badge: e.target.value };
+                              setLocalHero(updated);
+                              updateHero(updated);
+                            }}
+                            className="w-full px-3 py-1.5 text-sm border border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900 focus:border-slate-900 bg-white"
                           />
                         </div>
                         <div>
-                          <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
-                            Título Principal
-                          </label>
+                          <div className="flex justify-between items-center mb-1">
+                            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                              Título Principal
+                            </label>
+                            <span className="text-[8px] text-slate-400 font-medium">Sincronización instantánea</span>
+                          </div>
                           <input
                             type="text"
                             value={localHero.title}
-                            onChange={(e) => setLocalHero({ ...localHero, title: e.target.value })}
-                            className="w-full px-3 py-1.5 text-sm border border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900 focus:border-slate-900"
+                            onChange={(e) => {
+                              const updated = { ...localHero, title: e.target.value };
+                              setLocalHero(updated);
+                              updateHero(updated);
+                            }}
+                            className="w-full px-3 py-1.5 text-sm border border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900 focus:border-slate-900 bg-white"
                           />
                         </div>
                         <div>
-                          <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
-                            Subtítulo / Propuesta de Valor
-                          </label>
+                          <div className="flex justify-between items-center mb-1">
+                            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                              Subtítulo / Propuesta de Valor
+                            </label>
+                            <span className="text-[8px] text-slate-400 font-medium">Sincronización instantánea</span>
+                          </div>
                           <textarea
                             rows={3}
                             value={localHero.subtitle}
-                            onChange={(e) => setLocalHero({ ...localHero, subtitle: e.target.value })}
-                            className="w-full px-3 py-1.5 text-sm border border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900 focus:border-slate-900 resize-none"
+                            onChange={(e) => {
+                              const updated = { ...localHero, subtitle: e.target.value };
+                              setLocalHero(updated);
+                              updateHero(updated);
+                            }}
+                            className="w-full px-3 py-1.5 text-sm border border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900 focus:border-slate-900 resize-none bg-white"
                           />
                         </div>
                         <div className="grid grid-cols-2 gap-3">
@@ -415,8 +458,12 @@ export const DashboardView: React.FC = () => {
                             <input
                               type="text"
                               value={localHero.ctaPrimary}
-                              onChange={(e) => setLocalHero({ ...localHero, ctaPrimary: e.target.value })}
-                              className="w-full px-3 py-1.5 text-sm border border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900"
+                              onChange={(e) => {
+                                const updated = { ...localHero, ctaPrimary: e.target.value };
+                                setLocalHero(updated);
+                                updateHero(updated);
+                              }}
+                              className="w-full px-3 py-1.5 text-sm border border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900 bg-white"
                             />
                           </div>
                           <div>
@@ -426,22 +473,26 @@ export const DashboardView: React.FC = () => {
                             <input
                               type="text"
                               value={localHero.ctaSecondary}
-                              onChange={(e) => setLocalHero({ ...localHero, ctaSecondary: e.target.value })}
-                              className="w-full px-3 py-1.5 text-sm border border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900"
+                              onChange={(e) => {
+                                const updated = { ...localHero, ctaSecondary: e.target.value };
+                                setLocalHero(updated);
+                                updateHero(updated);
+                              }}
+                              className="w-full px-3 py-1.5 text-sm border border-slate-200 rounded-lg text-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900 bg-white"
                             />
                           </div>
                         </div>
-                      </div>
-                    </div>
+                      </CardContent>
+                    </Card>
 
                     {/* Benefits List Editor */}
-                    <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm space-y-4">
-                      <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                        <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                          <Sliders className="h-4.5 w-4.5 text-slate-500" />
+                    <Card className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+                      <CardHeader className="border-b border-slate-100 pb-4 flex flex-row items-center justify-between space-y-0">
+                        <CardTitle className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                          <Sliders className="h-4 w-4 text-slate-500" />
                           Sección de Beneficios (CMS)
-                        </h2>
-                        <button
+                        </CardTitle>
+                        <Button
                           onClick={() => {
                             addBenefit({
                               id: `b-${Date.now()}`,
@@ -450,24 +501,24 @@ export const DashboardView: React.FC = () => {
                               icon: "Sparkles",
                             });
                           }}
-                          className="flex items-center gap-1 bg-slate-900 hover:bg-slate-800 text-white font-bold text-[10px] uppercase tracking-wider px-2.5 py-1.5 rounded"
+                          className="flex items-center gap-1 bg-slate-900 hover:bg-slate-800 text-white font-bold text-[10px] uppercase tracking-wider px-2.5 py-1.5 h-auto rounded"
                         >
                           <Plus className="h-3 w-3" />
                           Nuevo
-                        </button>
-                      </div>
+                        </Button>
+                      </CardHeader>
 
-                      <div className="space-y-3.5 max-h-80 overflow-y-auto pr-1">
+                      <CardContent className="pt-5 space-y-3.5 max-h-80 overflow-y-auto pr-1">
                         {content.benefits.map((b) => (
                           <div key={b.id} className="p-3 bg-slate-50 border border-slate-150 rounded-lg space-y-2 relative">
                             <button
                               onClick={() => deleteBenefit(b.id)}
-                              className="absolute top-3 right-3 text-slate-400 hover:text-red-500"
+                              className="absolute top-3 right-3 text-slate-400 hover:text-red-500 cursor-pointer"
                             >
                               <Trash2 className="h-4 w-4" />
                             </button>
                             <div className="grid grid-cols-12 gap-2 pr-6">
-                              <div className="col-span-3">
+                              <div className="col-span-4">
                                 <label className="block text-[8px] font-bold text-slate-500 uppercase">Icono</label>
                                 <select
                                   value={b.icon}
@@ -482,7 +533,7 @@ export const DashboardView: React.FC = () => {
                                   <option value="Users">Usuarios</option>
                                 </select>
                               </div>
-                              <div className="col-span-9">
+                              <div className="col-span-8">
                                 <label className="block text-[8px] font-bold text-slate-500 uppercase">Título del Beneficio</label>
                                 <input
                                   type="text"
@@ -503,91 +554,120 @@ export const DashboardView: React.FC = () => {
                             </div>
                           </div>
                         ))}
-                      </div>
-                    </div>
+                      </CardContent>
+                    </Card>
 
                     {/* SEO Copy Editor */}
-                    <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm space-y-4">
-                      <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                        <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                          <Sliders className="h-4.5 w-4.5 text-slate-500" />
+                    <Card className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+                      <CardHeader className="border-b border-slate-100 pb-4 flex flex-row items-center justify-between space-y-0">
+                        <CardTitle className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                          <Sliders className="h-4 w-4 text-slate-500" />
                           Indexación y Metadatos SEO
-                        </h2>
-                        <button
-                          onClick={handleSaveSeo}
-                          className="bg-slate-900 hover:bg-slate-800 text-white font-bold text-[10px] uppercase tracking-wider px-3 py-1.5 rounded"
-                        >
-                          Guardar SEO
-                        </button>
-                      </div>
+                        </CardTitle>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] bg-emerald-500/10 text-emerald-600 px-2 py-0.5 rounded-md font-mono animate-pulse">
+                            Auto-sync activo
+                          </span>
+                          <Button
+                            onClick={handleSaveSeo}
+                            className="bg-slate-900 hover:bg-slate-800 text-white font-bold text-[10px] uppercase tracking-wider px-3 py-1.5 h-auto rounded"
+                          >
+                            Forzar Guardado
+                          </Button>
+                        </div>
+                      </CardHeader>
 
-                      <div className="space-y-3.5">
+                      <CardContent className="pt-5 space-y-3.5">
                         <div>
-                          <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
-                            Meta Title (Título del Sitio en Google)
-                          </label>
+                          <div className="flex justify-between items-center mb-1">
+                            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                              Meta Title (Título del Sitio en Google)
+                            </label>
+                            <span className="text-[8px] text-slate-400 font-medium">Sincronización instantánea</span>
+                          </div>
                           <input
                             type="text"
                             value={localSeo.metaTitle}
-                            onChange={(e) => setLocalSeo({ ...localSeo, metaTitle: e.target.value })}
-                            className="w-full px-3 py-1.5 text-sm border border-slate-200 rounded-lg text-slate-900"
+                            onChange={(e) => {
+                              const updated = { ...localSeo, metaTitle: e.target.value };
+                              setLocalSeo(updated);
+                              updateSeo(updated);
+                            }}
+                            className="w-full px-3 py-1.5 text-sm border border-slate-200 rounded-lg text-slate-900 bg-white"
                           />
                         </div>
                         <div>
-                          <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
-                            Meta Description (Resumen en Buscadores)
-                          </label>
+                          <div className="flex justify-between items-center mb-1">
+                            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                              Meta Description (Resumen en Buscadores)
+                            </label>
+                            <span className="text-[8px] text-slate-400 font-medium">Sincronización instantánea</span>
+                          </div>
                           <textarea
                             rows={2}
                             value={localSeo.metaDescription}
-                            onChange={(e) => setLocalSeo({ ...localSeo, metaDescription: e.target.value })}
-                            className="w-full px-3 py-1.5 text-sm border border-slate-200 rounded-lg text-slate-900 resize-none"
+                            onChange={(e) => {
+                              const updated = { ...localSeo, metaDescription: e.target.value };
+                              setLocalSeo(updated);
+                              updateSeo(updated);
+                            }}
+                            className="w-full px-3 py-1.5 text-sm border border-slate-200 rounded-lg text-slate-900 resize-none bg-white"
                           />
                         </div>
                         <div>
-                          <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
-                            Palabras Clave SEO (separadas por comas)
-                          </label>
+                          <div className="flex justify-between items-center mb-1">
+                            <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                              Palabras Clave SEO (separadas por comas)
+                            </label>
+                            <span className="text-[8px] text-slate-400 font-medium">Sincronización instantánea</span>
+                          </div>
                           <input
                             type="text"
                             value={localSeo.keywords}
-                            onChange={(e) => setLocalSeo({ ...localSeo, keywords: e.target.value })}
-                            className="w-full px-3 py-1.5 text-sm border border-slate-200 rounded-lg text-slate-900"
+                            onChange={(e) => {
+                              const updated = { ...localSeo, keywords: e.target.value };
+                              setLocalSeo(updated);
+                              updateSeo(updated);
+                            }}
+                            className="w-full px-3 py-1.5 text-sm border border-slate-200 rounded-lg text-slate-900 bg-white"
                           />
                         </div>
-                      </div>
-                    </div>
+                      </CardContent>
+                    </Card>
                   </div>
 
                   {/* Right Side: Real-time interactive simulation panel of Landing */}
                   <div className="lg:col-span-6 space-y-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-                        <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                        Vista Previa en Tiempo Real
-                      </span>
-                      <span className="text-[10px] text-slate-400 font-mono">Modo: iFrame Simulado</span>
-                    </div>
-
-                    <div className="border border-slate-300 rounded-2xl bg-white shadow-lg overflow-hidden h-[750px] flex flex-col relative">
-                      {/* Interactive mock browser address bar */}
-                      <div className="bg-slate-100 border-b border-slate-200 px-4 py-3 flex items-center gap-2">
-                        <div className="flex items-center gap-1">
-                          <div className="h-2.5 w-2.5 rounded-full bg-red-400" />
-                          <div className="h-2.5 w-2.5 rounded-full bg-yellow-400" />
-                          <div className="h-2.5 w-2.5 rounded-full bg-green-400" />
+                    <Card className="border border-slate-200 rounded-2xl bg-white shadow-lg overflow-hidden h-[810px] flex flex-col relative">
+                      <CardHeader className="bg-slate-50 border-b border-slate-200 px-5 py-4 flex flex-row items-center justify-between space-y-0">
+                        <CardTitle className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                          <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                          Vista Previa en Tiempo Real
+                        </CardTitle>
+                        <CardDescription className="text-[10px] text-slate-400 font-mono">
+                          Modo: iFrame Simulado
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="p-0 flex-grow flex flex-col overflow-hidden">
+                        {/* Interactive mock browser address bar */}
+                        <div className="bg-slate-100 border-b border-slate-200 px-4 py-3 flex items-center gap-2">
+                          <div className="flex items-center gap-1">
+                            <div className="h-2.5 w-2.5 rounded-full bg-red-400" />
+                            <div className="h-2.5 w-2.5 rounded-full bg-yellow-400" />
+                            <div className="h-2.5 w-2.5 rounded-full bg-green-400" />
+                          </div>
+                          <div className="flex-grow max-w-sm mx-auto bg-white border border-slate-200 rounded-md px-3 py-1 text-[10px] text-slate-400 font-mono flex items-center justify-between">
+                            <span>https://smartweb.ai/demo-landing</span>
+                            <RefreshCw className="h-3 w-3 text-slate-300 animate-spin-slow" />
+                          </div>
                         </div>
-                        <div className="flex-grow max-w-sm mx-auto bg-white border border-slate-200 rounded-md px-3 py-1 text-[10px] text-slate-400 font-mono flex items-center justify-between">
-                          <span>https://smartweb.ai/demo-landing</span>
-                          <RefreshCw className="h-3 w-3 text-slate-300 animate-spin-slow" />
-                        </div>
-                      </div>
 
-                      {/* Mocked Landing Content viewport */}
-                      <div className="flex-grow overflow-y-auto scale-[0.85] origin-top w-[117.6%] h-[117.6%] select-none pointer-events-none">
-                        <LandingView />
-                      </div>
-                    </div>
+                        {/* Mocked Landing Content viewport */}
+                        <div className="flex-grow overflow-y-auto scale-[0.85] origin-top w-[117.6%] h-[117.6%] select-none pointer-events-none">
+                          <LandingView />
+                        </div>
+                      </CardContent>
+                    </Card>
                   </div>
                 </div>
               </motion.div>
@@ -602,109 +682,113 @@ export const DashboardView: React.FC = () => {
                 exit={{ opacity: 0, y: -10 }}
                 className="max-w-3xl mx-auto space-y-6"
               >
-                <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm space-y-6">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-lg bg-slate-900 flex items-center justify-center text-white">
+                <Card className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+                  <CardHeader className="flex flex-row items-center gap-4 border-b border-slate-100 pb-5">
+                    <div className="h-10 w-10 rounded-lg bg-slate-900 flex items-center justify-center text-white shrink-0">
                       <Sparkles className="h-5 w-5 fill-white/10" />
                     </div>
                     <div>
-                      <h2 className="text-md font-bold text-slate-900">Motor de Redacción Creativa Inteligente</h2>
-                      <p className="text-xs text-slate-500">
+                      <CardTitle className="text-md font-bold text-slate-900">Motor de Redacción Creativa Inteligente</CardTitle>
+                      <CardDescription className="text-xs text-slate-500 mt-1">
                         Inyecta las directivas de tu marca y deja que la IA de Google Gemini diseñe una Landing de alta conversión.
-                      </p>
+                      </CardDescription>
                     </div>
-                  </div>
+                  </CardHeader>
 
-                  <div className="grid md:grid-cols-2 gap-4 pt-4 border-t border-slate-100">
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-[10px] font-bold text-slate-600 uppercase tracking-wider mb-1">
-                          Nombre de la Empresa
-                        </label>
-                        <input
-                          type="text"
-                          value={editingOnboarding.businessName}
-                          onChange={(e) => setEditingOnboarding({ ...editingOnboarding, businessName: e.target.value })}
-                          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg"
-                        />
+                  <CardContent className="pt-6">
+                    <div className="grid md:grid-cols-2 gap-6">
+                      <div className="space-y-4">
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-600 uppercase tracking-wider mb-1">
+                            Nombre de la Empresa
+                          </label>
+                          <input
+                            type="text"
+                            value={editingOnboarding.businessName}
+                            onChange={(e) => setEditingOnboarding({ ...editingOnboarding, businessName: e.target.value })}
+                            className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white text-slate-900"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-600 uppercase tracking-wider mb-1">
+                            ¿Qué hace tu negocio? (Industria y Propuesta)
+                          </label>
+                          <textarea
+                            rows={4}
+                            value={editingOnboarding.industry}
+                            onChange={(e) => setEditingOnboarding({ ...editingOnboarding, industry: e.target.value })}
+                            className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg resize-none bg-white text-slate-900"
+                          />
+                        </div>
                       </div>
-                      <div>
-                        <label className="block text-[10px] font-bold text-slate-600 uppercase tracking-wider mb-1">
-                          ¿Qué hace tu negocio? (Industria y Propuesta)
-                        </label>
-                        <textarea
-                          rows={4}
-                          value={editingOnboarding.industry}
-                          onChange={(e) => setEditingOnboarding({ ...editingOnboarding, industry: e.target.value })}
-                          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg resize-none"
-                        />
+
+                      <div className="space-y-4 flex flex-col justify-between">
+                        <div className="space-y-4">
+                          <div>
+                            <label className="block text-[10px] font-bold text-slate-600 uppercase tracking-wider mb-1">
+                              Público Objetivo
+                            </label>
+                            <input
+                              type="text"
+                              value={editingOnboarding.targetAudience}
+                              onChange={(e) => setEditingOnboarding({ ...editingOnboarding, targetAudience: e.target.value })}
+                              className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white text-slate-900"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-[10px] font-bold text-slate-600 uppercase tracking-wider mb-1">
+                              Tono de Comunicación
+                            </label>
+                            <select
+                              value={editingOnboarding.tone}
+                              onChange={(e) => setEditingOnboarding({ ...editingOnboarding, tone: e.target.value })}
+                              className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white text-slate-800"
+                            >
+                              <option value="profesional y confiable">Profesional y Confiable</option>
+                              <option value="innovador y tecnológico">Innovador y Tecnológico</option>
+                              <option value="cercano y amigable">Cercano y Amigable</option>
+                              <option value="enérgico y directo">Enérgico y Directo</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        <div className="pt-2">
+                          <Button
+                            type="button"
+                            onClick={triggerAIGenerateFromDashboard}
+                            disabled={loadingAI}
+                            className="w-full flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs uppercase tracking-wider py-6 rounded-lg shadow-sm transition-all cursor-pointer h-auto"
+                          >
+                            {loadingAI ? (
+                              <>
+                                <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                <span>Generando Copy con Gemini...</span>
+                              </>
+                            ) : (
+                              <>
+                                <Sparkles className="h-4.5 w-4.5 fill-white/10" />
+                                <span>Generar Nuevo Contenido</span>
+                              </>
+                            )}
+                          </Button>
+                        </div>
                       </div>
                     </div>
-
-                    <div className="space-y-4">
-                      <div>
-                        <label className="block text-[10px] font-bold text-slate-600 uppercase tracking-wider mb-1">
-                          Público Objetivo
-                        </label>
-                        <input
-                          type="text"
-                          value={editingOnboarding.targetAudience}
-                          onChange={(e) => setEditingOnboarding({ ...editingOnboarding, targetAudience: e.target.value })}
-                          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg"
-                        />
-                      </div>
-
-                      <div>
-                        <label className="block text-[10px] font-bold text-slate-600 uppercase tracking-wider mb-1">
-                          Tono de Comunicación
-                        </label>
-                        <select
-                          value={editingOnboarding.tone}
-                          onChange={(e) => setEditingOnboarding({ ...editingOnboarding, tone: e.target.value })}
-                          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg bg-white text-slate-800"
-                        >
-                          <option value="profesional y confiable">Profesional y Confiable</option>
-                          <option value="innovador y tecnológico">Innovador y Tecnológico</option>
-                          <option value="cercano y amigable">Cercano y Amigable</option>
-                          <option value="enérgico y directo">Enérgico y Directo</option>
-                        </select>
-                      </div>
-
-                      <div className="pt-2">
-                        <button
-                          type="button"
-                          onClick={triggerAIGenerateFromDashboard}
-                          disabled={loadingAI}
-                          className="w-full flex items-center justify-center gap-2 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs uppercase tracking-wider py-3 rounded-lg shadow-sm transition-all cursor-pointer"
-                        >
-                          {loadingAI ? (
-                            <>
-                              <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                              <span>Generando Copy con Gemini...</span>
-                            </>
-                          ) : (
-                            <>
-                              <Sparkles className="h-4.5 w-4.5 fill-white/10" />
-                              <span>Generar Nuevo Contenido</span>
-                            </>
-                          )}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                  </CardContent>
+                </Card>
 
                 {/* Live Output Banner */}
                 {onboardingAnswers && (
-                  <div className="bg-emerald-50 border border-emerald-200/80 rounded-xl p-5 flex items-start gap-3.5">
+                  <Card className="bg-emerald-50 border border-emerald-200/80 rounded-xl p-5 flex items-start gap-3.5 shadow-none">
                     <Check className="h-5 w-5 text-emerald-600 shrink-0 mt-0.5" />
-                    <div>
+                    <div className="space-y-1">
                       <h4 className="font-bold text-emerald-950 text-sm">Contenido Sincronizado</h4>
-                      <p className="text-xs text-emerald-800 leading-relaxed mt-1">
+                      <p className="text-xs text-emerald-800 leading-relaxed">
                         El motor IA ha completado con éxito la redacción comercial basada en tus directivas de marca. Toda la Landing ya muestra el nuevo copy (Hero, Beneficios y FAQs).
                       </p>
                     </div>
-                  </div>
+                  </Card>
                 )}
               </motion.div>
             )}
@@ -718,64 +802,75 @@ export const DashboardView: React.FC = () => {
                 exit={{ opacity: 0, y: -10 }}
                 className="space-y-6"
               >
-                {/* Visual Metrics Row */}
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
-                  <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm space-y-2">
-                    <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Visitas Totales</div>
-                    <div className="text-2xl font-black text-slate-900">14,232</div>
-                    <div className="text-[10px] text-emerald-600 font-bold flex items-center gap-0.5">
-                      <TrendingUp className="h-3.5 w-3.5" />
-                      <span>+12.4% esta semana</span>
-                    </div>
-                  </div>
+                 {/* Visual Metrics Row */}
+                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+                   <MetricCard
+                     title="Visitas Totales"
+                     value="14,232"
+                     trend="up"
+                     percentage={12.4}
+                     variation="esta semana"
+                     sparkline={[12200, 12500, 13100, 13400, 13900, 14232]}
+                     icon={<Eye className="h-4 w-4" />}
+                     tooltip="Número total de visitantes únicos que accedieron a la landing page."
+                   />
 
-                  <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm space-y-2">
-                    <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Tasa de Conversión</div>
-                    <div className="text-2xl font-black text-slate-900">{conversionRate}%</div>
-                    <div className="text-[10px] text-emerald-600 font-bold flex items-center gap-0.5">
-                      <TrendingUp className="h-3.5 w-3.5" />
-                      <span>+1.1% esta semana</span>
-                    </div>
-                  </div>
+                   <MetricCard
+                     title="Tasa de Conversión"
+                     value={`${conversionRate}%`}
+                     trend="up"
+                     percentage={1.1}
+                     variation="esta semana"
+                     sparkline={[4.8, 5.0, 5.2, 5.5, 5.7, Number(conversionRate)]}
+                     icon={<Zap className="h-4 w-4" />}
+                     tooltip="Porcentaje de visitantes que se convirtieron en prospectos registrados."
+                   />
 
-                  <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm space-y-2">
-                    <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Leads Totales</div>
-                    <div className="text-2xl font-black text-slate-900">{leads.length}</div>
-                    <div className="text-[10px] text-emerald-600 font-bold flex items-center gap-0.5">
-                      <TrendingUp className="h-3.5 w-3.5" />
-                      <span>+{leads.filter(l => l.status === "new").length} nuevos hoy</span>
-                    </div>
-                  </div>
+                   <MetricCard
+                     title="Leads Totales"
+                     value={leads.length}
+                     trend="up"
+                     percentage={18.5}
+                     variation={`+${leads.filter(l => l.status === "new").length} nuevos hoy`}
+                     sparkline={[8, 11, 14, 15, 17, leads.length]}
+                     icon={<Users className="h-4 w-4" />}
+                     tooltip="Prospectos de clientes comerciales capturados por la plataforma."
+                   />
 
-                  <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm space-y-2">
-                    <div className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Valor de Pipeline</div>
-                    <div className="text-2xl font-black text-slate-900">${totalLeadValue.toLocaleString()} USD</div>
-                    <div className="text-[10px] text-slate-500 font-medium">Suma total estimada</div>
-                  </div>
-                </div>
+                   <MetricCard
+                     title="Valor de Pipeline"
+                     value={`$${totalLeadValue.toLocaleString()} USD`}
+                     trend="up"
+                     percentage={24.1}
+                     variation="Suma total estimada"
+                     sparkline={[25000, 27500, 31000, 33500, 38000, totalLeadValue]}
+                     icon={<DollarSign className="h-4 w-4" />}
+                     tooltip="Valor acumulado de pauta estimada para los prospectos capturados."
+                   />
+                 </div>
 
                 {/* Sub-grid: Leads Table + SEO / Recommendations IA */}
                 <div className="grid lg:grid-cols-12 gap-8">
                   {/* Leads captured table */}
-                  <div className="lg:col-span-7 bg-white border border-slate-200 rounded-xl p-5 shadow-sm space-y-4">
-                    <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                      <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                        <Users className="h-4.5 w-4.5 text-slate-500" />
+                  <Card className="lg:col-span-7 bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden flex flex-col">
+                    <CardHeader className="border-b border-slate-100 pb-4 flex flex-row items-center justify-between space-y-0">
+                      <CardTitle className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                        <Users className="h-4 w-4 text-slate-500" />
                         Prospectos Capturados
-                      </h2>
-                      <button
+                      </CardTitle>
+                      <Button
                         onClick={() => setShowAddLeadModal(true)}
-                        className="flex items-center gap-1 bg-slate-900 hover:bg-slate-800 text-white font-bold text-[10px] uppercase tracking-wider px-2.5 py-1.5 rounded cursor-pointer"
+                        className="flex items-center gap-1 bg-slate-900 hover:bg-slate-800 text-white font-bold text-[10px] uppercase tracking-wider px-2.5 py-1.5 h-auto rounded cursor-pointer"
                       >
                         <Plus className="h-3 w-3" />
                         Registrar Prospecto
-                      </button>
-                    </div>
+                      </Button>
+                    </CardHeader>
 
-                    <div className="overflow-x-auto">
+                    <CardContent className="pt-4 overflow-x-auto flex-grow">
                       <table className="w-full text-left text-xs text-slate-500">
                         <thead>
-                          <tr className="border-b border-slate-100 font-bold text-slate-700">
+                          <tr className="border-b border-slate-100 font-bold text-slate-700 pb-2">
                             <th className="pb-2.5">Nombre</th>
                             <th className="pb-2.5">Empresa</th>
                             <th className="pb-2.5">Origen</th>
@@ -791,8 +886,10 @@ export const DashboardView: React.FC = () => {
                                 <span className="text-[10px] text-slate-400 font-mono">{lead.email}</span>
                               </td>
                               <td className="py-3 font-semibold text-slate-700">{lead.company}</td>
-                              <td className="py-3 text-[10px] font-mono bg-slate-100/50 text-slate-600 px-2 py-0.5 rounded-md inline-block mt-2">
-                                {lead.source}
+                              <td className="py-3">
+                                <span className="text-[10px] font-mono bg-slate-100/70 text-slate-600 px-2 py-0.5 rounded-md inline-block">
+                                  {lead.source}
+                                </span>
                               </td>
                               <td className="py-3">
                                 <span
@@ -814,113 +911,117 @@ export const DashboardView: React.FC = () => {
                           ))}
                         </tbody>
                       </table>
-                    </div>
-                  </div>
+                    </CardContent>
+                  </Card>
 
                   {/* AI SEO & Optimization Auditor */}
                   <div className="lg:col-span-5 space-y-6">
                     {/* SEO AUDITOR CARD */}
-                    <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm space-y-4">
-                      <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                        <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                          <Shield className="h-4.5 w-4.5 text-slate-500" />
+                    <Card className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+                      <CardHeader className="border-b border-slate-100 pb-4 flex flex-row items-center justify-between space-y-0">
+                        <CardTitle className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                          <Shield className="h-4 w-4 text-slate-500" />
                           Auditor de Calidad y SEO IA
-                        </h2>
-                        <button
+                        </CardTitle>
+                        <Button
                           onClick={runSeoAudit}
                           disabled={loadingAI}
-                          className="flex items-center gap-1.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-[10px] uppercase tracking-wider px-3 py-1.5 rounded cursor-pointer"
+                          className="flex items-center gap-1.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-[10px] uppercase tracking-wider px-3 py-1.5 h-auto rounded cursor-pointer"
                         >
                           {loadingAI ? "Analizando..." : "Auditar Sitio con IA"}
-                        </button>
-                      </div>
+                        </Button>
+                      </CardHeader>
 
-                      {!seoReport ? (
-                        <div className="text-center py-6 space-y-2.5">
-                          <Search className="h-8 w-8 text-slate-300 mx-auto" />
-                          <div className="space-y-1">
-                            <h4 className="text-xs font-bold text-slate-700">Sin Auditoría Reciente</h4>
-                            <p className="text-[10px] text-slate-400 px-6">
-                              Haz clic en auditar para analizar la optimización SEO, CRO y redacción de tu Landing con Gemini.
-                            </p>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="space-y-4.5">
-                          {/* Circle Scores */}
-                          <div className="grid grid-cols-3 gap-2 text-center pt-2">
-                            <div className="bg-slate-50 border border-slate-150 p-2 rounded-lg">
-                              <span className="block text-2xl font-black text-slate-900">{seoReport.seoScore}</span>
-                              <span className="text-[8px] font-bold text-slate-400 uppercase">SEO</span>
-                            </div>
-                            <div className="bg-slate-50 border border-slate-150 p-2 rounded-lg">
-                              <span className="block text-2xl font-black text-slate-900">{seoReport.readabilityScore}</span>
-                              <span className="text-[8px] font-bold text-slate-400 uppercase">Lector</span>
-                            </div>
-                            <div className="bg-slate-50 border border-slate-150 p-2 rounded-lg">
-                              <span className="block text-2xl font-black text-slate-900">{seoReport.croScore}</span>
-                              <span className="text-[8px] font-bold text-slate-400 uppercase">CRO</span>
+                      <CardContent className="pt-5 space-y-4">
+                        {!seoReport ? (
+                          <div className="text-center py-6 space-y-2.5">
+                            <Search className="h-8 w-8 text-slate-300 mx-auto" />
+                            <div className="space-y-1">
+                              <h4 className="text-xs font-bold text-slate-700">Sin Auditoría Reciente</h4>
+                              <p className="text-[10px] text-slate-400 px-6">
+                                Haz clic en auditar para analizar la optimización SEO, CRO y redacción de tu Landing con Gemini.
+                              </p>
                             </div>
                           </div>
+                        ) : (
+                          <div className="space-y-4">
+                            {/* Circle Scores */}
+                            <div className="grid grid-cols-3 gap-2.5 text-center">
+                              <div className="bg-slate-50 border border-slate-150 p-2.5 rounded-xl">
+                                <span className="block text-2xl font-black text-slate-900">{seoReport.seoScore}</span>
+                                <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider">SEO</span>
+                              </div>
+                              <div className="bg-slate-50 border border-slate-150 p-2.5 rounded-xl">
+                                <span className="block text-2xl font-black text-slate-900">{seoReport.readabilityScore}</span>
+                                <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider">Lector</span>
+                              </div>
+                              <div className="bg-slate-50 border border-slate-150 p-2.5 rounded-xl">
+                                <span className="block text-2xl font-black text-slate-900">{seoReport.croScore}</span>
+                                <span className="text-[8px] font-bold text-slate-400 uppercase tracking-wider">CRO</span>
+                              </div>
+                            </div>
 
-                          <div className="space-y-2">
-                            <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Diagnóstico</span>
-                            <p className="text-xs text-slate-600 leading-relaxed bg-slate-50/50 p-3 rounded-lg border border-slate-100">
-                              {seoReport.summary}
-                            </p>
-                          </div>
+                            <div className="space-y-2">
+                              <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Diagnóstico</span>
+                              <p className="text-xs text-slate-600 leading-relaxed bg-slate-50/50 p-3 rounded-lg border border-slate-100">
+                                {seoReport.summary}
+                              </p>
+                            </div>
 
-                          <div className="space-y-2">
-                            <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Recomendaciones Clave</span>
-                            <ul className="space-y-1.5 text-xs text-slate-600">
-                              {seoReport.improvements.slice(0, 3).map((item, i) => (
-                                <li key={i} className="flex items-start gap-2">
-                                  <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
-                                  <span>{item}</span>
-                                </li>
-                              ))}
-                            </ul>
+                            <div className="space-y-2">
+                              <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Recomendaciones Clave</span>
+                              <ul className="space-y-1.5 text-xs text-slate-600">
+                                {seoReport.improvements.slice(0, 3).map((item, i) => (
+                                  <li key={i} className="flex items-start gap-2">
+                                    <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
+                                    <span>{item}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
                           </div>
-                        </div>
-                      )}
-                    </div>
+                        )}
+                      </CardContent>
+                    </Card>
 
                     {/* GROWTH REC CARD */}
-                    <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm space-y-4">
-                      <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                        <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                          <BarChart3 className="h-4.5 w-4.5 text-slate-500" />
+                    <Card className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+                      <CardHeader className="border-b border-slate-100 pb-4 flex flex-row items-center justify-between space-y-0">
+                        <CardTitle className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                          <BarChart3 className="h-4 w-4 text-slate-500" />
                           Estrategia de Crecimiento IA
-                        </h2>
-                        <button
+                        </CardTitle>
+                        <Button
                           onClick={() => runGrowthRecs(14232, 5.82)}
                           disabled={loadingAI}
-                          className="flex items-center gap-1.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-[10px] uppercase tracking-wider px-3 py-1.5 rounded cursor-pointer"
+                          className="flex items-center gap-1.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-[10px] uppercase tracking-wider px-3 py-1.5 h-auto rounded cursor-pointer"
                         >
                           {loadingAI ? "Recomendando..." : "Consultar Consultora IA"}
-                        </button>
-                      </div>
+                        </Button>
+                      </CardHeader>
 
-                      {growthRecs.length === 0 ? (
-                        <p className="text-[10px] text-slate-400 text-center py-4">
-                          Analiza tus leads para recibir recomendaciones de optimización estratégica por IA.
-                        </p>
-                      ) : (
-                        <div className="space-y-3.5">
-                          {growthRecs.map((rec, idx) => (
-                            <div key={idx} className="p-3 bg-slate-50 border border-slate-150 rounded-lg space-y-1.5">
-                              <div className="flex items-center justify-between">
-                                <h4 className="text-xs font-bold text-slate-900">{rec.title}</h4>
-                                <span className="bg-slate-900 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-full uppercase">
-                                  Impacto {rec.impact}
-                                </span>
+                      <CardContent className="pt-5">
+                        {growthRecs.length === 0 ? (
+                          <p className="text-[10px] text-slate-400 text-center py-4">
+                            Analiza tus leads para recibir recomendaciones de optimización estratégica por IA.
+                          </p>
+                        ) : (
+                          <div className="space-y-3.5">
+                            {growthRecs.map((rec, idx) => (
+                              <div key={idx} className="p-3 bg-slate-50 border border-slate-150 rounded-lg space-y-1.5">
+                                <div className="flex items-center justify-between">
+                                  <h4 className="text-xs font-bold text-slate-900">{rec.title}</h4>
+                                  <span className="bg-slate-900 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-full uppercase">
+                                    Impacto {rec.impact}
+                                  </span>
+                                </div>
+                                <p className="text-[11px] text-slate-500 leading-relaxed">{rec.description}</p>
                               </div>
-                              <p className="text-[11px] text-slate-500 leading-relaxed">{rec.description}</p>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
+                            ))}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
                   </div>
                 </div>
               </motion.div>
@@ -933,127 +1034,138 @@ export const DashboardView: React.FC = () => {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm space-y-6"
+                className="space-y-6"
               >
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-4">
-                  <div>
-                    <h2 className="text-md font-bold text-slate-900 flex items-center gap-2">
-                      <Tv className="h-5 w-5 text-slate-800" />
-                      Gestor de Inventario de Pantallas DOOH
-                    </h2>
-                    <p className="text-xs text-slate-500 mt-1">
-                      Administra la red de pantallas publicitarias en Mendoza. Activa, pausa o edita las tarifas e impactos semanales para actualizar el Cotizador de la Landing en tiempo real.
-                    </p>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-slate-500">Búsqueda:</span>
-                    <div className="relative">
-                      <Search className="absolute left-2.5 top-2 h-3.5 w-3.5 text-slate-400" />
-                      <input
-                        type="text"
-                        placeholder="Buscar pantallas..."
-                        value={screenSearchQuery}
-                        onChange={(e) => setScreenSearchQuery(e.target.value)}
-                        className="pl-8 pr-3 py-1.5 text-xs border border-slate-200 rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-1 focus:ring-slate-900"
-                      />
+                {/* Header Card */}
+                <Card className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+                  <CardHeader className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-5">
+                    <div className="space-y-1">
+                      <CardTitle className="text-md font-bold text-slate-900 flex items-center gap-2">
+                        <Tv className="h-5 w-5 text-slate-800" />
+                        Gestor de Inventario de Pantallas DOOH
+                      </CardTitle>
+                      <CardDescription className="text-xs text-slate-500">
+                        Administra la red de pantallas publicitarias en Mendoza. Activa, pausa o edita las tarifas e impactos semanales para actualizar el Cotizador de la Landing en tiempo real.
+                      </CardDescription>
                     </div>
-                  </div>
-                </div>
 
-                {/* Grid split: Interactive Map & Quick Statistics */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                  {/* Left: Map */}
-                  <div className="lg:col-span-8 space-y-3">
-                    <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                      Ubicaciones Georreferenciadas (Mapa En Vivo)
-                    </span>
-                    <div className="h-[350px] border border-slate-200 rounded-xl overflow-hidden shadow-sm">
-                      <InteractiveMap
-                        screens={screens}
-                        selectedScreenId={selectedMapScreenId}
-                        onSelectScreen={(id) => setSelectedMapScreenId(id)}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Right: DOOH Network KPIs */}
-                  <div className="lg:col-span-4 space-y-4">
-                    <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                      Métricas de la Red DOOH
-                    </span>
-
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
-                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Disponibles</span>
-                        <span className="text-xl font-extrabold text-slate-950">
-                          {screens.filter((s) => s.status === "Activo" || s.status === "Disponible").length}
-                        </span>
-                        <span className="text-[8px] text-emerald-600 font-medium block">Disponibles</span>
-                      </div>
-                      <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
-                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">No Disponibles</span>
-                        <span className="text-xl font-extrabold text-slate-950">
-                          {screens.filter((s) => s.status === "Pausado" || s.status === "No disponible").length}
-                        </span>
-                        <span className="text-[8px] text-slate-500 font-medium block">Pausado / Mantenimiento</span>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className="text-xs font-bold text-slate-500">Búsqueda:</span>
+                      <div className="relative">
+                        <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-slate-400" />
+                        <Input
+                          type="text"
+                          placeholder="Buscar pantallas..."
+                          value={screenSearchQuery}
+                          onChange={(e) => setScreenSearchQuery(e.target.value)}
+                          className="pl-8 pr-3 py-1.5 h-9 text-xs border border-slate-200 rounded-lg bg-white text-slate-800 focus:outline-none focus:ring-1 focus:ring-slate-900"
+                        />
                       </div>
                     </div>
+                  </CardHeader>
 
-                    <div className="p-4 bg-slate-900 text-white rounded-xl space-y-2">
-                      <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">
-                        Valor de Inventario Semanal (Activo)
-                      </span>
-                      <span className="text-2xl font-black block text-emerald-400">
-                        $
-                        {screens
-                          .filter((s) => s.status === "Activo" || s.status === "Disponible")
-                          .reduce((sum, s) => sum + s.precio, 0)
-                          .toLocaleString("es-AR")}
-                      </span>
-                      <span className="text-[10px] text-slate-300 block">
-                        Impacto potencial acumulado:{" "}
-                        <strong className="text-white">
-                          {screens
-                            .filter((s) => s.status === "Activo" || s.status === "Disponible")
-                            .reduce((sum, s) => sum + s.impactos, 0)
-                            .toLocaleString("es-AR")}
-                        </strong>{" "}
-                        personas/semana.
-                      </span>
-                    </div>
+                  <CardContent className="pt-6">
+                    {/* Grid split: Interactive Map & Quick Statistics */}
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                      {/* Left: Map */}
+                      <Card className="lg:col-span-8 bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden flex flex-col">
+                        <CardHeader className="bg-slate-50/50 border-b border-slate-100 p-4">
+                          <CardTitle className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                            Ubicaciones Georreferenciadas (Mapa En Vivo)
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-0 h-[350px]">
+                          <InteractiveMap
+                            screens={screens}
+                            selectedScreenId={selectedMapScreenId}
+                            onSelectScreen={(id) => setSelectedMapScreenId(id)}
+                          />
+                        </CardContent>
+                      </Card>
 
-                    <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-600 leading-relaxed space-y-1.5">
-                      <h4 className="font-bold text-slate-800 flex items-center gap-1">
-                        <Zap className="h-3.5 w-3.5 text-amber-500" /> Sincronización Automática
-                      </h4>
-                      <p className="text-[10px]">
-                        Cualquier modificación de tarifa o pausa de pantalla se actualizará instantáneamente en el cotizador interactivo de Mendoza usado por los clientes.
-                      </p>
+                      {/* Right: DOOH Network KPIs */}
+                      <Card className="lg:col-span-4 bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden flex flex-col justify-between">
+                        <CardHeader className="bg-slate-50/50 border-b border-slate-100 p-4">
+                          <CardTitle className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+                            Métricas de la Red DOOH
+                          </CardTitle>
+                        </CardHeader>
+
+                        <CardContent className="p-4 space-y-4 flex-grow">
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
+                              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Disponibles</span>
+                              <span className="text-xl font-extrabold text-slate-950">
+                                {screens.filter((s) => s.status === "Activo" || s.status === "Disponible").length}
+                              </span>
+                              <span className="text-[8px] text-emerald-600 font-semibold block">Disponibles</span>
+                            </div>
+                            <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
+                              <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">No Disponibles</span>
+                              <span className="text-xl font-extrabold text-slate-950">
+                                {screens.filter((s) => s.status === "Pausado" || s.status === "No disponible").length}
+                              </span>
+                              <span className="text-[8px] text-slate-500 font-semibold block">Pausado / Mant.</span>
+                            </div>
+                          </div>
+
+                          <div className="p-4 bg-slate-900 text-white rounded-xl space-y-2">
+                            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">
+                              Valor de Inventario Semanal (Activo)
+                            </span>
+                            <span className="text-2xl font-black block text-emerald-400">
+                              $
+                              {screens
+                                .filter((s) => s.status === "Activo" || s.status === "Disponible")
+                                .reduce((sum, s) => sum + s.precio, 0)
+                                .toLocaleString("es-AR")}
+                            </span>
+                            <span className="text-[10px] text-slate-300 block">
+                              Impacto potencial acumulado:{" "}
+                              <strong className="text-white">
+                                {screens
+                                  .filter((s) => s.status === "Activo" || s.status === "Disponible")
+                                  .reduce((sum, s) => sum + s.impactos, 0)
+                                  .toLocaleString("es-AR")}
+                              </strong>{" "}
+                              personas/semana.
+                            </span>
+                          </div>
+                        </CardContent>
+
+                        <CardFooter className="bg-slate-50 border-t border-slate-100 p-3.5 flex items-start gap-2 text-xs text-slate-600">
+                          <Zap className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
+                          <div className="text-[10px] leading-relaxed">
+                            <strong className="text-slate-800">Sincronización Automática:</strong> Cualquier modificación de tarifa o pausa se actualizará instantáneamente en el cotizador interactivo.
+                          </div>
+                        </CardFooter>
+                      </Card>
                     </div>
-                  </div>
-                </div>
+                  </CardContent>
+                </Card>
 
                 {/* Visual DOOH Screen Catalog */}
-                <div className="bg-slate-50/50 border border-slate-200 rounded-xl p-6 space-y-6">
-                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <Card className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+                  <CardHeader className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-5">
                     <div>
-                      <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                        <Tv className="h-4.5 w-4.5 text-slate-800" />
+                      <CardTitle className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                        <Tv className="h-4 w-4 text-slate-800" />
                         Catálogo de Pantallas en Campaña
-                      </h3>
-                      <p className="text-[11px] text-slate-500">
+                      </CardTitle>
+                      <CardDescription className="text-xs text-slate-500 mt-1">
                         Visualiza, filtra y añade pantallas directamente a tu plan comercial interactivo.
-                      </p>
+                      </CardDescription>
                     </div>
 
-                    <div className="text-xs font-bold text-slate-500 bg-white border border-slate-200 px-3 py-1.5 rounded-lg shrink-0 shadow-xs">
+                    <div className="text-xs font-bold text-slate-500 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-lg shrink-0 shadow-xs">
                       Pantallas Disponibles: <span className="text-slate-900">{catalogFilteredScreens.length}</span>
                     </div>
-                  </div>
+                  </CardHeader>
 
-                  {/* Filter controls */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-white border border-slate-150 rounded-xl p-4 shadow-xs">
+                  <CardContent className="pt-6 space-y-6">
+                    {/* Filter controls */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 bg-slate-50/50 border border-slate-200 rounded-xl p-4 shadow-xs">
                     {/* Location selector */}
                     <div className="space-y-3">
                       <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
@@ -1223,41 +1335,42 @@ export const DashboardView: React.FC = () => {
                         </p>
                       </div>
 
-                      <button
+                      <Button
                         onClick={() => {
                           setCatalogZoneFilter("Todas");
                           setCatalogMaxPrice(200000);
                         }}
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-xs transition-colors cursor-pointer"
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs uppercase tracking-wider rounded-xl shadow-xs transition-colors cursor-pointer h-auto"
                       >
                         <Undo className="h-3 w-3" />
                         Reestablecer Filtros
-                      </button>
+                      </Button>
                     </div>
                   )}
-                </div>
+                </CardContent>
+              </Card>
 
-                {/* Inventory screens list and inline editor table */}
-                <div className="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-sm space-y-3.5 p-4">
-                  <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                    <div className="flex flex-col gap-0.5">
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                        Inventario Físico de Pantallas
-                      </span>
-                      <span className="text-[10px] text-slate-500 font-semibold">
-                        Mostrando {screens.length} ubicaciones
-                      </span>
-                    </div>
-                    <button
-                      onClick={handleAddNewScreen}
-                      className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-slate-950 text-[10px] font-bold uppercase tracking-wider rounded-lg transition-colors shadow-xs flex items-center gap-1.5 cursor-pointer"
-                    >
-                      <Plus className="h-3 w-3" />
-                      Agregar Pantalla / Ruta
-                    </button>
+              {/* Inventory screens list and inline editor table */}
+              <Card className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden mt-6">
+                <CardHeader className="flex flex-row items-center justify-between border-b border-slate-100 pb-4 space-y-0">
+                  <div>
+                    <CardTitle className="text-sm font-bold text-slate-900">
+                      Inventario Físico de Pantallas
+                    </CardTitle>
+                    <CardDescription className="text-xs text-slate-500 mt-1">
+                      Mostrando {screens.length} ubicaciones
+                    </CardDescription>
                   </div>
+                  <Button
+                    onClick={handleAddNewScreen}
+                    className="bg-slate-900 hover:bg-slate-800 text-white text-[10px] font-bold uppercase tracking-wider px-3 py-1.5 h-auto rounded flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <Plus className="h-3 w-3" />
+                    Agregar Pantalla / Ruta
+                  </Button>
+                </CardHeader>
 
-                  <div className="overflow-x-auto">
+                <CardContent className="pt-4 overflow-x-auto">
                     <table className="w-full text-left text-xs text-slate-500">
                       <thead>
                         <tr className="border-b border-slate-150 font-bold text-slate-700 uppercase text-[9px] tracking-wider">
@@ -1510,10 +1623,10 @@ export const DashboardView: React.FC = () => {
                           })}
                       </tbody>
                     </table>
-                  </div>
-                </div>
-              </motion.div>
-            )}
+                  </CardContent>
+                </Card>
+            </motion.div>
+          )}
 
 
             {/* TAB 5: MEDIAKIT & BRANDING */}
@@ -1523,66 +1636,78 @@ export const DashboardView: React.FC = () => {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm space-y-6 max-w-3xl mx-auto"
+                className="max-w-3xl mx-auto"
               >
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-lg bg-slate-900 flex items-center justify-center text-white">
-                    <Download className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <h2 className="text-md font-bold text-slate-900">MediaKit y Activos de Marca</h2>
-                    <p className="text-xs text-slate-500 font-medium">
-                      Descarga directrices, logotipos y paletas corporativas generadas automáticamente para tu landing.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="grid md:grid-cols-2 gap-6 pt-4 border-t border-slate-100">
-                  <div className="border border-slate-200 rounded-xl p-5 space-y-4">
-                    <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wide">Paleta de Colores</h3>
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <div className="h-6 w-6 rounded bg-slate-950 border border-slate-800" />
-                          <span className="text-xs font-semibold text-slate-700">Slate Black</span>
-                        </div>
-                        <span className="text-[10px] text-slate-400 font-mono">#0F172A</span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <div className="h-6 w-6 rounded bg-emerald-500" />
-                          <span className="text-xs font-semibold text-slate-700">Teal Green</span>
-                        </div>
-                        <span className="text-[10px] text-slate-400 font-mono">#10B981</span>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <div className="h-6 w-6 rounded bg-slate-100 border border-slate-200" />
-                          <span className="text-xs font-semibold text-slate-700">Cool Neutral</span>
-                        </div>
-                        <span className="text-[10px] text-slate-400 font-mono">#F1F5F9</span>
-                      </div>
+                <Card className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+                  <CardHeader className="flex flex-row items-center gap-4 border-b border-slate-100 pb-5">
+                    <div className="h-10 w-10 rounded-lg bg-slate-900 flex items-center justify-center text-white shrink-0">
+                      <Download className="h-5 w-5" />
                     </div>
-                  </div>
-
-                  <div className="border border-slate-200 rounded-xl p-5 space-y-4">
-                    <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wide">Descarga de Assets</h3>
-                    <div className="space-y-2">
-                      <button className="w-full flex items-center justify-between px-3 py-2 border border-slate-200 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-50">
-                        <span>Logotipo Corporativo (SVG)</span>
-                        <Download className="h-4 w-4" />
-                      </button>
-                      <button className="w-full flex items-center justify-between px-3 py-2 border border-slate-200 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-50">
-                        <span>Guía de Identidad PDF</span>
-                        <Download className="h-4 w-4" />
-                      </button>
-                      <button className="w-full flex items-center justify-between px-3 py-2 border border-slate-200 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-50">
-                        <span>Kit de Prensa Digital (Zip)</span>
-                        <Download className="h-4 w-4" />
-                      </button>
+                    <div>
+                      <CardTitle className="text-md font-bold text-slate-900">MediaKit y Activos de Marca</CardTitle>
+                      <CardDescription className="text-xs text-slate-500 mt-1">
+                        Descarga directrices, logotipos y paletas corporativas generadas automáticamente para tu landing.
+                      </CardDescription>
                     </div>
-                  </div>
-                </div>
+                  </CardHeader>
+
+                  <CardContent className="pt-6">
+                    <div className="grid md:grid-cols-2 gap-6">
+                      <Card className="bg-slate-50/50 border border-slate-200 rounded-xl shadow-none">
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-xs font-bold text-slate-900 uppercase tracking-wide">
+                            Paleta de Colores
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-3.5">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <div className="h-6 w-6 rounded bg-slate-950 border border-slate-800" />
+                              <span className="text-xs font-semibold text-slate-700">Slate Black</span>
+                            </div>
+                            <span className="text-[10px] text-slate-400 font-mono">#0F172A</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <div className="h-6 w-6 rounded bg-emerald-500" />
+                              <span className="text-xs font-semibold text-slate-700">Teal Green</span>
+                            </div>
+                            <span className="text-[10px] text-slate-400 font-mono">#10B981</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <div className="h-6 w-6 rounded bg-slate-100 border border-slate-200" />
+                              <span className="text-xs font-semibold text-slate-700">Cool Neutral</span>
+                            </div>
+                            <span className="text-[10px] text-slate-400 font-mono">#F1F5F9</span>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      <Card className="bg-slate-50/50 border border-slate-200 rounded-xl shadow-none">
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-xs font-bold text-slate-900 uppercase tracking-wide">
+                            Descarga de Assets
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-2.5">
+                          <button className="w-full flex items-center justify-between px-3.5 py-2 border border-slate-200 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100 hover:text-slate-900 bg-white transition-all">
+                            <span>Logotipo Corporativo (SVG)</span>
+                            <Download className="h-4 w-4" />
+                          </button>
+                          <button className="w-full flex items-center justify-between px-3.5 py-2 border border-slate-200 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100 hover:text-slate-900 bg-white transition-all">
+                            <span>Guía de Identidad PDF</span>
+                            <Download className="h-4 w-4" />
+                          </button>
+                          <button className="w-full flex items-center justify-between px-3.5 py-2 border border-slate-200 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100 hover:text-slate-900 bg-white transition-all">
+                            <span>Kit de Prensa Digital (Zip)</span>
+                            <Download className="h-4 w-4" />
+                          </button>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </CardContent>
+                </Card>
               </motion.div>
             )}
 
@@ -1593,67 +1718,95 @@ export const DashboardView: React.FC = () => {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm space-y-6 max-w-2xl mx-auto"
+                className="max-w-2xl mx-auto"
               >
-                <div>
-                  <h2 className="text-md font-bold text-slate-900 flex items-center gap-2">
-                    <Sliders className="h-5 w-5 text-slate-500" />
-                    Configuración de Automatizaciones
-                  </h2>
-                  <p className="text-xs text-slate-500">
-                    Sincroniza y gatilla respuestas comerciales inmediatas a tus nuevos prospectos.
-                  </p>
-                </div>
-
-                <div className="space-y-4 pt-4 border-t border-slate-100">
-                  <div className="flex items-center justify-between p-4 bg-slate-50 border border-slate-200 rounded-xl">
-                    <div className="space-y-0.5">
-                      <h4 className="text-xs font-bold text-slate-900">Email de Bienvenida Automatizado</h4>
-                      <p className="text-[10px] text-slate-400">Envía un email redactado por IA a cada nuevo lead en la landing.</p>
+                <Card className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+                  <CardHeader className="flex flex-row items-center gap-4 border-b border-slate-100 pb-5">
+                    <div className="h-10 w-10 rounded-lg bg-slate-900 flex items-center justify-center text-white shrink-0">
+                      <Sliders className="h-5 w-5 text-slate-400" />
                     </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={automationToggles.welcomeEmail}
-                        onChange={(e) => setAutomationToggles({ ...automationToggles, welcomeEmail: e.target.checked })}
-                        className="sr-only peer"
-                      />
-                      <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-slate-900" />
-                    </label>
-                  </div>
-
-                  <div className="flex items-center justify-between p-4 bg-slate-50 border border-slate-200 rounded-xl">
-                    <div className="space-y-0.5">
-                      <h4 className="text-xs font-bold text-slate-900">Sincronización HubSpot CRM</h4>
-                      <p className="text-[10px] text-slate-400">Sincroniza prospectos automáticamente con pipelines externos.</p>
+                    <div>
+                      <CardTitle className="text-md font-bold text-slate-900">Configuración de Automatizaciones</CardTitle>
+                      <CardDescription className="text-xs text-slate-500 mt-1">
+                        Sincroniza y gatilla respuestas comerciales inmediatas a tus nuevos prospectos.
+                      </CardDescription>
                     </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={automationToggles.crmSync}
-                        onChange={(e) => setAutomationToggles({ ...automationToggles, crmSync: e.target.checked })}
-                        className="sr-only peer"
-                      />
-                      <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-slate-900" />
-                    </label>
-                  </div>
+                  </CardHeader>
 
-                  <div className="flex items-center justify-between p-4 bg-slate-50 border border-slate-200 rounded-xl">
-                    <div className="space-y-0.5">
-                      <h4 className="text-xs font-bold text-slate-900">Reporte Analítico Semanal</h4>
-                      <p className="text-[10px] text-slate-400">Envía un resumen de visitas y tasa de conversión cada domingo.</p>
+                  <CardContent className="pt-6 space-y-4">
+                    <div className="flex items-center justify-between p-4 bg-slate-50 border border-slate-200 rounded-xl transition-all hover:bg-slate-100/50">
+                      <div className="space-y-0.5">
+                        <h4 className="text-xs font-bold text-slate-900">Email de Bienvenida Automatizado</h4>
+                        <p className="text-[10px] text-slate-400">Envía un email redactado por IA a cada nuevo lead en la landing.</p>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={automationToggles.welcomeEmail}
+                          onChange={(e) => setAutomationToggles({ ...automationToggles, welcomeEmail: e.target.checked })}
+                          className="sr-only peer"
+                        />
+                        <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-slate-900" />
+                      </label>
                     </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={automationToggles.weeklyReport}
-                        onChange={(e) => setAutomationToggles({ ...automationToggles, weeklyReport: e.target.checked })}
-                        className="sr-only peer"
-                      />
-                      <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-slate-900" />
-                    </label>
-                  </div>
-                </div>
+
+                    <div className="flex items-center justify-between p-4 bg-slate-50 border border-slate-200 rounded-xl transition-all hover:bg-slate-100/50">
+                      <div className="space-y-0.5">
+                        <h4 className="text-xs font-bold text-slate-900">Sincronización HubSpot CRM</h4>
+                        <p className="text-[10px] text-slate-400">Sincroniza prospectos automáticamente con pipelines externos.</p>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={automationToggles.crmSync}
+                          onChange={(e) => setAutomationToggles({ ...automationToggles, crmSync: e.target.checked })}
+                          className="sr-only peer"
+                        />
+                        <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-slate-900" />
+                      </label>
+                    </div>
+
+                    <div className="flex items-center justify-between p-4 bg-slate-50 border border-slate-200 rounded-xl transition-all hover:bg-slate-100/50">
+                      <div className="space-y-0.5">
+                        <h4 className="text-xs font-bold text-slate-900">Reporte Analítico Semanal</h4>
+                        <p className="text-[10px] text-slate-400">Envía un resumen de visitas y tasa de conversión cada domingo.</p>
+                      </div>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={automationToggles.weeklyReport}
+                          onChange={(e) => setAutomationToggles({ ...automationToggles, weeklyReport: e.target.checked })}
+                          className="sr-only peer"
+                        />
+                        <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-slate-900" />
+                      </label>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
+
+            {/* TAB 7: DESIGN SYSTEM & AUDIT */}
+            {currentDashboardTab === "design-system" && (
+              <motion.div
+                key="tab-design-system"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+              >
+                <DesignSystemAuditView />
+              </motion.div>
+            )}
+
+            {/* TAB 8: SITEMAP & MULTIPAGE SEO */}
+            {currentDashboardTab === "sitemap-seo" && (
+              <motion.div
+                key="tab-sitemap-seo"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+              >
+                <SitemapSeoView />
               </motion.div>
             )}
           </AnimatePresence>
@@ -2019,5 +2172,6 @@ const DEFAULT_LANDING_CONTENT = {
     metaTitle: "SmartWeb - Acelerador Comercial Inteligente B2B SaaS",
     metaDescription: "Crea, gestiona y optimiza tu presencia comercial digital con la IA integrada y el CMS interactivo más rápido del mercado.",
     keywords: "acelerador comercial, ia, saas b2b, cms inteligente, automatizacion de leads",
+    ogImage: "https://images.unsplash.com/photo-1551434678-e076c223a692?q=80&w=1200",
   }
 };

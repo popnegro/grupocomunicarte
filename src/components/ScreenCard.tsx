@@ -4,6 +4,7 @@ import { useCms } from "./CmsContext";
 import { motion, AnimatePresence } from "motion/react";
 import { Card, CardContent, CardFooter } from "@/src/components/ui/card";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/src/components/ui/dialog";
+import { Badge } from "@/src/components/ui/badge";
 import {
   Zap,
   Shield,
@@ -179,13 +180,13 @@ export const ScreenCard: React.FC<ScreenCardProps> = ({ screen, onFocusOnMap }) 
                 <h3 className="text-sm font-bold text-slate-900 leading-tight line-clamp-1 group-hover:text-slate-950 transition-colors">
                   {screen.nombre}
                 </h3>
-                <span className={`text-[8px] font-black px-1.5 py-0.5 rounded shrink-0 uppercase tracking-wider ${
-                  screen.status === "Activo" || screen.status === "Disponible" || screen.status === "disponible"
-                    ? "bg-emerald-50 text-emerald-700 border border-emerald-150"
-                    : "bg-rose-50 text-rose-700 border border-rose-150"
+                <Badge variant={screen.status === "Activo" || screen.status === "Disponible" ? "secondary" : "destructive"} className={`text-[8px] font-black px-1.5 py-0.5 rounded shrink-0 uppercase tracking-wider ${
+                  screen.status === "Activo" || screen.status === "Disponible"
+                    ? "bg-emerald-50 text-emerald-700 border border-emerald-150 hover:bg-emerald-50"
+                    : "bg-rose-50 text-rose-700 border border-rose-150 hover:bg-rose-50"
                 }`}>
-                  {screen.status === "Activo" || screen.status === "Disponible" || screen.status === "disponible" ? "Disponible" : "No disponible"}
-                </span>
+                  {screen.status === "Activo" || screen.status === "Disponible" ? "Disponible" : "No disponible"}
+                </Badge>
               </div>
 
               <div className="flex items-center gap-1 text-slate-500 text-xs mb-3">

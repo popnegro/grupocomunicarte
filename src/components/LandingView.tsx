@@ -7,6 +7,17 @@ import { InteractiveMap } from "./InteractiveMap";
 import { DoohScreen } from "../types";
 import { Button } from "@/src/components/ui/button";
 import { Input } from "@/src/components/ui/input";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardFooter
+} from "@/src/components/ui/card";
+import { sitemap, findSitemapItemBySlug, getBreadcrumbsForSlug, getFlatSitemap } from "../lib/sitemap";
+import { SubpageLayout } from "./SubpageLayout";
+import { Navigation } from "./Navigation";
 
 // Helper to resolve Lucide Icon string safely
 const DynamicIcon: React.FC<{ name: string; className?: string }> = ({ name, className }) => {
@@ -83,11 +94,28 @@ export const LandingView: React.FC = () => {
   } = useCms();
 
   // Navigation states
+  const [activeSubpageSlug, setActiveSubpageSlug] = useState<string>("/");
   const [isNosotrosOpen, setIsNosotrosOpen] = useState(false);
   const [isEspaciosOpen, setIsEspaciosOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isMobileNosotrosOpen, setIsMobileNosotrosOpen] = useState(false);
   const [isMobileEspaciosOpen, setIsMobileEspaciosOpen] = useState(false);
+
+  const handleNavigate = (slug: string) => {
+    setActiveSubpageSlug(slug);
+    if (slug === "/ubicaciones/mendoza") {
+      setSelectedProvince("Mendoza");
+    } else if (slug === "/ubicaciones/buenos-aires") {
+      setSelectedProvince("Buenos Aires");
+    }
+    // Try to scroll the window or viewport
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    
+    // Close mobile/dropdown states
+    setIsMobileMenuOpen(false);
+    setIsNosotrosOpen(false);
+    setIsEspaciosOpen(false);
+  };
 
   // Active province state for spaces
   const [selectedProvince, setSelectedProvince] = useState<"Mendoza" | "Buenos Aires">("Mendoza");
@@ -206,6 +234,60 @@ export const LandingView: React.FC = () => {
     }, 1500);
   };
 
+  if (activeSubpageSlug !== "/") {
+    return (
+      <div className="min-h-screen bg-slate-50 text-slate-900 selection:bg-slate-100 font-sans antialiased overflow-x-hidden">
+        {/* CMS Connection Notice */}
+        <div className="bg-slate-900 text-white text-[10px] md:text-xs py-2 px-4 text-center font-bold tracking-wider flex items-center justify-center gap-2">
+          <span className="inline-block h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+          <span>CONECTADO AL CMS: Los cambios en el Dashboard se actualizan al instante en el sitio</span>
+        </div>
+
+        {/* Navigation */}
+        <Navigation
+          activeSlug={activeSubpageSlug}
+          onNavigate={handleNavigate}
+          onSetActiveView={setActiveView}
+        />
+
+        {/* Dynamic Subpage Layout Content */}
+        <SubpageLayout
+          slug={activeSubpageSlug}
+          handleNavigate={handleNavigate}
+          screens={screens}
+          cart={cart}
+          toggleCart={toggleCart}
+          clearCart={clearCart}
+          weeks={weeks}
+          setWeeks={setWeeks}
+          addLead={addLead}
+        />
+
+        {/* Shared Footer */}
+        <footer className="border-t border-slate-200 bg-white py-12 text-slate-400 text-xs">
+          <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-6">
+            <div className="flex items-center gap-2">
+              <div className="h-7 w-7 rounded-lg bg-slate-950 flex items-center justify-center text-white font-black text-sm">
+                C
+              </div>
+              <span className="font-extrabold text-slate-800 text-sm">Grupo Comunicarte - SmartWeb SaaS</span>
+            </div>
+
+            <div className="flex items-center gap-6 font-bold">
+              <span className="hover:text-slate-600 cursor-pointer">Términos</span>
+              <span className="hover:text-slate-600 cursor-pointer">Privacidad</span>
+              <span className="hover:text-slate-600 cursor-pointer">Soporte B2B</span>
+            </div>
+
+            <div className="font-semibold text-slate-400">
+              &copy; 2026 Grupo Comunicarte. Todos los derechos reservados.
+            </div>
+          </div>
+        </footer>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 selection:bg-slate-100 font-sans antialiased overflow-x-hidden">
       {/* CMS Connection Notice */}
@@ -214,225 +296,12 @@ export const LandingView: React.FC = () => {
         <span>CONECTADO AL CMS: Los cambios en el Dashboard se actualizan al instante en el sitio</span>
       </div>
 
-      {/* Header */}
-      <header className="sticky top-0 z-45 bg-white/90 backdrop-blur-md border-b border-slate-150 px-6 py-4 max-w-7xl mx-auto flex items-center justify-between">
-        {/* Brand / Logo */}
-        <div 
-          onClick={() => scrollToSection("inicio")} 
-          className="flex items-center gap-2 cursor-pointer"
-        >
-          <div className="h-9 w-9 rounded-xl bg-slate-950 flex items-center justify-center text-white font-extrabold text-xl shadow-md shadow-slate-950/10">
-            C
-          </div>
-          <div className="flex flex-col">
-            <span className="font-black text-base tracking-tight text-slate-900 leading-none">SmartWeb</span>
-            <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider mt-0.5">Grupo Comunicarte</span>
-          </div>
-        </div>
-
-        {/* Desktop Navigation Menu */}
-        <nav className="hidden md:flex items-center gap-8 text-sm font-bold text-slate-500 relative">
-          {/* Inicio Link */}
-          <button 
-            onClick={() => scrollToSection("inicio")} 
-            className="hover:text-slate-950 transition-colors cursor-pointer"
-          >
-            Inicio
-          </button>
-
-          {/* Nosotros Dropdown */}
-          <div 
-            className="relative"
-            onMouseEnter={() => setIsNosotrosOpen(true)}
-            onMouseLeave={() => setIsNosotrosOpen(false)}
-          >
-            <button className="flex items-center gap-1.5 hover:text-slate-950 transition-colors cursor-pointer py-1">
-              <span>Nosotros</span>
-              <LucideIcons.ChevronDown className={`h-3 w-3 transition-transform duration-200 ${isNosotrosOpen ? "rotate-180" : ""}`} />
-            </button>
-            <AnimatePresence>
-              {isNosotrosOpen && (
-                <motion.div 
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 10 }}
-                  transition={{ duration: 0.15 }}
-                  className="absolute left-0 mt-2 w-52 bg-white border border-slate-150 rounded-xl shadow-xl py-2 z-50 overflow-hidden"
-                >
-                  <button 
-                    onClick={() => scrollToSection("soluciones")} 
-                    className="w-full text-left px-4 py-2 hover:bg-slate-50 text-xs font-bold text-slate-700 hover:text-slate-950 transition-colors flex items-center gap-2"
-                  >
-                    <LucideIcons.Sparkles className="h-3.5 w-3.5 text-slate-400" />
-                    <span>/soluciones</span>
-                  </button>
-                  <button 
-                    onClick={() => scrollToSection("soportes")} 
-                    className="w-full text-left px-4 py-2 hover:bg-slate-50 text-xs font-bold text-slate-700 hover:text-slate-950 transition-colors flex items-center gap-2"
-                  >
-                    <LucideIcons.Monitor className="h-3.5 w-3.5 text-slate-400" />
-                    <span>/soportes</span>
-                  </button>
-                  <button 
-                    onClick={() => scrollToSection("mediakit")} 
-                    className="w-full text-left px-4 py-2 hover:bg-slate-50 text-xs font-bold text-slate-700 hover:text-slate-950 transition-colors flex items-center gap-2"
-                  >
-                    <LucideIcons.FileText className="h-3.5 w-3.5 text-slate-400" />
-                    <span>/mediakit</span>
-                  </button>
-                  <button 
-                    onClick={() => scrollToSection("grupo-comunicarte")} 
-                    className="w-full text-left px-4 py-2 hover:bg-slate-50 text-xs font-bold text-slate-700 hover:text-slate-950 transition-colors flex items-center gap-2"
-                  >
-                    <LucideIcons.Tv className="h-3.5 w-3.5 text-slate-400" />
-                    <span>/grupo comunicarte</span>
-                  </button>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-
-          {/* Espacios Publicitarios Dropdown */}
-          <div 
-            className="relative"
-            onMouseEnter={() => setIsEspaciosOpen(true)}
-            onMouseLeave={() => setIsEspaciosOpen(false)}
-          >
-            <button className="flex items-center gap-1.5 hover:text-slate-950 transition-colors cursor-pointer py-1">
-              <span>Espacios publicitarios</span>
-              <LucideIcons.ChevronDown className={`h-3 w-3 transition-transform duration-200 ${isEspaciosOpen ? "rotate-180" : ""}`} />
-            </button>
-            <AnimatePresence>
-              {isEspaciosOpen && (
-                <motion.div 
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 10 }}
-                  transition={{ duration: 0.15 }}
-                  className="absolute left-0 mt-2 w-48 bg-white border border-slate-150 rounded-xl shadow-xl py-2 z-50 overflow-hidden"
-                >
-                  <button 
-                    onClick={() => scrollToSection("espacios-publicitarios", "Mendoza")} 
-                    className="w-full text-left px-4 py-2 hover:bg-slate-50 text-xs font-bold text-slate-700 hover:text-slate-950 transition-colors flex items-center gap-2"
-                  >
-                    <LucideIcons.MapPin className="h-3.5 w-3.5 text-sky-500" />
-                    <span>/mendoza</span>
-                  </button>
-                  <button 
-                    onClick={() => scrollToSection("espacios-publicitarios", "Buenos Aires")} 
-                    className="w-full text-left px-4 py-2 hover:bg-slate-50 text-xs font-bold text-slate-700 hover:text-slate-950 transition-colors flex items-center gap-2"
-                  >
-                    <LucideIcons.MapPin className="h-3.5 w-3.5 text-teal-500" />
-                    <span>/buenos aires</span>
-                  </button>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-
-          {/* Contacto Link */}
-          <button 
-            onClick={() => scrollToSection("contacto")} 
-            className="hover:text-slate-950 transition-colors cursor-pointer"
-          >
-            Contacto
-          </button>
-        </nav>
-
-        {/* Action Buttons (Dashboard Access & Mobile Toggle) */}
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => setActiveView("dashboard")}
-            className="hidden md:flex items-center gap-2 text-xs font-extrabold text-slate-950 bg-white border border-slate-200 hover:bg-slate-50 hover:border-slate-350 px-4 py-2 rounded-lg shadow-xs transition-all cursor-pointer"
-          >
-            <LucideIcons.LogIn className="h-3.5 w-3.5 text-slate-950" />
-            <span>Inicio sesión</span>
-          </button>
-
-          {/* Mobile menu toggle */}
-          <button
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="md:hidden p-2 rounded-lg bg-slate-100 text-slate-800 hover:bg-slate-200 cursor-pointer"
-          >
-            {isMobileMenuOpen ? <LucideIcons.X className="h-5 w-5" /> : <LucideIcons.Menu className="h-5 w-5" />}
-          </button>
-        </div>
-      </header>
-
-      {/* Mobile Navigation Drawer */}
-      <AnimatePresence>
-        {isMobileMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            className="md:hidden bg-white border-b border-slate-150 px-6 py-4 space-y-4"
-          >
-            <div className="flex flex-col gap-3 font-bold text-sm text-slate-600">
-              <button 
-                onClick={() => scrollToSection("inicio")} 
-                className="w-full text-left py-1 hover:text-slate-900"
-              >
-                Inicio
-              </button>
-
-              {/* Mobile Nosotros Collapsible */}
-              <div className="space-y-1">
-                <button 
-                  onClick={() => setIsMobileNosotrosOpen(!isMobileNosotrosOpen)} 
-                  className="w-full text-left py-1 hover:text-slate-900 flex items-center justify-between"
-                >
-                  <span>Nosotros</span>
-                  <LucideIcons.ChevronDown className={`h-4 w-4 transform transition-transform ${isMobileNosotrosOpen ? "rotate-180" : ""}`} />
-                </button>
-                {isMobileNosotrosOpen && (
-                  <div className="pl-4 space-y-2 py-1 text-xs">
-                    <button onClick={() => scrollToSection("soluciones")} className="w-full text-left py-1 block text-slate-500 hover:text-slate-900">/soluciones</button>
-                    <button onClick={() => scrollToSection("soportes")} className="w-full text-left py-1 block text-slate-500 hover:text-slate-900">/soportes</button>
-                    <button onClick={() => scrollToSection("mediakit")} className="w-full text-left py-1 block text-slate-500 hover:text-slate-900">/mediakit</button>
-                    <button onClick={() => scrollToSection("grupo-comunicarte")} className="w-full text-left py-1 block text-slate-500 hover:text-slate-900">/grupo comunicarte</button>
-                  </div>
-                )}
-              </div>
-
-              {/* Mobile Espacios Collapsible */}
-              <div className="space-y-1">
-                <button 
-                  onClick={() => setIsMobileEspaciosOpen(!isMobileEspaciosOpen)} 
-                  className="w-full text-left py-1 hover:text-slate-900 flex items-center justify-between"
-                >
-                  <span>Espacios publicitarios</span>
-                  <LucideIcons.ChevronDown className={`h-4 w-4 transform transition-transform ${isMobileEspaciosOpen ? "rotate-180" : ""}`} />
-                </button>
-                {isMobileEspaciosOpen && (
-                  <div className="pl-4 space-y-2 py-1 text-xs">
-                    <button onClick={() => scrollToSection("espacios-publicitarios", "Mendoza")} className="w-full text-left py-1 block text-slate-500 hover:text-slate-900">/mendoza</button>
-                    <button onClick={() => scrollToSection("espacios-publicitarios", "Buenos Aires")} className="w-full text-left py-1 block text-slate-500 hover:text-slate-900">/buenos aires</button>
-                  </div>
-                )}
-              </div>
-
-              <button 
-                onClick={() => scrollToSection("contacto")} 
-                className="w-full text-left py-1 hover:text-slate-900"
-              >
-                Contacto
-              </button>
-
-              <button
-                onClick={() => {
-                  setActiveView("dashboard");
-                  setIsMobileMenuOpen(false);
-                }}
-                className="w-full py-2.5 px-4 text-center text-xs font-extrabold text-white bg-slate-950 rounded-lg hover:bg-slate-800 transition-colors flex items-center justify-center gap-2"
-              >
-                <LucideIcons.LogIn className="h-4 w-4" />
-                <span>Inicio sesión</span>
-              </button>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Navigation */}
+      <Navigation
+        activeSlug={activeSubpageSlug}
+        onNavigate={handleNavigate}
+        onSetActiveView={setActiveView}
+      />
 
       {/* SECTION 1: INICIO (HERO) */}
       <section id="inicio" className="relative pt-12 pb-20 md:py-28 max-w-6xl mx-auto px-6 text-center">
@@ -442,7 +311,7 @@ export const LandingView: React.FC = () => {
             {content.hero.badge || "Impacto Comercial DOOH"}
           </div>
 
-          <h1 className="text-4xl md:text-6xl font-black text-slate-900 tracking-tight leading-[1.1] max-w-3xl mx-auto">
+          <h1 className="text-4xl md:text-6xl text-slate-950 tracking-tight leading-[1.08] max-w-3xl mx-auto font-display font-extrabold">
             {content.hero.title}
           </h1>
 
@@ -468,22 +337,22 @@ export const LandingView: React.FC = () => {
 
         {/* Live Screens Statistics Overview Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-5xl mx-auto mt-16 md:mt-24">
-          <div className="bg-white border border-slate-250 p-6 rounded-xl shadow-sm text-center">
+          <Card className="p-6 text-center bg-white border border-slate-250 shadow-sm rounded-xl">
             <span className="block text-3xl font-black text-slate-950 tracking-tight">14+</span>
             <span className="block text-[10px] uppercase font-bold text-slate-400 tracking-wider mt-1">Ubicaciones Premium</span>
-          </div>
-          <div className="bg-white border border-slate-250 p-6 rounded-xl shadow-sm text-center">
+          </Card>
+          <Card className="p-6 text-center bg-white border border-slate-250 shadow-sm rounded-xl">
             <span className="block text-3xl font-black text-slate-950 tracking-tight">100%</span>
             <span className="block text-[10px] uppercase font-bold text-slate-400 tracking-wider mt-1">Sincronización Digital</span>
-          </div>
-          <div className="bg-white border border-slate-250 p-6 rounded-xl shadow-sm text-center">
+          </Card>
+          <Card className="p-6 text-center bg-white border border-slate-250 shadow-sm rounded-xl">
             <span className="block text-3xl font-black text-slate-950 tracking-tight">+1.5M</span>
             <span className="block text-[10px] uppercase font-bold text-slate-400 tracking-wider mt-1">Audiencia Semanal</span>
-          </div>
-          <div className="bg-white border border-slate-250 p-6 rounded-xl shadow-sm text-center">
+          </Card>
+          <Card className="p-6 text-center bg-white border border-slate-250 shadow-sm rounded-xl">
             <span className="block text-3xl font-black text-slate-950 tracking-tight">4K Ultra</span>
             <span className="block text-[10px] uppercase font-bold text-slate-400 tracking-wider mt-1">Soportes de Alta Gama</span>
-          </div>
+          </Card>
         </div>
       </section>
 
@@ -497,7 +366,7 @@ export const LandingView: React.FC = () => {
               <span className="text-[10px] bg-slate-900 text-white font-bold tracking-widest uppercase px-3 py-1 rounded-full">
                 Estrategias Digitales
               </span>
-              <h2 className="text-3xl md:text-4xl font-black tracking-tight text-slate-900">
+              <h2 className="text-3xl md:text-4xl tracking-tight text-slate-950 font-display font-extrabold">
                 /soluciones
               </h2>
               <p className="text-slate-500 text-sm md:text-base leading-relaxed">
@@ -508,7 +377,7 @@ export const LandingView: React.FC = () => {
             {/* Editable Benefits / Solutions Cards in CMS */}
             <div className="grid md:grid-cols-3 gap-8">
               {content.benefits.map((item, index) => (
-                <div
+                <Card
                   key={item.id || index}
                   className="bg-slate-50 border border-slate-200/75 p-6 rounded-xl hover:border-slate-350 hover:shadow-md transition-all duration-300 space-y-4"
                 >
@@ -517,7 +386,7 @@ export const LandingView: React.FC = () => {
                   </div>
                   <h3 className="text-lg font-black text-slate-900">{item.title}</h3>
                   <p className="text-slate-500 text-xs leading-relaxed font-medium">{item.description}</p>
-                </div>
+                </Card>
               ))}
             </div>
           </div>
@@ -528,7 +397,7 @@ export const LandingView: React.FC = () => {
               <span className="text-[10px] bg-slate-100 border border-slate-200 text-slate-800 font-bold tracking-widest uppercase px-3 py-1 rounded-full">
                 Hardware e Infraestructura
               </span>
-              <h2 className="text-3xl md:text-4xl font-black tracking-tight text-slate-900">
+              <h2 className="text-3xl md:text-4xl tracking-tight text-slate-950 font-display font-extrabold">
                 /soportes
               </h2>
               <p className="text-slate-500 text-sm md:text-base leading-relaxed">
@@ -538,7 +407,7 @@ export const LandingView: React.FC = () => {
 
             <div className="grid md:grid-cols-3 gap-6">
               {/* Soporte 1 */}
-              <div className="bg-slate-50 border border-slate-200 rounded-xl p-6 space-y-4">
+              <Card className="bg-slate-50 border border-slate-200 rounded-xl p-6 space-y-4">
                 <div className="p-3 bg-sky-50 text-sky-600 rounded-lg inline-block">
                   <LucideIcons.Tv className="h-6 w-6" />
                 </div>
@@ -554,10 +423,10 @@ export const LandingView: React.FC = () => {
                   <div className="flex justify-between font-semibold"><span className="text-slate-400">Brillo:</span> <span className="text-slate-700">4,500 nits (Auto-Dim)</span></div>
                   <div className="flex justify-between font-semibold"><span className="text-slate-400">Refresh Rate:</span> <span className="text-slate-700">3,840 Hz (Flicker-Free)</span></div>
                 </div>
-              </div>
+              </Card>
 
               {/* Soporte 2 */}
-              <div className="bg-slate-50 border border-slate-200 rounded-xl p-6 space-y-4">
+              <Card className="bg-slate-50 border border-slate-200 rounded-xl p-6 space-y-4">
                 <div className="p-3 bg-teal-50 text-teal-600 rounded-lg inline-block">
                   <LucideIcons.Monitor className="h-6 w-6" />
                 </div>
@@ -573,10 +442,10 @@ export const LandingView: React.FC = () => {
                   <div className="flex justify-between font-semibold"><span className="text-slate-400">Brillo:</span> <span className="text-slate-700">7,500 nits (High-Contrast)</span></div>
                   <div className="flex justify-between font-semibold"><span className="text-slate-400">Refresh Rate:</span> <span className="text-slate-700">3,840 Hz (Flicker-Free)</span></div>
                 </div>
-              </div>
+              </Card>
 
               {/* Soporte 3 */}
-              <div className="bg-slate-50 border border-slate-200 rounded-xl p-6 space-y-4">
+              <Card className="bg-slate-50 border border-slate-200 rounded-xl p-6 space-y-4">
                 <div className="p-3 bg-purple-50 text-purple-600 rounded-lg inline-block">
                   <LucideIcons.Cpu className="h-6 w-6" />
                 </div>
@@ -592,7 +461,7 @@ export const LandingView: React.FC = () => {
                   <div className="flex justify-between font-semibold"><span className="text-slate-400">Brillo:</span> <span className="text-slate-700">6,000 nits (Eco-Saving)</span></div>
                   <div className="flex justify-between font-semibold"><span className="text-slate-400">Refresh Rate:</span> <span className="text-slate-700">3,840 Hz (Flicker-Free)</span></div>
                 </div>
-              </div>
+              </Card>
             </div>
           </div>
 

@@ -1,54 +1,48 @@
-// components/ui/BaseCard.tsx
-import { forwardRef, ReactNode } from 'react';
+import React, { useMemo } from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
-import { cn } from '@/src/lib/utils';
+import { Slot } from '@radix-ui/react-slot';
+import { cn } from '@/lib/utils';
 
 const cardVariants = cva(
-  'relative rounded-lg border transition-all duration-200',
+  'rounded-lg border bg-card text-card-foreground shadow-sm',
   {
     variants: {
       variant: {
-        default: 'bg-white border-gray-200 shadow-sm hover:shadow-md',
-        outlined: 'bg-transparent border-gray-200 hover:border-primary-400',
-        elevated: 'bg-white shadow-md hover:shadow-lg',
-        ghost: 'bg-transparent border-transparent hover:bg-gray-50',
-      },
-      padding: {
-        sm: 'p-3',
-        md: 'p-4',
-        lg: 'p-6',
-        xl: 'p-8',
-      },
-      interactive: {
-        true: 'cursor-pointer',
-        false: 'cursor-default',
+        default: '',
+        interactive: 'cursor-pointer hover:bg-muted/50 transition-colors',
       },
     },
     defaultVariants: {
       variant: 'default',
-      padding: 'lg',
-      interactive: false,
     },
   }
 );
 
-interface CardProps
-  extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof cardVariants> {
-  children: ReactNode;
+export interface CardProps extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof cardVariants> {
   asChild?: boolean;
 }
 
-const BaseCard = forwardRef<HTMLDivElement, CardProps>(
-  ({ className, variant, padding, interactive, ...props }, ref) => (
-    <div
-      ref={ref}
-      className={cn(cardVariants({ variant, padding, interactive, className }))}
-      {...props}
-    />
-  )
-);
+const BaseCard = React.forwardRef<HTMLDivElement, CardProps>(
+  ({ className, variant, asChild = false, ...props }, ref) => {
+    const Comp = asChild ? Slot : 'div';
 
+    const memoizedCardVariants = useMemo(() => cardVariants({ variant }), [variant]);
+
+    const commonProps = {
+      className: cn(memoizedCardVariants, className),
+      ref,
+      ...props,
+    };
+
+    if (variant === 'interactive') {
+      return (
+        <button {...commonProps} />
+      );
+    }
+
+    return <Comp {...commonProps} />;
+  }
+);
 BaseCard.displayName = 'BaseCard';
 
-export { BaseCard, cardVariants };
+export { BaseCard };

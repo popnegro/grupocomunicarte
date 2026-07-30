@@ -7,6 +7,7 @@ import { ScreenCard } from "./ScreenCard";
 import { DoohScreen, Lead } from "../types";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
+import { SoportesInventory } from "./SoportesInventory";
 
 // Shared Premium Buenos Aires Screens
 const BUENOS_AIRES_SCREENS: DoohScreen[] = [
@@ -367,19 +368,65 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
       </nav>
 
       {/* 3. HERO SUB-BANNER */}
-      <div className="bg-white border border-slate-200 rounded-2xl p-8 md:p-12 relative overflow-hidden shadow-xs">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-slate-50 rounded-full blur-3xl -z-10 translate-x-1/3 -translate-y-1/3 opacity-80" />
+      <div className="bg-white border border-[#e7e5e4] rounded-2xl p-8 md:p-10 relative overflow-hidden shadow-xs">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-stone-50 rounded-full blur-3xl -z-10 translate-x-1/3 -translate-y-1/3 opacity-80" />
         
-        <div className="max-w-3xl space-y-4">
-          <span className="text-[10px] bg-slate-900 text-white font-extrabold tracking-widest uppercase px-3 py-1 rounded-full">
-            {item.name}
-          </span>
-          <h1 className="text-3xl md:text-5xl font-black text-slate-900 tracking-tight">
-            {item.name}
-          </h1>
-          <p className="text-slate-500 text-sm md:text-base leading-relaxed font-medium">
-            {item.description}
-          </p>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+          {/* Left Column: Title and Description */}
+          <div className="lg:col-span-7 space-y-4 text-left">
+            <span className="inline-block text-[10px] bg-[#06434a]/10 border border-[#06434a]/20 text-[#06434a] font-extrabold tracking-widest uppercase px-3.5 py-1 rounded-full">
+              {item.keyword || "Publicidad Exterior"}
+            </span>
+            <h1 className="text-3xl md:text-4.5xl font-bold font-display text-stone-900 tracking-tight leading-tight">
+              {item.name}
+            </h1>
+            <p className="text-stone-500 text-sm md:text-base leading-relaxed font-normal font-sans max-w-xl">
+              {item.description}
+            </p>
+          </div>
+
+          {/* Right Column: Dynamic Image with Custom Fallback */}
+          <div className="lg:col-span-5 flex justify-center">
+            <div className="w-full max-w-xs aspect-video sm:aspect-4/3 bg-[#172023] border border-[#e7e5e4] shadow-[0_12px_32px_-8px_rgba(6,67,74,0.08)] rounded-xl overflow-hidden relative group">
+              {item.imageUrl ? (
+                <img
+                  src={item.imageUrl}
+                  alt={item.name}
+                  referrerPolicy="no-referrer"
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+              ) : (
+                /* Dynamic content-aware vector illustration */
+                <div className="w-full h-full p-5 flex flex-col justify-between relative overflow-hidden select-none">
+                  <div className="absolute inset-0 opacity-5 bg-[radial-gradient(#07BE8A_1.5px,transparent_1.5px)] bg-[size:10px_10px]" />
+                  <div className="absolute -bottom-10 -left-10 w-36 h-36 bg-[#06434a]/20 rounded-full blur-2xl" />
+                  
+                  <div className="flex items-center justify-between z-10">
+                    <span className="text-[8px] bg-[#07BE8A]/20 text-[#07BE8A] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
+                      {item.intent}
+                    </span>
+                    <LucideIcons.Tv className="h-4 w-4 text-stone-400" />
+                  </div>
+
+                  <div className="space-y-1.5 z-10">
+                    <span className="text-[8px] uppercase text-stone-400 font-bold tracking-widest block">Soporte Inteligente</span>
+                    <div className="text-sm font-display font-black text-white leading-snug truncate">
+                      {item.name}
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <span className="h-1.5 w-1.5 rounded-full bg-[#07BE8A]" />
+                      <span className="text-[9px] font-mono font-medium text-stone-300 truncate">Keyword: "{item.keyword}"</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between border-t border-white/5 pt-3 z-10 text-[9px] font-sans font-medium text-stone-400">
+                    <span>Indexado Google</span>
+                    <span className="text-[#07BE8A] font-bold">100% Optimizado</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
@@ -806,8 +853,28 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
             </div>
           )}
 
+          {/* SOPORTES INVENTORY PAGE AND CHILDREN */}
+          {slug.startsWith("/soportes") && (
+            <div className="space-y-6 bg-white border border-slate-200 rounded-2xl p-6 md:p-8 shadow-xs">
+              <div className="border-b border-slate-150 pb-4">
+                <h2 className="text-xl font-black text-slate-900">
+                  Inventario de Soportes en Vía Pública
+                </h2>
+                <p className="text-slate-500 text-xs mt-1">
+                  Catálogo completo e interactivo de dispositivos fijos, pantallas LED digitales UHD y unidades móviles.
+                </p>
+              </div>
+              <SoportesInventory
+                onNavigateToCityMap={(city) => {
+                  if (city === "Buenos Aires") handleNavigate("/ubicaciones/buenos-aires");
+                  else if (city === "Mendoza") handleNavigate("/ubicaciones/mendoza");
+                }}
+              />
+            </div>
+          )}
+
           {/* DEFAULT / OTHERS STATS */}
-          {!slug.startsWith("/contacto") && !slug.startsWith("/mediakit") && !slug.startsWith("/nosotros") && !slug.startsWith("/servicios") && !slug.startsWith("/blog") && !isMendoza && !isBA && (
+          {!slug.startsWith("/contacto") && !slug.startsWith("/mediakit") && !slug.startsWith("/nosotros") && !slug.startsWith("/servicios") && !slug.startsWith("/blog") && !slug.startsWith("/soportes") && !isMendoza && !isBA && (
             <div className="bg-white border border-slate-200 rounded-2xl p-6 space-y-4 shadow-xs">
               <h3 className="font-extrabold text-slate-900 text-sm">Contenido de la Sección</h3>
               <p className="text-slate-500 text-xs leading-relaxed">

@@ -2,83 +2,12 @@ import React, { useState } from "react";
 import { useCms } from "./CmsContext";
 import { motion, AnimatePresence } from "motion/react";
 import * as LucideIcons from "lucide-react";
-import { ScreenCard } from "./ScreenCard";
-import { InteractiveMap } from "./InteractiveMap";
-import { DoohScreen } from "../types";
-import { Button } from "@/src/components/ui/button";
-import { Input } from "@/src/components/ui/input";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-  CardFooter
-} from "@/src/components/ui/card";
-import { sitemap, findSitemapItemBySlug, getBreadcrumbsForSlug, getFlatSitemap } from "../lib/sitemap";
-import { SubpageLayout } from "./SubpageLayout";
 import { Navigation } from "./Navigation";
-
-// Helper to resolve Lucide Icon string safely
-const DynamicIcon: React.FC<{ name: string; className?: string }> = ({ name, className }) => {
-  const IconComponent = (LucideIcons as any)[name];
-  if (!IconComponent) {
-    return <LucideIcons.Sparkles className={className} />;
-  }
-  return <IconComponent className={className} />;
-};
-
-// Premium Buenos Aires Screens for the /buenos aires view
-const BUENOS_AIRES_SCREENS: DoohScreen[] = [
-  {
-    id: "ba-01",
-    nombre: "Av. 9 de Julio y Corrientes",
-    zona: "Obelisco",
-    tipo: "Vehicular",
-    impactos: 75000,
-    precio: 220000,
-    status: "Activo",
-    lat: -34.6037,
-    lng: -58.3816,
-    nota: "Pantalla monumental frente al Obelisco, máxima visibilidad y penetración nacional.",
-  },
-  {
-    id: "ba-02",
-    nombre: "Av. del Libertador y Av. Callao",
-    zona: "Recoleta",
-    tipo: "Mixto",
-    impactos: 42000,
-    precio: 180000,
-    status: "Activo",
-    lat: -34.5885,
-    lng: -58.3889,
-    nota: "Corredor vial premium en Recoleta, conectando con audiencias de alto nivel corporativo y adquisitivo.",
-  },
-  {
-    id: "ba-03",
-    nombre: "Puerto Madero Dique 3",
-    zona: "Puerto Madero",
-    tipo: "Peatonal",
-    impactos: 28000,
-    precio: 150000,
-    status: "Activo",
-    lat: -34.6076,
-    lng: -58.3643,
-    nota: "Ubicación peatonal exclusiva en el corazón financiero, polo gastronómico y residencial de lujo.",
-  },
-  {
-    id: "ba-04",
-    nombre: "Av. Cabildo y Juramento",
-    zona: "Belgrano",
-    tipo: "Peatonal",
-    impactos: 35000,
-    precio: 130000,
-    status: "Activo",
-    lat: -34.5621,
-    lng: -58.4566,
-    nota: "Esquina neurálgica en Belgrano de altísima circulación peatonal constante y trasbordo de transporte.",
-  },
-];
+import { Hero } from "./landing/Hero";
+import { InventoryCatalog } from "./landing/InventoryCatalog";
+import { Footer } from "./Footer";
+import { Card } from "@/src/components/ui/card";
+import { SubpageLayout } from "./SubpageLayout";
 
 export const LandingView: React.FC = () => {
   const {
@@ -91,36 +20,15 @@ export const LandingView: React.FC = () => {
     clearCart,
     weeks,
     setWeeks,
+    activeSlug,
+    setActiveSlug,
   } = useCms();
 
-  // Navigation states
-  const [activeSubpageSlug, setActiveSubpageSlug] = useState<string>("/");
-  const [isNosotrosOpen, setIsNosotrosOpen] = useState(false);
-  const [isEspaciosOpen, setIsEspaciosOpen] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isMobileNosotrosOpen, setIsMobileNosotrosOpen] = useState(false);
-  const [isMobileEspaciosOpen, setIsMobileEspaciosOpen] = useState(false);
+  // Selected city & catalog tab state
+  const [selectedCity, setSelectedCity] = useState<"Mendoza" | "San Juan" | "Buenos Aires">("Mendoza");
+  const [catalogTab, setCatalogTab] = useState<"tarjetas" | "mapa" | "mediakit">("tarjetas");
 
-  const handleNavigate = (slug: string) => {
-    setActiveSubpageSlug(slug);
-    if (slug === "/ubicaciones/mendoza") {
-      setSelectedProvince("Mendoza");
-    } else if (slug === "/ubicaciones/buenos-aires") {
-      setSelectedProvince("Buenos Aires");
-    }
-    // Try to scroll the window or viewport
-    window.scrollTo({ top: 0, behavior: "smooth" });
-    
-    // Close mobile/dropdown states
-    setIsMobileMenuOpen(false);
-    setIsNosotrosOpen(false);
-    setIsEspaciosOpen(false);
-  };
-
-  // Active province state for spaces
-  const [selectedProvince, setSelectedProvince] = useState<"Mendoza" | "Buenos Aires">("Mendoza");
-
-  // Lead / Contact form state
+  // General B2B Contact form states
   const [contactForm, setContactForm] = useState({
     name: "",
     email: "",
@@ -132,66 +40,40 @@ export const LandingView: React.FC = () => {
   const [isSubmittingContact, setIsSubmittingContact] = useState(false);
   const [contactSubmitted, setContactSubmitted] = useState(false);
 
-  // Proposal checkout state
-  const [proposalClient, setProposalClient] = useState({ name: "", email: "", company: "" });
-  const [isSubmittingProposal, setIsSubmittingProposal] = useState(false);
-  const [proposalSubmitted, setProposalSubmitted] = useState(false);
-
-  // Catalog filtering states
-  const [searchQuery, setSearchQuery] = useState("");
-  const [filterType, setFilterType] = useState<"Todos" | "Peatonal" | "Vehicular" | "Mixto">("Todos");
-  const [filterZone, setFilterZone] = useState("Todas");
-  const [selectedScreenId, setSelectedScreenId] = useState<string | null>(null);
-
-  // Media kit state
-  const [mediaKitDownloading, setMediaKitDownloading] = useState(false);
-  const [mediaKitSuccess, setMediaKitSuccess] = useState(false);
-
-  // FAQ accordion state
+  // FAQ state
   const [expandedFaq, setExpandedFaq] = useState<number | null>(null);
 
-  // Switch screens list according to selected province
-  const currentScreens = selectedProvince === "Mendoza" ? screens : BUENOS_AIRES_SCREENS;
-  const activeScreens = currentScreens.filter((screen) => screen.status === "Activo" || screen.status === "Disponible");
-
-  // Filtering calculations
-  const filteredScreens = activeScreens.filter((screen) => {
-    const matchesSearch =
-      screen.nombre.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      screen.zona.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesType = filterType === "Todos" || screen.tipo === filterType;
-    const matchesZone = filterZone === "Todas" || screen.zona === filterZone;
-    return matchesSearch && matchesType && matchesZone;
-  });
-
-  const availableZones = ["Todas", ...Array.from(new Set(activeScreens.map((s) => s.zona)))];
-
-  // Cart / Cotizador calculations supporting both provinces seamlessly
-  const allKnownScreens = [...screens, ...BUENOS_AIRES_SCREENS];
-  const cartScreens = allKnownScreens.filter((s) => cart.includes(s.id));
-  const cartSubtotal = cartScreens.reduce((sum, s) => sum + s.precio, 0);
-  const cartTotalImpacts = cartScreens.reduce((sum, s) => sum + s.impactos, 0) * 7 * weeks;
-  const cartTotalInvestment = cartSubtotal * weeks;
-
-  // Form submission: Proposal Form
-  const handleSubmitProposal = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!proposalClient.name || !proposalClient.email || cartScreens.length === 0) return;
-
-    setIsSubmittingProposal(true);
-    await addLead({
-      name: proposalClient.name,
-      email: proposalClient.email,
-      company: proposalClient.company,
-      source: `Cotizador DOOH (${selectedProvince})`,
-      status: "qualified",
-      value: cartTotalInvestment,
-    });
-    setIsSubmittingProposal(false);
-    setProposalSubmitted(true);
+  // Smooth scroll helper
+  const handleScrollTo = (id: string) => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
   };
 
-  // Form submission: General Contact Form
+  // Section click mapping from Navigation links
+  const handleSectionClick = (section: "inicio" | "espacios" | "mapa" | "mediakit" | "nosotros" | "contacto" | "soportes") => {
+    if (section === "inicio") {
+      handleScrollTo("hero-section");
+    } else if (section === "espacios") {
+      setCatalogTab("tarjetas");
+      handleScrollTo("espacios");
+    } else if (section === "mapa") {
+      setCatalogTab("mapa");
+      handleScrollTo("espacios");
+    } else if (section === "mediakit") {
+      setCatalogTab("mediakit");
+      handleScrollTo("espacios");
+    } else if (section === "soportes") {
+      handleScrollTo("soportes");
+    } else if (section === "nosotros") {
+      handleScrollTo("nosotros-section");
+    } else if (section === "contacto") {
+      handleScrollTo("contacto");
+    }
+  };
+
+  // General contact submit handler
   const handleContactSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!contactForm.name || !contactForm.email) return;
@@ -200,765 +82,326 @@ export const LandingView: React.FC = () => {
     await addLead({
       name: contactForm.name,
       email: contactForm.email,
-      company: contactForm.company || "Contacto General",
-      source: `Contacto - Interés: ${contactForm.spacePreference}`,
+      company: contactForm.company || "Consulta General",
+      source: `Formulario de Contacto (${contactForm.spacePreference})`,
       status: "new",
-      value: 1500, // estimated lead value
+      value: 1500, // estimated lead strategic value
     });
     setIsSubmittingContact(false);
     setContactSubmitted(true);
   };
 
-  // Smooth scroll handler
-  const scrollToSection = (id: string, province?: "Mendoza" | "Buenos Aires") => {
-    if (province) {
-      setSelectedProvince(province);
-      setFilterZone("Todas"); // Reset zone filter on province change
-    }
-    const element = document.getElementById(id);
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-    setIsMobileMenuOpen(false);
-    setIsNosotrosOpen(false);
-    setIsEspaciosOpen(false);
-  };
-
-  // Simulation of Media Kit download
-  const handleDownloadMediaKit = () => {
-    setMediaKitDownloading(true);
-    setTimeout(() => {
-      setMediaKitDownloading(false);
-      setMediaKitSuccess(true);
-      setTimeout(() => setMediaKitSuccess(false), 5000);
-    }, 1500);
-  };
-
-  if (activeSubpageSlug !== "/") {
-    return (
-      <div className="min-h-screen bg-slate-50 text-slate-900 selection:bg-slate-100 font-sans antialiased overflow-x-hidden">
-        {/* CMS Connection Notice */}
-        <div className="bg-slate-900 text-white text-[10px] md:text-xs py-2 px-4 text-center font-bold tracking-wider flex items-center justify-center gap-2">
-          <span className="inline-block h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-          <span>CONECTADO AL CMS: Los cambios en el Dashboard se actualizan al instante en el sitio</span>
-        </div>
-
-        {/* Navigation */}
-        <Navigation
-          activeSlug={activeSubpageSlug}
-          onNavigate={handleNavigate}
-          onSetActiveView={setActiveView}
-        />
-
-        {/* Dynamic Subpage Layout Content */}
-        <SubpageLayout
-          slug={activeSubpageSlug}
-          handleNavigate={handleNavigate}
-          screens={screens}
-          cart={cart}
-          toggleCart={toggleCart}
-          clearCart={clearCart}
-          weeks={weeks}
-          setWeeks={setWeeks}
-          addLead={addLead}
-        />
-
-        {/* Shared Footer */}
-        <footer className="border-t border-slate-200 bg-white py-12 text-slate-400 text-xs">
-          <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-6">
-            <div className="flex items-center gap-2">
-              <div className="h-7 w-7 rounded-lg bg-slate-950 flex items-center justify-center text-white font-black text-sm">
-                C
-              </div>
-              <span className="font-extrabold text-slate-800 text-sm">Grupo Comunicarte - SmartWeb SaaS</span>
-            </div>
-
-            <div className="flex items-center gap-6 font-bold">
-              <span className="hover:text-slate-600 cursor-pointer">Términos</span>
-              <span className="hover:text-slate-600 cursor-pointer">Privacidad</span>
-              <span className="hover:text-slate-600 cursor-pointer">Soporte B2B</span>
-            </div>
-
-            <div className="font-semibold text-slate-400">
-              &copy; 2026 Grupo Comunicarte. Todos los derechos reservados.
-            </div>
-          </div>
-        </footer>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 selection:bg-slate-100 font-sans antialiased overflow-x-hidden">
-      {/* CMS Connection Notice */}
-      <div className="bg-slate-900 text-white text-[10px] md:text-xs py-2 px-4 text-center font-bold tracking-wider flex items-center justify-center gap-2">
-        <span className="inline-block h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-        <span>CONECTADO AL CMS: Los cambios en el Dashboard se actualizan al instante en el sitio</span>
-      </div>
-
-      {/* Navigation */}
+    <div className="min-h-screen bg-[#FAF9F5] text-stone-800 selection:bg-stone-200/50 font-sans antialiased overflow-x-hidden">
+      {/* 1. Navigation with unified action buttons */}
       <Navigation
-        activeSlug={activeSubpageSlug}
-        onNavigate={handleNavigate}
+        activeSlug={activeSlug}
+        onNavigate={(slug) => {
+          setActiveSlug(slug);
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }}
         onSetActiveView={setActiveView}
+        onSectionClick={(section) => {
+          if (activeSlug !== "/") {
+            setActiveSlug("/");
+            setTimeout(() => handleSectionClick(section), 100);
+          } else {
+            handleSectionClick(section);
+          }
+        }}
+        cartCount={cart.length}
       />
 
-      {/* SECTION 1: INICIO (HERO) */}
-      <section id="inicio" className="relative pt-12 pb-20 md:py-28 max-w-6xl mx-auto px-6 text-center">
-        <div className="max-w-4xl mx-auto space-y-6">
-          <div className="inline-flex items-center gap-1.5 bg-slate-200/80 border border-slate-300/40 text-[10px] md:text-xs font-bold tracking-widest text-slate-800 uppercase px-3 py-1 rounded-full">
-            <LucideIcons.TrendingUp className="h-3.5 w-3.5 text-slate-900" />
-            {content.hero.badge || "Impacto Comercial DOOH"}
-          </div>
+      {activeSlug === "/" ? (
+        <>
+          {/* 2. Hero & Plaza selection */}
+          <Hero
+            screens={screens}
+            selectedCity={selectedCity}
+            onCitySelect={(city) => {
+              setSelectedCity(city);
+              // Wait briefly to allow React state mapping before scrolling
+              setTimeout(() => handleScrollTo("espacios"), 100);
+            }}
+            onExploreClick={() => handleScrollTo("espacios")}
+          />
 
-          <h1 className="text-4xl md:text-6xl text-slate-950 tracking-tight leading-[1.08] max-w-3xl mx-auto font-display font-extrabold">
-            {content.hero.title}
-          </h1>
-
-          <p className="text-slate-500 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed font-normal">
-            {content.hero.subtitle}
-          </p>
-
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-4">
-            <button
-              onClick={() => scrollToSection("espacios-publicitarios")}
-              className="w-full sm:w-auto bg-slate-950 hover:bg-slate-850 text-white font-bold text-sm px-8 py-3.5 rounded-xl shadow-md shadow-slate-950/10 transition-all text-center cursor-pointer"
-            >
-              Explorar Espacios Publicitarios
-            </button>
-            <button
-              onClick={() => scrollToSection("contacto")}
-              className="w-full sm:w-auto bg-white hover:bg-slate-50 border border-slate-200 text-slate-800 font-bold text-sm px-8 py-3.5 rounded-xl transition-all cursor-pointer shadow-xs"
-            >
-              Agendar Asesoría B2B
-            </button>
-          </div>
-        </div>
-
-        {/* Live Screens Statistics Overview Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-5xl mx-auto mt-16 md:mt-24">
-          <Card className="p-6 text-center bg-white border border-slate-250 shadow-sm rounded-xl">
-            <span className="block text-3xl font-black text-slate-950 tracking-tight">14+</span>
-            <span className="block text-[10px] uppercase font-bold text-slate-400 tracking-wider mt-1">Ubicaciones Premium</span>
-          </Card>
-          <Card className="p-6 text-center bg-white border border-slate-250 shadow-sm rounded-xl">
-            <span className="block text-3xl font-black text-slate-950 tracking-tight">100%</span>
-            <span className="block text-[10px] uppercase font-bold text-slate-400 tracking-wider mt-1">Sincronización Digital</span>
-          </Card>
-          <Card className="p-6 text-center bg-white border border-slate-250 shadow-sm rounded-xl">
-            <span className="block text-3xl font-black text-slate-950 tracking-tight">+1.5M</span>
-            <span className="block text-[10px] uppercase font-bold text-slate-400 tracking-wider mt-1">Audiencia Semanal</span>
-          </Card>
-          <Card className="p-6 text-center bg-white border border-slate-250 shadow-sm rounded-xl">
-            <span className="block text-3xl font-black text-slate-950 tracking-tight">4K Ultra</span>
-            <span className="block text-[10px] uppercase font-bold text-slate-400 tracking-wider mt-1">Soportes de Alta Gama</span>
-          </Card>
-        </div>
-      </section>
-
-      {/* SECTION 2: NOSOTROS */}
-      <section className="bg-white border-y border-slate-200/80 py-20">
-        <div className="max-w-6xl mx-auto px-6 space-y-24">
+      {/* 3. Soluciones & Services grid */}
+      <section id="soluciones" className="bg-stone-50 border-y border-stone-200 py-24 font-sans">
+        <div className="max-w-7xl mx-auto px-6 space-y-20">
           
-          {/* SUB-SECTION 2.1: /SOLUCIONES */}
-          <div id="soluciones" className="space-y-12">
-            <div className="text-center max-w-2xl mx-auto space-y-3">
-              <span className="text-[10px] bg-slate-900 text-white font-bold tracking-widest uppercase px-3 py-1 rounded-full">
-                Estrategias Digitales
+          {/* Section title */}
+          <div className="text-center max-w-2xl mx-auto space-y-3.5">
+            <span className="text-[10px] bg-[#06434a]/8 border border-[#06434a]/15 text-[#06434a] font-bold tracking-widest uppercase px-3.5 py-1.5 rounded-full">
+              Estrategia Exterior B2B
+            </span>
+            <h2 className="text-3xl md:text-4xl tracking-tight text-stone-900 font-display font-black">
+              Estrategias de Comunicación y Soluciones
+            </h2>
+            <p className="text-stone-500 text-xs md:text-sm leading-relaxed max-w-lg mx-auto">
+              Diseñamos soluciones integrales que trascienden el soporte físico, combinando alto alcance urbano con segmentación táctica.
+            </p>
+          </div>
+
+          {/* Benefits Cards mapped directly from CMS content */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {content.benefits.map((item, index) => {
+              // Resolve corresponding Lucide icon dynamically
+              const IconComponent = (LucideIcons as any)[item.icon] || LucideIcons.Sparkles;
+              return (
+                <Card
+                  key={item.id || index}
+                  className="bg-white border border-stone-200 p-6 rounded-[20px] shadow-xs hover:border-[#06434a]/30 hover:shadow-md transition-all duration-300 space-y-4"
+                >
+                  <div className="h-10 w-10 rounded-xl bg-[#06434a]/8 text-[#06434a] flex items-center justify-center">
+                    <IconComponent className="h-5 w-5" />
+                  </div>
+                  <h3 className="text-sm font-bold text-stone-900 font-display">{item.title}</h3>
+                  <p className="text-stone-500 text-xs leading-relaxed">{item.description}</p>
+                </Card>
+              );
+            })}
+          </div>
+
+          {/* User Requested: Services grid section */}
+          <div id="servicios-grid" className="pt-16 border-t border-stone-200 space-y-12">
+            <div className="text-center max-w-2xl mx-auto space-y-2">
+              <span className="text-[9px] bg-amber-500/10 text-amber-700 font-extrabold uppercase tracking-widest px-3 py-1 rounded-full">
+                Servicios Exclusivos
               </span>
-              <h2 className="text-3xl md:text-4xl tracking-tight text-slate-950 font-display font-extrabold">
-                /soluciones
-              </h2>
-              <p className="text-slate-500 text-sm md:text-base leading-relaxed">
-                Nuestras herramientas combinan pauta en vía pública clásica con segmentación digital de vanguardia, impulsando el alcance real de tu marca.
+              <h3 className="text-2xl font-bold text-stone-900 font-display">
+                Nuestros Servicios Urbanos
+              </h3>
+              <p className="text-xs text-stone-500">
+                Llevamos tu comunicación al siguiente nivel con soporte premium y auditorías constantes.
               </p>
             </div>
 
-            {/* Editable Benefits / Solutions Cards in CMS */}
-            <div className="grid md:grid-cols-3 gap-8">
-              {content.benefits.map((item, index) => (
-                <Card
-                  key={item.id || index}
-                  className="bg-slate-50 border border-slate-200/75 p-6 rounded-xl hover:border-slate-350 hover:shadow-md transition-all duration-300 space-y-4"
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[
+                {
+                  icon: <LucideIcons.Tv className="h-5 w-5" />,
+                  title: "DOOH Inteligente y Dinámico",
+                  description: "Anuncios dinámicos en nuestra red de pantallas LED 4K. Sincronización remota, brillo adaptativo y programación inteligente de spots.",
+                  badge: "UHD LED"
+                },
+                {
+                  icon: <LucideIcons.Target className="h-5 w-5" />,
+                  title: "Planificación de Medios B2B",
+                  description: "Campañas geolocalizadas con segmentación de audiencia vehicular y peatonal de alta densidad en Mendoza, San Juan y Buenos Aires.",
+                  badge: "Estratégico"
+                },
+                {
+                  icon: <LucideIcons.TrendingUp className="h-5 w-5" />,
+                  title: "Métricas de Audiencia y ROI",
+                  description: "Monitoreo continuo y estimaciones de impacto de flujo real para medir con precisión la efectividad del pautado de marca.",
+                  badge: "Analítica"
+                },
+                {
+                  icon: <LucideIcons.Layers className="h-5 w-5" />,
+                  title: "Mobiliario Urbano de Alta Gama",
+                  description: "Soportes situados estratégicamente en intersecciones neurálgicas y zonas de altísima afluencia comercial para máxima fijación visual.",
+                  badge: "Alta Cobertura"
+                },
+                {
+                  icon: <LucideIcons.PenTool className="h-5 w-5" />,
+                  title: "Optimización Creativa de Piezas",
+                  description: "Asesoría técnica para adaptar tus creatividades OOH a resoluciones idóneas, garantizando legibilidad, contraste cromático y visualización óptima.",
+                  badge: "Soporte Creativo"
+                },
+                {
+                  icon: <LucideIcons.Users className="h-5 w-5" />,
+                  title: "Atención Exclusiva de Agencias",
+                  description: "Especialistas dedicados a agencias creativas, grandes cuentas y campañas institucionales complejas de gran volumen nacional.",
+                  badge: "Corporativo"
+                }
+              ].map((service, idx) => (
+                <div
+                  key={idx}
+                  className="p-5 bg-white border border-stone-200 rounded-[16px] hover:border-[#06434a]/30 hover:shadow-sm transition-all duration-300 flex flex-col justify-between h-full"
                 >
-                  <div className="h-10 w-10 rounded-lg bg-slate-950 text-white flex items-center justify-center">
-                    <DynamicIcon name={item.icon} className="h-5 w-5" />
+                  <div className="space-y-3.5">
+                    <div className="flex items-center justify-between">
+                      <div className="p-2.5 rounded-xl bg-stone-50 text-[#06434a] border border-stone-100 flex items-center justify-center">
+                        {service.icon}
+                      </div>
+                      <span className="text-[8px] bg-stone-100 text-stone-500 font-extrabold px-2 py-0.5 rounded-md uppercase tracking-wider">
+                        {service.badge}
+                      </span>
+                    </div>
+
+                    <h4 className="text-xs font-bold text-stone-900 font-display">
+                      {service.title}
+                    </h4>
+
+                    <p className="text-[11px] text-stone-500 leading-relaxed">
+                      {service.description}
+                    </p>
                   </div>
-                  <h3 className="text-lg font-black text-slate-900">{item.title}</h3>
-                  <p className="text-slate-500 text-xs leading-relaxed font-medium">{item.description}</p>
-                </Card>
+
+                  <div className="pt-4 mt-auto">
+                    <button
+                      onClick={() => handleScrollTo("contacto")}
+                      className="text-[10px] font-bold text-[#06434a] hover:text-[#0b5e67] uppercase tracking-wider flex items-center gap-1 cursor-pointer"
+                    >
+                      <span>Consultar servicio</span>
+                      <LucideIcons.ArrowRight className="h-3 w-3" />
+                    </button>
+                  </div>
+                </div>
               ))}
             </div>
           </div>
 
-          {/* SUB-SECTION 2.2: /SOPORTES */}
-          <div id="soportes" className="pt-8 border-t border-slate-100 space-y-12">
-            <div className="text-center max-w-2xl mx-auto space-y-3">
-              <span className="text-[10px] bg-slate-100 border border-slate-200 text-slate-800 font-bold tracking-widest uppercase px-3 py-1 rounded-full">
+          {/* Soportes / Hardware specs breakdown */}
+          <div id="soportes" className="pt-16 border-t border-stone-200 space-y-12">
+            <div className="text-center max-w-2xl mx-auto space-y-2">
+              <span className="text-[9px] bg-stone-100 text-stone-500 font-extrabold uppercase tracking-widest px-3 py-1 rounded-full border border-stone-200">
                 Hardware e Infraestructura
               </span>
-              <h2 className="text-3xl md:text-4xl tracking-tight text-slate-950 font-display font-extrabold">
-                /soportes
-              </h2>
-              <p className="text-slate-500 text-sm md:text-base leading-relaxed">
-                Soportes LED de altísima definición estratégicamente ubicados para absorber la máxima atención de peatones y conductores.
+              <h3 className="text-2xl font-bold text-stone-900 font-display">
+                Formatos y Dispositivos de Exhibición
+              </h3>
+              <p className="text-xs text-stone-500">
+                Soportes tecnológicos de última gama diseñados para capturar impactos nítidos.
               </p>
             </div>
 
-            <div className="grid md:grid-cols-3 gap-6">
-              {/* Soporte 1 */}
-              <Card className="bg-slate-50 border border-slate-200 rounded-xl p-6 space-y-4">
-                <div className="p-3 bg-sky-50 text-sky-600 rounded-lg inline-block">
-                  <LucideIcons.Tv className="h-6 w-6" />
-                </div>
-                <div>
-                  <h3 className="font-extrabold text-sm uppercase text-slate-400 tracking-wider">Pantalla Peatonal</h3>
-                  <h4 className="font-black text-lg text-slate-900 mt-1">LED P2.5 High-Definition</h4>
-                </div>
-                <p className="text-slate-500 text-xs leading-relaxed">
-                  Pantallas de rango óptico peatonal ideales para centros comerciales y avenidas de gran afluencia de transeúntes. Brillo inteligente autoadaptativo.
-                </p>
-                <div className="border-t border-slate-200/60 pt-3 space-y-1.5 text-xs">
-                  <div className="flex justify-between font-semibold"><span className="text-slate-400">Tamaño:</span> <span className="text-slate-700">2.4m x 1.8m (4.32m²)</span></div>
-                  <div className="flex justify-between font-semibold"><span className="text-slate-400">Brillo:</span> <span className="text-slate-700">4,500 nits (Auto-Dim)</span></div>
-                  <div className="flex justify-between font-semibold"><span className="text-slate-400">Refresh Rate:</span> <span className="text-slate-700">3,840 Hz (Flicker-Free)</span></div>
-                </div>
-              </Card>
-
-              {/* Soporte 2 */}
-              <Card className="bg-slate-50 border border-slate-200 rounded-xl p-6 space-y-4">
-                <div className="p-3 bg-teal-50 text-teal-600 rounded-lg inline-block">
-                  <LucideIcons.Monitor className="h-6 w-6" />
-                </div>
-                <div>
-                  <h3 className="font-extrabold text-sm uppercase text-slate-400 tracking-wider">Monolito Vehicular</h3>
-                  <h4 className="font-black text-lg text-slate-900 mt-1">LED P4 Premium Outdoor</h4>
-                </div>
-                <p className="text-slate-500 text-xs leading-relaxed">
-                  Gabinetes monumentales diseñados para lectura veloz en rutas, accesos viales y avenidas principales con gran circulación automotriz.
-                </p>
-                <div className="border-t border-slate-200/60 pt-3 space-y-1.5 text-xs">
-                  <div className="flex justify-between font-semibold"><span className="text-slate-400">Tamaño:</span> <span className="text-slate-700">6.0m x 3.0m (18.00m²)</span></div>
-                  <div className="flex justify-between font-semibold"><span className="text-slate-400">Brillo:</span> <span className="text-slate-700">7,500 nits (High-Contrast)</span></div>
-                  <div className="flex justify-between font-semibold"><span className="text-slate-400">Refresh Rate:</span> <span className="text-slate-700">3,840 Hz (Flicker-Free)</span></div>
-                </div>
-              </Card>
-
-              {/* Soporte 3 */}
-              <Card className="bg-slate-50 border border-slate-200 rounded-xl p-6 space-y-4">
-                <div className="p-3 bg-purple-50 text-purple-600 rounded-lg inline-block">
-                  <LucideIcons.Cpu className="h-6 w-6" />
-                </div>
-                <div>
-                  <h3 className="font-extrabold text-sm uppercase text-slate-400 tracking-wider">Pantalla Mixta</h3>
-                  <h4 className="font-black text-lg text-slate-900 mt-1">LED P3.0 Professional</h4>
-                </div>
-                <p className="text-slate-500 text-xs leading-relaxed">
-                  Equilibrio técnico perfecto. Diseñado para cruces de alto tránsito vehicular que además disponen de esperas peatonales y paradas de buses.
-                </p>
-                <div className="border-t border-slate-200/60 pt-3 space-y-1.5 text-xs">
-                  <div className="flex justify-between font-semibold"><span className="text-slate-400">Tamaño:</span> <span className="text-slate-700">4.0m x 3.0m (12.00m²)</span></div>
-                  <div className="flex justify-between font-semibold"><span className="text-slate-400">Brillo:</span> <span className="text-slate-700">6,000 nits (Eco-Saving)</span></div>
-                  <div className="flex justify-between font-semibold"><span className="text-slate-400">Refresh Rate:</span> <span className="text-slate-700">3,840 Hz (Flicker-Free)</span></div>
-                </div>
-              </Card>
-            </div>
-          </div>
-
-          {/* SUB-SECTION 2.3: /MEDIAKIT */}
-          <div id="mediakit" className="pt-8 border-t border-slate-100 space-y-12">
-            <div className="grid md:grid-cols-12 gap-8 items-center bg-slate-950 rounded-2xl p-8 text-white relative overflow-hidden">
-              <div className="absolute inset-0 bg-[linear-gradient(to_right,#1f2937_1px,transparent_1px),linear-gradient(to_bottom,#1f2937_1px,transparent_1px)] bg-[size:3rem_3rem] opacity-20" />
-              
-              <div className="md:col-span-7 space-y-4 relative z-10">
-                <span className="text-[10px] bg-white/10 text-white border border-white/20 font-bold tracking-widest uppercase px-3 py-1 rounded-full">
-                  Métricas de Audiencia
-                </span>
-                <h2 className="text-3xl font-black tracking-tight leading-tight">
-                  /mediakit
-                </h2>
-                <p className="text-slate-300 text-xs md:text-sm leading-relaxed font-medium">
-                  Nuestro Media Kit contiene toda la información estadística demográfica de la audiencia de SmartWeb. Tasas de retención, impactos georreferenciados en Mendoza y Buenos Aires, formatos técnicos recomendados y planes comerciales anuales.
-                </p>
-                
-                <div className="pt-4 flex flex-wrap gap-4">
-                  <button
-                    onClick={handleDownloadMediaKit}
-                    disabled={mediaKitDownloading}
-                    className="px-6 py-3 bg-white text-slate-950 hover:bg-slate-100 font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md cursor-pointer flex items-center gap-2"
-                  >
-                    {mediaKitDownloading ? (
-                      <>
-                        <LucideIcons.RefreshCw className="h-4 w-4 animate-spin" />
-                        <span>Generando PDF...</span>
-                      </>
-                    ) : (
-                      <>
-                        <LucideIcons.FileDown className="h-4 w-4 text-slate-950" />
-                        <span>Descargar Media Kit Comercial</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-
-                <AnimatePresence>
-                  {mediaKitSuccess && (
-                    <motion.div
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 10 }}
-                      className="bg-emerald-500/20 border border-emerald-500/30 p-3 rounded-lg flex items-center gap-2 text-xs font-bold text-emerald-300 max-w-sm mt-3"
-                    >
-                      <LucideIcons.CheckCircle className="h-4.5 w-4.5 text-emerald-400" />
-                      <span>¡Descarga simulada iniciada! Documento listo para el pautado.</span>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-
-              {/* Graphic Mockup inside media kit panel */}
-              <div className="md:col-span-5 relative z-10 bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-4">
-                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Vista Rápida Media Kit</span>
-                <div className="space-y-3.5">
-                  <div className="space-y-1">
-                    <div className="flex justify-between text-xs font-bold"><span className="text-slate-300">Retención Visual</span> <span className="text-white">92%</span></div>
-                    <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden"><div className="h-full bg-emerald-400 rounded-full" style={{ width: "92%" }} /></div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {[
+                {
+                  title: "LED Peatonal de Alta Definición",
+                  desc: "Soportes adaptados a nivel peatonal perfectos para corredores comerciales y avenidas de flujo continuo. Brillo autotenuable inteligente.",
+                  spec: "Módulo LED P2.5 UHD",
+                  icon: <LucideIcons.Monitor className="h-5 w-5 text-sky-600" />
+                },
+                {
+                  title: "Monolito Vehicular Monumental",
+                  desc: "Pantallas de gran envergadura orientadas a flujos rápidos de avenidas y accesos viales con altísima recordación vehicular.",
+                  spec: "Módulo LED P4 Premium Outdoor",
+                  icon: <LucideIcons.Cpu className="h-5 w-5 text-emerald-600" />
+                },
+                {
+                  title: "Pantalla Mixta Dinámica",
+                  desc: "Equilibrio ideal. Diseñado para intersecciones con detención semafórica peatonal y paradas de transporte público masivo.",
+                  spec: "Módulo LED P3.0 Professional",
+                  icon: <LucideIcons.Layers className="h-5 w-5 text-purple-600" />
+                }
+              ].map((support, idx) => (
+                <div key={idx} className="p-5 bg-white border border-stone-200 rounded-[16px] space-y-3.5">
+                  <div className="flex items-center gap-2.5">
+                    <div className="p-2 rounded-xl bg-stone-50 border border-stone-100">
+                      {support.icon}
+                    </div>
+                    <span className="text-[9px] font-extrabold text-stone-400 uppercase tracking-widest font-mono">
+                      {support.spec}
+                    </span>
                   </div>
-                  <div className="space-y-1">
-                    <div className="flex justify-between text-xs font-bold"><span className="text-slate-300">Público Activo (Commuters)</span> <span className="text-white">74%</span></div>
-                    <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden"><div className="h-full bg-sky-400 rounded-full" style={{ width: "74%" }} /></div>
-                  </div>
-                  <div className="space-y-1">
-                    <div className="flex justify-between text-xs font-bold"><span className="text-slate-300">Consistencia Operativa</span> <span className="text-white">99.9%</span></div>
-                    <div className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden"><div className="h-full bg-purple-400 rounded-full" style={{ width: "99.9%" }} /></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
 
-          {/* SUB-SECTION 2.4: /GRUPO COMUNICARTE */}
-          <div id="grupo-comunicarte" className="pt-8 border-t border-slate-100 space-y-12">
-            <div className="grid md:grid-cols-2 gap-12 items-center">
-              <div className="space-y-5">
-                <span className="text-[10px] bg-slate-150 border border-slate-200 text-slate-800 font-bold tracking-widest uppercase px-3 py-1 rounded-full">
-                  El Holding de Medios Detrás
-                </span>
-                <h2 className="text-3xl font-black tracking-tight text-slate-900">
-                  /grupo comunicarte
-                </h2>
-                <p className="text-slate-500 text-xs md:text-sm leading-relaxed font-medium">
-                  <strong>Grupo Comunicarte</strong> es una corporación argentina líder en comunicación exterior y publicidad urbana. Con más de una década de trayectoria, el holding impulsa la transformación digital y automatizada en la vía pública mediante soportes interactivos y la robusta suite inteligente de SmartWeb.
-                </p>
-                <p className="text-slate-500 text-xs md:text-sm leading-relaxed font-medium">
-                  Nuestra alianza une la precisión del hardware con la agilidad del software, permitiendo a los anunciantes optimizar de forma autónoma presupuestos, pautado inteligente y medición analítica en Mendoza y Buenos Aires.
-                </p>
-              </div>
-
-              {/* Graphic container simulating institutional video */}
-              <div className="relative aspect-[16/9] rounded-xl overflow-hidden bg-slate-900 border border-slate-200 shadow-md group">
-                <div className="absolute inset-0 bg-gradient-to-br from-slate-950 to-slate-800 flex flex-col items-center justify-center space-y-3">
-                  <div className="h-12 w-12 rounded-full bg-white text-slate-950 flex items-center justify-center shadow-lg transform group-hover:scale-110 transition-transform duration-300 cursor-pointer">
-                    <LucideIcons.Play className="h-5 w-5 fill-slate-950 translate-x-0.5" />
-                  </div>
-                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Ver Video Institucional</span>
+                  <h4 className="text-xs font-bold text-stone-900 font-display">{support.title}</h4>
+                  <p className="text-[11px] text-stone-500 leading-relaxed">{support.desc}</p>
                 </div>
-              </div>
+              ))}
             </div>
           </div>
 
         </div>
       </section>
 
-      {/* SECTION 3: ESPACIOS PUBLICITARIOS (CATALOG & MAP) */}
-      <section id="espacios-publicitarios" className="py-20 max-w-7xl mx-auto px-6 space-y-12">
-        <div className="text-center max-w-3xl mx-auto space-y-3">
-          <span className="text-[10px] bg-slate-900 text-white font-bold tracking-widest uppercase px-3 py-1 rounded-full">
-            Localización de Soportes
-          </span>
-          <h2 className="text-3xl md:text-4xl font-black tracking-tight text-slate-900">
-            Espacios Publicitarios Activos
-          </h2>
-          <p className="text-slate-500 text-sm md:text-base leading-relaxed">
-            Filtra, cotiza e interactúa con nuestro inventario en tiempo real. Selecciona tu provincia para ver los espacios disponibles.
-          </p>
-        </div>
+      {/* 4. Active Catalog Marketplace (Grid, Map & MediaKit) */}
+      <InventoryCatalog
+        selectedCity={selectedCity}
+        activeTab={catalogTab}
+        setActiveTab={setCatalogTab}
+      />
 
-        {/* PROVINCE TAB SELECTOR */}
-        <div className="flex justify-center border-b border-slate-200 max-w-md mx-auto">
-          <button
-            onClick={() => {
-              setSelectedProvince("Mendoza");
-              setFilterZone("Todas");
-            }}
-            className={`w-1/2 py-3 text-sm font-black uppercase tracking-wider border-b-2 transition-all cursor-pointer ${
-              selectedProvince === "Mendoza"
-                ? "border-slate-950 text-slate-950"
-                : "border-transparent text-slate-400 hover:text-slate-600"
-            }`}
-          >
-            Mendoza ({screens.length})
-          </button>
-          <button
-            onClick={() => {
-              setSelectedProvince("Buenos Aires");
-              setFilterZone("Todas");
-            }}
-            className={`w-1/2 py-3 text-sm font-black uppercase tracking-wider border-b-2 transition-all cursor-pointer ${
-              selectedProvince === "Buenos Aires"
-                ? "border-slate-950 text-slate-950"
-                : "border-transparent text-slate-400 hover:text-slate-600"
-            }`}
-          >
-            Buenos Aires ({BUENOS_AIRES_SCREENS.length})
-          </button>
-        </div>
-
-        {/* Map and Catalog Container */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      {/* 5. Nosotros Section */}
+      <section id="nosotros-section" className="bg-stone-50 border-t border-stone-200 py-24 font-sans">
+        <div className="max-w-6xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
           
-          {/* Catalog & Filter list */}
-          <div className="lg:col-span-7 space-y-6">
-            <div className="bg-white border border-slate-200 rounded-xl p-4 flex flex-col md:flex-row items-center gap-3 shadow-xs">
-              {/* Search */}
-              <div className="relative w-full md:w-1/3">
-                <LucideIcons.Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400 z-10" />
-                <Input
-                  type="text"
-                  placeholder="Buscar por nombre..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 text-xs h-9"
-                />
-              </div>
-
-              {/* Type Filter Pills */}
-              <div className="flex flex-wrap items-center gap-1.5 w-full md:w-auto">
-                {(["Todos", "Peatonal", "Vehicular", "Mixto"] as const).map((type) => (
-                  <Button
-                    key={type}
-                    onClick={() => setFilterType(type)}
-                    variant={filterType === type ? "default" : "outline"}
-                    size="sm"
-                    className="h-8 text-xs font-bold"
-                  >
-                    {type}
-                  </Button>
-                ))}
-              </div>
-
-              {/* Zone Filter Dropdown */}
-              <div className="w-full md:w-auto md:ml-auto">
-                <select
-                  value={filterZone}
-                  onChange={(e) => setFilterZone(e.target.value)}
-                  className="w-full md:w-auto px-3 py-2 text-xs border border-slate-200 rounded-lg bg-white text-slate-700 font-bold focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 cursor-pointer"
-                >
-                  {availableZones.map((zone) => (
-                    <option key={zone} value={zone}>
-                      Zona: {zone}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            {/* Screens List Grid */}
-            {filteredScreens.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {filteredScreens.map((screen) => (
-                  <ScreenCard
-                    key={screen.id}
-                    screen={screen}
-                    onFocusOnMap={() => setSelectedScreenId(screen.id)}
-                  />
-                ))}
-              </div>
-            ) : (
-              <div className="text-center py-16 px-6 border border-dashed border-slate-250 rounded-2xl bg-white space-y-6 max-w-lg mx-auto flex flex-col items-center justify-center shadow-xs">
-                <div className="relative w-20 h-20 flex items-center justify-center">
-                  <div className="absolute inset-0 rounded-full bg-slate-50 border border-slate-200 animate-pulse" />
-                  <LucideIcons.Tv className="h-8 w-8 text-slate-400 relative z-10" />
-                </div>
-                <div className="space-y-1.5 max-w-sm">
-                  <h4 className="font-black text-slate-900 text-sm">Sin resultados</h4>
-                  <p className="text-xs text-slate-500 leading-relaxed">
-                    No encontramos espacios publicitarios activos en {selectedProvince} que coincidan con la búsqueda.
-                  </p>
-                </div>
-                <button
-                  onClick={() => {
-                    setSearchQuery("");
-                    setFilterType("Todos");
-                    setFilterZone("Todas");
-                  }}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-slate-950 hover:bg-slate-800 text-white font-bold text-xs uppercase tracking-wider rounded-xl transition-colors cursor-pointer"
-                >
-                  Limpiar Filtros
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* Interactive Map & Planificador */}
-          <div className="lg:col-span-5 space-y-6">
-            
-            {/* Interactive Leaflet Map Box */}
-            <div className="h-[380px] bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden relative">
-              <InteractiveMap
-                screens={filteredScreens}
-                selectedScreenId={selectedScreenId}
-                onSelectScreen={(id) => setSelectedScreenId(id)}
-              />
-            </div>
-
-            {/* Campaign Planificador / Cotizador box */}
-            <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4 shadow-sm">
-              <div className="flex items-center justify-between border-b border-slate-150 pb-3">
-                <div className="flex items-center gap-2">
-                  <LucideIcons.Calculator className="h-4.5 w-4.5 text-slate-900" />
-                  <h3 className="text-sm font-black text-slate-950">Planificador de Campaña</h3>
-                </div>
-                {cartScreens.length > 0 && (
-                  <button
-                    onClick={clearCart}
-                    className="text-[10px] font-bold text-slate-500 hover:text-red-600 transition-colors flex items-center gap-1 cursor-pointer"
-                  >
-                    <LucideIcons.Trash2 className="h-3 w-3" />
-                    Limpiar Plan
-                  </button>
-                )}
-              </div>
-
-              {cartScreens.length === 0 ? (
-                <div className="text-center py-8 space-y-2">
-                  <LucideIcons.PlusCircle className="h-6 w-6 text-slate-300 mx-auto" />
-                  <p className="text-xs text-slate-500 px-4 leading-relaxed font-medium">
-                    Tu cotizador está vacío. Agrega pantallas desde el catálogo o interactúa directamente con los marcadores del mapa.
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {/* Selected Screens pills */}
-                  <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto pr-1">
-                    {cartScreens.map((screen) => (
-                      <div
-                        key={screen.id}
-                        onClick={() => setSelectedScreenId(screen.id)}
-                        className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-slate-50 border border-slate-200 text-[10px] font-bold text-slate-700 hover:border-slate-900 cursor-pointer transition-colors"
-                      >
-                        <span className="h-1.5 w-1.5 rounded-full bg-slate-900" />
-                        <span className="truncate max-w-[120px]">{screen.nombre}</span>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleCart(screen.id);
-                          }}
-                          className="text-slate-400 hover:text-slate-950 ml-1 font-bold"
-                        >
-                          ×
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Campaign weeks config */}
-                  <div className="space-y-1.5">
-                    <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                      Duración de la Campaña (Semanas)
-                    </label>
-                    <div className="grid grid-cols-5 gap-1.5">
-                      {([1, 2, 4, 8, 12] as const).map((w) => (
-                        <button
-                          key={w}
-                          onClick={() => setWeeks(w)}
-                          className={`py-1.5 rounded-lg text-xs font-bold border transition-all cursor-pointer ${
-                            weeks === w
-                              ? "bg-slate-950 border-slate-950 text-white"
-                              : "bg-white border-slate-200 text-slate-600 hover:bg-slate-100"
-                          }`}
-                        >
-                          {w} sem
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Pricing / Estimates review panel */}
-                  <div className="bg-slate-50 border border-slate-200 rounded-lg p-3.5 space-y-3">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">
-                          Pantallas Elegidas
-                        </span>
-                        <span className="text-sm font-extrabold text-slate-800">
-                          {cartScreens.length} ubicaciones
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">
-                          Alcance Estimado
-                        </span>
-                        <span className="text-sm font-extrabold text-slate-800">
-                          {cartTotalImpacts.toLocaleString("es-AR")} imp.
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="pt-2.5 border-t border-slate-200/60 flex items-center justify-between">
-                      <div>
-                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">
-                          Inversión Total ({weeks} semanas)
-                        </span>
-                        <span className="text-base font-black text-slate-950">
-                          ${cartTotalInvestment.toLocaleString("es-AR")}
-                        </span>
-                      </div>
-                      <div className="text-right">
-                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">
-                          Inversión Semanal
-                        </span>
-                        <span className="text-xs font-bold text-slate-500">
-                          ${cartSubtotal.toLocaleString("es-AR")}/sem
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Lead form triggers */}
-                  <div className="border-t border-slate-150 pt-4">
-                    <AnimatePresence mode="wait">
-                      {!proposalSubmitted ? (
-                        <motion.form
-                          key="proposal-form"
-                          onSubmit={handleSubmitProposal}
-                          className="space-y-3 text-left"
-                        >
-                          <h4 className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
-                            Solicitar Presupuesto Formalizado (PDF)
-                          </h4>
-                          <div className="space-y-2">
-                            <input
-                              type="text"
-                              placeholder="Tu Nombre"
-                              required
-                              value={proposalClient.name}
-                              onChange={(e) =>
-                                setProposalClient({ ...proposalClient, name: e.target.value })
-                              }
-                              className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900"
-                            />
-                            <div className="grid grid-cols-2 gap-2">
-                              <input
-                                type="email"
-                                placeholder="Tu Correo"
-                                required
-                                value={proposalClient.email}
-                                onChange={(e) =>
-                                  setProposalClient({ ...proposalClient, email: e.target.value })
-                                }
-                                className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900"
-                              />
-                              <input
-                                type="text"
-                                placeholder="Empresa"
-                                value={proposalClient.company}
-                                onChange={(e) =>
-                                  setProposalClient({ ...proposalClient, company: e.target.value })
-                                }
-                                className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900"
-                              />
-                            </div>
-                          </div>
-
-                          <button
-                            type="submit"
-                            disabled={isSubmittingProposal}
-                            className="w-full bg-slate-950 hover:bg-slate-850 text-white font-bold text-xs uppercase tracking-wider py-2.5 rounded-lg shadow-sm transition-all cursor-pointer flex items-center justify-center gap-2"
-                          >
-                            {isSubmittingProposal ? (
-                              <span>Generando Presupuesto...</span>
-                            ) : (
-                              <>
-                                <LucideIcons.FileText className="h-3.5 w-3.5" />
-                                <span>Solicitar Presupuesto</span>
-                              </>
-                            )}
-                          </button>
-                        </motion.form>
-                      ) : (
-                        <motion.div
-                          key="proposal-success"
-                          initial={{ opacity: 0, scale: 0.95 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          className="bg-emerald-50 border border-emerald-100 p-4 rounded-lg text-center space-y-2.5"
-                        >
-                          <div className="h-9 w-9 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto">
-                            <LucideIcons.Check className="h-5 w-5" />
-                          </div>
-                          <div>
-                            <h4 className="font-bold text-emerald-900 text-xs">¡Presupuesto Solicitado!</h4>
-                            <p className="text-[10px] text-emerald-700 leading-relaxed px-1 mt-0.5">
-                              Se ha generado un nuevo Lead Comercial calificado por valor de <strong>${cartTotalInvestment.toLocaleString("es-AR")}</strong> en el Dashboard CRM. Nos contactaremos a la brevedad.
-                            </p>
-                          </div>
-                          <button
-                            onClick={() => {
-                              setProposalSubmitted(false);
-                              setProposalClient({ name: "", email: "", company: "" });
-                            }}
-                            className="text-[9px] font-bold text-emerald-800 hover:text-emerald-950 underline underline-offset-2"
-                          >
-                            Modificar cotización
-                          </button>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* SECTION 4: CONTACTO */}
-      <section id="contacto" className="py-20 bg-slate-900 text-white">
-        <div className="max-w-6xl mx-auto px-6 grid md:grid-cols-12 gap-12 items-center relative overflow-hidden">
-          {/* subtle background mesh */}
-          <div className="absolute inset-0 bg-[linear-gradient(to_right,#1f2937_1px,transparent_1px),linear-gradient(to_bottom,#1f2937_1px,transparent_1px)] bg-[size:4rem_4rem] opacity-25" />
-          
-          <div className="md:col-span-6 space-y-6 relative z-10">
-            <span className="text-[10px] bg-white/10 text-white border border-white/20 font-bold tracking-widest uppercase px-3 py-1 rounded-full">
-              Canal de Atención B2B
+          <div className="lg:col-span-7 space-y-6 text-left">
+            <span className="text-[10px] bg-stone-100 border border-stone-200 text-stone-600 font-bold tracking-widest uppercase px-3.5 py-1.5 rounded-full">
+              Holding de Comunicación Urbana
             </span>
-            <h2 className="text-3xl md:text-4xl font-black tracking-tight leading-tight">
-              Contacto y Asesoramiento Comercial
+            <h2 className="text-3xl font-display font-black tracking-tight text-stone-900">
+              Sobre Grupo Comunicarte
             </h2>
-            <p className="text-slate-300 text-xs md:text-sm leading-relaxed font-medium">
-              Escríbenos para armar un plan personalizado para tu negocio. Nuestro equipo comercial de <strong>Grupo Comunicarte</strong> te guiará en la selección de pantallas y el diseño de estrategias dinámicas.
+            <p className="text-stone-500 text-xs md:text-sm leading-relaxed">
+              <strong>Grupo Comunicarte</strong> es una corporación argentina líder con más de una década de trayectoria 
+              dedicada al desarrollo e innovación de soportes publicitarios y comunicación OOH (Out Of Home). 
+              El holding conecta anunciantes, marcas de consumo masivo y agencias con audiencias en el espacio urbano 
+              a través de una red premium de pantallas LED inteligentes y cartelería tradicional geolocalizada.
+            </p>
+            <p className="text-stone-500 text-xs md:text-sm leading-relaxed">
+              Nuestro propósito reside en transformar la vía pública clásica en un ecosistema publicitario interactivo y analítico, 
+              brindando consistencia operativa del 99.9% y visibilidad garantizada las 24 horas del día.
             </p>
 
-            <div className="space-y-4 pt-2 text-xs font-bold text-slate-300">
+            <div className="grid grid-cols-2 gap-4 pt-4 text-xs font-bold text-stone-700">
+              <div className="flex items-center gap-2">
+                <LucideIcons.ShieldAlert className="h-4 w-4 text-[#06434a]" />
+                <span>Auditoría de Pauta 100% Real</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <LucideIcons.Sparkles className="h-4 w-4 text-amber-500 animate-pulse" />
+                <span>Hardware UHD de Última Generación</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Institutional Video block with elegant mockup */}
+          <div className="lg:col-span-5 flex justify-center">
+            <div className="w-full max-w-sm aspect-[16/9] rounded-2xl overflow-hidden bg-stone-900 border border-stone-200 shadow-md group shrink-0 relative">
+              <div className="absolute inset-0 bg-gradient-to-br from-stone-950 via-stone-900 to-stone-850 flex flex-col items-center justify-center space-y-3.5">
+                <div className="h-12 w-12 rounded-full bg-white text-stone-950 flex items-center justify-center shadow-lg transform group-hover:scale-110 transition-transform duration-300 cursor-pointer">
+                  <LucideIcons.Play className="h-5 w-5 text-stone-950 fill-stone-950 translate-x-0.5" />
+                </div>
+                <span className="text-[9px] font-bold text-stone-400 uppercase tracking-widest">Video Institucional Grupo Comunicarte</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      {/* 6. General Contact Form section */}
+      <section id="contacto" className="py-24 bg-stone-900 text-white relative overflow-hidden font-sans">
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#2a2522_1px,transparent_1px),linear-gradient(to_bottom,#2a2522_1px,transparent_1px)] bg-[size:4rem_4rem] opacity-20 pointer-events-none" />
+
+        <div className="max-w-6xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center relative z-10">
+          
+          <div className="lg:col-span-6 space-y-6 text-left">
+            <span className="text-[9px] bg-white/10 text-stone-300 border border-white/20 font-bold tracking-widest uppercase px-3 py-1 rounded-full">
+              Canal de Atención B2B Directo
+            </span>
+            <h2 className="text-3xl md:text-4xl font-display font-black tracking-tight leading-tight">
+              Agendá una Asesoría con un Experto
+            </h2>
+            <p className="text-stone-300 text-xs md:text-sm leading-relaxed">
+              Escribinos para delinear el plan de impacto visual óptimo para tu marca. Nuestro equipo comercial de 
+              <strong> Grupo Comunicarte</strong> te asesorará en la selección física de soportes y la programación dinámica.
+            </p>
+
+            <div className="space-y-3 text-xs text-stone-300 font-semibold pt-4">
               <div className="flex items-center gap-3">
-                <LucideIcons.Mail className="h-5 w-5 text-emerald-400" />
-                <span>ventas@comunicarte.com.ar</span>
+                <LucideIcons.Mail className="h-4 w-4 text-amber-500" />
+                <span>comercial@grupocomunicarte.com.ar</span>
               </div>
               <div className="flex items-center gap-3">
-                <LucideIcons.Phone className="h-5 w-5 text-emerald-400" />
+                <LucideIcons.Phone className="h-4 w-4 text-amber-500" />
                 <span>+54 261 455-8800</span>
               </div>
               <div className="flex items-center gap-3">
-                <LucideIcons.MapPin className="h-5 w-5 text-emerald-400" />
+                <LucideIcons.MapPin className="h-4 w-4 text-amber-500" />
                 <span>Av. San Martín 1240, Mendoza Capital / Av. del Libertador 1800, CABA</span>
               </div>
             </div>
           </div>
 
-          {/* Elegant Contact Form Container */}
-          <div className="md:col-span-6 bg-white text-slate-950 rounded-xl p-6 shadow-xl border border-slate-100 relative z-10">
-            <h3 className="text-md font-bold text-slate-900 mb-1">Completa tus datos</h3>
-            <p className="text-slate-500 text-xs mb-6">Nos comunicaremos en menos de 24 horas.</p>
+          {/* Form */}
+          <div className="lg:col-span-6 bg-white text-stone-900 rounded-3xl p-6 md:p-8 shadow-2xl border border-stone-200">
+            <h3 className="text-md font-bold text-stone-900 mb-1 font-display">Completa tu consulta comercial</h3>
+            <p className="text-stone-500 text-xs mb-6">Nos contactaremos contigo en menos de 24 horas hábiles.</p>
 
             <AnimatePresence mode="wait">
               {!contactSubmitted ? (
@@ -968,95 +411,96 @@ export const LandingView: React.FC = () => {
                   className="space-y-4"
                 >
                   <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-[10px] font-bold text-slate-600 uppercase tracking-wider mb-1">
-                        Nombre Completo
+                    <div className="space-y-1">
+                      <label className="block text-[9px] font-extrabold text-stone-400 uppercase tracking-wider">
+                        Nombre Completo *
                       </label>
                       <input
                         type="text"
                         required
+                        placeholder="Ana de la Cruz"
                         value={contactForm.name}
                         onChange={(e) => setContactForm({ ...contactForm, name: e.target.value })}
-                        placeholder="Ana de la Cruz"
-                        className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900"
+                        className="w-full px-3 py-2 text-xs border border-stone-200 rounded-xl bg-stone-50 focus:outline-none focus:border-[#06434a]"
                       />
                     </div>
-                    <div>
-                      <label className="block text-[10px] font-bold text-slate-600 uppercase tracking-wider mb-1">
-                        Empresa
+                    <div className="space-y-1">
+                      <label className="block text-[9px] font-extrabold text-stone-400 uppercase tracking-wider">
+                        Empresa / Marca
                       </label>
                       <input
                         type="text"
+                        placeholder="Acme Corp"
                         value={contactForm.company}
                         onChange={(e) => setContactForm({ ...contactForm, company: e.target.value })}
-                        placeholder="Acme Corp"
-                        className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900"
+                        className="w-full px-3 py-2 text-xs border border-stone-200 rounded-xl bg-stone-50 focus:outline-none focus:border-[#06434a]"
                       />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-[10px] font-bold text-slate-600 uppercase tracking-wider mb-1">
-                        Correo Corporativo
+                    <div className="space-y-1">
+                      <label className="block text-[9px] font-extrabold text-stone-400 uppercase tracking-wider">
+                        Correo Corporativo *
                       </label>
                       <input
                         type="email"
                         required
+                        placeholder="nombre@empresa.com"
                         value={contactForm.email}
                         onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })}
-                        placeholder="ana@empresa.com"
-                        className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900"
+                        className="w-full px-3 py-2 text-xs border border-stone-200 rounded-xl bg-stone-50 focus:outline-none focus:border-[#06434a]"
                       />
                     </div>
-                    <div>
-                      <label className="block text-[10px] font-bold text-slate-600 uppercase tracking-wider mb-1">
+                    <div className="space-y-1">
+                      <label className="block text-[9px] font-extrabold text-stone-400 uppercase tracking-wider">
                         Teléfono
                       </label>
                       <input
                         type="tel"
+                        placeholder="+54 9 261 1234567"
                         value={contactForm.phone}
                         onChange={(e) => setContactForm({ ...contactForm, phone: e.target.value })}
-                        placeholder="+54 9 261 555-5555"
-                        className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900"
+                        className="w-full px-3 py-2 text-xs border border-stone-200 rounded-xl bg-stone-50 focus:outline-none focus:border-[#06434a]"
                       />
                     </div>
                   </div>
 
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-600 uppercase tracking-wider mb-1">
-                      Espacio Publicitario de Interés
+                  <div className="space-y-1">
+                    <label className="block text-[9px] font-extrabold text-stone-400 uppercase tracking-wider">
+                      Plaza Geográfica de Interés
                     </label>
                     <select
                       value={contactForm.spacePreference}
                       onChange={(e) => setContactForm({ ...contactForm, spacePreference: e.target.value })}
-                      className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg bg-white text-slate-700 font-bold focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 cursor-pointer"
+                      className="w-full px-3 py-2 text-xs border border-stone-200 rounded-xl bg-stone-50 font-semibold text-stone-700 focus:outline-none cursor-pointer"
                     >
-                      <option value="Mendoza">Mendoza</option>
-                      <option value="Buenos Aires">Buenos Aires</option>
-                      <option value="Ambos">Ambos Territorios</option>
+                      <option value="Mendoza">Plaza Mendoza</option>
+                      <option value="San Juan">Plaza San Juan</option>
+                      <option value="Buenos Aires">Plaza Buenos Aires</option>
+                      <option value="Todas">Múltiples Plazas</option>
                     </select>
                   </div>
 
-                  <div>
-                    <label className="block text-[10px] font-bold text-slate-600 uppercase tracking-wider mb-1">
-                      Mensaje / Consulta
+                  <div className="space-y-1">
+                    <label className="block text-[9px] font-extrabold text-stone-400 uppercase tracking-wider">
+                      Detalle de Campaña / Mensaje
                     </label>
                     <textarea
+                      placeholder="Escribí aquí tus dudas o detalles..."
+                      rows={3}
                       value={contactForm.message}
                       onChange={(e) => setContactForm({ ...contactForm, message: e.target.value })}
-                      placeholder="Contanos sobre tu campaña..."
-                      rows={3}
-                      className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900"
+                      className="w-full px-3 py-2 text-xs border border-stone-200 rounded-xl bg-stone-50 focus:outline-none focus:border-[#06434a]"
                     />
                   </div>
 
                   <button
                     type="submit"
                     disabled={isSubmittingContact}
-                    className="w-full bg-slate-900 hover:bg-slate-850 text-white font-bold text-xs uppercase tracking-wider py-3 rounded-lg shadow-sm transition-all cursor-pointer"
+                    className="w-full bg-[#06434a] hover:bg-[#0b5e67] disabled:bg-stone-300 text-white font-extrabold text-xs uppercase tracking-wider py-4 rounded-full shadow-sm transition-all cursor-pointer flex items-center justify-center gap-2"
                   >
-                    {isSubmittingContact ? "Enviando..." : "Enviar Consulta"}
+                    <span>{isSubmittingContact ? "Enviando..." : "Enviar Consulta Directa"}</span>
                   </button>
                 </motion.form>
               ) : (
@@ -1064,15 +508,15 @@ export const LandingView: React.FC = () => {
                   key="contact-success"
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  className="text-center py-8 space-y-4"
+                  className="text-center py-8 space-y-4 font-sans"
                 >
-                  <div className="h-12 w-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto">
+                  <div className="h-12 w-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto shadow-xs">
                     <LucideIcons.CheckCircle className="h-6 w-6" />
                   </div>
                   <div className="space-y-1">
-                    <h4 className="font-bold text-slate-900 text-sm">¡Consulta Recibida!</h4>
-                    <p className="text-xs text-slate-500 leading-relaxed px-4">
-                      Tus datos se han guardado con éxito. Se ha creado un nuevo Lead con origen en tu consulta comercial, visible de inmediato en el <strong>Dashboard CMS</strong>.
+                    <h4 className="font-bold text-stone-900 text-sm font-display">¡Consulta Comercial Recibida!</h4>
+                    <p className="text-xs text-stone-500 leading-relaxed px-4">
+                      Tus datos se guardaron exitosamente. Nuestro equipo comercial se comunicará contigo de inmediato para coordinar el pautado.
                     </p>
                   </div>
                   <button
@@ -1087,7 +531,7 @@ export const LandingView: React.FC = () => {
                         message: "",
                       });
                     }}
-                    className="text-xs font-semibold text-slate-600 hover:text-slate-900 underline underline-offset-4 cursor-pointer"
+                    className="text-xs font-bold text-[#06434a] hover:underline cursor-pointer"
                   >
                     Enviar otra consulta
                   </button>
@@ -1095,124 +539,92 @@ export const LandingView: React.FC = () => {
               )}
             </AnimatePresence>
           </div>
+
         </div>
       </section>
 
-      {/* Accordion FAQ Section */}
-      <section id="faq" className="py-20 bg-slate-100/50 border-t border-slate-200">
-        <div className="max-w-3xl mx-auto px-6">
-          <div className="text-center mb-12 space-y-3">
-            <span className="text-[10px] bg-slate-200 text-slate-800 font-bold tracking-widest uppercase px-3 py-1 rounded-full">
-              Soporte de Consultas
-            </span>
-            <h2 className="text-3xl font-black tracking-tight text-slate-900">
-              Preguntas Frecuentes
-            </h2>
-          </div>
+      {/* 7. FAQ Accordion section */}
+      <section id="faq-section" className="py-24 max-w-3xl mx-auto px-6 font-sans">
+        <div className="text-center mb-14 space-y-2">
+          <span className="text-[10px] bg-stone-100 border border-stone-200 text-stone-500 font-bold tracking-widest uppercase px-3 py-1 rounded-full">
+            Preguntas Frecuentes
+          </span>
+          <h2 className="text-2xl font-bold text-stone-900 font-display">
+            Soporte de Consultas OOH
+          </h2>
+        </div>
 
-          <div className="space-y-3">
-            {content.faq.map((item, index) => {
-              const isOpen = expandedFaq === index;
-              return (
-                <div
-                  key={index}
-                  className="bg-white border border-slate-200 rounded-xl overflow-hidden transition-all duration-300 shadow-xs"
+        <div className="space-y-4">
+          {content.faq.map((item, index) => {
+            const isOpen = expandedFaq === index;
+            return (
+              <div
+                key={index}
+                className="bg-white border border-stone-200 rounded-2xl overflow-hidden transition-all duration-300 shadow-xs hover:border-stone-300"
+              >
+                <button
+                  onClick={() => setExpandedFaq(isOpen ? null : index)}
+                  className="w-full px-6 py-4 text-left font-bold text-stone-900 flex items-center justify-between gap-4 cursor-pointer text-xs uppercase tracking-wide"
                 >
-                  <button
-                    onClick={() => setExpandedFaq(isOpen ? null : index)}
-                    className="w-full px-6 py-4 text-left font-bold text-slate-900 flex items-center justify-between gap-4 transition-colors hover:bg-slate-50/50 cursor-pointer text-sm"
-                  >
-                    <span>{item.question}</span>
-                    <LucideIcons.ChevronDown
-                      className={`h-4 w-4 text-slate-400 transition-transform duration-300 ${isOpen ? "rotate-180" : ""}`}
-                    />
-                  </button>
+                  <span>{item.question}</span>
+                  <LucideIcons.ChevronDown
+                    className={`h-4 w-4 text-stone-400 transition-transform duration-300 ${isOpen ? "rotate-180 text-[#06434a]" : ""}`}
+                  />
+                </button>
 
-                  <AnimatePresence initial={false}>
-                    {isOpen && (
-                      <motion.div
-                        initial={{ height: 0 }}
-                        animate={{ height: "auto" }}
-                        exit={{ height: 0 }}
-                        className="overflow-hidden"
-                      >
-                        <div className="px-6 pb-5 pt-1 text-slate-500 text-xs md:text-sm leading-relaxed border-t border-slate-100/50">
-                          {item.answer}
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              );
-            })}
-          </div>
+                <AnimatePresence initial={false}>
+                  {isOpen && (
+                    <motion.div
+                      initial={{ height: 0 }}
+                      animate={{ height: "auto" }}
+                      exit={{ height: 0 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="px-6 pb-5 pt-1 text-stone-500 text-xs leading-relaxed border-t border-stone-100">
+                        {item.answer}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            );
+          })}
         </div>
       </section>
+        </>
+      ) : (
+        <SubpageLayout
+          slug={activeSlug}
+          handleNavigate={(slug) => {
+            setActiveSlug(slug);
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }}
+          screens={screens}
+          cart={cart}
+          toggleCart={toggleCart}
+          clearCart={clearCart}
+          weeks={weeks}
+          setWeeks={setWeeks}
+          addLead={addLead}
+        />
+      )}
 
-      {/* Dynamic SEO Meta Preview Container */}
-      <section id="seo" className="py-20 max-w-4xl mx-auto px-6">
-        <div className="bg-white rounded-2xl border border-slate-200 p-6 md:p-8 space-y-6 shadow-sm">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="space-y-1">
-              <span className="text-[10px] bg-slate-100 border border-slate-200 text-slate-800 font-bold tracking-widest uppercase px-2.5 py-0.5 rounded-full">
-                Indexación y SEO Activo
-              </span>
-              <h3 className="text-lg font-black text-slate-900">Visualización en Buscadores</h3>
-            </div>
-            <button
-              onClick={() => {
-                setActiveView("dashboard");
-              }}
-              className="text-xs font-bold text-slate-900 underline underline-offset-4 cursor-pointer"
-            >
-              Configurar SEO en Dashboard
-            </button>
-          </div>
-
-          <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 space-y-3 max-w-2xl font-sans">
-            <div className="text-xs text-slate-400 flex items-center gap-1.5 font-mono">
-              <LucideIcons.Search className="h-3.5 w-3.5 text-slate-400" />
-              <span>https://smartweb.ai</span>
-            </div>
-            <h4 className="text-lg text-blue-800 hover:underline font-semibold leading-tight cursor-pointer">
-              {content.seo.metaTitle}
-            </h4>
-            <p className="text-slate-600 text-xs md:text-sm leading-relaxed font-medium">
-              {content.seo.metaDescription}
-            </p>
-            <div className="pt-2 border-t border-slate-200/60 flex flex-wrap items-center gap-1.5 text-[10px] text-slate-400">
-              <span className="font-bold text-slate-500">Keywords:</span>
-              {content.seo.keywords.split(",").map((kw, i) => (
-                <span key={i} className="bg-white text-slate-600 border border-slate-150 px-2 py-0.5 rounded-md font-mono font-bold">
-                  {kw.trim()}
-                </span>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="border-t border-slate-200 bg-white py-12 text-slate-400 text-xs">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-2">
-            <div className="h-7 w-7 rounded-lg bg-slate-950 flex items-center justify-center text-white font-black text-sm">
-              C
-            </div>
-            <span className="font-extrabold text-slate-800 text-sm">Grupo Comunicarte - SmartWeb SaaS</span>
-          </div>
-
-          <div className="flex items-center gap-6 font-bold">
-            <span className="hover:text-slate-600 cursor-pointer">Términos</span>
-            <span className="hover:text-slate-600 cursor-pointer">Privacidad</span>
-            <span className="hover:text-slate-600 cursor-pointer">Soporte B2B</span>
-          </div>
-
-          <div className="font-semibold text-slate-400">
-            &copy; 2026 Grupo Comunicarte. Todos los derechos reservados.
-          </div>
-        </div>
-      </footer>
+      {/* 8. Unified Footer */}
+      <Footer
+        onNavigate={(slug) => {
+          setActiveSlug(slug);
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }}
+        onSetActiveView={setActiveView}
+        onSectionScroll={(sectionId) => {
+          if (activeSlug !== "/") {
+            setActiveSlug("/");
+            setTimeout(() => handleSectionClick(sectionId as any), 100);
+          } else {
+            handleSectionClick(sectionId as any);
+          }
+        }}
+      />
     </div>
   );
 };

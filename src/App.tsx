@@ -7,9 +7,8 @@ import React from "react";
 import { CmsProvider, useCms } from "./components/CmsContext";
 import { LandingView } from "./components/LandingView";
 import { DashboardView } from "./components/DashboardView";
-import { OnboardingView } from "./components/OnboardingView";
 import { motion } from "motion/react";
-import { LayoutDashboard, Globe, ClipboardList, Sparkles } from "lucide-react";
+import { LayoutDashboard, Globe, Sparkles } from "lucide-react";
 
 function NavigationRouter() {
   const { activeView } = useCms();
@@ -19,8 +18,6 @@ function NavigationRouter() {
       return <LandingView />;
     case "dashboard":
       return <DashboardView />;
-    case "onboarding":
-      return <OnboardingView />;
     default:
       return <LandingView />;
   }
@@ -63,18 +60,6 @@ function FloatingViewSwitcher() {
       >
         <LayoutDashboard className="h-3.5 w-3.5" />
         <span>Consola B2B</span>
-      </button>
-
-      <button
-        onClick={() => setActiveView("onboarding")}
-        className={`flex items-center gap-1.5 px-3.5 py-2 rounded-full transition-all duration-200 cursor-pointer text-[11px] uppercase tracking-wider ${
-          activeView === "onboarding"
-            ? "bg-white text-slate-950 shadow-sm font-black"
-            : "text-slate-400 hover:text-white"
-        }`}
-      >
-        <ClipboardList className="h-3.5 w-3.5" />
-        <span>Quiz Onboarding</span>
       </button>
     </motion.div>
   );

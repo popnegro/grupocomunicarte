@@ -1,81 +1,79 @@
 import React, { useState } from "react";
 import { DoohScreen } from "../types";
 import { useCms } from "./CmsContext";
-import { motion, AnimatePresence } from "motion/react";
+import { motion } from "motion/react";
 import { Card, CardContent, CardFooter } from "@/src/components/ui/card";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/src/components/ui/dialog";
 import { Badge } from "@/src/components/ui/badge";
 import {
-  Zap,
-  Shield,
-  Sparkles,
   Plus,
   Check,
   MapPin,
-  Eye,
-  DollarSign,
-  X,
-  Calendar,
-  Clock,
-  Cpu,
-  Layers,
-  Activity,
   Maximize2,
+  Calendar,
+  Cpu,
   Info,
-  Sliders,
-  ChevronRight
+  Layers,
+  ArrowUpDown
 } from "lucide-react";
 
 interface ScreenCardProps {
   screen: DoohScreen;
   onFocusOnMap?: () => void;
+  isComparing?: boolean;
+  onCompareToggle?: () => void;
 }
 
-export const ScreenCard: React.FC<ScreenCardProps> = ({ screen, onFocusOnMap }) => {
-  const { cart, toggleCart, weeks } = useCms();
+export const ScreenCard: React.FC<ScreenCardProps> = ({
+  screen,
+  onFocusOnMap,
+  isComparing = false,
+  onCompareToggle,
+}) => {
+  const { cart, toggleCart } = useCms();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const isInCart = cart.includes(screen.id);
 
-  // Map types to premium styles and badges
+  // Map categories and types to premium styles and default specs
   const typeStyles = {
     Peatonal: {
-      bg: "bg-sky-50 border-sky-100 text-sky-700 dark:bg-sky-950/20 dark:border-sky-900/30 dark:text-sky-300",
+      bg: "bg-sky-50 border-sky-100 text-sky-700",
       dot: "bg-sky-500",
       res: "P2.5 High-Definition LED",
-      size: "2.4m x 1.8m (4.32m²)",
-      brightness: "4,500 nits (Sensor Auto-Dimming)",
+      size: "3.5m x 2.0m",
+      brightness: "5,500 nits (Auto-Dimming)",
     },
     Vehicular: {
-      bg: "bg-teal-50 border-teal-100 text-teal-700 dark:bg-teal-950/20 dark:border-teal-900/30 dark:text-teal-300",
+      bg: "bg-teal-50 border-teal-100 text-teal-700",
       dot: "bg-teal-500",
       res: "P4 Premium Outdoor Cabinets",
-      size: "6.0m x 3.0m (18.0m²)",
+      size: "8.0m x 3.0m",
       brightness: "7,500 nits (Ultra High-Contrast)",
     },
     Mixto: {
-      bg: "bg-purple-50 border-purple-100 text-purple-700 dark:bg-purple-950/20 dark:border-purple-900/30 dark:text-purple-300",
+      bg: "bg-purple-50 border-purple-100 text-purple-700",
       dot: "bg-purple-500",
       res: "P3.0 Professional Outdoor",
-      size: "4.0m x 3.0m (12.0m²)",
-      brightness: "6,000 nits (Smart Energy-Saving)",
+      size: "5.0m x 3.0m",
+      brightness: "6,500 nits (Smart Energy-Saving)",
     },
     LeadMóvil: {
-      bg: "bg-amber-50 border-amber-100 text-amber-700 dark:bg-amber-950/20 dark:border-amber-900/30 dark:text-amber-300",
+      bg: "bg-amber-50 border-amber-100 text-amber-700",
       dot: "bg-amber-500",
       res: "Formato Móvil (Linear Route)",
-      size: "Pantalla Móvil Premium 4.8m x 2.4m",
-      brightness: "6,500 nits (Full Day-Visible Smart LED)",
+      size: "4.0m x 2.0m Doble Cara",
+      brightness: "7,500 nits (Full Day Smart LED)",
     },
     Móvil: {
-      bg: "bg-amber-50 border-amber-100 text-amber-700 dark:bg-amber-950/20 dark:border-amber-900/30 dark:text-amber-300",
+      bg: "bg-amber-50 border-amber-100 text-amber-700",
       dot: "bg-amber-500",
       res: "Formato Móvil (Linear Route)",
-      size: "Pantalla Móvil Premium 4.8m x 2.4m",
-      brightness: "6,500 nits (Full Day-Visible Smart LED)",
+      size: "4.0m x 2.0m Doble Cara",
+      brightness: "7,500 nits (Full Day Smart LED)",
     },
   }[screen.tipo] || {
-    bg: "bg-slate-50 border-slate-100 text-slate-700",
-    dot: "bg-slate-500",
+    bg: "bg-stone-50 border-stone-100 text-stone-700",
+    dot: "bg-stone-500",
     res: "P3 Professional LED",
     size: "4m x 3m",
     brightness: "5,500 nits",
@@ -86,40 +84,37 @@ export const ScreenCard: React.FC<ScreenCardProps> = ({ screen, onFocusOnMap }) 
       ? (screen.impactos / 1000).toFixed(1) + "k"
       : String(screen.impactos);
 
-  const cpmValue = Math.round((screen.precio / screen.impactos) * (1000 / 7));
-
-  // Simulated availability for the next 6 months based on ID hash
+  // Simulated availability for the next 6 months
   const months = ["Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre", "Enero"];
   const getAvailabilityForMonth = (monthName: string, id: string) => {
-    // Generate a simple deterministic status based on character codes
     const sum = id.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0) + monthName.length;
     const rem = sum % 3;
     if (rem === 0) return { label: "Disponible", color: "bg-emerald-50 text-emerald-700 border-emerald-150" };
     if (rem === 1) return { label: "Reservado", color: "bg-amber-50 text-amber-700 border-amber-150" };
-    return { label: "Parcialmente Reservado", color: "bg-blue-50 text-blue-700 border-blue-150" };
+    return { label: "Parcial", color: "bg-blue-50 text-blue-700 border-blue-150" };
   };
 
   return (
     <>
       <motion.div
         layout
-        initial={{ opacity: 0, scale: 0.95 }}
+        initial={{ opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.95 }}
-        onClick={() => setIsModalOpen(true)}
+        exit={{ opacity: 0, scale: 0.98 }}
         className="h-full"
       >
         <Card
-          className={`group relative flex flex-col h-full bg-white border rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer ${
+          onClick={() => setIsModalOpen(true)}
+          className={`group relative flex flex-col h-full bg-white border rounded-[20px] overflow-hidden shadow-xs hover:shadow-md hover:-translate-y-1 transition-all duration-300 cursor-pointer ${
             isInCart
-              ? "border-slate-900 ring-2 ring-slate-900/5"
+              ? "border-[#06434a] ring-1 ring-[#06434a]/10"
               : (screen.tipo === "LeadMóvil" || screen.tipo === "Móvil")
-              ? "border-amber-400 hover:border-amber-500 ring-2 ring-amber-500/5 bg-amber-50/10"
-              : "border-slate-200 hover:border-slate-350"
+              ? "border-amber-400 hover:border-amber-500"
+              : "border-stone-200/80 hover:border-stone-300"
           }`}
         >
           {/* Visual Header / Thumbnail */}
-          <div className="relative h-32 bg-slate-900 flex items-center justify-center text-white overflow-hidden shrink-0">
+          <div className="relative aspect-[1.5/1] bg-stone-900 flex items-center justify-center text-white overflow-hidden shrink-0 rounded-t-[19px]">
             {screen.video ? (
               <video
                 src={screen.video}
@@ -127,139 +122,150 @@ export const ScreenCard: React.FC<ScreenCardProps> = ({ screen, onFocusOnMap }) 
                 muted
                 loop
                 playsInline
-                className="absolute inset-0 w-full h-full object-cover opacity-80"
+                className="absolute inset-0 w-full h-full object-cover opacity-90 transition-transform duration-700 ease-out group-hover:scale-103"
               />
             ) : (
-              <div className="absolute inset-0 bg-gradient-to-br from-slate-950 to-slate-800 flex items-center justify-center">
-                <span className="text-3xl font-black tracking-tight text-white/20 select-none">
-                  {screen.nombre.substring(0, 2).toUpperCase()}
+              <div className="absolute inset-0 bg-gradient-to-br from-stone-950 to-stone-800 flex items-center justify-center transition-transform duration-700 ease-out group-hover:scale-103">
+                <span className="text-3xl font-extrabold tracking-tight text-white/5 select-none uppercase">
+                  {screen.nombre.substring(0, 3).toUpperCase()}
                 </span>
               </div>
             )}
             
-            {/* Zoom Overlay on Hover */}
-            <div className="absolute inset-0 bg-slate-950/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-xs">
-              <span className="px-3 py-1.5 bg-white/90 text-slate-900 rounded-lg text-xs font-bold shadow-md flex items-center gap-1.5 transform scale-90 group-hover:scale-100 transition-transform">
-                <Maximize2 className="h-3.5 w-3.5" />
+            <div className="absolute inset-0 bg-stone-950/15 group-hover:opacity-20 transition-opacity" />
+
+            {/* Ficha Técnica Indicator */}
+            <div className="absolute inset-0 bg-stone-950/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[1px]">
+              <span className="px-4 py-2 bg-white text-stone-900 rounded-full text-xs font-bold shadow-lg flex items-center gap-1.5 transform scale-95 group-hover:scale-100 transition-all duration-200">
+                <Maximize2 className="h-3 w-3 text-[#06434a]" />
                 Ver Ficha Técnica
               </span>
             </div>
 
-            {/* Type Badge on Image */}
-            <div className="absolute top-3 left-3 z-10 flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wide uppercase shadow-sm border bg-white text-slate-800 border-slate-100">
+            {/* Type Badge */}
+            <div className="absolute top-3 left-3 z-10 flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-bold tracking-wider uppercase bg-white/95 text-stone-800 border border-stone-200 shadow-xs">
               <span className={`h-1.5 w-1.5 rounded-full ${typeStyles.dot}`} />
               {screen.tipo}
             </div>
 
-            {/* Exclusive LeadMóvil badge */}
+            {/* Mobile Route Badge */}
             {(screen.tipo === "LeadMóvil" || screen.tipo === "Móvil") && (
-              <div className="absolute top-3 right-12 z-10 bg-amber-500 text-slate-950 text-[9px] font-black tracking-wider uppercase px-2 py-1 rounded shadow-md">
-                EXCLUSIVO
+              <div className="absolute top-3 right-3 z-10 bg-amber-500 text-white text-[8px] font-extrabold tracking-widest uppercase px-2.5 py-1 rounded-full shadow-sm">
+                Recorrido
               </div>
             )}
 
-            {/* Focus on map option */}
-            {onFocusOnMap && (
+            {/* Locate on Map Button */}
+            {onFocusOnMap && !(screen.tipo === "LeadMóvil" || screen.tipo === "Móvil") && (
               <button
                 onClick={(e) => {
                   e.stopPropagation();
                   onFocusOnMap();
                 }}
                 title="Ubicar en el mapa"
-                className="absolute top-3 right-3 z-10 p-1.5 rounded-lg bg-white/90 hover:bg-white text-slate-700 hover:text-slate-950 transition-colors shadow-sm"
+                className="absolute bottom-3 right-3 z-10 p-2 rounded-full bg-white/90 hover:bg-white text-stone-700 hover:text-[#06434a] transition-colors shadow-sm border border-stone-200"
               >
                 <MapPin className="h-3.5 w-3.5" />
               </button>
             )}
           </div>
 
-          {/* Content */}
-          <CardContent className="p-4 pb-0 flex-grow flex flex-col justify-between">
-            <div>
-              <div className="flex items-start justify-between gap-2 mb-1">
-                <h3 className="text-sm font-bold text-slate-900 leading-tight line-clamp-1 group-hover:text-slate-950 transition-colors">
-                  {screen.nombre}
-                </h3>
-                <Badge variant={screen.status === "Activo" || screen.status === "Disponible" ? "secondary" : "destructive"} className={`text-[8px] font-black px-1.5 py-0.5 rounded shrink-0 uppercase tracking-wider ${
-                  screen.status === "Activo" || screen.status === "Disponible"
-                    ? "bg-emerald-50 text-emerald-700 border border-emerald-150 hover:bg-emerald-50"
-                    : "bg-rose-50 text-rose-700 border border-rose-150 hover:bg-rose-50"
-                }`}>
-                  {screen.status === "Activo" || screen.status === "Disponible" ? "Disponible" : "No disponible"}
-                </Badge>
-              </div>
-
-              <div className="flex items-center gap-1 text-slate-500 text-xs mb-3">
-                <MapPin className="h-3 w-3 shrink-0" />
-                <span className="truncate">{screen.zona}</span>
-              </div>
-
-              {/* Specs / KPIs */}
-              <div className="grid grid-cols-2 gap-2 mb-3">
-                <div className="bg-slate-50 border border-slate-100 p-2 rounded-lg text-center">
-                  <span className="block text-[9px] font-bold text-slate-400 uppercase tracking-wider">
-                    Impactos/Día
-                  </span>
-                  <span className="block text-xs font-bold text-slate-800">
-                    {formattedImpacts}
-                  </span>
+          {/* Card Body */}
+          <CardContent className="p-5 pb-0 flex-grow flex flex-col justify-between">
+            <div className="space-y-3.5">
+              <div className="space-y-1">
+                <div className="flex items-start justify-between gap-2.5">
+                  <h3 className="text-sm font-bold text-stone-900 leading-snug line-clamp-1 group-hover:text-[#06434a] transition-colors font-display">
+                    {screen.nombre}
+                  </h3>
+                  <Badge 
+                    className={`text-[8px] font-bold px-2 py-0.5 rounded-full shrink-0 uppercase tracking-wider ${
+                      screen.status === "Activo" || screen.status === "Disponible"
+                        ? "bg-emerald-50 text-emerald-700 border border-emerald-150 hover:bg-emerald-50"
+                        : "bg-stone-50 text-stone-500 border border-stone-200 hover:bg-stone-50"
+                    }`}
+                  >
+                    {screen.status === "Activo" || screen.status === "Disponible" ? "Disponible" : "Reservado"}
+                  </Badge>
                 </div>
-                <div className="bg-slate-50 border border-slate-100 p-2 rounded-lg text-center">
-                  <span className="block text-[9px] font-bold text-slate-400 uppercase tracking-wider">
-                    CPM Estimado
-                  </span>
-                  <span className="block text-xs font-bold text-slate-800">
-                    ${cpmValue}
-                  </span>
+
+                <div className="flex items-center gap-1.5 text-stone-500 text-xs">
+                  <MapPin className="h-3.5 w-3.5 text-stone-400 shrink-0" />
+                  <span className="truncate">{screen.zona}</span>
                 </div>
               </div>
 
-              {screen.nota && (
-                <p className="text-[11px] text-slate-500 italic bg-slate-50 p-2 rounded-md border border-slate-100/50 mb-3 line-clamp-2">
-                  "{screen.nota}"
-                </p>
+              {/* Specs & Performance KPI Bento Box */}
+              <div className="grid grid-cols-2 gap-2 bg-stone-50/80 p-2.5 rounded-xl border border-stone-100">
+                <div className="text-center">
+                  <span className="block text-[8px] font-extrabold text-stone-400 uppercase tracking-wider">
+                    Audiencia / Día
+                  </span>
+                  <span className="block text-xs font-bold text-stone-800 font-display">
+                    {formattedImpacts} visitas
+                  </span>
+                </div>
+                <div className="text-center border-l border-stone-200/50">
+                  <span className="block text-[8px] font-extrabold text-stone-400 uppercase tracking-wider">
+                    Dimensión
+                  </span>
+                  <span className="block text-xs font-bold text-stone-800 font-display">
+                    {screen.dimensiones || typeStyles.size}
+                  </span>
+                </div>
+              </div>
+
+              {screen.cobertura && (
+                <div className="text-[11px] text-stone-500 flex items-center gap-1 bg-stone-50/40 px-2 py-1.5 rounded-lg border border-stone-100">
+                  <Layers className="h-3 w-3 text-stone-400" />
+                  <span className="truncate">{screen.cobertura}</span>
+                </div>
               )}
             </div>
           </CardContent>
 
-          {/* Pricing & Cart Action */}
-          <CardFooter className="p-4 pt-3 border-t border-slate-100/80 flex items-center justify-between gap-3">
-            <div>
-              <span className="block text-[9px] font-bold text-slate-400 uppercase tracking-wider">
-                Precio Semanal
-              </span>
-              <span className="text-sm font-black text-slate-950">
-                {screen.precio === 0 ? (
-                  <span className="text-blue-600 text-xs font-extrabold uppercase bg-blue-50 border border-blue-150 px-1.5 py-0.5 rounded">Consultar</span>
-                ) : (
-                  <>
-                    ${screen.precio.toLocaleString("es-AR")}
-                    <span className="text-[10px] text-slate-400 font-normal">/sem</span>
-                  </>
-                )}
-              </span>
-            </div>
+          {/* Cart & Compare Action Footer */}
+          <CardFooter 
+            className="p-5 pt-3 border-t border-stone-100 flex items-center justify-between gap-3 mt-4"
+            onClick={(e) => e.stopPropagation()} // Stop modal from opening when clicking controls
+          >
+            {/* Comparison Checkbox */}
+            {onCompareToggle ? (
+              <label className="flex items-center gap-1.5 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={isComparing}
+                  onChange={onCompareToggle}
+                  className="h-3.5 w-3.5 rounded-md border-stone-300 text-[#06434a] focus:ring-[#06434a]/30 cursor-pointer accent-[#06434a]"
+                />
+                <span className="text-[10px] font-bold text-stone-500 uppercase tracking-wide hover:text-stone-850">
+                  Comparar
+                </span>
+              </label>
+            ) : (
+              <div className="text-[9px] text-stone-400 font-bold uppercase">
+                COBERTURA PREMIUM
+              </div>
+            )}
 
+            {/* MediaKit Action Button */}
             <button
-              onClick={(e) => {
-                e.stopPropagation();
-                toggleCart(screen.id);
-              }}
-              className={`flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all duration-200 cursor-pointer ${
+              onClick={() => toggleCart(screen.id)}
+              className={`flex items-center justify-center gap-1.5 px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-wide transition-all duration-200 cursor-pointer ${
                 isInCart
-                  ? "bg-slate-100 text-slate-800 hover:bg-slate-200 border border-slate-200"
-                  : "bg-slate-950 hover:bg-slate-800 text-white shadow-sm"
+                  ? "bg-stone-100 text-stone-800 hover:bg-stone-200 border border-stone-200"
+                  : "bg-stone-950 hover:bg-[#06434a] text-white shadow-xs"
               }`}
             >
               {isInCart ? (
                 <>
-                  <Check className="h-3.5 w-3.5" />
-                  <span>En Cotizador</span>
+                  <Check className="h-3 w-3 text-emerald-600" />
+                  <span>En MediaKit</span>
                 </>
               ) : (
                 <>
-                  <Plus className="h-3.5 w-3.5" />
-                  <span>Agregar</span>
+                  <Plus className="h-3 w-3" />
+                  <span>MediaKit</span>
                 </>
               )}
             </button>
@@ -267,255 +273,222 @@ export const ScreenCard: React.FC<ScreenCardProps> = ({ screen, onFocusOnMap }) 
         </Card>
       </motion.div>
 
-      {/* DETAILED INTERACTIVE MODAL */}
+      {/* DETAILED INTERACTIVE MODAL (PRICE-FREE EDITION) */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-w-4xl p-0 overflow-hidden bg-white border border-slate-200 shadow-2xl rounded-2xl flex flex-col lg:grid lg:grid-cols-12 max-h-[90vh] gap-0">
+        <DialogContent className="max-w-4xl p-0 overflow-hidden bg-white border border-stone-200 shadow-2xl rounded-[24px] flex flex-col lg:grid lg:grid-cols-12 max-h-[92vh] gap-0">
           <DialogTitle className="sr-only">{screen.nombre}</DialogTitle>
-          <DialogDescription className="sr-only">Detalles técnicos e información del soporte publicitario {screen.nombre}</DialogDescription>
+          <DialogDescription className="sr-only">Detalles técnicos e información de cobertura del soporte {screen.nombre}</DialogDescription>
 
           {/* Left Column: Visual Media Player & Stats Overview */}
-          <div className="lg:col-span-6 bg-slate-950 text-white flex flex-col justify-between relative overflow-hidden h-[300px] lg:h-auto min-h-[300px]">
-                {/* Visual Backdrop Player */}
-                {screen.video ? (
-                  <video
-                    src={screen.video}
-                    autoPlay
-                    muted
-                    loop
-                    playsInline
-                    className="absolute inset-0 w-full h-full object-cover opacity-90"
-                  />
-                ) : (
-                  <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 flex flex-col items-center justify-center">
-                    <span className="text-5xl font-black tracking-widest text-white/10 select-none uppercase">
-                      {screen.nombre.substring(0, 3)}
-                    </span>
-                  </div>
-                )}
+          <div className="lg:col-span-6 bg-stone-950 text-white flex flex-col justify-between relative overflow-hidden h-[300px] lg:h-auto min-h-[300px] lg:rounded-l-[23px]">
+            {screen.video ? (
+              <video
+                src={screen.video}
+                autoPlay
+                muted
+                loop
+                playsInline
+                className="absolute inset-0 w-full h-full object-cover opacity-90"
+              />
+            ) : (
+              <div className="absolute inset-0 bg-gradient-to-br from-stone-950 via-stone-900 to-stone-850 flex flex-col items-center justify-center">
+                <span className="text-4xl font-black tracking-widest text-white/5 select-none uppercase">
+                  {screen.nombre.substring(0, 3)}
+                </span>
+              </div>
+            )}
 
-                {/* Gradient shade on player top and bottom */}
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-slate-950/60 pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-t from-stone-950 via-stone-950/20 to-stone-950/50 pointer-events-none" />
 
-                {/* Screen Badge */}
-                <div className="absolute top-4 left-4 z-10 flex items-center gap-2 bg-white/95 text-slate-900 px-3 py-1.5 rounded-full text-[10px] font-extrabold tracking-wide uppercase shadow-lg">
-                  <span className={`h-2 w-2 rounded-full ${typeStyles.dot}`} />
-                  {screen.tipo}
-                </div>
+            {/* Screen Badge */}
+            <div className="absolute top-5 left-5 z-10 flex items-center gap-2 bg-white text-stone-900 px-3.5 py-1.5 rounded-full text-[9px] font-bold tracking-wider uppercase border border-stone-200">
+              <span className={`h-2 w-2 rounded-full ${typeStyles.dot}`} />
+              {screen.tipo}
+            </div>
 
-                {/* Overlaid Title & Quick Insights */}
-                <div className="mt-auto p-6 relative z-10 space-y-4">
-                  <div className="space-y-1">
-                    <span className="text-[10px] bg-slate-800/80 border border-slate-700 text-slate-300 font-bold px-2 py-0.5 rounded uppercase tracking-wider">
-                      ID: {screen.id.toUpperCase()}
-                    </span>
-                    <h2 className="text-xl lg:text-2xl font-black text-white tracking-tight">
-                      {screen.nombre}
-                    </h2>
-                    <p className="text-slate-300 text-xs flex items-center gap-1 font-semibold">
-                      <MapPin className="h-3 w-3 text-emerald-400" /> {screen.zona}, Mendoza
-                    </p>
-                  </div>
-
-                  {/* Core Metrics Indicators */}
-                  <div className="grid grid-cols-3 gap-2 pt-2 border-t border-slate-800">
-                    <div className="bg-slate-900/60 backdrop-blur-md p-2 rounded-lg border border-slate-800">
-                      <span className="block text-[8px] font-bold text-slate-400 uppercase tracking-widest">
-                        Imp. Semanales
-                      </span>
-                      <span className="block text-sm font-black text-white">
-                        {(screen.impactos * 7).toLocaleString("es-AR")}
-                      </span>
-                    </div>
-                    <div className="bg-slate-900/60 backdrop-blur-md p-2 rounded-lg border border-slate-800">
-                      <span className="block text-[8px] font-bold text-slate-400 uppercase tracking-widest">
-                        CPM ARS
-                      </span>
-                      <span className="block text-sm font-black text-white">
-                        ${cpmValue}
-                      </span>
-                    </div>
-                    <div className="bg-slate-900/60 backdrop-blur-md p-2 rounded-lg border border-slate-800">
-                      <span className="block text-[8px] font-bold text-slate-400 uppercase tracking-widest">
-                        Impacto Diario
-                      </span>
-                      <span className="block text-sm font-black text-white">
-                        {formattedImpacts}
-                      </span>
-                    </div>
-                  </div>
-                </div>
+            {/* Title & Quick Insights */}
+            <div className="mt-auto p-6 md:p-8 relative z-10 space-y-4">
+              <div className="space-y-1">
+                <span className="inline-block text-[8px] bg-white/10 border border-white/20 text-white font-bold px-2 py-0.5 rounded-full uppercase tracking-widest">
+                  ID: {screen.id.toUpperCase()}
+                </span>
+                <h2 className="text-xl lg:text-2xl font-bold text-white tracking-tight font-display">
+                  {screen.nombre}
+                </h2>
+                <p className="text-stone-300 text-xs flex items-center gap-1.5">
+                  <MapPin className="h-3.5 w-3.5 text-amber-500" /> {screen.zona}, {screen.ciudad || "Mendoza"}
+                </p>
               </div>
 
-              {/* Right Column: Dynamic Tabs & Specifications Detail */}
-              <div className="lg:col-span-6 p-6 flex flex-col justify-between overflow-y-auto max-h-[60vh] lg:max-h-full">
-                <div className="space-y-6">
-                  {/* Header / Editorial review */}
-                  <div className="space-y-2">
-                    <span className="text-[9px] bg-slate-100 text-slate-600 font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider">
-                      Reseña de Ubicación
-                    </span>
-                    <p className="text-xs text-slate-600 leading-relaxed italic bg-slate-50 p-3 rounded-xl border border-slate-150">
-                      "{screen.nota || "Ubicación comercial de alto impacto con visibilidad garantizada las 24 horas. Ideal para campañas masivas o de marca que buscan alta penetración local."}"
-                    </p>
-                  </div>
+              {/* Metrics Indicators (No Prices) */}
+              <div className="grid grid-cols-2 gap-2.5 pt-3.5 border-t border-white/15">
+                <div className="bg-stone-900/60 backdrop-blur-md p-2.5 rounded-xl border border-white/5 text-center">
+                  <span className="block text-[8px] font-extrabold text-stone-400 uppercase tracking-wider">
+                    Impactos Diarios
+                  </span>
+                  <span className="block text-sm font-bold text-white font-display mt-0.5">
+                    {screen.impactos.toLocaleString("es-AR")}
+                  </span>
+                </div>
+                <div className="bg-stone-900/60 backdrop-blur-md p-2.5 rounded-xl border border-white/5 text-center">
+                  <span className="block text-[8px] font-extrabold text-stone-400 uppercase tracking-wider">
+                    Audiencia Mensual
+                  </span>
+                  <span className="block text-sm font-bold text-white font-display mt-0.5">
+                    {(screen.impactos * 30).toLocaleString("es-AR")}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
 
-                  {/* LeadMóvil Route stops list */}
-                  {(screen.tipo === "LeadMóvil" || screen.tipo === "Móvil") && screen.ruta && screen.ruta.length > 0 && (
-                    <div className="space-y-3 bg-amber-50/50 border border-amber-100 p-4 rounded-xl shadow-xs">
-                      <h3 className="text-xs font-black text-amber-800 uppercase tracking-wider flex items-center gap-1.5 border-b border-amber-150 pb-1.5">
-                        <MapPin className="h-4 w-4 text-amber-600 animate-bounce" />
-                        Recorrido Lineal y Paradas ({screen.ruta.length})
-                      </h3>
-                      <div className="relative border-l-2 border-dashed border-amber-300 pl-4 ml-2 space-y-3.5 pt-1.5">
-                        {screen.ruta.map((stop, idx) => (
-                          <div key={idx} className="relative text-xs">
-                            <span className="absolute -left-[21px] top-0.5 flex h-2.5 w-2.5 items-center justify-center rounded-full bg-amber-500 ring-4 ring-amber-50" />
-                            <div className="space-y-0.5">
-                              <span className="text-[9px] text-amber-600 font-bold uppercase tracking-wider">
-                                Parada {idx + 1} {idx === 0 ? "(Inicio)" : idx === screen.ruta!.length - 1 ? "(Fin)" : ""}
-                              </span>
-                              <span className="font-semibold text-slate-800 block">{stop.nombre}</span>
-                              <span className="font-mono text-[9px] text-slate-500">{stop.lat.toFixed(4)}, {stop.lng.toFixed(4)}</span>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
+          {/* Right Column: Specifications Detail */}
+          <div className="lg:col-span-6 p-6 md:p-8 flex flex-col justify-between overflow-y-auto max-h-[60vh] lg:max-h-full">
+            <div className="space-y-5">
+              {/* Reseña */}
+              <div className="space-y-1.5">
+                <span className="text-[8px] bg-stone-100 text-stone-600 font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                  Reseña Técnica y Entorno
+                </span>
+                <p className="text-xs text-stone-600 leading-relaxed italic bg-stone-50 p-4 rounded-xl border border-stone-200/40">
+                  "{screen.nota || "Ubicación estratégica de gran alcance. Ideal para captar el flujo peatonal y vehicular de mayor densidad en la zona."}"
+                </p>
+              </div>
+
+              {/* Route stop list for LED Móvil */}
+              {(screen.tipo === "LeadMóvil" || screen.tipo === "Móvil") && screen.ruta && screen.ruta.length > 0 && (
+                <div className="space-y-3 bg-amber-50/40 border border-amber-200/60 p-4 rounded-xl">
+                  <h3 className="text-xs font-bold text-amber-900 uppercase tracking-wider flex items-center gap-1.5 border-b border-amber-200/40 pb-1.5 font-display">
+                    <MapPin className="h-4 w-4 text-amber-600" />
+                    Recorrido Estratégico y Horarios
+                  </h3>
+                  {screen.horarios && (
+                    <div className="text-xs text-stone-600 font-bold mb-2">
+                      Horario operativo: <span className="text-amber-700">{screen.horarios}</span>
                     </div>
                   )}
-
-                  {/* Technical Specifications Section */}
-                  <div className="space-y-3">
-                    <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-100 pb-1.5">
-                      <Cpu className="h-4 w-4 text-slate-800" />
-                      Ficha Técnica Avanzada
-                    </h3>
-
-                    <div className="grid grid-cols-2 gap-3 text-xs">
-                      <div className="space-y-0.5">
-                        <span className="text-[10px] text-slate-400 font-bold block">Modelo LED / Resolución</span>
-                        <span className="font-semibold text-slate-800 block">{typeStyles.res}</span>
+                  <div className="relative border-l-2 border-dashed border-amber-300 pl-4 ml-2 space-y-3 pt-1">
+                    {screen.ruta.map((stop, idx) => (
+                      <div key={idx} className="relative text-xs">
+                        <span className="absolute -left-[21px] top-0.5 flex h-2 w-2 items-center justify-center rounded-full bg-amber-500" />
+                        <div>
+                          <span className="font-semibold text-stone-800 block leading-none">{stop.nombre}</span>
+                          <span className="text-[9px] text-stone-400">Punto de alta afluencia {idx === 0 ? "de salida" : idx === screen.ruta!.length - 1 ? "de retorno" : ""}</span>
+                        </div>
                       </div>
-                      <div className="space-y-0.5">
-                        <span className="text-[10px] text-slate-400 font-bold block">Tamaño Físico</span>
-                        <span className="font-semibold text-slate-800 block">{typeStyles.size}</span>
-                      </div>
-                      <div className="space-y-0.5">
-                        <span className="text-[10px] text-slate-400 font-bold block">Brillo Máximo</span>
-                        <span className="font-semibold text-slate-800 block">{typeStyles.brightness}</span>
-                      </div>
-                      <div className="space-y-0.5">
-                        <span className="text-[10px] text-slate-400 font-bold block">Tasa de Refresco</span>
-                        <span className="font-semibold text-slate-800 block">3,840 Hz (Flicker-Free)</span>
-                      </div>
-                      <div className="space-y-0.5">
-                        <span className="text-[10px] text-slate-400 font-bold block">Formatos Aceptados</span>
-                        <span className="font-semibold text-slate-800 block">MP4, JPG, PNG (16:9)</span>
-                      </div>
-                      <div className="space-y-0.5">
-                        <span className="text-[10px] text-slate-400 font-bold block">Frecuencia Loop</span>
-                        <span className="font-semibold text-slate-800 block">Spot de 15s / Loop de 120s</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Monthly Availability Calendar */}
-                  <div className="space-y-3">
-                    <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-100 pb-1.5">
-                      <Calendar className="h-4 w-4 text-slate-800" />
-                      Historial y Disponibilidad
-                    </h3>
-
-                    <p className="text-[11px] text-slate-500 leading-relaxed">
-                      Cronograma de reservas estimadas para los próximos meses del ciclo de pauta actual:
-                    </p>
-
-                    <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-                      {months.map((month) => {
-                        const status = getAvailabilityForMonth(month, screen.id);
-                        return (
-                          <div
-                            key={month}
-                            className={`border rounded-lg p-2 text-center flex flex-col justify-between gap-1.5 min-h-[56px] ${status.color}`}
-                          >
-                            <span className="text-[10px] font-bold uppercase tracking-wider block opacity-80">
-                              {month.substring(0, 3)}
-                            </span>
-                            <span className="text-[8px] font-black leading-tight block uppercase">
-                              {status.label.split(" ")[0]}
-                            </span>
-                          </div>
-                        );
-                      })}
-                    </div>
+                    ))}
                   </div>
                 </div>
+              )}
 
-                {/* Bottom Pricing Panel & Dynamic Interaction CTA */}
-                <div className="pt-6 border-t border-slate-100 mt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              {/* Technical specs */}
+              <div className="space-y-2.5">
+                <h3 className="text-xs font-bold text-stone-900 uppercase tracking-wider flex items-center gap-1.5 border-b border-stone-100 pb-1.5 font-display">
+                  <Cpu className="h-4 w-4 text-[#06434a]" />
+                  Especificaciones Técnicas
+                </h3>
+
+                <div className="grid grid-cols-2 gap-3.5 text-xs">
                   <div className="space-y-0.5">
-                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest block">
-                      Inversión Recomendada
-                    </span>
-                    <div className="flex items-baseline gap-1.5">
-                      <span className="text-2xl font-black text-slate-950">
-                        {screen.precio === 0 ? (
-                          <span className="text-blue-600 font-extrabold text-base bg-blue-50 border border-blue-150 px-2 py-0.5 rounded uppercase">Consultar</span>
-                        ) : (
-                          `$${(screen.precio * weeks).toLocaleString("es-AR")}`
-                        )}
-                      </span>
-                      {screen.precio > 0 && (
-                        <span className="text-xs text-slate-500 font-semibold">
-                          ({weeks} {weeks === 1 ? "semana" : "semanas"})
-                        </span>
-                      )}
-                    </div>
-                    <span className="text-[10px] text-slate-400 block font-medium">
-                      {screen.precio === 0 ? "Precio comercial a convenir" : `Tarifa base: $${screen.precio.toLocaleString("es-AR")} ARS / semana`}
-                    </span>
+                    <span className="text-[9px] text-stone-400 font-bold block uppercase tracking-wider">Hardware / Resolución</span>
+                    <span className="font-semibold text-stone-800 block">{screen.refreshRate ? "UHD Outdoor Screen" : typeStyles.res}</span>
                   </div>
-
-                  <div className="flex items-center gap-2 shrink-0">
-                    {onFocusOnMap && (
-                      <button
-                        onClick={() => {
-                          onFocusOnMap();
-                          setIsModalOpen(false);
-                        }}
-                        className="px-3 py-2 text-xs font-bold text-slate-700 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl transition-all cursor-pointer flex items-center gap-1.5 shadow-xs"
-                      >
-                        <MapPin className="h-3.5 w-3.5" />
-                        <span>Ubicar</span>
-                      </button>
-                    )}
-
-                    <button
-                      onClick={() => {
-                        toggleCart(screen.id);
-                      }}
-                      className={`px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all duration-200 cursor-pointer flex items-center gap-2 shadow-md ${
-                        isInCart
-                          ? "bg-slate-100 text-slate-800 hover:bg-slate-200 border border-slate-200"
-                          : "bg-slate-950 hover:bg-slate-850 text-white"
-                      }`}
-                    >
-                      {isInCart ? (
-                        <>
-                          <Check className="h-4 w-4" />
-                          <span>Remover de Cotización</span>
-                        </>
-                      ) : (
-                        <>
-                          <Plus className="h-4 w-4" />
-                          <span>Añadir a Cotización</span>
-                        </>
-                      )}
-                    </button>
+                  <div className="space-y-0.5">
+                    <span className="text-[9px] text-stone-400 font-bold block uppercase tracking-wider">Dimensiones Físicas</span>
+                    <span className="font-semibold text-stone-800 block">{screen.dimensiones || typeStyles.size}</span>
+                  </div>
+                  <div className="space-y-0.5">
+                    <span className="text-[9px] text-stone-400 font-bold block uppercase tracking-wider">Pico de Brillo</span>
+                    <span className="font-semibold text-stone-800 block">{screen.brillo || typeStyles.brightness}</span>
+                  </div>
+                  <div className="space-y-0.5">
+                    <span className="text-[9px] text-stone-400 font-bold block uppercase tracking-wider">Tasa de Refresco</span>
+                    <span className="font-semibold text-stone-800 block">{screen.refreshRate || "3,840 Hz (Flicker-Free)"}</span>
+                  </div>
+                  <div className="space-y-0.5">
+                    <span className="text-[9px] text-stone-400 font-bold block uppercase tracking-wider">Soporte Multimedia</span>
+                    <span className="font-semibold text-stone-800 block">{screen.formato || "MP4, JPG, PNG"}</span>
+                  </div>
+                  <div className="space-y-0.5">
+                    <span className="text-[9px] text-stone-400 font-bold block uppercase tracking-wider">Frecuencia de Loop</span>
+                    <span className="font-semibold text-stone-800 block">Spot de 15s en rotación constante</span>
                   </div>
                 </div>
               </div>
-          </DialogContent>
-        </Dialog>
+
+              {/* Calendar list */}
+              <div className="space-y-2">
+                <h3 className="text-xs font-bold text-stone-900 uppercase tracking-wider flex items-center gap-1.5 border-b border-stone-100 pb-1.5 font-display">
+                  <Calendar className="h-4 w-4 text-[#06434a]" />
+                  Ciclos de Pauta y Reservas
+                </h3>
+                <div className="grid grid-cols-6 gap-1.5 pt-1">
+                  {months.map((month) => {
+                    const status = getAvailabilityForMonth(month, screen.id);
+                    return (
+                      <div
+                        key={month}
+                        className={`border rounded-lg p-1.5 text-center flex flex-col justify-between gap-1 min-h-[44px] ${status.color}`}
+                      >
+                        <span className="text-[8px] font-bold uppercase tracking-wider opacity-85 block">
+                          {month.substring(0, 3)}
+                        </span>
+                        <span className="text-[7px] font-black uppercase leading-none block">
+                          {status.label}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Actions */}
+            <div className="pt-5 border-t border-stone-150 mt-6 flex items-center justify-between gap-4">
+              <div className="text-stone-500 text-[10px] uppercase font-bold leading-tight">
+                <span className="block font-black text-[#06434a]">Comercialización Directa</span>
+                Sujeto a disponibilidad del ciclo
+              </div>
+
+              <div className="flex items-center gap-2">
+                {onFocusOnMap && (
+                  <button
+                    onClick={() => {
+                      onFocusOnMap();
+                      setIsModalOpen(false);
+                    }}
+                    className="px-3.5 py-2 text-xs font-bold text-stone-700 bg-stone-50 hover:bg-stone-100 border border-stone-200 rounded-full transition-all cursor-pointer flex items-center gap-1"
+                  >
+                    <MapPin className="h-3.5 w-3.5 text-stone-400" />
+                    <span>Ubicar</span>
+                  </button>
+                )}
+
+                <button
+                  onClick={() => toggleCart(screen.id)}
+                  className={`px-5 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all duration-200 cursor-pointer flex items-center gap-1.5 shadow-sm ${
+                    isInCart
+                      ? "bg-stone-100 text-stone-800 hover:bg-stone-200 border border-stone-200"
+                      : "bg-stone-950 hover:bg-[#06434a] text-white"
+                  }`}
+                >
+                  {isInCart ? (
+                    <>
+                      <Check className="h-4 w-4 text-emerald-600" />
+                      <span>Quitar</span>
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="h-4 w-4" />
+                      <span>MediaKit</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };

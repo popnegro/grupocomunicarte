@@ -1,6 +1,6 @@
 {
   "name": "SmartWeb CMS & AI Engine",
-  "description": "Full-stack SaaS platform featuring a commercial landing page driven by an advanced CMS dashboard and an intelligent AI marketing engine powered by Gemini.",
+  "description": "Plataforma de pautado publicitario OOH y DOOH inteligente, basada en una arquitectura orientada al inventario comercial, MediaKits interactivos y optimización de revenue con IA.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

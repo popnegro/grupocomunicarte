@@ -1,252 +1,141 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,100..900;1,100..900&family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&family=Poppins:ital,wght@0,100..900;1,100..900&display=swap');
 @import "tailwindcss";
 @import "leaflet/dist/leaflet.css";
 
-@custom-variant dark (&:is(.dark *));
+:root {
+  /* Fluid font sizes using clamp() to adapt perfectly across viewports */
+  --font-size-xs: clamp(0.75rem, 0.72rem + 0.15vw, 0.8125rem);
+  --font-size-sm: clamp(0.8125rem, 0.78rem + 0.2vw, 0.9375rem);
+  --font-size-base: clamp(0.9375rem, 0.9rem + 0.25vw, 1.0625rem);
+  --font-size-lg: clamp(1.0625rem, 1.02rem + 0.3vw, 1.1875rem);
+  --font-size-xl: clamp(1.1875rem, 1.1rem + 0.4vw, 1.375rem);
+  --font-size-2xl: clamp(1.375rem, 1.25rem + 0.6vw, 1.625rem);
+  --font-size-3xl: clamp(1.625rem, 1.45rem + 0.8vw, 2.0rem);
+  --font-size-4xl: clamp(2.0rem, 1.75rem + 1.2vw, 2.5rem);
+  --font-size-5xl: clamp(2.5rem, 2.15rem + 1.6vw, 3.25rem);
+
+  /* Typography Font Families */
+  --text-display: "Poppins", system-ui, -apple-system, sans-serif;
+  --text-body: "Inter", system-ui, -apple-system, sans-serif;
+}
 
 @theme {
-  /* 1. PALETA DE COLORES COMPLETA (de 05_SISTEMAS_VISUALES_TOKENS.md) */
+  /* Brand Theme Colors */
+  --color-primary: #06434a;
+  --color-primary-hover: #0a545d;
+  --color-secondary: #07be8a;
+  --color-secondary-hover: #06a376;
+  --color-neutral-slate-dark: #172023;
+  --color-neutral-slate-light: #fafaf9;
+  --color-danger-rose: #f43f5e;
+  --color-warning-amber: #f59e0b;
 
-  /* Primary (Tierra Cálida) */
-  --color-primary-50: #f5ede5;
-  --color-primary-100: #e8d9ca;
-  --color-primary-200: #d9bf95;
-  --color-primary-300: #c9a560;
-  --color-primary-400: #8B6F47;
-  --color-primary-500: #7a5f3f;
-  --color-primary-600: #6a5037;
-  --color-primary-700: #5a402f;
-  --color-primary-800: #4a3027;
-  --color-primary-900: #3a201f;
+  /* standard shadcn/ui variables in Tailwind v4 style */
+  --color-background: #fafaf9;
+  --color-foreground: #172023;
+  --color-card: #ffffff;
+  --color-card-foreground: #172023;
+  --color-popover: #ffffff;
+  --color-popover-foreground: #172023;
+  --color-muted: #f5f5f4;
+  --color-muted-foreground: #78716c;
+  --color-accent: #f5f5f4;
+  --color-accent-foreground: #172023;
+  --color-destructive: #f43f5e;
+  --color-destructive-foreground: #fafaf9;
+  --color-border: #e7e5e4;
+  --color-input: #e7e5e4;
+  --color-ring: #06434a;
 
-  /* Secondary (Azul Confianza) */
-  --color-secondary-50: #e3ecf2;
-  --color-secondary-100: #c7d9e5;
-  --color-secondary-200: #a4bccf;
-  --color-secondary-300: #7d9fb9;
-  --color-secondary-400: #2B5A7C;
-  --color-secondary-500: #254c6a;
-  --color-secondary-600: #1f4058;
-  --color-secondary-700: #193446;
-  --color-secondary-800: #132834;
-  --color-secondary-900: #0d1c22;
+  /* Spacing Scale (8px Grid & Múltiplos) */
+  --spacing-micro: 0.25rem;      /* 4px */
+  --spacing-tight: 0.5rem;      /* 8px */
+  --spacing-base: 1rem;         /* 16px */
+  --spacing-generous: 1.5rem;   /* 24px */
+  --spacing-section: 3rem;      /* 48px */
 
-  /* Success (Verde Esperanza) */
-  --color-success-50: #e8f2ed;
-  --color-success-100: #cfe5db;
-  --color-success-200: #a8d3bb;
-  --color-success-300: #6B9E7F;
-  --color-success-400: #4d7a62;
-  --color-success-500: #2f564b;
-  --color-success-600: #1f3834;
-  --color-success-700: #0f1a17;
+  /* Typography Font Families connected to CSS custom properties */
+  --font-display: var(--text-display);
+  --font-sans: var(--text-body);
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
-  /* Warning (Naranja Energía) */
-  --color-warning-50: #fde8dd;
-  --color-warning-100: #fad1bb;
-  --color-warning-200: #f5b08a;
-  --color-warning-300: #D97C3B;
-  --color-warning-400: #b85e25;
-  --color-warning-500: #9a4a1a;
-  --color-warning-600: #7a360f;
-  --color-warning-700: #5a2204;
-
-  /* Error (Rojo Cuidado) */
-  --color-error-50: #fde8e8;
-  --color-error-100: #fad1d1;
-  --color-error-200: #f5a3a3;
-  --color-error-300: #C73E3E;
-  --color-error-400: #ad2f2f;
-  --color-error-500: #932020;
-  --color-error-600: #791111;
-
-  /* Gray Scale */
-  --color-gray-50: #fafafa;
-  --color-gray-100: #f5f5f5;
-  --color-gray-200: #e8e8e8;
-  --color-gray-300: #cccccc;
-  --color-gray-400: #999999;
-  --color-gray-500: #666666;
-  --color-gray-600: #333333;
-  --color-gray-700: #1a1a1a;
-  --color-gray-800: #000000;
-
-  /* Variables shadcn/ui adaptadas a la nueva paleta */
-  --color-background: var(--color-gray-50);
-  --color-foreground: var(--color-gray-700);
-  --color-card: var(--color-gray-50);
-  --color-card-foreground: var(--color-gray-700);
-  --color-popover: var(--color-gray-50);
-  --color-popover-foreground: var(--color-gray-700);
-  --color-primary: var(--color-primary-400);
-  --color-primary-foreground: var(--color-gray-50);
-  --color-secondary: var(--color-secondary-400);
-  --color-secondary-foreground: var(--color-gray-50);
-  --color-muted: var(--color-gray-100);
-  --color-muted-foreground: var(--color-gray-500);
-  --color-accent: var(--color-success-300);
-  --color-accent-foreground: var(--color-gray-50);
-  --color-destructive: var(--color-error-300);
-  --color-destructive-foreground: var(--color-gray-50);
-  --color-border: var(--color-gray-300);
-  --color-input: var(--color-gray-300);
-  --color-ring: var(--color-secondary-400);
-
-  /* 2. TIPOGRAFÍA SISTEMA */
-  --font-sans: "Geist Sans", -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-ui: "Inter", sans-serif;
-  --font-mono: "JetBrains Mono", monospace;
-
-  /* 3. SISTEMA DE ESPACIADO (Base 4px) */
-  --spacing-xs: 0.25rem;  /* 4px */
-  --spacing-sm: 0.5rem;   /* 8px */
-  --spacing-md: 0.75rem;  /* 12px */
-  --spacing-lg: 1rem;     /* 16px */
-  --spacing-xl: 1.25rem;  /* 20px */
-  --spacing-2xl: 1.5rem;  /* 24px */
-  --spacing-3xl: 2rem;    /* 32px */
-  --spacing-4xl: 2.5rem;  /* 40px */
-  --spacing-5xl: 3rem;    /* 48px */
-  --spacing-6xl: 4rem;    /* 64px */
-  --spacing-7xl: 5rem;    /* 80px */
-  --spacing-8xl: 6rem;    /* 96px */
-
-  /* 4. SISTEMA DE RADIOS */
-  --radius-none: 0px;
-  --radius-sm: 4px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-  --radius-xl: 16px;
-  --radius-2xl: 20px;
-  --radius-full: 9999px;
-
-  /* 5. SISTEMA DE SOMBRAS */
-  --shadow-sm: 0 1px 2px 0 rgba(0,0,0,0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
-  --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
-  --shadow-xl: 0 20px 25px -5px rgba(0,0,0,0.1);
-  --shadow-focus: 0 0 0 3px rgba(43, 90, 124, 0.1);
-
-  /* 6. SISTEMA DE ANIMACIONES */
-  --duration-fade: 200ms;
-  --duration-slide: 300ms;
-  --duration-pulse: 1500ms;
-  --duration-bounce: 400ms;
-  --duration-glow: 800ms;
-
-  --ease-out-cubic: cubic-bezier(0.33, 1, 0.68, 1);
-  --ease-in-out-cubic: cubic-bezier(0.65, 0, 0.35, 1);
+  /* Fluid Font Sizes mapped to Tailwind v4 utilities */
+  --text-xs: var(--font-size-xs);
+  --text-sm: var(--font-size-sm);
+  --text-base: var(--font-size-base);
+  --text-lg: var(--font-size-lg);
+  --text-xl: var(--font-size-xl);
+  --text-2xl: var(--font-size-2xl);
+  --text-3xl: var(--font-size-3xl);
+  --text-4xl: var(--font-size-4xl);
+  --text-5xl: var(--font-size-5xl);
 }
 
-/* Custom Base resets & utility classes */
+/* Custom Base resets & utility classes aligning with AA standards */
 @layer base {
-  body, .body {
-    @apply bg-background text-foreground font-sans antialiased selection:bg-primary/20;
-    font-size: 18px;
-    line-height: 1.6;
-    font-weight: 400;
-    letter-spacing: -0.01em;
-    text-rendering: optimizeLegibility;
+  body {
+    @apply bg-neutral-slate-light text-stone-900 font-sans antialiased selection:bg-[#C47D50]/15;
+    font-family: var(--text-body);
+    font-size: var(--font-size-base);
+    line-height: 1.625;
+    letter-spacing: -0.011em;
   }
 
-  h1, .h1 {
-    font-size: 56px;
-    line-height: 1.2;
+  p, li, span, label, input, select, textarea, button {
+    font-family: var(--text-body);
+  }
+
+  h1 {
+    font-family: var(--text-display);
+    font-size: var(--font-size-5xl);
+    font-weight: 800;
+    line-height: 1.15;
+    letter-spacing: -0.03em;
+    @apply text-stone-950;
+  }
+
+  h2 {
+    font-family: var(--text-display);
+    font-size: var(--font-size-4xl);
     font-weight: 700;
-    letter-spacing: -0.02em;
-    font-family: var(--font-sans);
+    line-height: 1.2;
+    letter-spacing: -0.025em;
+    @apply text-stone-900;
   }
 
-  h2, .h2 {
-    font-size: 44px;
+  h3 {
+    font-family: var(--text-display);
+    font-size: var(--font-size-3xl);
+    font-weight: 600;
     line-height: 1.25;
-    font-weight: 600;
-    letter-spacing: -0.01em;
-    font-family: var(--font-sans);
+    letter-spacing: -0.02em;
+    @apply text-stone-900;
   }
 
-  h3, .h3 {
-    font-size: 32px;
+  h4 {
+    font-family: var(--text-display);
+    font-size: var(--font-size-2xl);
+    font-weight: 600;
     line-height: 1.3;
-    font-weight: 600;
-    letter-spacing: -0.005em;
-    font-family: var(--font-sans);
+    letter-spacing: -0.015em;
+    @apply text-stone-900;
   }
 
-  h4, .h4 {
-    font-size: 24px;
+  h5 {
+    font-family: var(--text-display);
+    font-size: var(--font-size-xl);
+    font-weight: 600;
     line-height: 1.35;
+    letter-spacing: -0.01em;
+    @apply text-stone-900;
+  }
+
+  h6 {
+    font-family: var(--text-display);
+    font-size: var(--font-size-lg);
     font-weight: 600;
-    font-family: var(--font-sans);
-  }
-
-  .small {
-    font-size: 16px;
-    line-height: 1.6;
-    font-weight: 400;
-    font-family: var(--font-sans);
-  }
-
-  .caption {
-    font-size: 14px;
-    line-height: 1.5;
-    font-weight: 500;
-    color: var(--color-gray-500);
-    font-family: var(--font-ui);
-  }
-
-  label, .label, .badge {
-    font-size: 12px;
     line-height: 1.4;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    font-family: var(--font-ui);
+    letter-spacing: -0.01em;
+    @apply text-stone-900;
   }
-
-  /* Responsive Typography */
-  @media (max-width: 640px) {
-    h1, .h1 { font-size: 40px; }
-    h2, .h2 { font-size: 32px; }
-    h3, .h3 { font-size: 24px; }
-    body, .body { font-size: 16px; }
-  }
-
-  /* Focus Ring */
-  *:focus-visible {
-    outline: none;
-    box-shadow: var(--shadow-focus);
-  }
-}
-
-:root {
-  --sidebar: hsl(0 0% 98%);
-  --sidebar-foreground: hsl(240 5.3% 26.1%);
-  --sidebar-primary: hsl(240 5.9% 10%);
-  --sidebar-primary-foreground: hsl(0 0% 98%);
-  --sidebar-accent: hsl(240 4.8% 95.9%);
-  --sidebar-accent-foreground: hsl(240 5.9% 10%);
-  --sidebar-border: hsl(220 13% 91%);
-  --sidebar-ring: hsl(217.2 91.2% 59.8%);
-}
-
-.dark {
-  --sidebar: hsl(240 5.9% 10%);
-  --sidebar-foreground: hsl(240 4.8% 95.9%);
-  --sidebar-primary: hsl(224.3 76.3% 48%);
-  --sidebar-primary-foreground: hsl(0 0% 100%);
-  --sidebar-accent: hsl(240 3.7% 15.9%);
-  --sidebar-accent-foreground: hsl(240 4.8% 95.9%);
-  --sidebar-border: hsl(240 3.7% 15.9%);
-  --sidebar-ring: hsl(217.2 91.2% 59.8%);
-}
-
-@theme inline {
-  --color-sidebar: var(--sidebar);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-ring: var(--sidebar-ring);
 }

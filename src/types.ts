@@ -9,6 +9,7 @@ export interface HeroContent {
   subtitle: string;
   ctaPrimary: string;
   ctaSecondary: string;
+  imageUrl?: string;
 }
 
 export interface BenefitItem {
@@ -78,6 +79,8 @@ export interface DoohScreen {
   nombre: string;
   zona: string;
   tipo: "Peatonal" | "Vehicular" | "Mixto" | "Móvil" | "LeadMóvil";
+  categoria?: "Tradicionales" | "Pantallas LED" | "LED Móvil";
+  ciudad?: string; // "Mendoza" | "San Juan" | "Buenos Aires"
   impactos: number;
   precio: number; // per week
   status: "Activo" | "Pausado" | "Disponible" | "No disponible";
@@ -85,5 +88,11 @@ export interface DoohScreen {
   lng: number;
   nota?: string;
   video?: string;
+  dimensiones?: string;
+  brillo?: string;
+  refreshRate?: string;
+  formato?: string;
+  cobertura?: string;
+  horarios?: string;
   ruta?: { lat: number; lng: number; nombre: string }[];
 }

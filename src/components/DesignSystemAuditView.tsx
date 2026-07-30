@@ -41,7 +41,7 @@ export const DesignSystemAuditView: React.FC<DesignSystemAuditProps> = () => {
 
   // WCAG 2.2 AA Interactive Checklist State
   const [checklist, setChecklist] = useState([
-    { id: "1", category: "Perceptible", task: "Contraste de texto mínimo de 4.5:1 para cuerpo de texto (Cumplido: Slate-900 en Slate-50 supera 12:1)", checked: true },
+    { id: "1", category: "Perceptible", task: "Contraste de texto mínimo de 4.5:1 para cuerpo de texto (Cumplido: #172023 en #fafaf9 supera 12:1)", checked: true },
     { id: "2", category: "Perceptible", task: "Soporte para modo oscuro / claro sin pérdida de legibilidad", checked: true },
     { id: "3", category: "Operable", task: "Tamaño mínimo de área interactiva táctil de 44x44px en móviles", checked: true },
     { id: "4", category: "Operable", task: "Navegación por teclado completa (secuencia de Focus lógica con outline visible)", checked: true },
@@ -59,19 +59,19 @@ export const DesignSystemAuditView: React.FC<DesignSystemAuditProps> = () => {
   // Design Tokens Data
   const tokens = {
     colors: [
-      { name: "Primary Indigo", value: "bg-indigo-600", text: "text-indigo-600", hex: "#4F46E5", role: "Botones principales, acentos de marca" },
-      { name: "Secondary Emerald", value: "bg-emerald-500", text: "text-emerald-500", hex: "#10B981", role: "Tasa de conversión positiva, leads calificados" },
-      { name: "Neutral Slate Dark", value: "bg-slate-900", text: "text-slate-900", hex: "#0F172A", role: "Textos de visualización, títulos H1/H2, Sidebar" },
-      { name: "Neutral Slate Light", value: "bg-slate-50", text: "text-slate-50", hex: "#F8FAFC", role: "Fondos de pantalla limpios y despejados" },
-      { name: "Danger Rose", value: "bg-rose-500", text: "text-rose-500", hex: "#F43F5E", role: "Estados de error, eliminar leads, desconexiones" },
-      { name: "Warning Amber", value: "bg-amber-500", text: "text-amber-500", hex: "#F59E0B", role: "Alerta de SEO incompleto, leads pendientes" },
+      { name: "Primary Brand", value: "bg-[#06434a]", text: "text-[#06434a]", hex: "#06434a", role: "Botones principales, acentos de marca de alta densidad" },
+      { name: "Secondary Mint", value: "bg-[#07be8a]", text: "text-[#07be8a]", hex: "#07be8a", role: "Tasa de conversión positiva, leads calificados, badges" },
+      { name: "Neutral Dark Slate", value: "bg-[#172023]", text: "text-[#172023]", hex: "#172023", role: "Textos de visualización, títulos H1/H2, fondo de Sidebar" },
+      { name: "Neutral Light Stone", value: "bg-[#fafaf9]", text: "text-[#fafaf9]", hex: "#fafaf9", role: "Fondos de pantalla limpios y cálidos" },
+      { name: "Danger Rose", value: "bg-[#f43f5e]", text: "text-[#f43f5e]", hex: "#f43f5e", role: "Estados de error, eliminar leads, desconexiones" },
+      { name: "Warning Amber", value: "bg-[#f59e0b]", text: "text-[#f59e0b]", hex: "#f59e0b", role: "Alerta de SEO incompleto, leads pendientes" },
     ],
     typography: [
-      { name: "Display Hero", size: "text-4xl (36px)", weight: "font-black tracking-tight", usage: "Títulos monumentales en landing" },
-      { name: "H1 Header", size: "text-2xl (24px)", weight: "font-extrabold tracking-tight", usage: "Títulos principales de cada sección" },
-      { name: "H2 Subheading", size: "text-lg (18px)", weight: "font-bold", usage: "Títulos de tarjetas, paneles internos" },
-      { name: "Body Standard", size: "text-sm (14px)", weight: "font-medium text-slate-600", usage: "Párrafos de lectura, tablas, descripciones" },
-      { name: "Label Mono", size: "text-[10px]", weight: "font-bold font-mono text-slate-400 uppercase tracking-wider", usage: "Etiquetas, metadatos, identificadores" },
+      { name: "Display (Poppins)", size: "text-4xl (36px)", weight: "font-black tracking-tight", usage: "Títulos monumentales e impacto visual" },
+      { name: "H1 Header (Poppins)", size: "text-2xl (24px)", weight: "font-extrabold tracking-tight", usage: "Títulos principales de sección" },
+      { name: "H2 Subheading (Poppins)", size: "text-lg (18px)", weight: "font-bold", usage: "Títulos de tarjetas, paneles internos" },
+      { name: "Body Standard (Inter)", size: "text-sm (14px)", weight: "font-medium text-stone-600", usage: "Párrafos de lectura, tablas, descripciones" },
+      { name: "Label Mono (Inter)", size: "text-[10px]", weight: "font-bold font-mono text-stone-400 uppercase tracking-wider", usage: "Etiquetas, metadatos, identificadores" },
     ],
     spacing: [
       { name: "Micro", size: "4px", value: "p-1", usage: "Espaciado de etiquetas y metadatos muy pequeños" },

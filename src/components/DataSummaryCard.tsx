@@ -1,6 +1,6 @@
 import React from 'react';
-import { BaseCard } from '@/components/ui/BaseCard';
 import { IconType } from 'react-icons';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/src/components/ui/card";
 
 interface DataSummaryCardProps {
   title: string;
@@ -20,18 +20,20 @@ const DataSummaryCard: React.FC<DataSummaryCardProps> = ({
   changeType,
 }) => {
   return (
-    <BaseCard>
-      <div className="p-4">
+    <Card className="p-4">
+      <CardHeader className="p-0 pb-4">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="text-lg font-semibold">{title}</h3>
-            <p className="text-sm text-muted-foreground">{subtitle}</p>
+            <CardTitle className="text-lg font-semibold">{title}</CardTitle>
+            <CardDescription className="text-sm text-muted-foreground">{subtitle}</CardDescription>
           </div>
           <div className="text-2xl">
             <Icon />
           </div>
         </div>
-        <div className="mt-4">
+      </CardHeader>
+      <CardContent className="p-0">
+        <div className="mt-4"> {/* This div was inside BaseCard's children */}
           <p className="text-3xl font-bold">{value}</p>
           {change && (
             <p className={`text-sm ${changeType === 'positive' ? 'text-green-500' : 'text-red-500'}`}>
@@ -39,8 +41,8 @@ const DataSummaryCard: React.FC<DataSummaryCardProps> = ({
             </p>
           )}
         </div>
-      </div>
-    </BaseCard>
+      </CardContent>
+    </Card>
   );
 };
 

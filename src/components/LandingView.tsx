@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { useCms } from "./CmsContext";
 import { motion, AnimatePresence } from "motion/react";
 import * as LucideIcons from "lucide-react";
@@ -10,22 +11,34 @@ import { Card } from "@/src/components/ui/card";
 import { SubpageLayout } from "./SubpageLayout";
 
 export const LandingView: React.FC = () => {
+  const { pathname } = useLocation();
   const {
     content,
     addLead,
-    setActiveView,
     screens,
     cart,
-    toggleCart,
-    clearCart,
-    weeks,
-    setWeeks,
-    activeSlug,
-    setActiveSlug,
   } = useCms();
 
+  useEffect(() => {
+    // #region agent log
+    fetch("http://127.0.0.1:7493/ingest/f8c8e631-57b0-4152-abc1-83ff85c4f09b", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "8483d9" },
+      body: JSON.stringify({
+        sessionId: "8483d9",
+        runId: "pre-fix",
+        hypothesisId: "A",
+        location: "LandingView.tsx:mount",
+        message: "LandingView mounted",
+        data: { pathname, isHomepage: pathname === "/" },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
+  }, [pathname]);
+
   // Selected city & catalog tab state
-  const [selectedCity, setSelectedCity] = useState<"Mendoza" | "San Juan" | "Buenos Aires">("Mendoza");
+  const [selectedCity, setSelectedCity] = useState<"Mendoza" | "Buenos Aires">("Mendoza");
   const [catalogTab, setCatalogTab] = useState<"tarjetas" | "mapa" | "mediakit">("tarjetas");
 
   // General B2B Contact form states
@@ -95,24 +108,10 @@ export const LandingView: React.FC = () => {
     <div className="min-h-screen bg-[#FAF9F5] text-stone-800 selection:bg-stone-200/50 font-sans antialiased overflow-x-hidden">
       {/* 1. Navigation with unified action buttons */}
       <Navigation
-        activeSlug={activeSlug}
-        onNavigate={(slug) => {
-          setActiveSlug(slug);
-          window.scrollTo({ top: 0, behavior: "smooth" });
-        }}
-        onSetActiveView={setActiveView}
-        onSectionClick={(section) => {
-          if (activeSlug !== "/") {
-            setActiveSlug("/");
-            setTimeout(() => handleSectionClick(section), 100);
-          } else {
-            handleSectionClick(section);
-          }
-        }}
+        onSectionClick={handleSectionClick}
         cartCount={cart.length}
       />
 
-      {activeSlug === "/" ? (
         <>
           {/* 2. Hero & Plaza selection */}
           <Hero
@@ -188,7 +187,7 @@ export const LandingView: React.FC = () => {
                 {
                   icon: <LucideIcons.Target className="h-5 w-5" />,
                   title: "Planificación de Medios B2B",
-                  description: "Campañas geolocalizadas con segmentación de audiencia vehicular y peatonal de alta densidad en Mendoza, San Juan y Buenos Aires.",
+                  description: "Campañas geolocalizadas con segmentación de audiencia vehicular y peatonal de alta densidad en Mendoza y Buenos Aires.",
                   badge: "Estratégico"
                 },
                 {
@@ -217,7 +216,7 @@ export const LandingView: React.FC = () => {
                 }
               ].map((service, idx) => (
                 <div
-                  key={idx}
+                  key={idx} // Convert to Card
                   className="p-5 bg-white border border-stone-200 rounded-[16px] hover:border-[#06434a]/30 hover:shadow-sm transition-all duration-300 flex flex-col justify-between h-full"
                 >
                   <div className="space-y-3.5">
@@ -248,7 +247,7 @@ export const LandingView: React.FC = () => {
                       <LucideIcons.ArrowRight className="h-3 w-3" />
                     </button>
                   </div>
-                </div>
+                </div> // End of Card
               ))}
             </div>
           </div>
@@ -289,7 +288,7 @@ export const LandingView: React.FC = () => {
                 }
               ].map((support, idx) => (
                 <div key={idx} className="p-5 bg-white border border-stone-200 rounded-[16px] space-y-3.5">
-                  <div className="flex items-center gap-2.5">
+                  <div className="flex items-center gap-2.5"> {/* CardHeader-like */}
                     <div className="p-2 rounded-xl bg-stone-50 border border-stone-100">
                       {support.icon}
                     </div>
@@ -297,10 +296,9 @@ export const LandingView: React.FC = () => {
                       {support.spec}
                     </span>
                   </div>
-
-                  <h4 className="text-xs font-bold text-stone-900 font-display">{support.title}</h4>
-                  <p className="text-[11px] text-stone-500 leading-relaxed">{support.desc}</p>
-                </div>
+                  <h4 className="text-xs font-bold text-stone-900 font-display">{support.title}</h4> {/* CardTitle */}
+                  <p className="text-[11px] text-stone-500 leading-relaxed">{support.desc}</p> {/* CardDescription */}
+                </div> // End of Card
               ))}
             </div>
           </div>
@@ -476,7 +474,6 @@ export const LandingView: React.FC = () => {
                       className="w-full px-3 py-2 text-xs border border-stone-200 rounded-xl bg-stone-50 font-semibold text-stone-700 focus:outline-none cursor-pointer"
                     >
                       <option value="Mendoza">Plaza Mendoza</option>
-                      <option value="San Juan">Plaza San Juan</option>
                       <option value="Buenos Aires">Plaza Buenos Aires</option>
                       <option value="Todas">Múltiples Plazas</option>
                     </select>
@@ -592,26 +589,26 @@ export const LandingView: React.FC = () => {
         </div>
       </section>
         </>
-      ) : (
-        <SubpageLayout
-          slug={activeSlug}
-          handleNavigate={(slug) => {
-            setActiveSlug(slug);
-            window.scrollTo({ top: 0, behavior: "smooth" });
-          }}
-          screens={screens}
-          cart={cart}
-          toggleCart={toggleCart}
-          clearCart={clearCart}
-          weeks={weeks}
-          setWeeks={setWeeks}
-          addLead={addLead}
-        />
-      )}
+      
 
       {/* 8. Unified Footer */}
       <Footer
         onNavigate={(slug) => {
+          // #region agent log
+          fetch("http://127.0.0.1:7493/ingest/f8c8e631-57b0-4152-abc1-83ff85c4f09b", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "X-Debug-Session-Id": "8483d9" },
+            body: JSON.stringify({
+              sessionId: "8483d9",
+              runId: "pre-fix",
+              hypothesisId: "B",
+              location: "LandingView.tsx:Footer.onNavigate",
+              message: "Footer navigate invoked",
+              data: { slug, hasSetActiveSlug: typeof setActiveSlug !== "undefined" },
+              timestamp: Date.now(),
+            }),
+          }).catch(() => {});
+          // #endregion
           setActiveSlug(slug);
           window.scrollTo({ top: 0, behavior: "smooth" });
         }}

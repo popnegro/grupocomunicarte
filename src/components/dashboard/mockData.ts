@@ -90,31 +90,7 @@ export const INITIAL_MEDIAKITS: MediaKit[] = [
       { id: "ba-02", notas: "Corredor Callao y Libertador para target ejecutivo.", prioridad: "Alta", duracionSem: 2 }
     ]
   },
-  {
-    id: "mk-203",
-    nombre: "Pauta Estacional San Juan - Retail PyME",
-    clienteId: "cl-04",
-    clienteNombre: "Franquicias Café Central",
-    ciudad: "San Juan",
-    screenIds: ["sj-01", "sj-03"],
-    version: 3,
-    estado: "Aceptado",
-    fecha: "2026-07-25",
-    presupuesto: 1200000,
-    objetivo: "Tracción de tráfico a locales del microcentro",
-    comentarios: [
-      { id: "c-2", user: "Comercial Ejec.", text: "Cliente aceptó el descuento del 10% en el pack.", date: "2026-07-26 11:00" }
-    ],
-    historial: [
-      { id: "h-4", action: "Creado", date: "2026-07-25 11:00", user: "Comercial Ejec." },
-      { id: "h-5", action: "Aplicado descuento comercial del 10%", date: "2026-07-26 10:15", user: "Director Comercial" },
-      { id: "h-6", action: "Aprobado por el cliente", date: "2026-07-27 16:00", user: "Comercial Ejec." }
-    ],
-    soportesEdicionInline: [
-      { id: "sj-01", notas: "Cerca de Legislatura, gran impacto peatonal.", prioridad: "Alta", duracionSem: 3 },
-      { id: "sj-03", notas: "Plaza 25 de Mayo, casco comercial.", prioridad: "Alta", duracionSem: 3 }
-    ]
-  }
+
 ];
 
 export const INITIAL_COTIZACIONES: Cotizacion[] = [
@@ -129,31 +105,11 @@ export const INITIAL_COTIZACIONES: Cotizacion[] = [
     total: 1440000,
     estado: "Enviada"
   },
-  {
-    id: "qt-102",
-    mediakitId: "mk-203",
-    mediakitNombre: "Pauta Estacional San Juan - Retail PyME",
-    clienteNombre: "Franquicias Café Central",
-    descuentoPercent: 12,
-    validez: "2026-08-10",
-    condiciones: "Facturación a 30 días.",
-    total: 501600,
-    estado: "Aceptada"
-  }
+
 ];
 
 export const INITIAL_RESERVAS: Reserva[] = [
-  {
-    id: "rv-401",
-    mediakitId: "mk-203",
-    clienteNombre: "Franquicias Café Central",
-    screenId: "sj-01",
-    screenNombre: "Av. Libertador y Las Heras",
-    fechaInicio: "2026-08-01",
-    fechaFin: "2026-08-22",
-    estado: "Confirmada",
-    conflictiva: false
-  },
+
   // Overlapping booking to simulate AI conflict detection
   {
     id: "rv-402",
@@ -169,18 +125,7 @@ export const INITIAL_RESERVAS: Reserva[] = [
 ];
 
 export const INITIAL_CAMPAÑAS: Campaña[] = [
-  {
-    id: "cp-501",
-    reservaId: "rv-401",
-    clienteNombre: "Franquicias Café Central",
-    nombre: "Promo Invierno Café Central - San Juan",
-    screenId: "sj-01",
-    screenNombre: "Av. Libertador y Las Heras",
-    fechaInicio: "2026-08-01",
-    fechaFin: "2026-08-22",
-    progreso: 15,
-    estado: "Planificada"
-  },
+
   {
     id: "cp-502",
     reservaId: "rv-400", // pre-existing campaign
@@ -213,16 +158,7 @@ export const INITIAL_VEHICLES: LedVehicle[] = [
     gpsStatus: "Online",
     estado: "En ruta"
   },
-  {
-    id: "vh-02",
-    patente: "AE-112-ZZ",
-    chofer: "Ramiro Funes",
-    rutaActiva: "Anillo Comercial Capital (San Juan)",
-    bateria: "95%",
-    velocidad: "0 km/h",
-    gpsStatus: "Online",
-    estado: "Disponible"
-  },
+
   {
     id: "vh-03",
     patente: "AG-889-AA",

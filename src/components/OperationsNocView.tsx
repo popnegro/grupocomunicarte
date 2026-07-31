@@ -3,6 +3,7 @@ import { motion } from "motion/react";
 import { Shield, Radio, Activity, AlertTriangle, CheckCircle2, Server, Hammer, Eye, FileText, Send, Calendar, RefreshCcw, Plus, Check } from "lucide-react";
 import { Button } from "./ui/button";
 import { useCms } from "./CmsContext";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/src/components/ui/card";
 
 interface NocAlert {
   id: string;
@@ -105,34 +106,31 @@ export const OperationsNocView: React.FC = () => {
 
       {/* NOC Performance Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-        <div className="bg-white border border-slate-200 p-4.5 rounded-2xl shadow-xs space-y-1">
+        <Card className="p-4.5 space-y-1">
           <div className="flex items-center justify-between">
             <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Estado General de Red</span>
             <span className="h-2 w-2 rounded-full bg-emerald-500" />
           </div>
           <span className="text-xl font-extrabold text-slate-950 block">94.8% Online</span>
           <span className="text-[9px] text-slate-400 block font-semibold">10 de 11 nodos activos</span>
-        </div>
-
-        <div className="bg-white border border-slate-200 p-4.5 rounded-2xl shadow-xs space-y-1">
+        </Card>
+        <Card className="p-4.5 space-y-1">
           <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Alarmas Activas</span>
           <span className={`text-xl font-black block ${activeAlertsCount > 0 ? "text-rose-600 animate-pulse" : "text-slate-950"}`}>
             {activeAlertsCount} Alertas
           </span>
           <span className="text-[9px] text-slate-400 block font-semibold">Requiere atención en Palmares</span>
-        </div>
-
-        <div className="bg-white border border-slate-200 p-4.5 rounded-2xl shadow-xs space-y-1">
+        </Card>
+        <Card className="p-4.5 space-y-1">
           <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Carga Publicitaria (Ocupación)</span>
           <span className="text-xl font-extrabold text-slate-950 block">76.3%</span>
           <span className="text-[9px] text-emerald-600 block font-semibold">↑ 4.2% esta semana</span>
-        </div>
-
-        <div className="bg-white border border-slate-200 p-4.5 rounded-2xl shadow-xs space-y-1">
+        </Card>
+        <Card className="p-4.5 space-y-1">
           <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Auditorías Pendientes (PoP)</span>
           <span className="text-xl font-extrabold text-slate-950 block">3 Pendientes</span>
           <span className="text-[9px] text-slate-400 block font-semibold">Verificación fotográfica requerida</span>
-        </div>
+        </Card>
       </div>
 
       {/* Navigation Sub-Tabs */}
@@ -169,7 +167,7 @@ export const OperationsNocView: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           {(["Planificación", "Impresión/Assets", "Carga Digital", "Auditoría", "Mantenimiento"] as const).map((stage) => {
             const stageTasks = tasks.filter((t) => t.stage === stage);
-            return (
+            return ( // This is a column for kanban, which contains cards.
               <div key={stage} className="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex flex-col h-[450px]">
                 {/* Column Header */}
                 <div className="flex items-center justify-between border-b border-slate-200 pb-2.5 mb-3 shrink-0">
@@ -182,9 +180,9 @@ export const OperationsNocView: React.FC = () => {
                 {/* Column Body Tasks */}
                 <div className="space-y-3 overflow-y-auto flex-grow min-h-0 pr-0.5">
                   {stageTasks.length === 0 ? (
-                    <div className="border border-dashed border-slate-200 rounded-xl p-4 text-center text-slate-400 text-[10px] bg-white/50 py-10">
+                    <Card className="border border-dashed border-slate-200 p-4 text-center text-slate-400 text-[10px] bg-white/50 py-10">
                       Sin tareas activas
-                    </div>
+                    </Card>
                   ) : (
                     stageTasks.map((task) => (
                       <div
@@ -207,14 +205,14 @@ export const OperationsNocView: React.FC = () => {
                     ))
                   )}
                 </div>
-              </div>
-            );
+                </div>
+            )
           })}
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Active Alerts List */}
-          <div className="lg:col-span-8 bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+          <Card className="lg:col-span-8 overflow-hidden">
             <div className="bg-slate-50/50 border-b border-slate-100 p-4.5 flex items-center justify-between">
               <span className="text-xs font-bold text-slate-900">Historial Reciente de Alertas de Nodos</span>
               <button
@@ -230,9 +228,9 @@ export const OperationsNocView: React.FC = () => {
 
             <div className="divide-y divide-slate-100">
               {alerts.length === 0 ? (
-                <div className="p-8 text-center text-slate-400 text-xs">
+                <CardContent className="p-8 text-center text-slate-400 text-xs">
                   No hay incidentes ni alertas registradas en el NOC.
-                </div>
+                </CardContent>
               ) : (
                 alerts.map((al) => (
                   <div
@@ -294,12 +292,12 @@ export const OperationsNocView: React.FC = () => {
                   </div>
                 ))
               )}
-            </div>
-          </div>
-
+            </div> {/* End of divide-y */}
+          </Card> {/* End of Card */}
+          
           {/* Incident reporting status guidelines */}
           <div className="lg:col-span-4 space-y-6">
-            <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-4 text-xs">
+            <Card className="p-5 space-y-4 text-xs">
               <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider border-b border-slate-100 pb-3">
                 Protocolo de Emergencias NOC
               </h3>
@@ -317,7 +315,7 @@ export const OperationsNocView: React.FC = () => {
                   <p><strong className="text-slate-800">Sensores de Brillo:</strong> El software recalibra la emisión lumínica en Mendoza según la salida de sol y atardecer para evitar encandilamiento o pautas tenues.</p>
                 </div>
               </div>
-            </div>
+            </Card>
           </div>
         </div>
       )}

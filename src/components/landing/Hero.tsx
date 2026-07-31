@@ -6,7 +6,7 @@ import { DoohScreen } from "../../types";
 interface HeroProps {
   screens: DoohScreen[];
   selectedCity: string;
-  onCitySelect: (city: "Mendoza" | "San Juan" | "Buenos Aires") => void;
+  onCitySelect: (city: "Mendoza" | "Buenos Aires") => void;
   onExploreClick: () => void;
 }
 
@@ -17,7 +17,7 @@ export const Hero: React.FC<HeroProps> = ({
   onExploreClick,
 }) => {
   // Calculate stats dynamically for each plaza
-  const getCityStats = (city: "Mendoza" | "San Juan" | "Buenos Aires") => {
+  const getCityStats = (city: "Mendoza" | "Buenos Aires") => {
     const cityScreens = screens.filter((s) => s.ciudad === city);
     const fixed = cityScreens.filter((s) => s.categoria === "Pantallas LED" || s.categoria === "Tradicionales").length;
     const mobile = cityScreens.filter((s) => s.categoria === "LED Móvil").length;
@@ -32,7 +32,6 @@ export const Hero: React.FC<HeroProps> = ({
   };
 
   const mendozaStats = getCityStats("Mendoza");
-  const sanJuanStats = getCityStats("San Juan");
   const buenosAiresStats = getCityStats("Buenos Aires");
 
   const plazarCards = [
@@ -42,14 +41,6 @@ export const Hero: React.FC<HeroProps> = ({
       description: "Polo estratégico del Oeste Argentino",
       stats: mendozaStats,
       accent: "from-sky-500/10 to-[#06434a]/10",
-      border: "hover:border-[#06434a]/30",
-    },
-    {
-      id: "San Juan" as const,
-      name: "San Juan",
-      description: "Conexión urbana e institucional clave",
-      stats: sanJuanStats,
-      accent: "from-purple-500/10 to-[#06434a]/10",
       border: "hover:border-[#06434a]/30",
     },
     {
@@ -120,7 +111,7 @@ export const Hero: React.FC<HeroProps> = ({
             <div className="flex items-center justify-between border-t border-white/10 pt-4 z-10 text-xs">
               <div>
                 <span className="block text-[8px] uppercase font-bold text-stone-400">Plazas Habilitadas</span>
-                <span className="font-mono font-black text-white">Mendoza, SJ & BA</span>
+                <span className="font-mono font-black text-white">Mendoza & BA</span>
               </div>
               <div className="text-right">
                 <span className="block text-[8px] uppercase font-bold text-stone-400">Total Soportes</span>

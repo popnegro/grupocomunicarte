@@ -31,7 +31,7 @@ import { Button } from "@/src/components/ui/button";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/src/components/ui/dialog";
 
 interface InventoryCatalogProps {
-  selectedCity: "Mendoza" | "San Juan" | "Buenos Aires";
+  selectedCity: "Mendoza" | "Buenos Aires";
   activeTab: "tarjetas" | "mapa" | "mediakit";
   setActiveTab: (tab: "tarjetas" | "mapa" | "mediakit") => void;
 }
@@ -655,7 +655,7 @@ Mensaje del cliente: ${checkoutForm.message || "Sin mensaje adicional."}
                 <div className="space-y-2">
                   <h4 className="font-bold text-stone-900 text-base font-display">Tu MediaKit está vacío</h4>
                   <p className="text-xs text-stone-500 max-w-sm mx-auto leading-relaxed">
-                    Aún no seleccionaste ningún soporte publicitario. Regresá al catálogo de tarjetas o mapa para añadir espacios de Mendoza, San Juan o Buenos Aires.
+                    Aún no seleccionaste ningún soporte publicitario. Regresá al catálogo de tarjetas o mapa para añadir espacios de Mendoza o Buenos Aires.
                   </p>
                 </div>
                 <div>

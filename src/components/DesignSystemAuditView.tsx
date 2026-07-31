@@ -24,6 +24,7 @@ import {
 // Import real shadcn/ui components
 import { Badge } from "./ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "./ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/src/components/ui/card";
 import { Button } from "./ui/button";
 
 interface DesignSystemAuditProps {
@@ -155,7 +156,7 @@ export const DesignSystemAuditView: React.FC<DesignSystemAuditProps> = () => {
             >
               {/* Score metrics blocks */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-white border border-slate-200 rounded-xl p-4 flex items-center gap-4 shadow-2xs">
+                <Card className="p-4 flex items-center gap-4 shadow-2xs">
                   <div className="h-10 w-10 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600">
                     <Layout className="h-5 w-5" />
                   </div>
@@ -164,9 +165,9 @@ export const DesignSystemAuditView: React.FC<DesignSystemAuditProps> = () => {
                     <span className="text-md font-black text-slate-900">89 / 100</span>
                     <span className="block text-[9px] text-emerald-600 font-semibold mt-0.5">Alto potencial de captación</span>
                   </div>
-                </div>
+                </Card>
 
-                <div className="bg-white border border-slate-200 rounded-xl p-4 flex items-center gap-4 shadow-2xs">
+                <Card className="p-4 flex items-center gap-4 shadow-2xs">
                   <div className="h-10 w-10 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
                     <CheckCircle2 className="h-5 w-5" />
                   </div>
@@ -175,9 +176,9 @@ export const DesignSystemAuditView: React.FC<DesignSystemAuditProps> = () => {
                     <span className="text-md font-black text-slate-900">Pasado (Nivel AA)</span>
                     <span className="block text-[9px] text-slate-400 font-semibold mt-0.5">Soporta lectores y contrastes</span>
                   </div>
-                </div>
+                </Card>
 
-                <div className="bg-white border border-slate-200 rounded-xl p-4 flex items-center gap-4 shadow-2xs">
+                <Card className="p-4 flex items-center gap-4 shadow-2xs">
                   <div className="h-10 w-10 rounded-lg bg-amber-50 flex items-center justify-center text-amber-600">
                     <Grid className="h-5 w-5" />
                   </div>
@@ -186,13 +187,12 @@ export const DesignSystemAuditView: React.FC<DesignSystemAuditProps> = () => {
                     <span className="text-md font-black text-slate-900">Muy Bajo</span>
                     <span className="block text-[9px] text-emerald-600 font-semibold mt-0.5">Flujo en 3 pasos simple</span>
                   </div>
-                </div>
+                </Card>
               </div>
 
               {/* Core Audit Report Grid */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Strengths & Recommendations */}
-                <div className="space-y-4">
                   {/* Fortalezas */}
                   <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-2xs space-y-3">
                     <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
@@ -214,8 +214,9 @@ export const DesignSystemAuditView: React.FC<DesignSystemAuditProps> = () => {
                       </li>
                     </ul>
                   </div>
-
+                  
                   {/* Recomendaciones */}
+                  {/* This is a card-like structure */}
                   <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-2xs space-y-3">
                     <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
                       <span className="h-2 w-2 rounded-full bg-indigo-500" />
@@ -236,9 +237,9 @@ export const DesignSystemAuditView: React.FC<DesignSystemAuditProps> = () => {
                       </li>
                     </ul>
                   </div>
-                </div>
-
+                  {/* End of card-like structure */}
                 {/* Problems & Risks */}
+                {/* This is a card-like structure */}
                 <div className="space-y-4">
                   <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-2xs space-y-3">
                     <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5 text-rose-700">
@@ -264,8 +265,9 @@ export const DesignSystemAuditView: React.FC<DesignSystemAuditProps> = () => {
                       </div>
                     </div>
                   </div>
-
+                  
                   {/* Future Improvements Backlog */}
+                  {/* This is a card-like structure */}
                   <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-2xs space-y-3">
                     <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
                       <Sparkles className="h-3.5 w-3.5 text-indigo-500" />
@@ -290,9 +292,10 @@ export const DesignSystemAuditView: React.FC<DesignSystemAuditProps> = () => {
                       </div>
                     </div>
                   </div>
-                </div>
-              </div>
-
+                  {/* End of card-like structure */}
+                </div> {/* End of Problems & Risks column */}
+              </div> {/* End of Core Audit Report Grid */}
+              
               {/* Interactive Checklist UI */}
               <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-2xs space-y-4">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 border-b border-slate-100 pb-3">
@@ -347,7 +350,7 @@ export const DesignSystemAuditView: React.FC<DesignSystemAuditProps> = () => {
             </motion.div>
           )}
 
-          {/* SUB-TAB 2: DESIGN TOKENS */}
+          {/* SUB-TAB 2: DESIGN TOKENS */} {/* This is a card-like section */}
           {activeSubTab === "tokens" && (
             <motion.div
               key="tokens-view"
@@ -357,7 +360,7 @@ export const DesignSystemAuditView: React.FC<DesignSystemAuditProps> = () => {
               className="space-y-6"
             >
               {/* Colors system */}
-              <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-2xs space-y-4">
+              <Card className="p-5 shadow-2xs space-y-4">
                 <div className="border-b border-slate-100 pb-2">
                   <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
                     <span className="h-1.5 w-1.5 rounded-full bg-indigo-600" />
@@ -381,9 +384,9 @@ export const DesignSystemAuditView: React.FC<DesignSystemAuditProps> = () => {
                     </div>
                   ))}
                 </div>
-              </div>
-
+              </Card>
               {/* Typography scale */}
+              {/* This is a card-like structure */}
               <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-2xs space-y-4">
                 <div className="border-b border-slate-100 pb-2">
                   <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
@@ -410,8 +413,9 @@ export const DesignSystemAuditView: React.FC<DesignSystemAuditProps> = () => {
                   ))}
                 </div>
               </div>
-
+              {/* End of card-like structure */}
               {/* Spacing tokens */}
+              {/* This is a card-like structure */}
               <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-2xs space-y-4">
                 <div className="border-b border-slate-100 pb-2">
                   <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
@@ -461,7 +465,7 @@ export const DesignSystemAuditView: React.FC<DesignSystemAuditProps> = () => {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* 1. Buttons playground */}
+                {/* 1. Buttons playground */} {/* This is a card-like structure */}
                 <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-2xs space-y-4">
                   <div className="border-b border-slate-100 pb-1.5">
                     <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Interactividad</span>
@@ -470,27 +474,26 @@ export const DesignSystemAuditView: React.FC<DesignSystemAuditProps> = () => {
 
                   {/* Selector states */}
                   <div className="flex flex-wrap gap-1">
-                    {["default", "hover", "active", "loading", "disabled"].map((st) => (
-                      <button
+                    {(["default", "hover", "active", "loading", "disabled"] as const).map((st) => (
+                      <Button
                         key={st}
                         onClick={() => setBtnState(st as any)}
-                        className={`px-2 py-1 text-[9px] font-bold uppercase rounded ${
-                          btnState === st 
-                            ? "bg-indigo-600 text-white" 
-                            : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                        }`}
+                        variant={btnState === st ? "default" : "secondary"}
+                        size="sm"
+                        className="h-auto px-2 py-1 text-[9px] font-bold uppercase"
                       >
                         {st}
-                      </button>
+                      </Button>
                     ))}
                   </div>
 
                   {/* Button render target */}
                   <div className="h-24 bg-slate-50/50 border border-slate-100 rounded-lg flex items-center justify-center p-4">
                     <Button
+                      size="lg"
                       disabled={btnState === "disabled" || btnState === "loading"}
-                      variant={btnState === "disabled" ? "outline" : btnState === "hover" ? "default" : btnState === "active" ? "default" : "secondary"}
-                      className={`w-full py-2.5 transition-all flex items-center justify-center gap-2 cursor-pointer ${
+                      variant={btnState === "disabled" ? "outline" : "default"}
+                      className={`w-full transition-all flex items-center justify-center gap-2 ${
                         btnState === "hover" 
                           ? "bg-indigo-600 text-white scale-[1.02] shadow-xs" 
                           : btnState === "active" 
@@ -513,8 +516,9 @@ export const DesignSystemAuditView: React.FC<DesignSystemAuditProps> = () => {
                       )}
                     </Button>
                   </div>
-                </div>
+                </div> {/* End of card-like structure */}
 
+                {/* 2. Badges / Status state */} {/* This is a card-like structure */}
                 {/* 2. Badges / Status state */}
                 <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-2xs space-y-4">
                   <div className="border-b border-slate-100 pb-1.5">
@@ -524,18 +528,16 @@ export const DesignSystemAuditView: React.FC<DesignSystemAuditProps> = () => {
 
                   {/* Selector states */}
                   <div className="flex flex-wrap gap-1">
-                    {["success", "warning", "danger", "info", "neutral"].map((st) => (
-                      <button
+                    {(["success", "warning", "danger", "info", "neutral"] as const).map((st) => (
+                      <Button
                         key={st}
                         onClick={() => setBadgeState(st as any)}
-                        className={`px-2 py-1 text-[9px] font-bold uppercase rounded ${
-                          badgeState === st 
-                            ? "bg-indigo-600 text-white" 
-                            : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                        }`}
+                        variant={badgeState === st ? "default" : "secondary"}
+                        size="sm"
+                        className="h-auto px-2 py-1 text-[9px] font-bold uppercase"
                       >
                         {st}
-                      </button>
+                      </Button>
                     ))}
                   </div>
 
@@ -568,8 +570,9 @@ export const DesignSystemAuditView: React.FC<DesignSystemAuditProps> = () => {
                       {badgeState === "neutral" && "📋 En Espera"}
                     </Badge>
                   </div>
-                </div>
+                </div> {/* End of card-like structure */}
 
+                {/* 3. Inputs state */} {/* This is a card-like structure */}
                 {/* 3. Inputs state */}
                 <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-2xs space-y-4">
                   <div className="border-b border-slate-100 pb-1.5">
@@ -579,18 +582,16 @@ export const DesignSystemAuditView: React.FC<DesignSystemAuditProps> = () => {
 
                   {/* Selector states */}
                   <div className="flex flex-wrap gap-1">
-                    {["default", "focus", "error", "filled"].map((st) => (
-                      <button
+                    {(["default", "focus", "error", "filled"] as const).map((st) => (
+                      <Button
                         key={st}
                         onClick={() => setInputState(st as any)}
-                        className={`px-2 py-1 text-[9px] font-bold uppercase rounded ${
-                          inputState === st 
-                            ? "bg-indigo-600 text-white" 
-                            : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                        }`}
+                        variant={inputState === st ? "default" : "secondary"}
+                        size="sm"
+                        className="h-auto px-2 py-1 text-[9px] font-bold uppercase"
                       >
                         {st}
-                      </button>
+                      </Button>
                     ))}
                   </div>
 
@@ -616,7 +617,7 @@ export const DesignSystemAuditView: React.FC<DesignSystemAuditProps> = () => {
                       <span className="text-[9px] text-rose-600 font-bold block">✘ Formato de correo inválido</span>
                     )}
                   </div>
-                </div>
+                </div> {/* End of card-like structure */}
               </div>
             </motion.div>
           )}
@@ -631,7 +632,7 @@ export const DesignSystemAuditView: React.FC<DesignSystemAuditProps> = () => {
               className="space-y-6"
             >
               {/* User Flow Map */}
-              <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-2xs space-y-4">
+              <Card className="p-5 shadow-2xs space-y-4">
                 <div className="border-b border-slate-100 pb-2">
                   <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
                     <span className="h-1.5 w-1.5 rounded-full bg-indigo-600" />
@@ -672,9 +673,9 @@ export const DesignSystemAuditView: React.FC<DesignSystemAuditProps> = () => {
                     <p className="text-[10px] text-slate-500 leading-tight">Guardado en PostgreSQL y envío automático de email bienvenida.</p>
                   </div>
                 </div>
-              </div>
-
+              </Card>
               {/* High / Low Fidelity Wireframe Blueprint */}
+              {/* This is a card-like structure */}
               <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-2xs space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
                   <div>
@@ -687,26 +688,22 @@ export const DesignSystemAuditView: React.FC<DesignSystemAuditProps> = () => {
                   
                   {/* Fidelity Switch */}
                   <div className="bg-slate-100 p-1 rounded-lg border border-slate-200 inline-flex">
-                    <button
+                    <Button
                       onClick={() => setWireframeFidelity("low")}
-                      className={`px-3 py-1 text-[10px] font-bold uppercase rounded-md transition-all cursor-pointer ${
-                        wireframeFidelity === "low" 
-                          ? "bg-white text-slate-900 shadow-xs" 
-                          : "text-slate-500 hover:text-slate-800"
-                      }`}
+                      variant={wireframeFidelity === "low" ? "secondary" : "ghost"}
+                      size="sm"
+                      className="h-auto px-3 py-1 text-[10px] font-bold uppercase"
                     >
                       Baja Fidelidad
-                    </button>
-                    <button
+                    </Button>
+                    <Button
                       onClick={() => setWireframeFidelity("high")}
-                      className={`px-3 py-1 text-[10px] font-bold uppercase rounded-md transition-all cursor-pointer ${
-                        wireframeFidelity === "high" 
-                          ? "bg-indigo-600 text-white shadow-xs" 
-                          : "text-slate-500 hover:text-slate-800"
-                      }`}
+                      variant={wireframeFidelity === "high" ? "default" : "ghost"}
+                      size="sm"
+                      className="h-auto px-3 py-1 text-[10px] font-bold uppercase"
                     >
                       Alta Fidelidad
-                    </button>
+                    </Button>
                   </div>
                 </div>
 
@@ -784,7 +781,7 @@ export const DesignSystemAuditView: React.FC<DesignSystemAuditProps> = () => {
                       </div>
                     </div>
                   )}
-                </div>
+                </div> {/* End of simulated console layout */}
               </div>
             </motion.div>
           )}
@@ -797,15 +794,16 @@ export const DesignSystemAuditView: React.FC<DesignSystemAuditProps> = () => {
           <Shield className="h-3.5 w-3.5 text-indigo-500" />
           * Todas las directrices de esta consola cumplen rigurosamente con los lineamientos del Prompt Maestro.
         </span>
-        <button
+        <Button
+          variant="outline"
+          size="sm"
           onClick={() => {
             alert("Design Specs Exportadas: Puedes encontrar las definiciones de tokens en /src/components/DesignSystemAuditView.tsx");
           }}
-          className="flex items-center gap-1.5 px-3 py-1.5 border border-slate-200 hover:border-indigo-200 bg-white text-slate-600 hover:text-indigo-600 rounded-lg text-xs font-bold transition-all shrink-0 cursor-pointer"
         >
           <Download className="h-3.5 w-3.5" />
           Exportar Tokens de Diseño
-        </button>
+        </Button>
       </div>
     </div>
   );

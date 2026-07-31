@@ -56,12 +56,12 @@ export const MediaKitModule: React.FC<MediaKitModuleProps> = ({
   // Manual wizard state
   const [wizardName, setWizardName] = useState("");
   const [wizardClienteId, setWizardClienteId] = useState(clientes[0]?.id || "");
-  const [wizardCiudad, setWizardCiudad] = useState<"Mendoza" | "San Juan" | "Buenos Aires">("Mendoza");
+  const [wizardCiudad, setWizardCiudad] = useState<"Mendoza" | "Buenos Aires">("Mendoza");
   const [wizardScreenIds, setWizardScreenIds] = useState<string[]>([]);
 
   // AI proposal state
   const [aiClient, setAiClient] = useState("");
-  const [aiCiudad, setAiCiudad] = useState<"Mendoza" | "San Juan" | "Buenos Aires">("Mendoza");
+  const [aiCiudad, setAiCiudad] = useState<"Mendoza" | "Buenos Aires">("Mendoza");
   const [aiBudget, setAiBudget] = useState("3000000");
   const [aiGoal, setAiGoal] = useState<"Branding" | "High Density" | "Premium">("Branding");
 
@@ -734,7 +734,6 @@ export const MediaKitModule: React.FC<MediaKitModuleProps> = ({
                     className="w-full px-3 py-2 border border-stone-200 rounded-xl bg-stone-50 cursor-pointer"
                   >
                     <option value="Mendoza">Mendoza</option>
-                    <option value="San Juan">San Juan</option>
                     <option value="Buenos Aires">Buenos Aires</option>
                   </select>
                 </div>
@@ -844,7 +843,6 @@ export const MediaKitModule: React.FC<MediaKitModuleProps> = ({
                     className="w-full px-3 py-2 border border-stone-200 rounded-xl bg-stone-50 cursor-pointer"
                   >
                     <option value="Mendoza">Mendoza</option>
-                    <option value="San Juan">San Juan</option>
                     <option value="Buenos Aires">Buenos Aires</option>
                   </select>
                 </div>

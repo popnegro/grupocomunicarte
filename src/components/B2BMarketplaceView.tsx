@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { ShoppingBag, Check, X, Calendar, ArrowRight, Sparkles, Receipt, Percent, Tag, User, Mail, Building, ShieldCheck, Download, AlertCircle } from "lucide-react";
 import { Button } from "./ui/button";
 import { useCms } from "./CmsContext";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/src/components/ui/card";
 
 export const B2BMarketplaceView: React.FC = () => {
   const { screens, cart, toggleCart, clearCart, addLead } = useCms();
@@ -126,7 +127,7 @@ export const B2BMarketplaceView: React.FC = () => {
             </div>
 
             {/* Receipt Summary card */}
-            <div className="bg-slate-50 border border-slate-150 rounded-xl p-4 text-xs space-y-2.5 text-left max-w-md mx-auto">
+            <Card className="bg-slate-50 border border-slate-150 p-4 text-xs space-y-2.5 text-left max-w-md mx-auto">
               <div className="flex justify-between border-b border-slate-200 pb-2 font-bold text-slate-900 uppercase text-[10px] tracking-wider">
                 <span>Resumen de Cotización</span>
                 <span>Mendoza OOH</span>
@@ -151,7 +152,7 @@ export const B2BMarketplaceView: React.FC = () => {
                 <span>Total Estimado Neto</span>
                 <span>${finalTotal.toLocaleString("es-AR")} ARS</span>
               </div>
-            </div>
+            </Card>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 max-w-md mx-auto pt-2">
               <Button
@@ -175,7 +176,7 @@ export const B2BMarketplaceView: React.FC = () => {
           </motion.div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6" key="marketplace">
-            {/* Left Column: Screen browser catalogs */}
+            {/* Left Column: Screen browser catalogs */} {/* This is a container for cards */}
             <div className="lg:col-span-8 space-y-5">
               {/* Filter controls */}
               <div className="bg-white border border-slate-200 p-4.5 rounded-2xl shadow-xs flex flex-col md:flex-row gap-4 items-start md:items-center justify-between text-xs font-bold text-slate-400 uppercase tracking-wider">
@@ -277,7 +278,7 @@ export const B2BMarketplaceView: React.FC = () => {
                           {isSelected ? (
                             <span className="flex items-center justify-center gap-1.5">
                               <Check className="h-3.5 w-3.5 text-emerald-400" />
-                              Quitar del Presupuesto
+                              Quitar de la Cotización
                             </span>
                           ) : (
                             "Agregar a mi Cotización"
@@ -292,7 +293,7 @@ export const B2BMarketplaceView: React.FC = () => {
 
             {/* Right Column: Checkout Proposal Form */}
             <div className="lg:col-span-4 space-y-6">
-              <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-5">
+              <Card className="p-5 space-y-5">
                 <div className="border-b border-slate-100 pb-3 flex items-center justify-between">
                   <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider">
                     Cotización Estimada ({cart.length})
@@ -469,7 +470,7 @@ export const B2BMarketplaceView: React.FC = () => {
                     </form>
                   </div>
                 )}
-              </div>
+              </Card>
             </div>
           </div>
         )}

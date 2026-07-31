@@ -1,0 +1,20 @@
+# Usar una imagen oficial de Node.js. La versión -slim es un buen balance.
+FROM node:20-slim
+
+# Establecer el directorio de trabajo dentro del contenedor
+WORKDIR /app
+
+# Copiar los archivos de definición de paquetes (package.json y package-lock.json)
+COPY package*.json ./
+
+# Instalar las dependencias del proyecto
+RUN npm install
+
+# Copiar el resto del código de la aplicación (será sobreescrito por el volumen, pero es buena práctica tenerlo)
+COPY . .
+
+# Exponer el puerto 3000 que usa tu aplicación de desarrollo
+EXPOSE 3000
+
+# El comando por defecto para iniciar el contenedor, que correrá el script "dev"
+CMD ["npm", "run", "dev"]

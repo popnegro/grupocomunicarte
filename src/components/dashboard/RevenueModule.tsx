@@ -81,7 +81,6 @@ export const RevenueModule: React.FC<RevenueModuleProps> = ({
   // Occupancy metrics per plaza
   const stats = [
     { plaza: "Mendoza", rate: 92, status: "Alta Demanda", color: "text-teal-600 bg-teal-50 border-teal-200" },
-    { plaza: "San Juan", rate: 76, status: "Normal", color: "text-blue-600 bg-blue-50 border-blue-200" },
     { plaza: "Buenos Aires", rate: 85, status: "Alta Demanda", color: "text-emerald-600 bg-emerald-50 border-emerald-200" }
   ];
 

@@ -6,15 +6,16 @@ import { Search, MapPin, Tv, ArrowUpDown, Shield, SlidersHorizontal, Eye, Dollar
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 
+import { useNavigate } from "react-router-dom";
+
 interface SoportesInventoryProps {
   initialCity?: string;
-  onNavigateToCityMap?: (city: "Mendoza" | "San Juan" | "Buenos Aires") => void;
 }
 
 export const SoportesInventory: React.FC<SoportesInventoryProps> = ({
   initialCity,
-  onNavigateToCityMap,
 }) => {
+  const navigate = useNavigate();
   const { screens } = useCms();
 
   // Local filtering states
@@ -96,7 +97,7 @@ export const SoportesInventory: React.FC<SoportesInventoryProps> = ({
     }
   };
 
-  const cities = ["Todas", "Mendoza", "San Juan", "Buenos Aires"];
+  const cities = ["Todas", "Mendoza", "Buenos Aires"];
   const tipos = ["Todos", "Peatonal", "Vehicular", "Mixto", "Móvil"];
   const categorias = ["Todas", "Pantallas LED", "Tradicionales", "LED Móvil"];
 
@@ -104,7 +105,7 @@ export const SoportesInventory: React.FC<SoportesInventoryProps> = ({
     <div className="space-y-8 font-sans">
       {/* Dynamic Inventory Stats Panel */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-        <div className="bg-white border border-stone-200/80 rounded-2xl p-5 flex items-center gap-4 shadow-xs">
+        <Card className="p-5 flex items-center gap-4 shadow-xs">
           <div className="p-3 bg-stone-100 text-stone-700 rounded-xl">
             <Tv className="h-5 w-5" />
           </div>
@@ -113,9 +114,9 @@ export const SoportesInventory: React.FC<SoportesInventoryProps> = ({
             <span className="text-2xl font-bold font-display text-stone-900">{stats.totalCount}</span>
             <span className="text-[10px] text-stone-400 block mt-0.5">En catálogo filtrado</span>
           </div>
-        </div>
+        </Card>
 
-        <div className="bg-white border border-stone-200/80 rounded-2xl p-5 flex items-center gap-4 shadow-xs">
+        <Card className="p-5 flex items-center gap-4 shadow-xs">
           <div className="p-3 bg-emerald-50 text-[#06434a] rounded-xl">
             <Eye className="h-5 w-5" />
           </div>
@@ -126,9 +127,9 @@ export const SoportesInventory: React.FC<SoportesInventoryProps> = ({
             </span>
             <span className="text-[10px] text-stone-400 block mt-0.5">Visualizaciones estimadas</span>
           </div>
-        </div>
+        </Card>
 
-        <div className="bg-white border border-stone-200/80 rounded-2xl p-5 flex items-center gap-4 shadow-xs">
+        <Card className="p-5 flex items-center gap-4 shadow-xs">
           <div className="p-3 bg-stone-100 text-[#06434a] rounded-xl">
             <DollarSign className="h-5 w-5" />
           </div>
@@ -139,11 +140,11 @@ export const SoportesInventory: React.FC<SoportesInventoryProps> = ({
             </span>
             <span className="text-[10px] text-stone-400 block mt-0.5">ARS por semana</span>
           </div>
-        </div>
+        </Card>
       </div>
 
       {/* Main Filter & Action Dashboard bar */}
-      <div className="bg-white border border-stone-200/80 rounded-2xl p-6 space-y-5 shadow-xs">
+      <Card className="p-6 space-y-5 shadow-xs">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-stone-100 pb-5">
           <div className="space-y-1">
             <h3 className="text-base font-bold text-stone-900 flex items-center gap-2">
@@ -264,9 +265,9 @@ export const SoportesInventory: React.FC<SoportesInventoryProps> = ({
             </button>
           </div>
 
-          {selectedCity !== "Todas" && onNavigateToCityMap && (
+          {selectedCity !== "Todas" && (
             <button
-              onClick={() => onNavigateToCityMap(selectedCity as any)}
+              onClick={() => navigate(`/ubicaciones/${selectedCity.toLowerCase()}`)}
               className="text-[#06434a] hover:text-[#0b5e67] font-bold text-xs flex items-center gap-1 transition-colors cursor-pointer"
             >
               <MapPin className="h-3.5 w-3.5" />
@@ -274,7 +275,7 @@ export const SoportesInventory: React.FC<SoportesInventoryProps> = ({
             </button>
           )}
         </div>
-      </div>
+      </Card>
 
       {/* Grid List */}
       {filteredAndSortedScreens.length > 0 ? (
@@ -286,7 +287,7 @@ export const SoportesInventory: React.FC<SoportesInventoryProps> = ({
           ))}
         </div>
       ) : (
-        <div className="text-center py-16 bg-white border border-dashed border-stone-200 rounded-3xl p-6">
+        <Card className="text-center py-16 border-dashed p-6">
           <Tv className="h-12 w-12 text-stone-300 mx-auto mb-3" />
           <h4 className="font-extrabold text-stone-850 text-sm">No encontramos soportes que coincidan</h4>
           <p className="text-stone-500 text-xs max-w-sm mx-auto mt-1.5 leading-relaxed font-medium">
@@ -305,7 +306,7 @@ export const SoportesInventory: React.FC<SoportesInventoryProps> = ({
             Restablecer Filtros
           </Button>
         </div>
-      )}
+      </Card>
     </div>
   );
 };

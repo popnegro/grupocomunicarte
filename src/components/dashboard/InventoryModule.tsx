@@ -208,7 +208,6 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
               >
                 <option value="Todas">Todas</option>
                 <option value="Mendoza">Mendoza</option>
-                <option value="San Juan">San Juan</option>
                 <option value="Buenos Aires">Buenos Aires</option>
               </select>
             </div>
@@ -423,7 +422,6 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
                         className="w-full px-2 py-1.5 text-[11px] border border-stone-200 rounded-lg bg-stone-50 cursor-pointer"
                       >
                         <option value="Mendoza">Mendoza</option>
-                        <option value="San Juan">San Juan</option>
                         <option value="Buenos Aires">Buenos Aires</option>
                       </select>
                     </div>
@@ -717,7 +715,6 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
                     className="w-full px-3 py-2 border border-stone-200 rounded-xl bg-stone-50 cursor-pointer"
                   >
                     <option value="Mendoza">Mendoza</option>
-                    <option value="San Juan">San Juan</option>
                     <option value="Buenos Aires">Buenos Aires</option>
                   </select>
                 </div>

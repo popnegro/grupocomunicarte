@@ -127,7 +127,6 @@ export const Footer: React.FC<FooterProps> = ({ onSetActiveView, onSectionScroll
           <ul className="space-y-2.5 text-xs text-stone-600">
             {[
               { label: "Plaza Mendoza", target: "espacios" },
-              { label: "Plaza San Juan", target: "espacios" },
               { label: "Plaza Buenos Aires", target: "espacios" },
               { label: "Catálogo Completo", target: "espacios" },
             ].map((link, idx) => (

@@ -116,25 +116,23 @@ async function callGemini(prompt: string, responseSchema?: any) {
   if (!ai) {
     throw new Error("Gemini AI Client is not initialized (missing API key)");
   }
-
-  const model = ai.getGenerativeModel({
-    model: "gemini-1.5-flash", // Usar un modelo recomendado
+  
+  const config: any = {
     temperature: 0.7,
-  });
-
-  const generationConfig: any = {};
+  };
 
   if (responseSchema) {
-    generationConfig.responseMimeType = "application/json";
-    generationConfig.responseSchema = responseSchema;
+    config.responseMimeType = "application/json";
+    config.responseSchema = responseSchema;
   }
 
-  const result = await model.generateContent(
-    prompt,
-    generationConfig
-  );
+  const response = await ai.models.generateContent({
+    model: "gemini-3.6-flash",
+    contents: prompt,
+    config,
+  });
 
-  return result.response.text();
+  return response.text;
 }
 
 // --- REST API ENDPOINTS ---
@@ -513,11 +511,11 @@ app.post("/api/ai/data-hub-query", async (req: Request, res: Response) => {
 
   try {
     if (ai) {
-      const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
-      const result = await model.generateContent(prompt);
-      const response = result.response;
-      const text = response.text();
-      res.json({ success: true, answer: text });
+      const response = await ai.models.generateContent({
+        model: "gemini-3.6-flash",
+        contents: prompt,
+      });
+      res.json({ success: true, answer: response.text });
     } else {
       throw new Error("Gemini AI Client is not initialized");
     }

@@ -25,8 +25,6 @@ import {
   Check,
   ChevronLeft
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/src/components/ui/card";
-import { Button } from "./ui/button";
 
 // Types for sitemap node
 interface SitemapNode {
@@ -144,7 +142,7 @@ export const SitemapSeoView: React.FC = () => {
         children: [
           { name: "Por Industria", slug: "/soluciones/por-industria", keyword: "publicidad exterior para automotriz retail", intent: "Commercial", wordCount: 1300, depth: 3 },
           { name: "Por Objetivo", slug: "/soluciones/por-objetivo", keyword: "campañas de branding via publica", intent: "Commercial", wordCount: 1150, depth: 3 },
-          { name: "Por Cotización", slug: "/soluciones/por-cotizacion", keyword: "cotizacion de publicidad en via publica", intent: "Transactional", wordCount: 1400, depth: 3 },
+          { name: "Por Presupuesto", slug: "/soluciones/por-presupuesto", keyword: "costo de publicidad en via publica", intent: "Transactional", wordCount: 1400, depth: 3 },
         ]
       },
       {
@@ -194,7 +192,7 @@ export const SitemapSeoView: React.FC = () => {
         wordCount: 750,
         depth: 2,
         children: [
-          { name: "Solicitar Cotización", slug: "/contacto/cotizacion", keyword: "cotizacion publicidad exterior argentina", intent: "Transactional", wordCount: 900, depth: 3 },
+          { name: "Solicitar Cotización", slug: "/contacto/cotizacion", keyword: "presupuesto publicidad exterior argentina", intent: "Transactional", wordCount: 900, depth: 3 },
           { name: "Trabajá con Nosotros", slug: "/contacto/empleo", keyword: "empleo publicidad exterior mendoza", intent: "Transactional", wordCount: 800, depth: 3 },
         ]
       },
@@ -367,16 +365,18 @@ export const SitemapSeoView: React.FC = () => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
             return (
-              <Button
+              <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as any)}
-                variant={isActive ? "default" : "ghost"}
-                size="sm"
-                className={`flex items-center gap-2 text-xs font-bold whitespace-nowrap h-auto py-2 px-3.5 rounded-lg ${isActive ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-400 hover:text-white hover:bg-slate-800/50'}`}
+                className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
+                  isActive
+                    ? "bg-emerald-600 text-white shadow-xs"
+                    : "text-slate-400 hover:text-white hover:bg-slate-800/50"
+                }`}
               >
                 <Icon className="h-3.5 w-3.5" />
                 {tab.label}
-              </Button>
+              </button>
             );
           })}
         </div>
@@ -425,26 +425,26 @@ export const SitemapSeoView: React.FC = () => {
 
               {/* Fast stats cards for sitemap depth */}
               <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-                <Card className="p-4 shadow-3xs">
+                <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-3xs">
                   <span className="block text-[10px] font-bold text-slate-400 uppercase font-mono">Profundidad Máxima</span>
                   <span className="text-md font-black text-slate-900">3 Niveles</span>
                   <span className="block text-[9px] text-emerald-600 font-bold mt-1">Cumple regla estricta UX</span>
-                </Card>
-                <Card className="p-4 shadow-3xs">
+                </div>
+                <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-3xs">
                   <span className="block text-[10px] font-bold text-slate-400 uppercase font-mono">Páginas Huérfanas</span>
                   <span className="text-md font-black text-slate-900">0</span>
                   <span className="block text-[9px] text-emerald-600 font-bold mt-1">100% enlazado interno</span>
-                </Card>
-                <Card className="p-4 shadow-3xs">
+                </div>
+                <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-3xs">
                   <span className="block text-[10px] font-bold text-slate-400 uppercase font-mono">Clústeres de Intención</span>
                   <span className="text-md font-black text-slate-900">4 Categorías</span>
                   <span className="block text-[9px] text-indigo-600 font-bold mt-1">Estructura SEO semántica</span>
-                </Card>
-                <Card className="p-4 shadow-3xs">
+                </div>
+                <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-3xs">
                   <span className="block text-[10px] font-bold text-slate-400 uppercase font-mono">Escalabilidad de URL</span>
                   <span className="text-md font-black text-slate-900">Infinita</span>
                   <span className="block text-[9px] text-emerald-600 font-bold mt-1">Listo para Headless CMS</span>
-                </Card>
+                </div>
               </div>
             </motion.div>
           )}
@@ -462,7 +462,7 @@ export const SitemapSeoView: React.FC = () => {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 
                 {/* 1. Diagnóstico de Debilidades de la Estructura Anterior */}
-                <Card className="p-5 shadow-2xs space-y-4">
+                <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-2xs space-y-4">
                   <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2 text-rose-700">
                     <AlertTriangle className="h-4.5 w-4.5 text-rose-500" />
                     Diagnóstico de Estructura Anterior (Problemas Críticos)
@@ -491,9 +491,9 @@ export const SitemapSeoView: React.FC = () => {
                     </div>
                   </div>
                 </div>
-                </Card>
+
                 {/* 2. Soluciones Aplicadas */}
-                <Card className="p-5 shadow-2xs space-y-4">
+                <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-2xs space-y-4">
                   <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2 text-emerald-700">
                     <CheckCircle2 className="h-4.5 w-4.5 text-emerald-500" />
                     Soluciones Aplicadas en el Rediseño Multipage
@@ -570,7 +570,7 @@ export const SitemapSeoView: React.FC = () => {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 
                 {/* Justificación UX */}
-                <Card className="p-5 shadow-2xs space-y-4">
+                <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-2xs space-y-4">
                   <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2 text-indigo-700">
                     <BookOpen className="h-4.5 w-4.5 text-indigo-500" />
                     Justificación de Experiencia de Usuario (UX Architect)
@@ -602,9 +602,9 @@ export const SitemapSeoView: React.FC = () => {
                     </div>
                   </div>
                 </div>
-                </Card>
+
                 {/* Justificación SEO */}
-                <Card className="p-5 shadow-2xs space-y-4">
+                <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-2xs space-y-4">
                   <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2 text-emerald-700">
                     <Globe className="h-4.5 w-4.5 text-emerald-500" />
                     Justificación SEO Estratégico (SEO Strategist)
@@ -633,7 +633,7 @@ export const SitemapSeoView: React.FC = () => {
                     </div>
                   </div>
                 </div>
-                </Card>
+
               </div>
 
               {/* Mega Menu Visual Blueprint */}
@@ -664,11 +664,11 @@ export const SitemapSeoView: React.FC = () => {
                     <div className="space-y-1 text-slate-400">
                       <div className="hover:text-white cursor-pointer">🗺 Mapa Interactivo Georreferenciado</div>
                       <div className="hover:text-white cursor-pointer">📊 Descargar Mediakit & Tarifario PDF</div>
-                      <div className="hover:text-white cursor-pointer">🎯 Solicitar Propuesta de Cotización</div>
+                      <div className="hover:text-white cursor-pointer">🎯 Solicitar Propuesta de Presupuesto</div>
                     </div>
                   </div>
                 </div>
-              </Card>
+              </div>
             </motion.div>
           )}
 
@@ -682,7 +682,7 @@ export const SitemapSeoView: React.FC = () => {
               className="space-y-6"
             >
               {/* Interactive URL Generator card */}
-              <Card className="p-5 shadow-2xs space-y-4">
+              <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-2xs space-y-4">
                 <div className="border-b border-slate-100 pb-2">
                   <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
                     <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" />
@@ -780,10 +780,10 @@ export const SitemapSeoView: React.FC = () => {
                     </div>
                   </div>
                 </div>
-              </Card>
+              </div>
 
               {/* Simulated Breadcrumbs code visualization to show Grade AA coding */}
-              <Card className="p-5 shadow-2xs space-y-2">
+              <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-2xs space-y-2">
                 <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider font-mono">Estructura JSON-LD para Google de Breadcrumbs (Marcado Schema.org)</span>
                 <pre className="p-3.5 bg-slate-50 border border-slate-150 rounded-lg text-[10px] font-mono text-slate-600 overflow-x-auto">
 {`{
@@ -825,7 +825,7 @@ export const SitemapSeoView: React.FC = () => {
               className="space-y-6"
             >
               {/* Scalability stats banner */}
-              <Card className="p-5 shadow-2xs space-y-4">
+              <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-2xs space-y-4">
                 <div className="border-b border-slate-100 pb-2">
                   <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
                     <span className="h-1.5 w-1.5 rounded-full bg-indigo-600" />
@@ -887,7 +887,7 @@ export const SitemapSeoView: React.FC = () => {
                     </div>
                   </div>
                 </div>
-              </Card>
+              </div>
 
               {/* Next.js App Router compatibility visualization */}
               <div className="bg-slate-900 text-white p-5 rounded-xl border border-slate-800 space-y-3">
@@ -925,17 +925,15 @@ export const SitemapSeoView: React.FC = () => {
           <Check className="h-4 w-4 text-emerald-500" />
           Estructura multipágina B2B diseñada bajo estándares de UX Architect y SEO Técnico.
         </span>
-        <Button
-          variant="outline"
-          size="sm"
+        <button
           onClick={() => {
             alert("Esquema de Sitemap Exportado para Google XML Sitemap Generator: https://grupocomunicarte.com/sitemap.xml");
           }}
-          className="h-auto text-xs"
+          className="flex items-center gap-1.5 px-3 py-1.5 border border-slate-200 hover:border-emerald-200 bg-white text-slate-600 hover:text-emerald-600 rounded-lg text-xs font-bold transition-all shrink-0 cursor-pointer"
         >
           <ExternalLink className="h-3.5 w-3.5" />
           Generar sitemap.xml
-        </Button>
+        </button>
       </div>
     </div>
   );

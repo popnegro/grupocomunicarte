@@ -97,10 +97,16 @@ export const ScreenCard: React.FC<ScreenCardProps> = ({
   return (
     <>
       <motion.div
-        layout
-        initial={{ opacity: 0, scale: 0.98 }}
-        animate={{ opacity: 1, scale: 1 }}
-        exit={{ opacity: 0, scale: 0.98 }}
+        layout="position"
+        initial={{ opacity: 0, scale: 0.96, y: 15 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.96, y: -15 }}
+        transition={{ 
+          type: "spring", 
+          stiffness: 300, 
+          damping: 28,
+          opacity: { duration: 0.25 }
+        }}
         className="h-full"
       >
         <Card
@@ -231,17 +237,27 @@ export const ScreenCard: React.FC<ScreenCardProps> = ({
           >
             {/* Comparison Checkbox */}
             {onCompareToggle ? (
-              <label className="flex items-center gap-1.5 cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={isComparing}
-                  onChange={onCompareToggle}
-                  className="h-3.5 w-3.5 rounded-md border-stone-300 text-[#06434a] focus:ring-[#06434a]/30 cursor-pointer accent-[#06434a]"
-                />
-                <span className="text-[10px] font-bold text-stone-500 uppercase tracking-wide hover:text-stone-850">
-                  Comparar
-                </span>
-              </label>
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onCompareToggle();
+                }}
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-[10px] font-extrabold uppercase tracking-wider transition-all cursor-pointer ${
+                  isComparing
+                    ? "bg-stone-50 text-[#06434a] border-[#06434a]/30"
+                    : "bg-white text-stone-500 border-stone-200 hover:text-stone-800 hover:border-stone-300"
+                }`}
+              >
+                <div className={`h-3 w-3 rounded-md flex items-center justify-center border transition-all ${
+                  isComparing 
+                    ? "bg-[#06434a] border-[#06434a]" 
+                    : "border-stone-300 bg-white"
+                }`}>
+                  {isComparing && <Check className="h-2 w-2 text-white stroke-[4px]" />}
+                </div>
+                <span>Comparar</span>
+              </button>
             ) : (
               <div className="text-[9px] text-stone-400 font-bold uppercase">
                 COBERTURA PREMIUM

@@ -7,7 +7,7 @@ interface NavigationProps {
   activeSlug: string;
   onNavigate: (slug: string) => void;
   onSetActiveView: (view: "landing" | "dashboard") => void;
-  onSectionClick?: (section: "inicio" | "espacios" | "mapa" | "mediakit" | "nosotros" | "contacto" | "soportes") => void;
+  onSectionClick?: (section: "inicio" | "espacios" | "soluciones" | "nosotros" | "contacto") => void;
   logoSrc?: string;
   logoAlt?: string;
   brandName?: string;
@@ -30,13 +30,11 @@ export const Navigation: React.FC<NavigationProps> = ({
   const NAV_ITEMS = [
     { id: "inicio", name: "Inicio", icon: <LucideIcons.Home className="h-4 w-4" /> },
     { id: "espacios", name: "Espacios Publicitarios", icon: <LucideIcons.LayoutGrid className="h-4 w-4" /> },
-    { id: "mapa", name: "Mapa", icon: <LucideIcons.Map className="h-4 w-4" /> },
-    { id: "soportes", name: "Soportes", icon: <LucideIcons.Monitor className="h-4 w-4" /> },
+    { id: "soluciones", name: "Soluciones", icon: <LucideIcons.Layers className="h-4 w-4" /> },
     { id: "nosotros", name: "Nosotros", icon: <LucideIcons.Info className="h-4 w-4" /> },
-    { id: "contacto", name: "Contacto", icon: <LucideIcons.Phone className="h-4 w-4" /> },
   ] as const;
 
-  const handleItemClick = (id: "inicio" | "espacios" | "mapa" | "mediakit" | "soportes" | "nosotros" | "contacto") => {
+  const handleItemClick = (id: "inicio" | "espacios" | "soluciones" | "nosotros" | "contacto") => {
     setActiveSection(id);
     setIsMobileMenuOpen(false);
     if (onSectionClick) {
@@ -95,17 +93,12 @@ export const Navigation: React.FC<NavigationProps> = ({
         {/* Action Buttons (Dashboard Access & Mobile Toggle) */}
         <div className="flex items-center gap-3">
           <button
-            id="nav-cta-login"
-            onClick={() => handleItemClick("mediakit")}
+            id="nav-cta-contacto"
+            onClick={() => handleItemClick("contacto")}
             className="hidden sm:flex items-center gap-2 text-xs font-bold text-white bg-[#06434a] hover:bg-[#0b5e67] px-5 py-2.5 rounded-full shadow-md hover:shadow-lg transition-all cursor-pointer font-sans relative"
           >
-            <LucideIcons.FileDown className="h-3.5 w-3.5 text-white" />
-            <span>Mi MediaKit</span>
-            {cartCount > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-amber-500 text-[10px] font-black text-white shadow-md animate-pulse">
-                {cartCount}
-              </span>
-            )}
+            <LucideIcons.Phone className="h-3.5 w-3.5 text-white" />
+            <span>Contacto</span>
           </button>
 
           {/* Mobile menu toggle */}
@@ -157,22 +150,16 @@ export const Navigation: React.FC<NavigationProps> = ({
                 })}
               </div>
 
-              {/* Login/CTA mobile item */}
+              {/* Contacto mobile item */}
               <div className="pt-2 border-t border-stone-200/50">
                 <button
                   onClick={() => {
-                    handleItemClick("mediakit");
-                    setIsMobileMenuOpen(false);
+                    handleItemClick("contacto");
                   }}
                   className="w-full py-3 px-4 text-center text-xs font-bold text-white bg-[#06434a] rounded-full hover:bg-[#0b5e67] transition-colors flex items-center justify-center gap-2 shadow-md relative"
                 >
-                  <LucideIcons.FileDown className="h-4 w-4" />
-                  <span>Mi MediaKit</span>
-                  {cartCount > 0 && (
-                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-amber-500 text-[10px] font-black text-white shadow-sm animate-pulse">
-                      {cartCount}
-                    </span>
-                  )}
+                  <LucideIcons.Phone className="h-4 w-4" />
+                  <span>Contacto</span>
                 </button>
               </div>
             </div>

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { useCms } from "../CmsContext";
 import { DoohScreen } from "../../types";
@@ -21,23 +21,32 @@ import {
   Cpu, 
   FileCheck,
   ChevronRight,
+  ChevronDown,
   Info,
   Calendar,
   Layers,
-  X
+  X,
+  Mountain,
+  Building2,
+  Tv,
+  Image,
+  Truck,
+  Filter
 } from "lucide-react";
 import { Input } from "@/src/components/ui/input";
 import { Button } from "@/src/components/ui/button";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/src/components/ui/dialog";
 
 interface InventoryCatalogProps {
-  selectedCity: "Mendoza" | "San Juan" | "Buenos Aires";
+  selectedCity: "Mendoza" | "Buenos Aires";
+  onCityChange?: (city: "Mendoza" | "Buenos Aires") => void;
   activeTab: "tarjetas" | "mapa" | "mediakit";
   setActiveTab: (tab: "tarjetas" | "mapa" | "mediakit") => void;
 }
 
 export const InventoryCatalog: React.FC<InventoryCatalogProps> = ({
   selectedCity,
+  onCityChange,
   activeTab,
   setActiveTab,
 }) => {
@@ -53,6 +62,7 @@ export const InventoryCatalog: React.FC<InventoryCatalogProps> = ({
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<"Todos" | "Tradicionales" | "Pantallas LED" | "LED Móvil">("Todos");
   const [selectedZone, setSelectedZone] = useState("Todas");
+  const [isZoneDropdownOpen, setIsZoneDropdownOpen] = useState(false);
   const [selectedScreenId, setSelectedScreenId] = useState<string | null>(null);
 
   // Comparison State
@@ -78,6 +88,19 @@ export const InventoryCatalog: React.FC<InventoryCatalogProps> = ({
     return screens.filter((s) => s.ciudad === selectedCity && (s.status === "Activo" || s.status === "Disponible"));
   }, [screens, selectedCity]);
 
+  // Counts of premium screens per city
+  const cityCountsAll = useMemo(() => {
+    let mendoza = 0;
+    let baires = 0;
+    screens.forEach((s) => {
+      if (s.status === "Activo" || s.status === "Disponible") {
+        if (s.ciudad === "Mendoza") mendoza++;
+        else if (s.ciudad === "Buenos Aires") baires++;
+      }
+    });
+    return { Mendoza: mendoza, "Buenos Aires": baires };
+  }, [screens]);
+
   // Compute dynamic category counts for the active city
   const categoryCounts = useMemo(() => {
     const counts = { Tradicionales: 0, "Pantallas LED": 0, "LED Móvil": 0 };
@@ -89,19 +112,66 @@ export const InventoryCatalog: React.FC<InventoryCatalogProps> = ({
     return counts;
   }, [cityScreens]);
 
+  // Filter zones dynamically for active city with item counts
+  const zonesWithCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    cityScreens.forEach((s) => {
+      counts[s.zona] = (counts[s.zona] || 0) + 1;
+    });
+    
+    const sortedZones = Array.from(new Set(cityScreens.map((s) => s.zona))).sort((a, b) => a.localeCompare(b));
+    return [
+      { name: "Todas", count: cityScreens.length },
+      ...sortedZones.map((z) => ({ name: z, count: counts[z] || 0 }))
+    ];
+  }, [cityScreens]);
+
   // Filter zones dynamically for active city
   const availableZones = useMemo(() => {
     const zones = new Set(cityScreens.map((s) => s.zona));
     return ["Todas", ...Array.from(zones)];
   }, [cityScreens]);
 
+  // Computed zones grouped by city for the unified selector
+  const allZonesByCity = useMemo(() => {
+    const mendozaZones = new Set<string>();
+    const bairesZones = new Set<string>();
+
+    screens.forEach((s) => {
+      if (s.status === "Activo" || s.status === "Disponible") {
+        if (s.ciudad === "Mendoza") {
+          mendozaZones.add(s.zona);
+        } else if (s.ciudad === "Buenos Aires") {
+          bairesZones.add(s.zona);
+        }
+      }
+    });
+
+    return {
+      Mendoza: ["Todas", ...Array.from(mendozaZones)].sort((a, b) => {
+        if (a === "Todas") return -1;
+        if (b === "Todas") return 1;
+        return a.localeCompare(b);
+      }),
+      "Buenos Aires": ["Todas", ...Array.from(bairesZones)].sort((a, b) => {
+        if (a === "Todas") return -1;
+        if (b === "Todas") return 1;
+        return a.localeCompare(b);
+      }),
+    };
+  }, [screens]);
+
   // Filtered dataset for display
   const filteredScreens = useMemo(() => {
     return cityScreens.filter((s) => {
-      const matchesSearch =
-        s.nombre.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        s.zona.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (s.nota && s.nota.toLowerCase().includes(searchQuery.toLowerCase()));
+      // Intelligent multi-word search in lowercase
+      const searchTerms = searchQuery.toLowerCase().split(/\s+/).filter(Boolean);
+      const matchesSearch = searchTerms.every((term) => 
+        s.nombre.toLowerCase().includes(term) ||
+        s.zona.toLowerCase().includes(term) ||
+        s.categoria.toLowerCase().includes(term) ||
+        (s.nota && s.nota.toLowerCase().includes(term))
+      );
 
       const matchesCategory = selectedCategory === "Todos" || s.categoria === selectedCategory;
       const matchesZone = selectedZone === "Todas" || s.zona === selectedZone;
@@ -109,6 +179,14 @@ export const InventoryCatalog: React.FC<InventoryCatalogProps> = ({
       return matchesSearch && matchesCategory && matchesZone;
     });
   }, [cityScreens, searchQuery, selectedCategory, selectedZone]);
+
+  // Safely reset selected zone if it doesn't belong to the newly selected city
+  useEffect(() => {
+    const isZoneInCity = cityScreens.some((s) => s.zona === selectedZone);
+    if (selectedZone !== "Todas" && !isZoneInCity) {
+      setSelectedZone("Todas");
+    }
+  }, [selectedCity, cityScreens, selectedZone]);
 
   // MediaKit screens
   const cartScreens = useMemo(() => {
@@ -186,10 +264,12 @@ Mensaje del cliente: ${checkoutForm.message || "Sin mensaje adicional."}
   return (
     <section id="espacios" className="py-20 max-w-7xl mx-auto px-6 space-y-10 font-sans">
       {/* SECTION HEADER */}
-      <div className="text-center max-w-3xl mx-auto space-y-3">
-        <span className="text-[10px] bg-[#06434a]/8 border border-[#06434a]/15 text-[#06434a] font-black tracking-widest uppercase px-4 py-1.5 rounded-full">
-          Plaza Activa: {selectedCity}
-        </span>
+      <div className="text-center max-w-3xl mx-auto space-y-4">
+        <div className="flex items-center justify-center">
+          <span className="text-[10px] bg-[#06434a]/8 border border-[#06434a]/15 text-[#06434a] font-black tracking-widest uppercase px-4 py-1.5 rounded-full select-none">
+            Plaza Activa: {selectedCity}
+          </span>
+        </div>
         <h2 className="text-3xl md:text-4xl tracking-tight text-stone-900 font-display font-black">
           Catálogo de Inventario DOOH
         </h2>
@@ -252,60 +332,210 @@ Mensaje del cliente: ${checkoutForm.message || "Sin mensaje adicional."}
 
       {/* FILTER PANEL - (Only displayed if tab is Tarjetas or Mapa) */}
       {activeTab !== "mediakit" && (
-        <div className="bg-[#FAF9F5]/70 border border-stone-200/60 rounded-2xl p-5 space-y-4">
-          <div className="flex flex-col md:flex-row items-center gap-4">
-            {/* Search Input */}
-            <div className="relative w-full md:w-1/3">
-              <Search className="absolute left-3.5 top-3 h-4 w-4 text-stone-400 z-10" />
+        <div className="sticky top-[80px] z-30 bg-[#FAF9F5]/95 backdrop-blur-md border border-stone-200/80 rounded-xl p-4 md:p-5 space-y-4 shadow-sm hover:shadow-md transition-all duration-300">
+          <style dangerouslySetInnerHTML={{__html: `
+            .scrollbar-none::-webkit-scrollbar { display: none; }
+            .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
+          `}} />
+          
+          {/* TIER 1: Main Search & Compact Plaza Switcher */}
+          <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-center">
+            
+            {/* Buscador Inteligente Principal */}
+            <div className="relative flex-1">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400 z-10" />
               <Input
                 type="text"
-                placeholder="Buscar por avenida, zona o referencia..."
+                placeholder={`Buscar avenida, calle, zona o formato en ${selectedCity}...`}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 text-xs h-10 bg-white border-stone-200 focus:border-[#06434a] focus:ring-[#06434a]/10"
+                className="pl-10 pr-10 text-xs h-11 bg-white border-stone-200 rounded-xl focus:border-[#06434a] focus:ring-[#06434a]/10 font-bold placeholder:text-stone-400 shadow-2xs w-full"
               />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-700 p-1 cursor-pointer"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
             </div>
 
-            {/* Category Pills (Dynamic Counters) */}
-            <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
-              {(["Todos", "Tradicionales", "Pantallas LED", "LED Móvil"] as const).map((cat) => {
-                const count = cat === "Todos" ? cityScreens.length : categoryCounts[cat];
+            {/* Selector Compacto de Plaza / Mercado */}
+            <div className="flex bg-stone-100 p-1 rounded-xl border border-stone-200/60 shadow-inner shrink-0 self-start md:self-auto">
+              {(["Mendoza", "Buenos Aires"] as const).map((city) => {
+                const isSelected = selectedCity === city;
+                const count = cityCountsAll[city];
                 return (
-                  <Button
-                    key={cat}
-                    onClick={() => setSelectedCategory(cat)}
-                    variant={selectedCategory === cat ? "default" : "outline"}
-                    size="sm"
-                    className={`h-9 text-[10px] uppercase font-bold tracking-wider rounded-full transition-all cursor-pointer ${
-                      selectedCategory === cat
-                        ? "bg-[#06434a] hover:bg-[#0b5e67] text-white border-[#06434a]"
-                        : "bg-white hover:bg-stone-50 text-stone-600 border-stone-200"
+                  <button
+                    key={city}
+                    type="button"
+                    onClick={() => {
+                      if (onCityChange) onCityChange(city);
+                      setSelectedZone("Todas"); // Reset zone when switching plaza
+                    }}
+                    className={`relative px-4 h-9 rounded-lg text-xs font-bold transition-all duration-150 cursor-pointer flex items-center gap-1.5 ${
+                      isSelected
+                        ? "bg-[#06434a] text-white shadow-xs font-black"
+                        : "text-stone-500 hover:text-stone-850 hover:bg-white/50"
                     }`}
                   >
-                    <span>{cat}</span>
-                    <span className={`ml-1 px-1.5 py-0.5 rounded-full text-[9px] ${selectedCategory === cat ? "bg-white/20 text-white" : "bg-stone-100 text-stone-400"}`}>
+                    {city === "Mendoza" ? (
+                      <Mountain className="h-3.5 w-3.5 shrink-0 z-10" />
+                    ) : (
+                      <Building2 className="h-3.5 w-3.5 shrink-0 z-10" />
+                    )}
+                    <span className="z-10">{city}</span>
+                    <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-black z-10 ${
+                      isSelected ? "bg-white/20 text-white" : "bg-stone-200 text-stone-500"
+                    }`}>
                       {count}
                     </span>
-                  </Button>
+                    {isSelected && (
+                      <motion.div
+                        layoutId="activePlazaRedesign"
+                        className="absolute inset-0 bg-[#06434a] rounded-lg -z-0"
+                        transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                      />
+                    )}
+                  </button>
                 );
               })}
             </div>
 
-            {/* Zone Filter Dropdown */}
-            <div className="w-full md:w-auto md:ml-auto">
-              <select
-                value={selectedZone}
-                onChange={(e) => setSelectedZone(e.target.value)}
-                className="w-full md:w-auto px-4 py-2.5 text-xs border border-stone-200 rounded-xl bg-white text-stone-700 font-bold focus:outline-none focus:ring-4 focus:ring-[#06434a]/10 focus:border-[#06434a] cursor-pointer"
-              >
-                {availableZones.map((zone) => (
-                  <option key={zone} value={zone}>
-                    {zone === "Todas" ? "Todas las Zonas" : `Zona: ${zone}`}
-                  </option>
-                ))}
-              </select>
-            </div>
           </div>
+
+          {/* TIER 2: Format Selection & Scrollable Zones */}
+          <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 pt-1 border-t border-stone-200/40">
+            
+            {/* Format filters */}
+            <div className="flex flex-wrap items-center gap-1.5 shrink-0">
+              {([
+                { name: "Todos", label: "Todos", icon: Grid },
+                { name: "Tradicionales", label: "Tradicionales", icon: Image },
+                { name: "Pantallas LED", label: "LED", icon: Tv },
+                { name: "LED Móvil", label: "LED Móvil", icon: Truck }
+              ] as const).map((cat) => {
+                const isActive = selectedCategory === cat.name;
+                const count = cat.name === "Todos" ? cityScreens.length : categoryCounts[cat.name];
+                const Icon = cat.icon;
+                return (
+                  <button
+                    key={cat.name}
+                    type="button"
+                    onClick={() => setSelectedCategory(cat.name)}
+                    className={`flex items-center gap-1.5 px-3 h-8.5 rounded-lg text-[11px] font-bold transition-all duration-150 cursor-pointer border ${
+                      isActive
+                        ? "bg-[#06434a] text-white border-[#06434a] shadow-xs"
+                        : "bg-white hover:bg-stone-50 border-stone-200 text-stone-600 hover:text-stone-900"
+                    }`}
+                  >
+                    <Icon className="h-3.5 w-3.5" />
+                    <span>{cat.label}</span>
+                    <span className={`px-1 py-0.5 rounded-full text-[9px] font-black ${
+                      isActive ? "bg-white/20 text-white" : "bg-stone-100 text-stone-400"
+                    }`}>
+                      {count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Scrollable Zones selection */}
+            <div className="flex-1 lg:max-w-md xl:max-w-xl flex items-center gap-2 overflow-hidden bg-stone-50/60 border border-stone-200/40 rounded-xl px-3 py-1">
+              <MapPin className="h-3.5 w-3.5 text-[#06434a] shrink-0" />
+              <div className="flex overflow-x-auto scrollbar-none gap-1.5 flex-1 py-1 pr-1">
+                {zonesWithCounts.map((zone) => {
+                  const isCurrent = selectedZone === zone.name;
+                  return (
+                    <button
+                      key={zone.name}
+                      type="button"
+                      onClick={() => setSelectedZone(zone.name)}
+                      className={`px-2.5 py-1 rounded-lg text-[10px] font-extrabold transition-all duration-150 cursor-pointer border shrink-0 flex items-center gap-1 ${
+                        isCurrent
+                          ? "bg-[#06434a]/10 text-[#06434a] border-[#06434a] font-black"
+                          : "bg-white hover:bg-stone-100 border-stone-200 text-stone-600 hover:text-[#06434a]"
+                      }`}
+                    >
+                      <span>{zone.name === "Todas" ? "Todas las zonas" : zone.name}</span>
+                      <span className={`px-1 rounded-full text-[8px] font-bold ${
+                        isCurrent ? "bg-[#06434a] text-white" : "bg-stone-150 text-stone-400"
+                      }`}>
+                        {zone.count}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+          </div>
+
+          {/* Active filters bar */}
+          {(searchQuery !== "" || selectedCategory !== "Todos" || selectedZone !== "Todas") && (
+            <div className="pt-3 border-t border-stone-200/40 flex flex-wrap items-center justify-between gap-3 text-xs">
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className="text-[9px] text-stone-400 font-extrabold uppercase tracking-widest">
+                  Filtros Activos:
+                </span>
+                
+                {searchQuery !== "" && (
+                  <span className="inline-flex items-center gap-1 bg-white text-stone-700 px-2 py-0.5 rounded-md text-[10px] font-bold border border-stone-200 shadow-2xs">
+                    <span>Búsqueda: "{searchQuery}"</span>
+                    <button
+                      type="button"
+                      onClick={() => setSearchQuery("")}
+                      className="hover:text-red-600 cursor-pointer inline-flex items-center p-0.5 ml-1"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </span>
+                )}
+
+                {selectedCategory !== "Todos" && (
+                  <span className="inline-flex items-center gap-1 bg-[#06434a]/5 text-[#06434a] px-2 py-0.5 rounded-md text-[10px] font-bold border border-[#06434a]/15">
+                    <span>Formato: {selectedCategory}</span>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedCategory("Todos")}
+                      className="hover:text-red-600 cursor-pointer inline-flex items-center p-0.5 ml-1"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </span>
+                )}
+
+                {selectedZone !== "Todas" && (
+                  <span className="inline-flex items-center gap-1 bg-[#06434a]/5 text-[#06434a] px-2 py-0.5 rounded-md text-[10px] font-bold border border-[#06434a]/15">
+                    <span>Zona: {selectedZone}</span>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedZone("Todas")}
+                      className="hover:text-red-600 cursor-pointer inline-flex items-center p-0.5 ml-1"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </span>
+                )}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchQuery("");
+                  setSelectedCategory("Todos");
+                  setSelectedZone("Todas");
+                }}
+                className="text-stone-400 hover:text-red-600 font-extrabold uppercase text-[9px] tracking-wider cursor-pointer transition-colors duration-150"
+              >
+                Limpiar todo
+              </button>
+            </div>
+          )}
+
         </div>
       )}
 
@@ -315,20 +545,25 @@ Mensaje del cliente: ${checkoutForm.message || "Sin mensaje adicional."}
         {activeTab === "tarjetas" && (
           <div className="space-y-6">
             {filteredScreens.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredScreens.map((screen) => (
-                  <ScreenCard
-                    key={screen.id}
-                    screen={screen}
-                    isComparing={compareIds.includes(screen.id)}
-                    onCompareToggle={() => handleCompareToggle(screen.id)}
-                    onFocusOnMap={() => {
-                      setActiveTab("mapa");
-                      setSelectedScreenId(screen.id);
-                    }}
-                  />
-                ))}
-              </div>
+              <motion.div 
+                layout="position"
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+              >
+                <AnimatePresence mode="popLayout">
+                  {filteredScreens.map((screen) => (
+                    <ScreenCard
+                      key={screen.id}
+                      screen={screen}
+                      isComparing={compareIds.includes(screen.id)}
+                      onCompareToggle={() => handleCompareToggle(screen.id)}
+                      onFocusOnMap={() => {
+                        setActiveTab("mapa");
+                        setSelectedScreenId(screen.id);
+                      }}
+                    />
+                  ))}
+                </AnimatePresence>
+              </motion.div>
             ) : (
               <div className="text-center py-20 border border-dashed border-stone-200 rounded-2xl bg-white max-w-md mx-auto p-6 space-y-4">
                 <div className="h-14 w-14 rounded-full bg-stone-50 border border-stone-200 flex items-center justify-center mx-auto">
@@ -364,31 +599,38 @@ Mensaje del cliente: ${checkoutForm.message || "Sin mensaje adicional."}
                 Listado en Mapa ({filteredScreens.length})
               </h3>
               
-              <div className="space-y-2">
-                {filteredScreens.map((s) => {
-                  const isSelected = selectedScreenId === s.id;
-                  const inCart = cart.includes(s.id);
-                  return (
-                    <div
-                      key={s.id}
-                      onClick={() => setSelectedScreenId(s.id)}
-                      className={`p-3 rounded-lg border text-xs cursor-pointer transition-all ${
-                        isSelected 
-                          ? "bg-[#06434a]/5 border-[#06434a]" 
-                          : "border-stone-150 hover:bg-stone-50"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="font-bold text-stone-900 block truncate">{s.nombre}</span>
-                        {inCart && (
-                          <span className="h-2 w-2 rounded-full bg-[#06434a]" />
-                        )}
-                      </div>
-                      <span className="text-[10px] text-stone-500 block mt-0.5">{s.zona} • {s.categoria}</span>
-                    </div>
-                  );
-                })}
-              </div>
+              <motion.div layout="position" className="space-y-2">
+                <AnimatePresence mode="popLayout">
+                  {filteredScreens.map((s) => {
+                    const isSelected = selectedScreenId === s.id;
+                    const inCart = cart.includes(s.id);
+                    return (
+                      <motion.div
+                        key={s.id}
+                        layout="position"
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 10 }}
+                        transition={{ type: "spring", stiffness: 350, damping: 30 }}
+                        onClick={() => setSelectedScreenId(s.id)}
+                        className={`p-3 rounded-lg border text-xs cursor-pointer transition-all ${
+                          isSelected 
+                            ? "bg-[#06434a]/5 border-[#06434a]" 
+                            : "border-stone-150 hover:bg-stone-50"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="font-bold text-stone-900 block truncate">{s.nombre}</span>
+                          {inCart && (
+                            <span className="h-2 w-2 rounded-full bg-[#06434a]" />
+                          )}
+                        </div>
+                        <span className="text-[10px] text-stone-500 block mt-0.5">{s.zona} • {s.categoria}</span>
+                      </motion.div>
+                    );
+                  })}
+                </AnimatePresence>
+              </motion.div>
             </div>
 
             {/* Main Interactive Leaflet Map */}
@@ -648,25 +890,84 @@ Mensaje del cliente: ${checkoutForm.message || "Sin mensaje adicional."}
 
               </div>
             ) : (
-              <div className="text-center py-20 bg-stone-50 border border-dashed border-stone-200 rounded-[24px] max-w-lg mx-auto p-8 space-y-5">
-                <div className="h-16 w-16 bg-stone-100 rounded-full flex items-center justify-center mx-auto text-stone-400 shadow-inner">
-                  <FileDown className="h-7 w-7" />
+              <div className="space-y-12">
+                <div className="text-center py-12 bg-stone-50/50 border border-dashed border-stone-200 rounded-[24px] max-w-lg mx-auto p-8 space-y-5 shadow-xs">
+                  <div className="h-14 w-14 bg-stone-100 rounded-full flex items-center justify-center mx-auto text-stone-400 shadow-inner">
+                    <FileDown className="h-6 w-6" />
+                  </div>
+                  <div className="space-y-2">
+                    <h4 className="font-bold text-stone-900 text-base font-display">Tu MediaKit está vacío</h4>
+                    <p className="text-xs text-stone-500 max-w-sm mx-auto leading-relaxed">
+                      Aún no seleccionaste ningún soporte publicitario. Regresá al catálogo de tarjetas o mapa para añadir espacios de {selectedCity}.
+                    </p>
+                  </div>
+                  <div>
+                    <button
+                      onClick={() => setActiveTab("tarjetas")}
+                      className="inline-flex items-center gap-1.5 px-6 py-3 bg-[#06434a] hover:bg-[#0b5e67] text-white font-bold text-xs uppercase tracking-wider rounded-full transition-all cursor-pointer"
+                    >
+                      <span>Ir al Catálogo</span>
+                      <ChevronRight className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <h4 className="font-bold text-stone-900 text-base font-display">Tu MediaKit está vacío</h4>
-                  <p className="text-xs text-stone-500 max-w-sm mx-auto leading-relaxed">
-                    Aún no seleccionaste ningún soporte publicitario. Regresá al catálogo de tarjetas o mapa para añadir espacios de Mendoza, San Juan o Buenos Aires.
-                  </p>
-                </div>
-                <div>
-                  <button
-                    onClick={() => setActiveTab("tarjetas")}
-                    className="inline-flex items-center gap-1.5 px-6 py-3 bg-[#06434a] hover:bg-[#0b5e67] text-white font-bold text-xs uppercase tracking-wider rounded-full transition-all cursor-pointer"
-                  >
-                    <span>Ir al Catálogo</span>
-                    <ChevronRight className="h-4 w-4" />
-                  </button>
-                </div>
+
+                {screens.filter((s) => s.ciudad === selectedCity && !cart.includes(s.id) && (s.status === "Activo" || s.status === "Disponible")).length > 0 && (
+                  <div className="max-w-4xl mx-auto space-y-6">
+                    <div className="text-center space-y-1.5">
+                      <span className="text-[9px] bg-amber-500/10 text-amber-700 font-extrabold px-3 py-1 rounded-full uppercase tracking-wider">
+                        Sugerencias Inteligentes
+                      </span>
+                      <h4 className="text-sm font-bold text-stone-900 uppercase tracking-wider font-display">
+                        Soportes Recomendados en {selectedCity}
+                      </h4>
+                      <p className="text-stone-400 text-xs">
+                        Añadí soportes con alto nivel de audiencia a tu cotización con un solo click.
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      {screens
+                        .filter((s) => s.ciudad === selectedCity && !cart.includes(s.id) && (s.status === "Activo" || s.status === "Disponible"))
+                        .slice(0, 3)
+                        .map((s) => {
+                          const formattedHits = s.impactos >= 1000
+                            ? (s.impactos / 1000).toFixed(1) + "k"
+                            : String(s.impactos);
+                          return (
+                            <div
+                              key={s.id}
+                              className="p-4 bg-white border border-stone-200 rounded-2xl flex flex-col justify-between hover:border-[#06434a]/30 hover:shadow-sm transition-all text-left"
+                            >
+                              <div className="space-y-2">
+                                <span className="text-[8px] font-extrabold text-stone-400 uppercase tracking-wider">
+                                  {s.categoria}
+                                </span>
+                                <h5 className="text-xs font-bold text-stone-900 font-display line-clamp-1">{s.nombre}</h5>
+                                <p className="text-[10px] text-stone-500 flex items-center gap-0.5">
+                                  <MapPin className="h-3 w-3 text-stone-400" />
+                                  {s.zona}
+                                </p>
+                                
+                                <div className="bg-stone-50 p-2 rounded-lg text-[10px] flex items-center justify-between border border-stone-100">
+                                  <span className="text-stone-400 font-semibold">Impacto diario:</span>
+                                  <span className="font-bold text-stone-800">{formattedHits} visitas</span>
+                                </div>
+                              </div>
+
+                              <button
+                                onClick={() => toggleCart(s.id)}
+                                className="mt-4 w-full py-2 bg-stone-950 hover:bg-[#06434a] text-white rounded-xl text-[9px] font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 cursor-pointer transition-all"
+                              >
+                                <Plus className="h-3 w-3" />
+                                <span>Añadir al MediaKit</span>
+                              </button>
+                            </div>
+                          );
+                        })}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>

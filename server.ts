@@ -1,10 +1,7 @@
 import express, { Request, Response } from "express";
 import path from "path";
-import dotenv from "dotenv";
 import { GoogleGenAI, Type } from "@google/genai";
 import pg from "pg";
-
-dotenv.config();
 
 const app = express();
 const PORT = 3000;

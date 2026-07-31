@@ -1,0 +1,28 @@
+version: '2.2'
+
+services:
+  # Servicio para el entorno de DESARROLLO
+  dev:
+    container_name: grupocomunicarte-dev
+    build:
+      context: .
+      dockerfile: Dockerfile.dev # Usa el Dockerfile de desarrollo
+    ports:
+      - "3000:3000"
+    volumes:
+      # Sincroniza tu código local con el del contenedor para ver cambios en vivo
+      - .:/app
+      # Evita que la carpeta node_modules local sobreescriba la del contenedor
+      - /app/node_modules
+
+  # Servicio para el entorno de PRODUCCIÓN
+  prod:
+    container_name: grupocomunicarte-prod
+    build:
+      context: .
+      dockerfile: Dockerfile.prod # Usa el nuevo Dockerfile de producción
+    ports:
+      - "8080:3000" # Mapeamos el puerto 3000 del contenedor al 8080 de tu máquina
+    env_file:
+      - .env # Carga las variables de entorno desde el archivo .env
+    restart: unless-stopped # Reinicia el contenedor automáticamente si falla

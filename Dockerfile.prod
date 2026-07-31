@@ -1,0 +1,40 @@
+# === Etapa 1: Build ===
+# Usamos una imagen completa de Node.js para tener todas las herramientas de compilación.
+FROM node:20 AS build
+
+# Establecemos el directorio de trabajo
+WORKDIR /app
+
+# Copiamos los archivos de definición de paquetes
+COPY package*.json ./
+
+# Instalamos TODAS las dependencias (incluyendo devDependencies para el build)
+# Esto aprovecha la caché de Docker. Solo se reinstala si package.json cambia.
+RUN npm install
+
+# Copiamos el resto del código fuente de la aplicación
+COPY . .
+
+# Ejecutamos el script de compilación
+# Nos aseguramos de que las variables de entorno de build estén disponibles si son necesarias.
+RUN npm run build
+
+
+# === Etapa 2: Producción ===
+# Partimos de una imagen ligera de Node.js para la imagen final
+FROM node:20 AS production
+
+WORKDIR /app
+
+# Instalamos solo las dependencias de PRODUCCIÓN. Esto crea una carpeta node_modules limpia.
+COPY package*.json ./
+RUN npm install --omit=dev
+
+# Copiamos los archivos compilados desde la etapa de 'builder'
+COPY --from=build /app/dist ./dist
+
+# Exponemos el puerto 3000 (el que usa tu servidor Express)
+EXPOSE 3000
+
+# El comando para iniciar el servidor en producción
+CMD ["npm", "start"]

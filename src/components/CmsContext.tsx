@@ -224,92 +224,6 @@ const SEED_SCREENS: DoohScreen[] = [
     ]
   },
 
-  // SAN JUAN PLAZA
-  {
-    id: 'sj-01',
-    nombre: 'Av. Libertador y Las Heras',
-    zona: 'Capital',
-    tipo: 'Peatonal',
-    categoria: 'Pantallas LED',
-    ciudad: 'San Juan',
-    impactos: 15400,
-    precio: 85000,
-    status: 'Activo',
-    lat: -31.5361,
-    lng: -68.5283,
-    nota: 'Frente a la Legislatura de San Juan y el principal ingreso al Parque de Mayo.',
-    dimensiones: '4.0m x 2.5m (10.00m²)',
-    brillo: '6,000 nits',
-    refreshRate: '3,840 Hz',
-    formato: 'MP4, JPG',
-    cobertura: 'Polo institucional, cívico y deportivo'
-  },
-  {
-    id: 'sj-02',
-    nombre: 'Av. Ignacio de la Roza y Urquiza',
-    zona: 'Capital',
-    tipo: 'Vehicular',
-    categoria: 'Tradicionales',
-    ciudad: 'San Juan',
-    impactos: 22000,
-    precio: 95000,
-    status: 'Activo',
-    lat: -31.5369,
-    lng: -68.5422,
-    nota: 'Soporte monumental en el corredor vial universitario más transitado de la provincia.',
-    dimensiones: '8.0m x 3.0m (24.00m²)',
-    brillo: 'Iluminación Frontlight LED',
-    refreshRate: 'N/A',
-    formato: 'Lona Vinílica Premium',
-    cobertura: 'Comunidad estudiantil y residencial ABC1'
-  },
-  {
-    id: 'sj-03',
-    nombre: 'Plaza 25 de Mayo',
-    zona: 'Centro',
-    tipo: 'Peatonal',
-    categoria: 'Pantallas LED',
-    ciudad: 'San Juan',
-    impactos: 18500,
-    precio: 105000,
-    status: 'Activo',
-    lat: -31.5375,
-    lng: -68.5245,
-    nota: 'Esquina comercial de máxima afluencia en el casco histórico y bancario.',
-    dimensiones: '3.5m x 2.0m (7.00m²)',
-    brillo: '5,500 nits',
-    refreshRate: '3,840 Hz',
-    formato: 'MP4, JPG',
-    cobertura: 'Tránsito comercial, gubernamental y administrativo'
-  },
-  {
-    id: 'sj-04',
-    nombre: 'LeadMóvil San Juan Express',
-    zona: 'Capital',
-    tipo: 'Móvil',
-    categoria: 'LED Móvil',
-    ciudad: 'San Juan',
-    impactos: 32000,
-    precio: 140000,
-    status: 'Activo',
-    lat: -31.5375,
-    lng: -68.5245,
-    nota: 'Soporte móvil premium recorriendo los principales anillos comerciales de San Juan.',
-    dimensiones: '4.0m x 2.0m Doble Cara',
-    brillo: '7,000 nits',
-    refreshRate: '3,840 Hz',
-    formato: 'MP4, JPG',
-    cobertura: 'Recorrido céntrico e institucional',
-    horarios: '09:00 a 13:00 y 18:00 a 21:00 hs',
-    ruta: [
-      { lat: -31.5375, lng: -68.5245, nombre: 'Plaza 25 de Mayo (Inicio)' },
-      { lat: -31.5358, lng: -68.5280, nombre: 'Av. Libertador y Las Heras' },
-      { lat: -31.5332, lng: -68.5410, nombre: 'Av. Libertador y San Martín' },
-      { lat: -31.5410, lng: -68.5450, nombre: 'Urquiza e Ignacio de la Roza' },
-      { lat: -31.5435, lng: -68.5290, nombre: 'Av. Córdoba y Mendoza (Fin)' }
-    ]
-  },
-
   // BUENOS AIRES PLAZA
   {
     id: 'ba-01',
@@ -820,7 +734,7 @@ export const CmsProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const baseTitle = "Grupo Comunicarte | Publicidad Exterior y DOOH";
       const title = item ? `Grupo Comunicarte | ${item.name}` : baseTitle;
       const description = item ? item.description : "Líderes en publicidad exterior (OOH) y pantallas LED de gran formato en Argentina.";
-      const keywords = item ? item.keyword : "publicidad exterior, via publica, pantallas led, mendoza, san juan, buenos aires";
+      const keywords = item ? item.keyword : "publicidad exterior, via publica, pantallas led, mendoza, buenos aires";
 
       // Update document title
       document.title = title;

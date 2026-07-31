@@ -56,7 +56,7 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
   const [newScreenForm, setNewScreenForm] = useState({
     nombre: "",
     zona: "Centro",
-    ciudad: "Mendoza",
+    ciudad: "Mendoza" as "Mendoza" | "Buenos Aires",
     categoria: "Pantallas LED" as any,
     tipo: "Peatonal" as any,
     impactos: 15000,
@@ -208,7 +208,6 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
               >
                 <option value="Todas">Todas</option>
                 <option value="Mendoza">Mendoza</option>
-                <option value="San Juan">San Juan</option>
                 <option value="Buenos Aires">Buenos Aires</option>
               </select>
             </div>
@@ -254,12 +253,12 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
                     {screen.categoria}
                   </span>
                   
-                  <span className={`text-[9px] font-bold ${
+                  <span className={`text-[9px] font-extrabold px-2 py-0.5 rounded-md uppercase tracking-wider ${
                     screen.status === "Activo" || screen.status === "Disponible"
-                      ? "text-emerald-600"
-                      : "text-amber-500"
+                      ? "bg-emerald-100/80 text-emerald-950 border border-emerald-200"
+                      : "bg-amber-100/80 text-amber-950 border border-amber-200"
                   }`}>
-                    ● {screen.status}
+                    {screen.status}
                   </span>
                 </div>
 
@@ -419,11 +418,10 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
                       <label className="block text-[8px] font-extrabold text-stone-400 uppercase tracking-widest">Plaza / Ciudad</label>
                       <select
                         value={selectedScreen.ciudad}
-                        onChange={(e) => onUpdateScreen(selectedScreen.id, { ciudad: e.target.value })}
+                        onChange={(e) => onUpdateScreen(selectedScreen.id, { ciudad: e.target.value as any })}
                         className="w-full px-2 py-1.5 text-[11px] border border-stone-200 rounded-lg bg-stone-50 cursor-pointer"
                       >
                         <option value="Mendoza">Mendoza</option>
-                        <option value="San Juan">San Juan</option>
                         <option value="Buenos Aires">Buenos Aires</option>
                       </select>
                     </div>
@@ -713,11 +711,10 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
                   <label className="block text-[8px] font-extrabold text-stone-400 uppercase tracking-widest">Plaza / Ciudad</label>
                   <select
                     value={newScreenForm.ciudad}
-                    onChange={(e) => setNewScreenForm({ ...newScreenForm, ciudad: e.target.value })}
+                    onChange={(e) => setNewScreenForm({ ...newScreenForm, ciudad: e.target.value as any })}
                     className="w-full px-3 py-2 border border-stone-200 rounded-xl bg-stone-50 cursor-pointer"
                   >
                     <option value="Mendoza">Mendoza</option>
-                    <option value="San Juan">San Juan</option>
                     <option value="Buenos Aires">Buenos Aires</option>
                   </select>
                 </div>

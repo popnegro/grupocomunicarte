@@ -80,7 +80,7 @@ export interface DoohScreen {
   zona: string;
   tipo: "Peatonal" | "Vehicular" | "Mixto" | "Móvil" | "LeadMóvil";
   categoria?: "Tradicionales" | "Pantallas LED" | "LED Móvil";
-  ciudad?: string; // "Mendoza" | "San Juan" | "Buenos Aires"
+  ciudad?: "Mendoza" | "Buenos Aires";
   impactos: number;
   precio: number; // per week
   status: "Activo" | "Pausado" | "Disponible" | "No disponible";

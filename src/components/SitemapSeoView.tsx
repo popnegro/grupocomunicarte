@@ -843,7 +843,7 @@ export const SitemapSeoView: React.FC = () => {
                       <div className="space-y-0.5">
                         <strong className="text-slate-900 block font-bold">Expansión de Ciudades (+100 Ciudades)</strong>
                         <p>
-                          Para agregar una nueva ciudad (como San Juan, San Luis o Salta), solo se añade un registro en el CMS o se crea el archivo dinámico <code>/ubicaciones/[slug]</code> en Next.js App Router. El sistema auto-enruta el mapa comercial y las tarifas sin modificar la barra de navegación principal.
+                          Para agregar una nueva ciudad (como Córdoba, San Luis o Salta), solo se añade un registro en el CMS o se crea el archivo dinámico <code>/ubicaciones/[slug]</code> en Next.js App Router. El sistema auto-enruta el mapa comercial y las tarifas sin modificar la barra de navegación principal.
                         </p>
                       </div>
                     </div>

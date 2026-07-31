@@ -14,7 +14,7 @@ export interface MediaKit {
   nombre: string;
   clienteId: string;
   clienteNombre: string;
-  ciudad: "Mendoza" | "San Juan" | "Buenos Aires";
+  ciudad: "Mendoza" | "Buenos Aires";
   screenIds: string[];
   version: number;
   estado: "Borrador" | "Nuevo" | "En revisión" | "Cotizando" | "Negociación" | "Aceptado" | "Rechazado" | "Convertido" | "Archivado";

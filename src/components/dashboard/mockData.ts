@@ -92,11 +92,11 @@ export const INITIAL_MEDIAKITS: MediaKit[] = [
   },
   {
     id: "mk-203",
-    nombre: "Pauta Estacional San Juan - Retail PyME",
+    nombre: "Pauta Estacional Mendoza - Retail PyME",
     clienteId: "cl-04",
     clienteNombre: "Franquicias Café Central",
-    ciudad: "San Juan",
-    screenIds: ["sj-01", "sj-03"],
+    ciudad: "Mendoza",
+    screenIds: ["sc-01", "sc-03"],
     version: 3,
     estado: "Aceptado",
     fecha: "2026-07-25",
@@ -111,8 +111,8 @@ export const INITIAL_MEDIAKITS: MediaKit[] = [
       { id: "h-6", action: "Aprobado por el cliente", date: "2026-07-27 16:00", user: "Comercial Ejec." }
     ],
     soportesEdicionInline: [
-      { id: "sj-01", notas: "Cerca de Legislatura, gran impacto peatonal.", prioridad: "Alta", duracionSem: 3 },
-      { id: "sj-03", notas: "Plaza 25 de Mayo, casco comercial.", prioridad: "Alta", duracionSem: 3 }
+      { id: "sc-01", notas: "Cerca de Sarmiento, gran impacto peatonal.", prioridad: "Alta", duracionSem: 3 },
+      { id: "sc-03", notas: "Plaza España, casco comercial.", prioridad: "Alta", duracionSem: 3 }
     ]
   }
 ];
@@ -132,7 +132,7 @@ export const INITIAL_COTIZACIONES: Cotizacion[] = [
   {
     id: "qt-102",
     mediakitId: "mk-203",
-    mediakitNombre: "Pauta Estacional San Juan - Retail PyME",
+    mediakitNombre: "Pauta Estacional Mendoza - Retail PyME",
     clienteNombre: "Franquicias Café Central",
     descuentoPercent: 12,
     validez: "2026-08-10",
@@ -147,8 +147,8 @@ export const INITIAL_RESERVAS: Reserva[] = [
     id: "rv-401",
     mediakitId: "mk-203",
     clienteNombre: "Franquicias Café Central",
-    screenId: "sj-01",
-    screenNombre: "Av. Libertador y Las Heras",
+    screenId: "sc-01",
+    screenNombre: "Sarmiento y 9 de Julio",
     fechaInicio: "2026-08-01",
     fechaFin: "2026-08-22",
     estado: "Confirmada",
@@ -173,9 +173,9 @@ export const INITIAL_CAMPAÑAS: Campaña[] = [
     id: "cp-501",
     reservaId: "rv-401",
     clienteNombre: "Franquicias Café Central",
-    nombre: "Promo Invierno Café Central - San Juan",
-    screenId: "sj-01",
-    screenNombre: "Av. Libertador y Las Heras",
+    nombre: "Promo Invierno Café Central - Mendoza",
+    screenId: "sc-01",
+    screenNombre: "Sarmiento y 9 de Julio",
     fechaInicio: "2026-08-01",
     fechaFin: "2026-08-22",
     progreso: 15,
@@ -217,7 +217,7 @@ export const INITIAL_VEHICLES: LedVehicle[] = [
     id: "vh-02",
     patente: "AE-112-ZZ",
     chofer: "Ramiro Funes",
-    rutaActiva: "Anillo Comercial Capital (San Juan)",
+    rutaActiva: "Circuito Accesos y Mitre (Mendoza)",
     bateria: "95%",
     velocidad: "0 km/h",
     gpsStatus: "Online",

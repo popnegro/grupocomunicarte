@@ -6,7 +6,7 @@ import { DoohScreen } from "../../types";
 interface HeroProps {
   screens: DoohScreen[];
   selectedCity: string;
-  onCitySelect: (city: "Mendoza" | "San Juan" | "Buenos Aires") => void;
+  onCitySelect: (city: "Mendoza" | "Buenos Aires") => void;
   onExploreClick: () => void;
 }
 
@@ -17,7 +17,7 @@ export const Hero: React.FC<HeroProps> = ({
   onExploreClick,
 }) => {
   // Calculate stats dynamically for each plaza
-  const getCityStats = (city: "Mendoza" | "San Juan" | "Buenos Aires") => {
+  const getCityStats = (city: "Mendoza" | "Buenos Aires") => {
     const cityScreens = screens.filter((s) => s.ciudad === city);
     const fixed = cityScreens.filter((s) => s.categoria === "Pantallas LED" || s.categoria === "Tradicionales").length;
     const mobile = cityScreens.filter((s) => s.categoria === "LED Móvil").length;
@@ -32,7 +32,6 @@ export const Hero: React.FC<HeroProps> = ({
   };
 
   const mendozaStats = getCityStats("Mendoza");
-  const sanJuanStats = getCityStats("San Juan");
   const buenosAiresStats = getCityStats("Buenos Aires");
 
   const plazarCards = [
@@ -42,14 +41,6 @@ export const Hero: React.FC<HeroProps> = ({
       description: "Polo estratégico del Oeste Argentino",
       stats: mendozaStats,
       accent: "from-sky-500/10 to-[#06434a]/10",
-      border: "hover:border-[#06434a]/30",
-    },
-    {
-      id: "San Juan" as const,
-      name: "San Juan",
-      description: "Conexión urbana e institucional clave",
-      stats: sanJuanStats,
-      accent: "from-purple-500/10 to-[#06434a]/10",
       border: "hover:border-[#06434a]/30",
     },
     {
@@ -63,68 +54,106 @@ export const Hero: React.FC<HeroProps> = ({
   ];
 
   return (
-    <section id="hero-section" className="relative pt-16 pb-20 md:pt-24 md:pb-28 max-w-7xl mx-auto px-6 font-sans">
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+    <section id="hero-section" className="relative pt-12 pb-24 md:pt-20 md:pb-32 max-w-7xl mx-auto px-6 font-sans">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
         {/* Left Column: Copywriting B2B premium */}
-        <div className="lg:col-span-7 space-y-6 text-left">
-          <div className="inline-flex items-center gap-2 bg-[#06434a]/8 border border-[#06434a]/15 text-[10px] md:text-xs font-bold tracking-widest text-[#06434a] uppercase px-4 py-1.5 rounded-full">
-            <TrendingUp className="h-3.5 w-3.5" />
-            <span>Marketplace de Inventario Publicitario</span>
+        <div className="lg:col-span-7 space-y-8 text-left">
+          <div className="inline-flex items-center gap-2 bg-[#06434a]/5 border border-[#06434a]/10 text-[10px] md:text-xs font-bold tracking-wider text-[#06434a] uppercase px-4 py-1.5 rounded-full select-none">
+            <TrendingUp className="h-3.5 w-3.5 stroke-[2.5]" />
+            <span>HOLDING DE COMUNICACIÓN EXTERIOR PREMIUM</span>
           </div>
 
-          <h1 className="text-4xl md:text-6xl text-stone-900 tracking-tight leading-[1.08] font-display font-black">
-            Conectá tu marca con <br />
-            <span className="text-[#06434a]">audiencias reales</span> en la calle
+          <h1 className="text-4xl md:text-[56px] text-stone-900 tracking-tight leading-[1.05] font-display font-black">
+            Planificá y auditá tu <br />
+            pauta <span className="text-[#06434a]">OOH de alta gama</span>
           </h1>
 
-          <p className="text-stone-500/90 text-sm md:text-base leading-relaxed max-w-2xl">
-            Descubrí de forma interactiva nuestra red de pantallas LED de alta definición, 
-            soportes estáticos premium y unidades de LED Móvil. Seleccioná ubicaciones estratégicas, 
-            creá tu propio MediaKit y recibí una propuesta comercial a medida de tus objetivos.
+          <p className="text-stone-500 text-sm md:text-base leading-relaxed max-w-2xl font-medium">
+            Accedé en tiempo real a nuestra red exclusiva de pantallas LED de gran formato, dispositivos tradicionales geolocalizados y unidades de LED Móvil. Seleccioná ubicaciones de alto tránsito, personalizá tu MediaKit y recibí métricas certificadas de audiencia urbana.
           </p>
 
-          <div className="flex flex-col sm:flex-row items-center gap-3 pt-2">
+          <div className="flex flex-wrap items-center gap-4 pt-2">
             <button
               onClick={onExploreClick}
-              className="w-full sm:w-auto bg-[#06434a] hover:bg-[#0b5e67] text-white font-bold text-xs uppercase tracking-wider px-8 py-4 rounded-full shadow-lg shadow-[#06434a]/10 hover:shadow-[#06434a]/20 transition-all text-center cursor-pointer flex items-center justify-center gap-2"
+              className="w-full sm:w-auto bg-[#06434a] hover:bg-[#0b5e67] text-white font-extrabold text-xs uppercase tracking-wider px-8 py-4 rounded-xl shadow-xs transition-all text-center cursor-pointer flex items-center justify-center gap-2"
             >
-              <span>Explorar Catálogo Completo</span>
-              <ChevronRight className="h-4 w-4" />
+              <span>Explorar Catálogo Activo</span>
+              <ChevronRight className="h-4 w-4 stroke-[2.5]" />
             </button>
+            <a
+              href="#contacto"
+              className="w-full sm:w-auto text-center border border-stone-200 bg-white hover:bg-stone-50 text-stone-850 font-extrabold text-xs uppercase tracking-wider px-8 py-4 rounded-xl transition-all flex items-center justify-center gap-2"
+            >
+              <span>Agendar Asesoría</span>
+            </a>
+          </div>
+
+          {/* Trusted By Section */}
+          <div className="pt-6 border-t border-stone-100 space-y-3">
+            <span className="block text-[10px] font-bold text-stone-400 uppercase tracking-widest font-mono">TRUSTED BY INDUSTRY LEADERS</span>
+            <div className="flex flex-wrap items-center gap-x-8 gap-y-3 text-stone-500 font-mono text-xs font-black tracking-tighter opacity-70">
+              <span className="hover:text-stone-900 transition-colors cursor-default">TOYOTA AR</span>
+              <span className="hover:text-stone-900 transition-colors cursor-default">COCA-COLA CO</span>
+              <span className="hover:text-stone-900 transition-colors cursor-default">STARBUCKS</span>
+              <span className="hover:text-stone-900 transition-colors cursor-default">PATAGONIA S.A.</span>
+              <span className="hover:text-stone-900 transition-colors cursor-default">MERCADOLIBRE</span>
+            </div>
           </div>
         </div>
 
-        {/* Right Column: Dynamic Visual Mockup */}
+        {/* Right Column: Dynamic Visual Mockup / DOOH Command Widget */}
         <div className="lg:col-span-5 flex justify-center">
-          <div className="w-full max-w-md aspect-[1.35/1] bg-[#111618] border border-stone-200/50 shadow-2xl rounded-2xl overflow-hidden relative group p-6 flex flex-col justify-between select-none">
-            {/* Subtle tech grid */}
-            <div className="absolute inset-0 opacity-[0.03] bg-[linear-gradient(to_right,#fff_1px,transparent_1px),linear-gradient(to_bottom,#fff_1px,transparent_1px)] bg-[size:16px_24px]" />
-            <div className="absolute top-0 right-0 w-40 h-40 bg-[#06434a]/25 rounded-full blur-3xl" />
-
-            <div className="flex items-center justify-between z-10">
-              <div className="flex items-center gap-1.5 bg-white/5 border border-white/10 px-2.5 py-1 rounded-full">
-                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-[9px] uppercase font-bold text-emerald-400 font-mono">Disponibilidad en Tiempo Real</span>
+          <div className="w-full max-w-md bg-white border border-stone-200/80 shadow-md rounded-2xl overflow-hidden relative group p-6 flex flex-col justify-between select-none space-y-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5 bg-emerald-50 border border-emerald-100 px-2.5 py-1 rounded-full">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-[9px] uppercase font-extrabold text-emerald-700 tracking-wider font-mono">NOC LIVE OPS</span>
               </div>
-              <span className="text-[9px] bg-[#06434a]/30 text-emerald-300 font-mono px-2 py-0.5 rounded-md border border-[#06434a]/50">DOOH ACTIVE</span>
+              <span className="text-[9px] bg-stone-50 text-stone-500 font-mono font-extrabold px-2 py-1 rounded border border-stone-200/60 uppercase">Mendoza & BA</span>
             </div>
 
-            <div className="space-y-2.5 z-10">
-              <span className="text-[9px] font-extrabold text-stone-400 uppercase tracking-widest block">GRUPO COMUNICARTE</span>
-              <h3 className="text-xl md:text-2xl font-bold text-white leading-tight font-display">
-                Circuito de Pantallas Inteligentes
-              </h3>
-              <div className="h-0.5 w-12 bg-emerald-400 rounded-full" />
+            {/* Simulated Live Analytics Bar */}
+            <div className="space-y-4">
+              <div className="space-y-1">
+                <span className="block text-[9px] uppercase font-bold text-stone-400 tracking-widest font-mono">Frecuencia Global de Loop</span>
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-3xl font-display font-black text-stone-900 tracking-tight">15s</span>
+                  <span className="text-xs text-stone-500 font-semibold">Spot certificado</span>
+                </div>
+              </div>
+
+              {/* Progress visual list of screens running */}
+              <div className="space-y-2 bg-stone-50/60 p-3 rounded-xl border border-stone-150/40 text-left text-xs">
+                <div className="flex items-center justify-between text-[10px] font-bold text-stone-400 uppercase tracking-wider font-mono">
+                  <span>Soporte en Ejecución</span>
+                  <span className="text-[#06434a]">Rotando</span>
+                </div>
+                
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between text-stone-850 font-extrabold text-[11px]">
+                    <span className="truncate">Palmares Open Mall UHD</span>
+                    <span className="font-mono text-stone-400 text-[10px]">98% Brillo</span>
+                  </div>
+                  <div className="w-full bg-stone-200/50 h-1.5 rounded-full overflow-hidden">
+                    <div className="bg-[#06434a] h-full rounded-full w-4/5 animate-pulse" />
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-1 text-[10px] text-stone-500 border-t border-stone-150/50">
+                  <span>Impactos Hoy</span>
+                  <strong className="font-mono text-stone-900 font-black">+145,280</strong>
+                </div>
+              </div>
             </div>
 
-            <div className="flex items-center justify-between border-t border-white/10 pt-4 z-10 text-xs">
+            <div className="flex items-center justify-between border-t border-stone-100 pt-4 text-xs font-bold text-stone-700">
               <div>
-                <span className="block text-[8px] uppercase font-bold text-stone-400">Plazas Habilitadas</span>
-                <span className="font-mono font-black text-white">Mendoza, SJ & BA</span>
+                <span className="block text-[8px] uppercase font-bold text-stone-400 tracking-wider">Uptime Certificado</span>
+                <span className="font-mono font-extrabold text-stone-900">99.92%</span>
               </div>
               <div className="text-right">
-                <span className="block text-[8px] uppercase font-bold text-stone-400">Total Soportes</span>
-                <span className="font-mono font-black text-emerald-400">21 Unidades Activas</span>
+                <span className="block text-[8px] uppercase font-bold text-stone-400 tracking-wider">Ubicaciones Premium</span>
+                <span className="font-mono font-extrabold text-[#06434a]">17 Activas</span>
               </div>
             </div>
           </div>

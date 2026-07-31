@@ -43,9 +43,11 @@ import {
   ChevronLeft,
   ChevronRight,
   Sparkles,
-  Globe
+  Globe,
+  Shield
 } from "lucide-react";
 import { SitemapSeoView } from "./SitemapSeoView";
+import { DesignSystemAuditView } from "./DesignSystemAuditView";
 
 export const DashboardView: React.FC = () => {
   const {
@@ -54,6 +56,7 @@ export const DashboardView: React.FC = () => {
     updateScreen,
     currentDashboardTab: activeTab,
     setCurrentDashboardTab: setActiveTab,
+    setActiveView,
   } = useCms();
 
   // Active User Profile (RBAC state)
@@ -238,7 +241,8 @@ export const DashboardView: React.FC = () => {
     { id: "revenue", label: "Revenue IA", icon: TrendingUp, desc: "Optimización de tarifas" },
     { id: "seo", label: "Estrategia SEO", icon: Globe, desc: "Arquitectura multipágina y sitemap" },
     { id: "reportes", label: "Reportes", icon: BarChart3, desc: "Analíticas corporativas" },
-    { id: "administracion", label: "Administración", icon: Settings2, desc: "Logs de auditoría y RBAC" }
+    { id: "administracion", label: "Administración", icon: Settings2, desc: "Logs de auditoría y RBAC" },
+    { id: "design-system", label: "Design System", icon: Shield, desc: "Consola de Tokens, Guías UX/UI y Accesibilidad" }
   ];
 
   return (
@@ -290,6 +294,19 @@ export const DashboardView: React.FC = () => {
             })}
           </nav>
 
+          {/* Return to Public Website section */}
+          <div className="p-4 border-t border-stone-100">
+            <button
+              onClick={() => setActiveView("landing")}
+              className="w-full p-2.5 rounded-xl flex items-center gap-3 cursor-pointer text-left transition-all text-emerald-800 hover:bg-emerald-50/50 hover:text-emerald-950 font-bold"
+            >
+              <Globe className="h-4.5 w-4.5 shrink-0 text-emerald-600" />
+              {!sidebarCollapsed && (
+                <span className="text-xs leading-none">Ver Sitio Público</span>
+              )}
+            </button>
+          </div>
+
         </div>
 
         {/* Collapser Toggle Footer */}
@@ -329,10 +346,16 @@ export const DashboardView: React.FC = () => {
               cotizaciones={cotizaciones}
               reservas={reservas}
               campañas={campañas}
+              clientes={clientes}
               userRole={userRole}
               onNavigateToTab={setActiveTab}
               onApproveReserva={handleApproveReserva}
               onApproveCotizacion={handleApproveCotizacion}
+              setCampañas={setCampañas}
+              setClientes={setClientes}
+              setCotizaciones={setCotizaciones}
+              setReservas={setReservas}
+              addLog={addLog}
             />
           )}
 
@@ -417,6 +440,10 @@ export const DashboardView: React.FC = () => {
               logs={logs}
               userRole={userRole}
             />
+          )}
+
+          {activeTab === "design-system" && (
+            <DesignSystemAuditView />
           )}
         </div>
       </main>

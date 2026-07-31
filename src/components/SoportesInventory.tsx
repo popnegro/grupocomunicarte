@@ -8,8 +8,13 @@ import { Button } from "./ui/button";
 
 interface SoportesInventoryProps {
   initialCity?: string;
-  onNavigateToCityMap?: (city: "Mendoza" | "San Juan" | "Buenos Aires") => void;
+  onNavigateToCityMap?: (city: "Mendoza" | "Buenos Aires") => void;
 }
+
+// Performance Optimization: Declare static constants outside the component rendering cycle to avoid recreation overhead
+const CITIES = ["Todas", "Mendoza", "Buenos Aires"] as const;
+const TIPOS = ["Todos", "Peatonal", "Vehicular", "Mixto", "Móvil"] as const;
+const CATEGORIAS = ["Todas", "Pantallas LED", "Tradicionales", "LED Móvil"] as const;
 
 export const SoportesInventory: React.FC<SoportesInventoryProps> = ({
   initialCity,
@@ -96,17 +101,13 @@ export const SoportesInventory: React.FC<SoportesInventoryProps> = ({
     }
   };
 
-  const cities = ["Todas", "Mendoza", "San Juan", "Buenos Aires"];
-  const tipos = ["Todos", "Peatonal", "Vehicular", "Mixto", "Móvil"];
-  const categorias = ["Todas", "Pantallas LED", "Tradicionales", "LED Móvil"];
-
   return (
     <div className="space-y-8 font-sans">
       {/* Dynamic Inventory Stats Panel */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
         <div className="bg-white border border-stone-200/80 rounded-2xl p-5 flex items-center gap-4 shadow-xs">
           <div className="p-3 bg-stone-100 text-stone-700 rounded-xl">
-            <Tv className="h-5 w-5" />
+            <Tv className="h-5 w-5" aria-hidden="true" />
           </div>
           <div>
             <span className="text-[10px] text-stone-400 uppercase font-black tracking-widest block">Soportes Activos</span>
@@ -117,7 +118,7 @@ export const SoportesInventory: React.FC<SoportesInventoryProps> = ({
 
         <div className="bg-white border border-stone-200/80 rounded-2xl p-5 flex items-center gap-4 shadow-xs">
           <div className="p-3 bg-emerald-50 text-[#06434a] rounded-xl">
-            <Eye className="h-5 w-5" />
+            <Eye className="h-5 w-5" aria-hidden="true" />
           </div>
           <div>
             <span className="text-[10px] text-stone-400 uppercase font-black tracking-widest block">Impacto Semanal</span>
@@ -130,7 +131,7 @@ export const SoportesInventory: React.FC<SoportesInventoryProps> = ({
 
         <div className="bg-white border border-stone-200/80 rounded-2xl p-5 flex items-center gap-4 shadow-xs">
           <div className="p-3 bg-stone-100 text-[#06434a] rounded-xl">
-            <DollarSign className="h-5 w-5" />
+            <DollarSign className="h-5 w-5" aria-hidden="true" />
           </div>
           <div>
             <span className="text-[10px] text-stone-400 uppercase font-black tracking-widest block">Tarifa Promedio</span>
@@ -147,7 +148,7 @@ export const SoportesInventory: React.FC<SoportesInventoryProps> = ({
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-stone-100 pb-5">
           <div className="space-y-1">
             <h3 className="text-base font-bold text-stone-900 flex items-center gap-2">
-              <SlidersHorizontal className="h-4.5 w-4.5 text-[#06434a]" />
+              <SlidersHorizontal className="h-4.5 w-4.5 text-[#06434a]" aria-hidden="true" />
               Filtros Avanzados de Inventario
             </h3>
             <p className="text-stone-500 text-xs font-normal">
@@ -157,13 +158,15 @@ export const SoportesInventory: React.FC<SoportesInventoryProps> = ({
 
           {/* Quick Search */}
           <div className="relative w-full lg:max-w-xs">
-            <Search className="absolute left-3 top-2.5 h-4 w-4 text-stone-400" />
+            <Search className="absolute left-3 top-2.5 h-4 w-4 text-stone-400" aria-hidden="true" />
             <Input
               type="text"
+              id="search-soportes"
               placeholder="Buscar por esquina o zona..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-9 h-9 text-xs focus-visible:ring-[#06434a]"
+              aria-label="Buscar soportes por esquina, zona o notas de ubicación"
             />
           </div>
         </div>
@@ -172,17 +175,19 @@ export const SoportesInventory: React.FC<SoportesInventoryProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Plaza Selector */}
           <div className="space-y-1.5">
-            <label className="text-[10px] font-bold text-stone-500 uppercase tracking-wider block">Ciudad / Plaza</label>
-            <div className="flex flex-wrap gap-1">
-              {cities.map((city) => (
+            <span className="text-[10px] font-bold text-stone-500 uppercase tracking-wider block" id="label-plaza">Ciudad / Plaza</span>
+            <div className="flex flex-wrap gap-1" role="group" aria-labelledby="label-plaza">
+              {CITIES.map((city) => (
                 <Button
                   key={city}
+                  type="button"
                   variant={selectedCity === city ? "default" : "outline"}
                   size="sm"
                   onClick={() => setSelectedCity(city)}
                   className={`h-8 text-xs font-bold ${
                     selectedCity === city ? "bg-[#06434a] hover:bg-[#0b5e67] text-white" : "border-stone-200 hover:bg-stone-50"
                   }`}
+                  aria-pressed={selectedCity === city}
                 >
                   {city === "Todas" ? "Todas" : city}
                 </Button>
@@ -192,17 +197,19 @@ export const SoportesInventory: React.FC<SoportesInventoryProps> = ({
 
           {/* Categoría Selector */}
           <div className="space-y-1.5">
-            <label className="text-[10px] font-bold text-stone-500 uppercase tracking-wider block">Formato Físico / Digital</label>
-            <div className="flex flex-wrap gap-1">
-              {categorias.map((cat) => (
+            <span className="text-[10px] font-bold text-stone-500 uppercase tracking-wider block" id="label-formato">Formato Físico / Digital</span>
+            <div className="flex flex-wrap gap-1" role="group" aria-labelledby="label-formato">
+              {CATEGORIAS.map((cat) => (
                 <Button
                   key={cat}
+                  type="button"
                   variant={selectedCategoria === cat ? "default" : "outline"}
                   size="sm"
                   onClick={() => setSelectedCategoria(cat)}
                   className={`h-8 text-xs font-bold ${
                     selectedCategoria === cat ? "bg-[#06434a] hover:bg-[#0b5e67] text-white" : "border-stone-200 hover:bg-stone-50"
                   }`}
+                  aria-pressed={selectedCategoria === cat}
                 >
                   {cat === "Todas" ? "Todos" : cat}
                 </Button>
@@ -212,17 +219,19 @@ export const SoportesInventory: React.FC<SoportesInventoryProps> = ({
 
           {/* Tránsito Selector */}
           <div className="space-y-1.5">
-            <label className="text-[10px] font-bold text-stone-500 uppercase tracking-wider block">Tipo de Tránsito</label>
-            <div className="flex flex-wrap gap-1">
-              {tipos.map((tipo) => (
+            <span className="text-[10px] font-bold text-stone-500 uppercase tracking-wider block" id="label-transito">Tipo de Tránsito</span>
+            <div className="flex flex-wrap gap-1" role="group" aria-labelledby="label-transito">
+              {TIPOS.map((tipo) => (
                 <Button
                   key={tipo}
+                  type="button"
                   variant={selectedTipo === tipo ? "default" : "outline"}
                   size="sm"
                   onClick={() => setSelectedTipo(tipo)}
                   className={`h-8 text-xs font-bold ${
                     selectedTipo === tipo ? "bg-[#06434a] hover:bg-[#0b5e67] text-white" : "border-stone-200 hover:bg-stone-50"
                   }`}
+                  aria-pressed={selectedTipo === tipo}
                 >
                   {tipo}
                 </Button>
@@ -233,43 +242,53 @@ export const SoportesInventory: React.FC<SoportesInventoryProps> = ({
 
         {/* Sorting Controller Bar */}
         <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-stone-100 text-xs">
-          <div className="flex items-center gap-2 text-stone-500 font-semibold">
+          <div className="flex items-center gap-2 text-stone-500 font-semibold" role="toolbar" aria-label="Controles de ordenamiento">
             <span>Ordenar por:</span>
             <button
+              type="button"
               onClick={() => toggleSort("impactos")}
               className={`px-2.5 py-1 rounded-md font-bold transition-colors flex items-center gap-1 ${
                 sortBy === "impactos" ? "bg-stone-100 text-[#06434a]" : "hover:text-stone-900"
               }`}
+              aria-label={`Ordenar por impactos semanales, orden ${sortBy === "impactos" && sortOrder === "asc" ? "ascendente" : "descendente"}`}
+              aria-current={sortBy === "impactos" ? "true" : undefined}
             >
               <span>Impactos</span>
-              <ArrowUpDown className="h-3 w-3" />
+              <ArrowUpDown className="h-3 w-3" aria-hidden="true" />
             </button>
             <button
+              type="button"
               onClick={() => toggleSort("precio")}
               className={`px-2.5 py-1 rounded-md font-bold transition-colors flex items-center gap-1 ${
                 sortBy === "precio" ? "bg-stone-100 text-[#06434a]" : "hover:text-stone-900"
               }`}
+              aria-label={`Ordenar por tarifa semanal, orden ${sortBy === "precio" && sortOrder === "asc" ? "ascendente" : "descendente"}`}
+              aria-current={sortBy === "precio" ? "true" : undefined}
             >
               <span>Tarifa</span>
-              <ArrowUpDown className="h-3 w-3" />
+              <ArrowUpDown className="h-3 w-3" aria-hidden="true" />
             </button>
             <button
+              type="button"
               onClick={() => toggleSort("nombre")}
               className={`px-2.5 py-1 rounded-md font-bold transition-colors flex items-center gap-1 ${
                 sortBy === "nombre" ? "bg-stone-100 text-[#06434a]" : "hover:text-stone-900"
               }`}
+              aria-label={`Ordenar por nombre alfabéticamente, orden ${sortBy === "nombre" && sortOrder === "asc" ? "ascendente" : "descendente"}`}
+              aria-current={sortBy === "nombre" ? "true" : undefined}
             >
               <span>Nombre</span>
-              <ArrowUpDown className="h-3 w-3" />
+              <ArrowUpDown className="h-3 w-3" aria-hidden="true" />
             </button>
           </div>
 
           {selectedCity !== "Todas" && onNavigateToCityMap && (
             <button
+              type="button"
               onClick={() => onNavigateToCityMap(selectedCity as any)}
               className="text-[#06434a] hover:text-[#0b5e67] font-bold text-xs flex items-center gap-1 transition-colors cursor-pointer"
             >
-              <MapPin className="h-3.5 w-3.5" />
+              <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
               <span>Ver mapa satelital de {selectedCity}</span>
             </button>
           )}
@@ -278,7 +297,7 @@ export const SoportesInventory: React.FC<SoportesInventoryProps> = ({
 
       {/* Grid List */}
       {filteredAndSortedScreens.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6" role="region" aria-label="Resultados de soportes publicitarios">
           {filteredAndSortedScreens.map((screen) => (
             <div key={screen.id} className="h-full">
               <ScreenCard screen={screen} />
@@ -286,13 +305,14 @@ export const SoportesInventory: React.FC<SoportesInventoryProps> = ({
           ))}
         </div>
       ) : (
-        <div className="text-center py-16 bg-white border border-dashed border-stone-200 rounded-3xl p-6">
-          <Tv className="h-12 w-12 text-stone-300 mx-auto mb-3" />
+        <div className="text-center py-16 bg-white border border-dashed border-stone-200 rounded-3xl p-6" role="alert">
+          <Tv className="h-12 w-12 text-stone-300 mx-auto mb-3" aria-hidden="true" />
           <h4 className="font-extrabold text-stone-850 text-sm">No encontramos soportes que coincidan</h4>
           <p className="text-stone-500 text-xs max-w-sm mx-auto mt-1.5 leading-relaxed font-medium">
             Probá modificando los filtros de ciudad, formato o limpiando el cuadro de búsqueda para ver más opciones disponibles en nuestro catálogo.
           </p>
           <Button
+            type="button"
             onClick={() => {
               setSearchQuery("");
               setSelectedCity("Todas");

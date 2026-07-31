@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import * as LucideIcons from "lucide-react";
 import { findSitemapItemBySlug, getBreadcrumbsForSlug, sitemap, SitemapItem } from "../lib/sitemap";
@@ -8,6 +8,7 @@ import { DoohScreen, Lead } from "../types";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { SoportesInventory } from "./SoportesInventory";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "../ui/card";
 
 // Shared Premium Buenos Aires Screens
 const BUENOS_AIRES_SCREENS: DoohScreen[] = [
@@ -61,41 +62,38 @@ const BUENOS_AIRES_SCREENS: DoohScreen[] = [
   },
 ];
 
-interface SubpageLayoutProps {
-  slug: string;
-  handleNavigate: (slug: string) => void;
-  screens: DoohScreen[];
-  cart: string[];
-  toggleCart: (id: string) => void;
-  clearCart: () => void;
-  weeks: number;
-  setWeeks: (weeks: number) => void;
-  addLead: (lead: Omit<Lead, "id" | "date">) => Promise<Lead | null>;
-}
+import { Link, useNavigate, useParams } from "react-router-dom";
+import { useCms } from "./CmsContext";
 
-export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
-  slug,
-  handleNavigate,
-  screens,
-  cart,
-  toggleCart,
-  clearCart,
-  weeks,
-  setWeeks,
-  addLead,
-}) => {
-  const item = findSitemapItemBySlug(slug);
-  const breadcrumbs = getBreadcrumbsForSlug(slug);
+// ... (resto de las importaciones)
+
+export const SubpageLayout: React.FC = () => {
+  const { slug, subslug } = useParams<{ slug: string; subslug?: string }>();
+  const {
+    screens,
+    cart,
+    toggleCart,
+    clearCart,
+    weeks,
+    setWeeks,
+    addLead,
+  } = useCms();
+
+  const fullSlug = useMemo(() => (subslug ? `/${slug}/${subslug}` : `/${slug}`), [slug, subslug]);
+
+  const navigate = useNavigate();
+  const item = findSitemapItemBySlug(fullSlug);
+  const breadcrumbs = getBreadcrumbsForSlug(fullSlug);
 
   // Dynamic Browser Simulation Tooltip copy
   const [copiedUrl, setCopiedUrl] = useState(false);
   const [showJsonLd, setShowJsonLd] = useState(false);
 
   // Mendoza / BA select logic
-  const isMendoza = slug.includes("mendoza");
-  const isBA = slug.includes("buenos-aires");
-  const currentProvince = isBA ? "Buenos Aires" : "Mendoza";
-  const provinceScreens = isBA ? BUENOS_AIRES_SCREENS : screens;
+  const isMendoza = fullSlug.includes("mendoza");
+  const isBA = fullSlug.includes("buenos-aires");
+  const [currentProvince, setCurrentProvince] = useState(isBA ? "Buenos Aires" : "Mendoza");
+  const provinceScreens = currentProvince === "Buenos Aires" ? BUENOS_AIRES_SCREENS : screens;
   const activeScreens = provinceScreens.filter((s) => s.status === "Activo" || s.status === "Disponible");
 
   // Filter Catalog states (Local to subpage layout to prevent inter-view pollution)
@@ -110,7 +108,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
     setFilterType("Todos");
     setFilterZone("Todas");
     setSelectedScreenId(null);
-  }, [slug]);
+  }, [fullSlug]);
 
   // Filtering calculations
   const filteredScreens = activeScreens.filter((screen) => {
@@ -120,7 +118,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
     
     // Type checking based on path
     let matchesType = filterType === "Todos" || screen.tipo === filterType;
-    if (slug.includes("/pantallas-led") || slug.includes("/publicidad-digital")) {
+    if (fullSlug.includes("/pantallas-led") || fullSlug.includes("/publicidad-digital")) {
       // Prefer LED models
       matchesType = true; 
     }
@@ -163,7 +161,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
       name: contactForm.name,
       email: contactForm.email,
       company: contactForm.company || "Subpage Contact",
-      source: `Contacto SEO - Ruta: ${slug}`,
+      source: `Contacto SEO - Ruta: ${fullSlug}`,
       status: "new",
       value: 1200,
     });
@@ -180,7 +178,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
       name: proposalClient.name,
       email: proposalClient.email,
       company: proposalClient.company,
-      source: `Cotizador SEO - Ruta: ${slug}`,
+      source: `Cotizador SEO - Ruta: ${fullSlug}`,
       status: "qualified",
       value: cartTotalInvestment,
     });
@@ -209,18 +207,18 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
         <p className="text-slate-500 text-sm max-w-md mx-auto">
           La ruta simulada no está definida en el mapa del sitio SEO principal. Comprueba el sitemap.
         </p>
-        <button
-          onClick={() => handleNavigate("/")}
+        <Link
+          to="/"
           className="px-6 py-2.5 bg-slate-950 text-white font-bold text-xs uppercase tracking-wider rounded-xl cursor-pointer"
         >
           Volver al Inicio
-        </button>
+        </Link>
       </div>
     );
   }
 
   // Get children links or sibling links for better SEO deep linking
-  const parentSegment = slug.split("/").slice(0, -1).join("/") || "/";
+  const parentSegment = fullSlug.split("/").slice(0, -1).join("/") || "/";
   const parentItem = parentSegment === "/" ? { name: "Inicio", children: sitemap } : findSitemapItemBySlug(parentSegment);
   const siblingPages = parentItem?.children?.filter((c) => c.slug !== slug) || [];
   const childPages = item.children || [];
@@ -355,12 +353,12 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
               {isLast ? (
                 <span className="text-slate-900 font-extrabold">{crumb.name}</span>
               ) : (
-                <button
-                  onClick={() => handleNavigate(crumb.slug)}
+                <Link
+                  to={crumb.slug}
                   className="hover:text-slate-950 transition-colors cursor-pointer text-slate-500"
                 >
                   {crumb.name}
-                </button>
+                </Link>
               )}
             </React.Fragment>
           );
@@ -454,6 +452,21 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
                   </span>
                 </div>
 
+                {/* Plaza Switcher */}
+                <div className="flex items-center gap-2 bg-slate-100 border border-slate-200 p-1 rounded-xl">
+                  {(["Mendoza", "Buenos Aires"] as const).map((city) => (
+                    <Button
+                      key={city}
+                      onClick={() => setCurrentProvince(city)}
+                      variant={currentProvince === city ? "default" : "ghost"}
+                      size="sm"
+                      className="flex-1 justify-center h-8 text-xs font-bold"
+                    >
+                      {city}
+                    </Button>
+                  ))}
+                </div>
+
                 {/* Filters */}
                 <div className="flex flex-col sm:flex-row items-center gap-3">
                   <div className="relative w-full sm:w-1/3">
@@ -530,7 +543,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
           )}
 
           {/* CONTACT & QUOTATION FORM VIEW (For /contacto or /contacto/cotizacion) */}
-          {slug.startsWith("/contacto") && (
+          {fullSlug.startsWith("/contacto") && (
             <div className="bg-white border border-slate-200 rounded-2xl p-6 md:p-8 space-y-6 shadow-xs">
               <div className="border-b border-slate-150 pb-4">
                 <h2 className="text-xl font-black text-slate-900">Formulario Comercial de Cotización B2B</h2>
@@ -656,7 +669,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
           )}
 
           {/* MEDIAKIT & DOWNLOADS CENTER (For /mediakit or /mediakit/descargas) */}
-          {slug.startsWith("/mediakit") && (
+          {fullSlug.startsWith("/mediakit") && (
             <div className="space-y-6">
               <div className="bg-slate-950 text-white rounded-2xl p-6 md:p-8 space-y-4 relative overflow-hidden">
                 <div className="absolute inset-0 bg-[linear-gradient(to_right,#1f2937_1px,transparent_1px),linear-gradient(to_bottom,#1f2937_1px,transparent_1px)] bg-[size:3rem_3rem] opacity-20" />
@@ -703,7 +716,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
               </div>
 
               {/* Technical specifications checklist */}
-              <div className="bg-white border border-slate-200 rounded-2xl p-6 space-y-6 shadow-xs">
+              <Card className="p-6 space-y-6 shadow-xs">
                 <div className="border-b border-slate-150 pb-3">
                   <h3 className="font-extrabold text-slate-900 text-sm">Especificaciones Técnicas para Creativos</h3>
                   <p className="text-slate-500 text-[11px] mt-0.5">Asegura la mejor fidelidad en nuestras pantallas LED gigantes.</p>
@@ -711,7 +724,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                   <div className="border border-slate-150 rounded-xl p-4 space-y-3">
-                    <div className="flex items-center gap-2 font-bold text-slate-800">
+                    <div className="flex items-center gap-2 font-bold text-slate-800"> {/* CardHeader-like */}
                       <LucideIcons.Monitor className="h-4.5 w-4.5 text-slate-600" />
                       <span>Pantallas LED Digitales (DOOH)</span>
                     </div>
@@ -724,7 +737,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
                   </div>
 
                   <div className="border border-slate-150 rounded-xl p-4 space-y-3">
-                    <div className="flex items-center gap-2 font-bold text-slate-800">
+                    <div className="flex items-center gap-2 font-bold text-slate-800"> {/* CardHeader-like */}
                       <LucideIcons.Layers className="h-4.5 w-4.5 text-slate-600" />
                       <span>Soportes Físicos (Vallas / Monopostes)</span>
                     </div>
@@ -736,7 +749,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
                     </ul>
                   </div>
                 </div>
-              </div>
+              </Card>
             </div>
           )}
 
@@ -768,7 +781,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
           )}
 
           {/* HISTORICAL & GENERAL COMPANY VIEWS (For /nosotros and children) */}
-          {slug.startsWith("/nosotros") && (
+          {fullSlug.startsWith("/nosotros") && (
             <div className="space-y-6">
               {/* Core Corporate Values */}
               <div className="bg-white border border-slate-200 rounded-2xl p-6 md:p-8 space-y-6 shadow-xs">
@@ -804,7 +817,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
           )}
 
           {/* GENERAL SERVICES INFORMATION VIEWS (For /servicios and children) */}
-          {slug.startsWith("/servicios") && (
+          {fullSlug.startsWith("/servicios") && (
             <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-semibold">
                 <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-3 shadow-xs">
@@ -831,7 +844,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
           )}
 
           {/* B2B OUT-OF-HOME MARKETING BLOG (For /blog and children) */}
-          {slug.startsWith("/blog") && (
+          {fullSlug.startsWith("/blog") && (
             <div className="space-y-6">
               <div className="bg-white border border-slate-200 rounded-2xl p-6 space-y-6 shadow-xs">
                 <h3 className="text-lg font-black text-slate-900">Últimos Artículos de Análisis Industrial</h3>
@@ -854,7 +867,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
           )}
 
           {/* SOPORTES INVENTORY PAGE AND CHILDREN */}
-          {slug.startsWith("/soportes") && (
+          {fullSlug.startsWith("/soportes") && (
             <div className="space-y-6 bg-white border border-slate-200 rounded-2xl p-6 md:p-8 shadow-xs">
               <div className="border-b border-slate-150 pb-4">
                 <h2 className="text-xl font-black text-slate-900">
@@ -874,7 +887,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
           )}
 
           {/* DEFAULT / OTHERS STATS */}
-          {!slug.startsWith("/contacto") && !slug.startsWith("/mediakit") && !slug.startsWith("/nosotros") && !slug.startsWith("/servicios") && !slug.startsWith("/blog") && !slug.startsWith("/soportes") && !isMendoza && !isBA && (
+          {!fullSlug.startsWith("/contacto") && !fullSlug.startsWith("/mediakit") && !fullSlug.startsWith("/nosotros") && !fullSlug.startsWith("/servicios") && !fullSlug.startsWith("/blog") && !fullSlug.startsWith("/soportes") && !isMendoza && !isBA && (
             <div className="bg-white border border-slate-200 rounded-2xl p-6 space-y-4 shadow-xs">
               <h3 className="font-extrabold text-slate-900 text-sm">Contenido de la Sección</h3>
               <p className="text-slate-500 text-xs leading-relaxed">
@@ -897,7 +910,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
             <div className="flex items-center justify-between border-b border-slate-150 pb-3">
               <div className="flex items-center gap-2">
                 <LucideIcons.Calculator className="h-4.5 w-4.5 text-slate-900" />
-                <h3 className="text-xs font-black text-slate-950">Tu Estimación de Presupuesto</h3>
+                <h3 className="text-xs font-black text-slate-950">Tu Estimación de Cotización</h3>
               </div>
               {cartScreens.length > 0 && (
                 <button
@@ -989,7 +1002,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
                       disabled={isSubmittingProposal}
                       className="w-full py-2 bg-slate-950 hover:bg-slate-850 text-white font-bold text-[11px] uppercase tracking-wider rounded-lg shadow-xs transition-colors cursor-pointer"
                     >
-                      {isSubmittingProposal ? "Enviando..." : "Solicitar Presupuesto"}
+                      {isSubmittingProposal ? "Enviando..." : "Solicitar Cotización"}
                     </button>
                   </form>
                 ) : (
@@ -1000,7 +1013,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
                   </div>
                 )}
               </div>
-            )}
+            )} {/* End of cart.length === 0 conditional */}
           </div>
 
           {/* SEO DEEP LINKING CLUSTER NAVIGATION */}
@@ -1015,14 +1028,14 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
                 <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block">Secciones Relacionadas</span>
                 <div className="flex flex-col gap-1.5 text-xs">
                   {siblingPages.slice(0, 5).map((sib) => (
-                    <button
+                    <Link
                       key={sib.slug}
-                      onClick={() => handleNavigate(sib.slug)}
+                      to={sib.slug}
                       className="w-full text-left font-bold text-slate-600 hover:text-slate-950 hover:bg-slate-50 px-2 py-1 rounded transition-colors cursor-pointer flex items-center justify-between"
                     >
                       <span className="truncate">{sib.name}</span>
                       <LucideIcons.ArrowRight className="h-3 w-3 text-slate-300" />
-                    </button>
+                    </Link>
                   ))}
                 </div>
               </div>
@@ -1034,27 +1047,27 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
                 <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block">Sub-categorías</span>
                 <div className="flex flex-col gap-1.5 text-xs">
                   {childPages.map((child) => (
-                    <button
+                    <Link
                       key={child.slug}
-                      onClick={() => handleNavigate(child.slug)}
+                      to={child.slug}
                       className="w-full text-left font-bold text-slate-600 hover:text-slate-950 hover:bg-slate-50 px-2 py-1 rounded transition-colors cursor-pointer flex items-center justify-between"
                     >
                       <span className="truncate">{child.name}</span>
                       <LucideIcons.ChevronRight className="h-3.5 w-3.5 text-slate-350" />
-                    </button>
+                    </Link>
                   ))}
                 </div>
               </div>
             )}
 
             {/* CTA back to main lander */}
-            <button
-              onClick={() => handleNavigate("/")}
+            <Link
+              to="/"
               className="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs uppercase rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 mt-2"
             >
               <LucideIcons.Home className="h-3.5 w-3.5 text-slate-600" />
               <span>Volver a la Portada</span>
-            </button>
+            </Link>
           </div>
 
         </div>

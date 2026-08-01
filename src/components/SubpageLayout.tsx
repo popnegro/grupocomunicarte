@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import * as LucideIcons from "lucide-react";
 import { findSitemapItemBySlug, getBreadcrumbsForSlug, sitemap, SitemapItem } from "../lib/sitemap";
@@ -95,8 +95,8 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
   const isMendoza = slug.includes("mendoza");
   const isBA = slug.includes("buenos-aires");
   const currentProvince = isBA ? "Buenos Aires" : "Mendoza";
-  const provinceScreens = isBA ? BUENOS_AIRES_SCREENS : screens;
-  const activeScreens = provinceScreens.filter((s) => s.status === "Activo" || s.status === "Disponible");
+  const provinceScreens = useMemo(() => isBA ? BUENOS_AIRES_SCREENS : screens, [isBA, screens]);
+  const activeScreens = useMemo(() => provinceScreens.filter((s) => s.status === "Activo" || s.status === "Disponible"), [provinceScreens]);
 
   // Filter Catalog states (Local to subpage layout to prevent inter-view pollution)
   const [searchQuery, setSearchQuery] = useState("");
@@ -113,29 +113,31 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
   }, [slug]);
 
   // Filtering calculations
-  const filteredScreens = activeScreens.filter((screen) => {
-    const matchesSearch =
-      screen.nombre.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      screen.zona.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    // Type checking based on path
-    let matchesType = filterType === "Todos" || screen.tipo === filterType;
-    if (slug.includes("/pantallas-led") || slug.includes("/publicidad-digital")) {
-      // Prefer LED models
-      matchesType = true; 
-    }
-    const matchesZone = filterZone === "Todas" || screen.zona === filterZone;
-    return matchesSearch && matchesType && matchesZone;
-  });
+  const filteredScreens = useMemo(() => {
+    return activeScreens.filter((screen) => {
+      const matchesSearch =
+        screen.nombre.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        screen.zona.toLowerCase().includes(searchQuery.toLowerCase());
+      
+      // Type checking based on path
+      let matchesType = filterType === "Todos" || screen.tipo === filterType;
+      if (slug.includes("/pantallas-led") || slug.includes("/publicidad-digital")) {
+        // Prefer LED models
+        matchesType = true; 
+      }
+      const matchesZone = filterZone === "Todas" || screen.zona === filterZone;
+      return matchesSearch && matchesType && matchesZone;
+    });
+  }, [activeScreens, searchQuery, filterType, filterZone, slug]);
 
-  const availableZones = ["Todas", ...Array.from(new Set(activeScreens.map((s) => s.zona)))];
+  const availableZones = useMemo(() => ["Todas", ...Array.from(new Set(activeScreens.map((s) => s.zona)))], [activeScreens]);
 
   // Cart calculation helpers
-  const allKnownScreens = [...screens, ...BUENOS_AIRES_SCREENS];
-  const cartScreens = allKnownScreens.filter((s) => cart.includes(s.id));
-  const cartSubtotal = cartScreens.reduce((sum, s) => sum + s.precio, 0);
-  const cartTotalImpacts = cartScreens.reduce((sum, s) => sum + s.impactos, 0) * 7 * weeks;
-  const cartTotalInvestment = cartSubtotal * weeks;
+  const allKnownScreens = useMemo(() => [...screens, ...BUENOS_AIRES_SCREENS], [screens]);
+  const cartScreens = useMemo(() => allKnownScreens.filter((s) => cart.includes(s.id)), [allKnownScreens, cart]);
+  const cartSubtotal = useMemo(() => cartScreens.reduce((sum, s) => sum + s.precio, 0), [cartScreens]);
+  const cartTotalImpacts = useMemo(() => cartScreens.reduce((sum, s) => sum + s.impactos, 0) * 7 * weeks, [cartScreens, weeks]);
+  const cartTotalInvestment = useMemo(() => cartSubtotal * weeks, [cartSubtotal, weeks]);
 
   // Contact Form inside simulated pages (like /contacto)
   const [contactForm, setContactForm] = useState({

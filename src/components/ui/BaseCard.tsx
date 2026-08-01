@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { Slot } from '@radix-ui/react-slot';
-import { cn } from '@/lib/utils';
+import { cn } from '@/src/lib/utils';
 
 const cardVariants = cva(
   'rounded-lg border bg-card text-card-foreground shadow-sm',
@@ -10,10 +10,21 @@ const cardVariants = cva(
       variant: {
         default: '',
         interactive: 'cursor-pointer hover:bg-muted/50 transition-colors',
+        outlined: 'border-2 border-muted bg-transparent',
+        ghost: 'border-none bg-transparent shadow-none',
+        elevated: 'shadow-md border-none',
       },
+      padding: {
+        none: 'p-0',
+        sm: 'p-3',
+        md: 'p-4',
+        lg: 'p-6',
+        xl: 'p-8',
+      }
     },
     defaultVariants: {
       variant: 'default',
+      padding: 'md',
     },
   }
 );
@@ -23,10 +34,10 @@ export interface CardProps extends React.HTMLAttributes<HTMLDivElement>, Variant
 }
 
 const BaseCard = React.forwardRef<HTMLDivElement, CardProps>(
-  ({ className, variant, asChild = false, ...props }, ref) => {
+  ({ className, variant, padding, asChild = false, ...props }, ref) => {
     const Comp = asChild ? Slot : 'div';
 
-    const memoizedCardVariants = useMemo(() => cardVariants({ variant }), [variant]);
+    const memoizedCardVariants = useMemo(() => cardVariants({ variant, padding }), [variant, padding]);
 
     const commonProps = {
       className: cn(memoizedCardVariants, className),
@@ -36,7 +47,7 @@ const BaseCard = React.forwardRef<HTMLDivElement, CardProps>(
 
     if (variant === 'interactive') {
       return (
-        <button {...commonProps} />
+        <button {...(commonProps as any)} />
       );
     }
 

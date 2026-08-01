@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { motion, AnimatePresence } from "motion/react";
 import { useCms } from "./CmsContext";
 import { DoohScreen } from "../types";
 
@@ -64,6 +65,7 @@ export const DashboardView: React.FC = () => {
 
   // Sidebar navigation state
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   // Core commercial databases states
   const [mediaKits, setMediaKits] = useState<MediaKit[]>(INITIAL_MEDIAKITS);
@@ -246,25 +248,51 @@ export const DashboardView: React.FC = () => {
   ];
 
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-[#FAF9F5] text-stone-800">
+    <div className="flex h-screen w-screen overflow-hidden bg-[#FAF9F5] text-stone-800 relative">
+      
+      {/* Mobile Sidebar Toggle Backdrop Overlay */}
+      <AnimatePresence>
+        {mobileSidebarOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 0.4 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setMobileSidebarOpen(false)}
+            className="fixed inset-0 bg-black z-40 md:hidden"
+          />
+        )}
+      </AnimatePresence>
       
       {/* 1. Sidebar Panel */}
-      <aside className={`border-r border-stone-200/80 bg-white flex flex-col justify-between transition-all duration-300 relative shrink-0 z-50 shadow-2xs ${
-        sidebarCollapsed ? "w-16" : "w-64"
-      }`}>
+      <aside className={`border-r border-stone-200/80 bg-white flex flex-col justify-between transition-all duration-300 shrink-0 shadow-2xs z-50
+        /* Position adaptive */
+        fixed inset-y-0 left-0 md:relative md:flex h-full
+        ${mobileSidebarOpen ? "translate-x-0 w-64" : "-translate-x-full md:translate-x-0"}
+        ${sidebarCollapsed ? "md:w-16 w-64" : "md:w-64 w-64"}
+      `}>
         <div className="flex flex-col h-full overflow-y-auto">
           
           {/* Logo Brand Header */}
-          <div className="p-5 border-b border-stone-100 flex items-center gap-3 text-[#06434a] select-none font-display text-left">
-            <div className="h-7 w-7 rounded-lg bg-[#06434a] flex items-center justify-center text-white shrink-0 shadow-sm font-black text-sm">
-              C
-            </div>
-            {!sidebarCollapsed && (
-              <div className="min-w-0">
-                <span className="block text-xs font-black tracking-tight leading-none text-stone-900 uppercase">Grupo Comunicarte</span>
-                <span className="block text-[8px] font-bold text-stone-400 mt-1 leading-none uppercase tracking-widest">SaaS DOOH Platform</span>
+          <div className="p-5 border-b border-stone-100 flex items-center justify-between gap-3 text-[#06434a] select-none font-display text-left">
+            <div className="flex items-center gap-3">
+              <div className="h-7 w-7 rounded-lg bg-[#06434a] flex items-center justify-center text-white shrink-0 shadow-sm font-black text-sm">
+                C
               </div>
-            )}
+              {(!sidebarCollapsed || mobileSidebarOpen) && (
+                <div className="min-w-0">
+                  <span className="block text-xs font-black tracking-tight leading-none text-stone-900 uppercase">Grupo Comunicarte</span>
+                  <span className="block text-[8px] font-bold text-stone-400 mt-1 leading-none uppercase tracking-widest">SaaS DOOH Platform</span>
+                </div>
+              )}
+            </div>
+            {/* Mobile close button inside header */}
+            <button
+              onClick={() => setMobileSidebarOpen(false)}
+              className="md:hidden p-1 rounded-lg text-stone-400 hover:bg-stone-50 hover:text-stone-700 min-h-[44px] min-w-[44px] flex items-center justify-center cursor-pointer"
+              aria-label="Cerrar menú"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </button>
           </div>
 
           {/* Links navigation group */}
@@ -274,37 +302,49 @@ export const DashboardView: React.FC = () => {
               const Icon = item.icon;
 
               return (
-                <button
+                <motion.button
                   key={item.id}
-                  onClick={() => setActiveTab(item.id)}
-                  className={`w-full p-2.5 rounded-xl flex items-center gap-3 cursor-pointer text-left transition-all ${
+                  onClick={() => {
+                    setActiveTab(item.id);
+                    setMobileSidebarOpen(false);
+                  }}
+                  whileHover={{ scale: 1.01, x: 3 }}
+                  whileTap={{ scale: 0.98 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 25 }}
+                  className={`w-full py-3 px-3 md:p-2.5 rounded-xl flex items-center gap-3 cursor-pointer text-left transition-all min-h-[44px] ${
                     active 
                       ? "bg-[#06434a] text-white font-bold shadow-sm" 
                       : "text-stone-500 hover:bg-stone-50 hover:text-stone-900"
                   }`}
                 >
                   <Icon className={`h-4.5 w-4.5 shrink-0 ${active ? "text-amber-300 animate-pulse" : ""}`} />
-                  {!sidebarCollapsed && (
+                  {(!sidebarCollapsed || mobileSidebarOpen) && (
                     <div className="min-w-0 text-left">
                       <span className="block text-xs leading-none">{item.label}</span>
                     </div>
                   )}
-                </button>
+                </motion.button>
               );
             })}
           </nav>
 
           {/* Return to Public Website section */}
           <div className="p-4 border-t border-stone-100">
-            <button
-              onClick={() => setActiveView("landing")}
-              className="w-full p-2.5 rounded-xl flex items-center gap-3 cursor-pointer text-left transition-all text-emerald-800 hover:bg-emerald-50/50 hover:text-emerald-950 font-bold"
+            <motion.button
+              onClick={() => {
+                setActiveView("landing");
+                setMobileSidebarOpen(false);
+              }}
+              whileHover={{ scale: 1.01, x: 3 }}
+              whileTap={{ scale: 0.98 }}
+              transition={{ type: "spring", stiffness: 400, damping: 25 }}
+              className="w-full py-3 px-3 md:p-2.5 rounded-xl flex items-center gap-3 cursor-pointer text-left transition-all text-emerald-800 hover:bg-emerald-50/50 hover:text-emerald-950 font-bold min-h-[44px]"
             >
               <Globe className="h-4.5 w-4.5 shrink-0 text-emerald-600" />
-              {!sidebarCollapsed && (
+              {(!sidebarCollapsed || mobileSidebarOpen) && (
                 <span className="text-xs leading-none">Ver Sitio Público</span>
               )}
-            </button>
+            </motion.button>
           </div>
 
         </div>
@@ -313,7 +353,7 @@ export const DashboardView: React.FC = () => {
         <div className="p-4 border-t border-stone-100 flex items-center justify-between">
           <button
             onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            className="p-1.5 hover:bg-stone-50 rounded-lg text-stone-400 hover:text-stone-700 cursor-pointer transition-colors mx-auto lg:mx-0"
+            className="p-1.5 hover:bg-stone-50 rounded-lg text-stone-400 hover:text-stone-700 cursor-pointer transition-colors mx-auto lg:mx-0 hidden md:block"
           >
             {sidebarCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
           </button>
@@ -334,117 +374,129 @@ export const DashboardView: React.FC = () => {
               setUserRole={setUserRole}
               title={headerTitle}
               description={headerDesc}
+              onToggleMobileSidebar={() => setMobileSidebarOpen(!mobileSidebarOpen)}
             />
           );
         })()}
 
         {/* Sub-view router container */}
         <div className="flex-1 overflow-y-auto relative bg-[#FAF9F5]">
-          {activeTab === "dashboard" && (
-            <DashboardHome
-              mediaKits={mediaKits}
-              cotizaciones={cotizaciones}
-              reservas={reservas}
-              campañas={campañas}
-              clientes={clientes}
-              userRole={userRole}
-              onNavigateToTab={setActiveTab}
-              onApproveReserva={handleApproveReserva}
-              onApproveCotizacion={handleApproveCotizacion}
-              setCampañas={setCampañas}
-              setClientes={setClientes}
-              setCotizaciones={setCotizaciones}
-              setReservas={setReservas}
-              addLog={addLog}
-            />
-          )}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.12, ease: "easeOut" }}
+              className="w-full min-h-full"
+            >
+              {activeTab === "dashboard" && (
+                <DashboardHome
+                  mediaKits={mediaKits}
+                  cotizaciones={cotizaciones}
+                  reservas={reservas}
+                  campañas={campañas}
+                  clientes={clientes}
+                  userRole={userRole}
+                  onNavigateToTab={setActiveTab}
+                  onApproveReserva={handleApproveReserva}
+                  onApproveCotizacion={handleApproveCotizacion}
+                  setCampañas={setCampañas}
+                  setClientes={setClientes}
+                  setCotizaciones={setCotizaciones}
+                  setReservas={setReservas}
+                  addLog={addLog}
+                />
+              )}
 
-          {activeTab === "inventario" && (
-            <InventoryModule
-              screens={screens}
-              userRole={userRole}
-              onUpdateScreen={handleUpdateScreen}
-              onAddScreen={handleAddScreen}
-              onDeleteScreen={handleDeleteScreen}
-            />
-          )}
+              {activeTab === "inventario" && (
+                <InventoryModule
+                  screens={screens}
+                  userRole={userRole}
+                  onUpdateScreen={handleUpdateScreen}
+                  onAddScreen={handleAddScreen}
+                  onDeleteScreen={handleDeleteScreen}
+                />
+              )}
 
-          {activeTab === "mediakit" && (
-            <MediaKitModule
-              mediaKits={mediaKits}
-              clientes={clientes}
-              screens={screens}
-              userRole={userRole}
-              onUpdateMediaKit={handleUpdateMediaKit}
-              onAddMediaKit={handleAddMediaKit}
-              onDeleteMediaKit={(id) => setMediaKits((prev) => prev.filter((m) => m.id !== id))}
-              onGenerateQuoteFromMediaKit={handleGenerateQuoteFromMediaKit}
-            />
-          )}
+              {activeTab === "mediakit" && (
+                <MediaKitModule
+                  mediaKits={mediaKits}
+                  clientes={clientes}
+                  screens={screens}
+                  userRole={userRole}
+                  onUpdateMediaKit={handleUpdateMediaKit}
+                  onAddMediaKit={handleAddMediaKit}
+                  onDeleteMediaKit={(id) => setMediaKits((prev) => prev.filter((m) => m.id !== id))}
+                  onGenerateQuoteFromMediaKit={handleGenerateQuoteFromMediaKit}
+                />
+              )}
 
-          {activeTab === "reservas" && (
-            <WorkflowModule
-              cotizaciones={cotizaciones}
-              reservas={reservas}
-              campañas={campañas}
-              screens={screens}
-              userRole={userRole}
-              onUpdateCotizacion={(id, data) => setCotizaciones((prev) => prev.map((q) => (q.id === id ? { ...q, ...data } : q)))}
-              onUpdateReserva={(id, data) => setReservas((prev) => prev.map((r) => (r.id === id ? { ...r, ...data } : r)))}
-              onUpdateCampaña={(id, data) => setCampañas((prev) => prev.map((c) => (c.id === id ? { ...c, ...data } : c)))}
-              onApproveCotizacion={handleApproveCotizacion}
-              onApproveReserva={handleApproveReserva}
-            />
-          )}
+              {activeTab === "reservas" && (
+                <WorkflowModule
+                  cotizaciones={cotizaciones}
+                  reservas={reservas}
+                  campañas={campañas}
+                  screens={screens}
+                  userRole={userRole}
+                  onUpdateCotizacion={(id, data) => setCotizaciones((prev) => prev.map((q) => (q.id === id ? { ...q, ...data } : q)))}
+                  onUpdateReserva={(id, data) => setReservas((prev) => prev.map((r) => (r.id === id ? { ...r, ...data } : r)))}
+                  onUpdateCampaña={(id, data) => setCampañas((prev) => prev.map((c) => (c.id === id ? { ...c, ...data } : c)))}
+                  onApproveCotizacion={handleApproveCotizacion}
+                  onApproveReserva={handleApproveReserva}
+                />
+              )}
 
-          {activeTab === "led-movil" && (
-            <LedMovilModule
-              vehicles={vehicles}
-              onUpdateVehicle={(id, data) => setVehicles((prev) => prev.map((v) => (v.id === id ? { ...v, ...data } : v)))}
-              onAddVehicle={(vh) => setVehicles((prev) => [...prev, vh])}
-            />
-          )}
+              {activeTab === "led-movil" && (
+                <LedMovilModule
+                  vehicles={vehicles}
+                  onUpdateVehicle={(id, data) => setVehicles((prev) => prev.map((v) => (v.id === id ? { ...v, ...data } : v)))}
+                  onAddVehicle={(vh) => setVehicles((prev) => [...prev, vh])}
+                />
+              )}
 
-          {activeTab === "revenue" && (
-            <RevenueModule
-              screens={screens}
-              onUpdateScreenPrice={handleUpdateScreenPrice}
-            />
-          )}
+              {activeTab === "revenue" && (
+                <RevenueModule
+                  screens={screens}
+                  onUpdateScreenPrice={handleUpdateScreenPrice}
+                />
+              )}
 
-          {activeTab === "calendario" && (
-            <CalendarModule
-              screens={screens}
-              onUpdateScreenStatus={(id, status) => handleUpdateScreen(id, { status: status as any })}
-            />
-          )}
+              {activeTab === "calendario" && (
+                <CalendarModule
+                  screens={screens}
+                  onUpdateScreenStatus={(id, status) => handleUpdateScreen(id, { status: status as any })}
+                />
+              )}
 
-          {activeTab === "clientes" && (
-            <ClientsModule
-              clientes={clientes}
-              userRole={userRole}
-              onAddCliente={(cliente) => setClientes((prev) => [...prev, cliente])}
-            />
-          )}
+              {activeTab === "clientes" && (
+                <ClientsModule
+                  clientes={clientes}
+                  userRole={userRole}
+                  onAddCliente={(cliente) => setClientes((prev) => [...prev, cliente])}
+                />
+              )}
 
-          {activeTab === "reportes" && (
-            <ReportsModule />
-          )}
+              {activeTab === "reportes" && (
+                <ReportsModule />
+              )}
 
-          {activeTab === "seo" && (
-            <SitemapSeoView />
-          )}
+              {activeTab === "seo" && (
+                <SitemapSeoView />
+              )}
 
-          {activeTab === "administracion" && (
-            <AdministrationModule
-              logs={logs}
-              userRole={userRole}
-            />
-          )}
+              {activeTab === "administracion" && (
+                <AdministrationModule
+                  logs={logs}
+                  userRole={userRole}
+                />
+              )}
 
-          {activeTab === "design-system" && (
-            <DesignSystemAuditView />
-          )}
+              {activeTab === "design-system" && (
+                <DesignSystemAuditView />
+              )}
+            </motion.div>
+          </AnimatePresence>
         </div>
       </main>
 

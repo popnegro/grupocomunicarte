@@ -108,7 +108,7 @@ export const BaseCard: React.FC<BaseCardProps> = ({
           className={cn(
             "relative overflow-hidden w-full select-none",
             aspectClasses[imageAspectRatio],
-            borderRadius === "xl" ? "rounded-t-xl" : borderRadius === "2xl" ? "rounded-t-[20px]" : "rounded-t-[24px]"
+            borderRadius === "xl" ? "rounded-t-2xl" : borderRadius === "2xl" ? "rounded-t-3xl" : "rounded-t-[32px]"
           )}
         >
           <motion.img

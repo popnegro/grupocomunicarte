@@ -4,6 +4,7 @@ import { motion } from "motion/react";
 import * as LucideIcons from "lucide-react";
 import { Navigation } from "./Navigation";
 import { Hero } from "./landing/Hero";
+import { FeaturedCarousel } from "./landing/FeaturedCarousel";
 import { InventoryCatalog } from "./landing/InventoryCatalog";
 import { Footer } from "./Footer";
 import { SubpageLayout } from "./SubpageLayout";
@@ -161,6 +162,9 @@ export const LandingView: React.FC = () => {
             }}
             onExploreClick={() => handleScrollTo("espacios")}
           />
+
+          {/* 2b. Featured Screens Carousel proposal */}
+          <FeaturedCarousel screens={screens} />
 
           {/* 3. Refactored "Soluciones" Section */}
           <section id="soluciones" className="bg-stone-50 border-y border-stone-200/80 py-24 font-sans">
@@ -446,7 +450,7 @@ export const LandingView: React.FC = () => {
               </div>
 
               {/* Form */}
-              <div className="lg:col-span-6 bg-white text-stone-900 rounded-3xl p-6 md:p-8 shadow-2xl border border-stone-200">
+              <div className="lg:col-span-6 bg-white text-stone-900 rounded-[32px] p-6 md:p-8 shadow-2xl border border-stone-200">
                 <h3 className="text-md font-bold text-stone-900 mb-1 font-display">Completa tu consulta comercial</h3>
                 <p className="text-stone-500 text-xs mb-6">Nos contactaremos contigo en menos de 24 horas hábiles.</p>
 
@@ -467,7 +471,7 @@ export const LandingView: React.FC = () => {
                             placeholder="Ana de la Cruz"
                             value={contactForm.name}
                             onChange={(e) => setContactForm({ ...contactForm, name: e.target.value })}
-                            className="w-full px-3 py-2 text-xs border border-stone-200 rounded-xl bg-stone-50 focus:outline-none focus:border-[#06434a]"
+                            className="w-full px-3 py-2 text-xs border border-stone-200 rounded-lg bg-stone-50 focus:outline-none focus:border-[#06434a]"
                           />
                         </div>
                         <div className="space-y-1">
@@ -479,7 +483,7 @@ export const LandingView: React.FC = () => {
                             placeholder="Acme Corp"
                             value={contactForm.company}
                             onChange={(e) => setContactForm({ ...contactForm, company: e.target.value })}
-                            className="w-full px-3 py-2 text-xs border border-stone-200 rounded-xl bg-stone-50 focus:outline-none focus:border-[#06434a]"
+                            className="w-full px-3 py-2 text-xs border border-stone-200 rounded-lg bg-stone-50 focus:outline-none focus:border-[#06434a]"
                           />
                         </div>
                       </div>
@@ -495,7 +499,7 @@ export const LandingView: React.FC = () => {
                             placeholder="nombre@empresa.com"
                             value={contactForm.email}
                             onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })}
-                            className="w-full px-3 py-2 text-xs border border-stone-200 rounded-xl bg-stone-50 focus:outline-none focus:border-[#06434a]"
+                            className="w-full px-3 py-2 text-xs border border-stone-200 rounded-lg bg-stone-50 focus:outline-none focus:border-[#06434a]"
                           />
                         </div>
                         <div className="space-y-1">
@@ -507,7 +511,7 @@ export const LandingView: React.FC = () => {
                             placeholder="+54 9 261 1234567"
                             value={contactForm.phone}
                             onChange={(e) => setContactForm({ ...contactForm, phone: e.target.value })}
-                            className="w-full px-3 py-2 text-xs border border-stone-200 rounded-xl bg-stone-50 focus:outline-none focus:border-[#06434a]"
+                            className="w-full px-3 py-2 text-xs border border-stone-200 rounded-lg bg-stone-50 focus:outline-none focus:border-[#06434a]"
                           />
                         </div>
                       </div>
@@ -519,7 +523,7 @@ export const LandingView: React.FC = () => {
                         <select
                           value={contactForm.spacePreference}
                           onChange={(e) => setContactForm({ ...contactForm, spacePreference: e.target.value })}
-                          className="w-full px-3 py-2 text-xs border border-stone-200 rounded-xl bg-stone-50 font-semibold text-stone-700 focus:outline-none cursor-pointer"
+                          className="w-full px-3 py-2 text-xs border border-stone-200 rounded-lg bg-stone-50 font-semibold text-stone-700 focus:outline-none cursor-pointer"
                         >
                           <option value="Mendoza">Plaza Mendoza</option>
                           <option value="Buenos Aires">Plaza Buenos Aires</option>
@@ -536,7 +540,7 @@ export const LandingView: React.FC = () => {
                           rows={3}
                           value={contactForm.message}
                           onChange={(e) => setContactForm({ ...contactForm, message: e.target.value })}
-                          className="w-full px-3 py-2 text-xs border border-stone-200 rounded-xl bg-stone-50 focus:outline-none focus:border-[#06434a]"
+                          className="w-full px-3 py-2 text-xs border border-stone-200 rounded-lg bg-stone-50 focus:outline-none focus:border-[#06434a]"
                         />
                       </div>
 

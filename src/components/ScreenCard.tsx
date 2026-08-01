@@ -17,6 +17,16 @@ import {
   ArrowUpDown
 } from "lucide-react";
 
+export const isMediaVideo = (url?: string): boolean => {
+  if (!url) return false;
+  if (url.startsWith("data:video/")) return true;
+  if (url.startsWith("data:image/")) return false;
+  const lowercase = url.toLowerCase();
+  if (lowercase.match(/\.(mp4|webm|mov|ogg|m4v)$/)) return true;
+  if (lowercase.match(/\.(jpg|jpeg|png|webp|gif|svg)$/) || lowercase.includes("unsplash.com") || lowercase.includes("images.unsplash.com")) return false;
+  return true; // default fallback if unknown
+};
+
 interface ScreenCardProps {
   screen: DoohScreen;
   onFocusOnMap?: () => void;
@@ -122,14 +132,23 @@ export const ScreenCard: React.FC<ScreenCardProps> = ({
           {/* Visual Header / Thumbnail */}
           <div className="relative aspect-[1.5/1] bg-stone-900 flex items-center justify-center text-white overflow-hidden shrink-0 rounded-t-[19px]">
             {screen.video ? (
-              <video
-                src={screen.video}
-                autoPlay
-                muted
-                loop
-                playsInline
-                className="absolute inset-0 w-full h-full object-cover opacity-90 transition-transform duration-700 ease-out group-hover:scale-103"
-              />
+              isMediaVideo(screen.video) ? (
+                <video
+                  src={screen.video}
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  className="absolute inset-0 w-full h-full object-cover opacity-90 transition-transform duration-700 ease-out group-hover:scale-103"
+                />
+              ) : (
+                <img
+                  src={screen.video}
+                  alt={screen.nombre}
+                  className="absolute inset-0 w-full h-full object-cover opacity-95 transition-transform duration-700 ease-out group-hover:scale-103"
+                  referrerPolicy="no-referrer"
+                />
+              )
             ) : (
               <div className="absolute inset-0 bg-gradient-to-br from-stone-950 to-stone-800 flex items-center justify-center transition-transform duration-700 ease-out group-hover:scale-103">
                 <span className="text-3xl font-extrabold tracking-tight text-white/5 select-none uppercase">
@@ -169,9 +188,9 @@ export const ScreenCard: React.FC<ScreenCardProps> = ({
                   onFocusOnMap();
                 }}
                 title="Ubicar en el mapa"
-                className="absolute bottom-3 right-3 z-10 p-2 rounded-full bg-white/90 hover:bg-white text-stone-700 hover:text-[#06434a] transition-colors shadow-sm border border-stone-200"
+                className="absolute bottom-3 right-3 z-10 h-11 w-11 flex items-center justify-center rounded-full bg-white/95 hover:bg-white text-stone-700 hover:text-[#06434a] transition-all shadow-sm border border-stone-200 focus-visible:ring-2 focus-visible:ring-[#06434a] focus-visible:outline-none focus:outline-none min-h-[44px] min-w-[44px] cursor-pointer"
               >
-                <MapPin className="h-3.5 w-3.5" />
+                <MapPin className="h-4 w-4" />
               </button>
             )}
           </div>
@@ -195,8 +214,8 @@ export const ScreenCard: React.FC<ScreenCardProps> = ({
                   </Badge>
                 </div>
 
-                <div className="flex items-center gap-1.5 text-stone-500 text-xs">
-                  <MapPin className="h-3.5 w-3.5 text-stone-400 shrink-0" />
+                <div className="flex items-center gap-1.5 text-stone-600 text-xs">
+                  <MapPin className="h-3.5 w-3.5 text-stone-500 shrink-0" />
                   <span className="truncate">{screen.zona}</span>
                 </div>
               </div>
@@ -204,26 +223,26 @@ export const ScreenCard: React.FC<ScreenCardProps> = ({
               {/* Specs & Performance KPI Bento Box */}
               <div className="grid grid-cols-2 gap-2 bg-stone-50/80 p-2.5 rounded-xl border border-stone-100">
                 <div className="text-center">
-                  <span className="block text-[8px] font-extrabold text-stone-400 uppercase tracking-wider">
+                  <span className="block text-[8px] font-extrabold text-stone-550 uppercase tracking-wider">
                     Audiencia / Día
                   </span>
-                  <span className="block text-xs font-bold text-stone-800 font-display">
+                  <span className="block text-xs font-bold text-stone-900 font-display">
                     {formattedImpacts} visitas
                   </span>
                 </div>
                 <div className="text-center border-l border-stone-200/50">
-                  <span className="block text-[8px] font-extrabold text-stone-400 uppercase tracking-wider">
+                  <span className="block text-[8px] font-extrabold text-stone-550 uppercase tracking-wider">
                     Dimensión
                   </span>
-                  <span className="block text-xs font-bold text-stone-800 font-display">
+                  <span className="block text-xs font-bold text-stone-900 font-display">
                     {screen.dimensiones || typeStyles.size}
                   </span>
                 </div>
               </div>
 
               {screen.cobertura && (
-                <div className="text-[11px] text-stone-500 flex items-center gap-1 bg-stone-50/40 px-2 py-1.5 rounded-lg border border-stone-100">
-                  <Layers className="h-3 w-3 text-stone-400" />
+                <div className="text-[11px] text-stone-600 flex items-center gap-1 bg-stone-50/40 px-2 py-1.5 rounded-lg border border-stone-100">
+                  <Layers className="h-3 w-3 text-stone-500" />
                   <span className="truncate">{screen.cobertura}</span>
                 </div>
               )}
@@ -243,23 +262,23 @@ export const ScreenCard: React.FC<ScreenCardProps> = ({
                   e.stopPropagation();
                   onCompareToggle();
                 }}
-                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-[10px] font-extrabold uppercase tracking-wider transition-all cursor-pointer ${
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg border text-[10px] font-extrabold uppercase tracking-wider transition-all cursor-pointer min-h-[44px] min-w-[44px] focus-visible:ring-2 focus-visible:ring-[#06434a] focus-visible:outline-none focus:outline-none ${
                   isComparing
                     ? "bg-stone-50 text-[#06434a] border-[#06434a]/30"
-                    : "bg-white text-stone-500 border-stone-200 hover:text-stone-800 hover:border-stone-300"
+                    : "bg-white text-stone-600 border-stone-200 hover:text-stone-800 hover:border-stone-300"
                 }`}
               >
-                <div className={`h-3 w-3 rounded-md flex items-center justify-center border transition-all ${
+                <div className={`h-3.5 w-3.5 rounded-md flex items-center justify-center border transition-all ${
                   isComparing 
                     ? "bg-[#06434a] border-[#06434a]" 
-                    : "border-stone-300 bg-white"
+                    : "border-stone-400 bg-white"
                 }`}>
                   {isComparing && <Check className="h-2 w-2 text-white stroke-[4px]" />}
                 </div>
                 <span>Comparar</span>
               </button>
             ) : (
-              <div className="text-[9px] text-stone-400 font-bold uppercase">
+              <div className="text-[9px] text-stone-500 font-bold uppercase tracking-wider">
                 COBERTURA PREMIUM
               </div>
             )}
@@ -267,9 +286,9 @@ export const ScreenCard: React.FC<ScreenCardProps> = ({
             {/* MediaKit Action Button */}
             <button
               onClick={() => toggleCart(screen.id)}
-              className={`flex items-center justify-center gap-1.5 px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-wide transition-all duration-200 cursor-pointer ${
+              className={`flex items-center justify-center gap-1.5 px-4.5 py-2.5 rounded-full text-[10px] font-black uppercase tracking-wide transition-all duration-200 cursor-pointer min-h-[44px] min-w-[110px] focus-visible:ring-2 focus-visible:ring-[#06434a] focus-visible:outline-none focus:outline-none ${
                 isInCart
-                  ? "bg-stone-100 text-stone-800 hover:bg-stone-200 border border-stone-200"
+                  ? "bg-stone-100 text-stone-850 hover:bg-stone-250 border border-stone-200"
                   : "bg-stone-950 hover:bg-[#06434a] text-white shadow-xs"
               }`}
             >
@@ -298,14 +317,23 @@ export const ScreenCard: React.FC<ScreenCardProps> = ({
           {/* Left Column: Visual Media Player & Stats Overview */}
           <div className="lg:col-span-6 bg-stone-950 text-white flex flex-col justify-between relative overflow-hidden h-[300px] lg:h-auto min-h-[300px] lg:rounded-l-[23px]">
             {screen.video ? (
-              <video
-                src={screen.video}
-                autoPlay
-                muted
-                loop
-                playsInline
-                className="absolute inset-0 w-full h-full object-cover opacity-90"
-              />
+              isMediaVideo(screen.video) ? (
+                <video
+                  src={screen.video}
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  className="absolute inset-0 w-full h-full object-cover opacity-90"
+                />
+              ) : (
+                <img
+                  src={screen.video}
+                  alt={screen.nombre}
+                  className="absolute inset-0 w-full h-full object-cover opacity-95"
+                  referrerPolicy="no-referrer"
+                />
+              )
             ) : (
               <div className="absolute inset-0 bg-gradient-to-br from-stone-950 via-stone-900 to-stone-850 flex flex-col items-center justify-center">
                 <span className="text-4xl font-black tracking-widest text-white/5 select-none uppercase">
@@ -339,7 +367,7 @@ export const ScreenCard: React.FC<ScreenCardProps> = ({
               {/* Metrics Indicators (No Prices) */}
               <div className="grid grid-cols-2 gap-2.5 pt-3.5 border-t border-white/15">
                 <div className="bg-stone-900/60 backdrop-blur-md p-2.5 rounded-xl border border-white/5 text-center">
-                  <span className="block text-[8px] font-extrabold text-stone-400 uppercase tracking-wider">
+                  <span className="block text-[8px] font-extrabold text-stone-300 uppercase tracking-wider">
                     Impactos Diarios
                   </span>
                   <span className="block text-sm font-bold text-white font-display mt-0.5">
@@ -347,7 +375,7 @@ export const ScreenCard: React.FC<ScreenCardProps> = ({
                   </span>
                 </div>
                 <div className="bg-stone-900/60 backdrop-blur-md p-2.5 rounded-xl border border-white/5 text-center">
-                  <span className="block text-[8px] font-extrabold text-stone-400 uppercase tracking-wider">
+                  <span className="block text-[8px] font-extrabold text-stone-300 uppercase tracking-wider">
                     Audiencia Mensual
                   </span>
                   <span className="block text-sm font-bold text-white font-display mt-0.5">
@@ -389,7 +417,7 @@ export const ScreenCard: React.FC<ScreenCardProps> = ({
                         <span className="absolute -left-[21px] top-0.5 flex h-2 w-2 items-center justify-center rounded-full bg-amber-500" />
                         <div>
                           <span className="font-semibold text-stone-800 block leading-none">{stop.nombre}</span>
-                          <span className="text-[9px] text-stone-400">Punto de alta afluencia {idx === 0 ? "de salida" : idx === screen.ruta!.length - 1 ? "de retorno" : ""}</span>
+                          <span className="text-[9px] text-stone-550">Punto de alta afluencia {idx === 0 ? "de salida" : idx === screen.ruta!.length - 1 ? "de retorno" : ""}</span>
                         </div>
                       </div>
                     ))}
@@ -406,27 +434,27 @@ export const ScreenCard: React.FC<ScreenCardProps> = ({
 
                 <div className="grid grid-cols-2 gap-3.5 text-xs">
                   <div className="space-y-0.5">
-                    <span className="text-[9px] text-stone-400 font-bold block uppercase tracking-wider">Hardware / Resolución</span>
+                    <span className="text-[9px] text-stone-600 font-extrabold block uppercase tracking-wider">Hardware / Resolución</span>
                     <span className="font-semibold text-stone-800 block">{screen.refreshRate ? "UHD Outdoor Screen" : typeStyles.res}</span>
                   </div>
                   <div className="space-y-0.5">
-                    <span className="text-[9px] text-stone-400 font-bold block uppercase tracking-wider">Dimensiones Físicas</span>
+                    <span className="text-[9px] text-stone-600 font-extrabold block uppercase tracking-wider">Dimensiones Físicas</span>
                     <span className="font-semibold text-stone-800 block">{screen.dimensiones || typeStyles.size}</span>
                   </div>
                   <div className="space-y-0.5">
-                    <span className="text-[9px] text-stone-400 font-bold block uppercase tracking-wider">Pico de Brillo</span>
+                    <span className="text-[9px] text-stone-600 font-extrabold block uppercase tracking-wider">Pico de Brillo</span>
                     <span className="font-semibold text-stone-800 block">{screen.brillo || typeStyles.brightness}</span>
                   </div>
                   <div className="space-y-0.5">
-                    <span className="text-[9px] text-stone-400 font-bold block uppercase tracking-wider">Tasa de Refresco</span>
+                    <span className="text-[9px] text-stone-600 font-extrabold block uppercase tracking-wider">Tasa de Refresco</span>
                     <span className="font-semibold text-stone-800 block">{screen.refreshRate || "3,840 Hz (Flicker-Free)"}</span>
                   </div>
                   <div className="space-y-0.5">
-                    <span className="text-[9px] text-stone-400 font-bold block uppercase tracking-wider">Soporte Multimedia</span>
+                    <span className="text-[9px] text-stone-600 font-extrabold block uppercase tracking-wider">Soporte Multimedia</span>
                     <span className="font-semibold text-stone-800 block">{screen.formato || "MP4, JPG, PNG"}</span>
                   </div>
                   <div className="space-y-0.5">
-                    <span className="text-[9px] text-stone-400 font-bold block uppercase tracking-wider">Frecuencia de Loop</span>
+                    <span className="text-[9px] text-stone-600 font-extrabold block uppercase tracking-wider">Frecuencia de Loop</span>
                     <span className="font-semibold text-stone-800 block">Spot de 15s en rotación constante</span>
                   </div>
                 </div>
@@ -473,16 +501,16 @@ export const ScreenCard: React.FC<ScreenCardProps> = ({
                       onFocusOnMap();
                       setIsModalOpen(false);
                     }}
-                    className="px-3.5 py-2 text-xs font-bold text-stone-700 bg-stone-50 hover:bg-stone-100 border border-stone-200 rounded-full transition-all cursor-pointer flex items-center gap-1"
+                    className="px-4 py-2 text-xs font-bold text-stone-700 bg-stone-50 hover:bg-stone-100 border border-stone-200 rounded-full transition-all cursor-pointer flex items-center gap-1 min-h-[44px] focus-visible:ring-2 focus-visible:ring-[#06434a] focus-visible:outline-none focus:outline-none"
                   >
-                    <MapPin className="h-3.5 w-3.5 text-stone-400" />
+                    <MapPin className="h-3.5 w-3.5 text-stone-500" />
                     <span>Ubicar</span>
                   </button>
                 )}
 
                 <button
                   onClick={() => toggleCart(screen.id)}
-                  className={`px-5 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all duration-200 cursor-pointer flex items-center gap-1.5 shadow-sm ${
+                  className={`px-5 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all duration-200 cursor-pointer flex items-center gap-1.5 shadow-sm min-h-[44px] focus-visible:ring-2 focus-visible:ring-[#06434a] focus-visible:outline-none focus:outline-none ${
                     isInCart
                       ? "bg-stone-100 text-stone-800 hover:bg-stone-200 border border-stone-200"
                       : "bg-stone-950 hover:bg-[#06434a] text-white"

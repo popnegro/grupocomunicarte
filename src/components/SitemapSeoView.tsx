@@ -637,7 +637,7 @@ export const SitemapSeoView: React.FC = () => {
               </div>
 
               {/* Mega Menu Visual Blueprint */}
-              <div className="bg-slate-900 text-white rounded-xl p-5 border border-slate-800 space-y-3">
+              <div className="bg-slate-900 text-white rounded-[28px] p-5 border border-slate-800 space-y-3">
                 <span className="block text-[10px] font-bold text-emerald-400 uppercase tracking-wider font-mono">Plano de Megamenú Principal (Desktop Visual Spec)</span>
                 
                 <div className="bg-slate-950 p-4 rounded-lg border border-slate-800 grid grid-cols-1 md:grid-cols-3 gap-6 text-xs">
@@ -890,7 +890,7 @@ export const SitemapSeoView: React.FC = () => {
               </div>
 
               {/* Next.js App Router compatibility visualization */}
-              <div className="bg-slate-900 text-white p-5 rounded-xl border border-slate-800 space-y-3">
+              <div className="bg-slate-900 text-white p-5 rounded-[28px] border border-slate-800 space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="block text-[10px] font-bold text-emerald-400 uppercase tracking-wider font-mono">Simulación de Estructura de Carpetas de Código (Next.js App Router compatible)</span>
                   <span className="text-[9px] bg-slate-800 text-slate-300 font-mono px-2 py-0.5 rounded">app/ Directory Schema</span>

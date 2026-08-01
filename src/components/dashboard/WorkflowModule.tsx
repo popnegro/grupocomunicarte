@@ -17,7 +17,8 @@ import {
   Trash2,
   X,
   HelpCircle,
-  TrendingDown
+  TrendingDown,
+  Search
 } from "lucide-react";
 
 interface WorkflowModuleProps {
@@ -47,10 +48,45 @@ export const WorkflowModule: React.FC<WorkflowModuleProps> = ({
 }) => {
   const [activeWorkflowSubTab, setActiveWorkflowSubTab] = useState<"quotes" | "reservas" | "campañas">("quotes");
   
-  // Interactive editing states
+  // Interactive editing and filtering states
   const [selectedQuoteId, setSelectedQuoteId] = useState<string | null>(null);
   const [showAiResolutionModal, setShowAiResolutionModal] = useState<string | null>(null);
   const [showToast, setShowToast] = useState<string | null>(null);
+
+  const [workflowSearch, setWorkflowSearch] = useState("");
+  const [quoteStatusFilter, setQuoteStatusFilter] = useState<"Todas" | "Borrador" | "Aceptada" | "Pendiente">("Todas");
+  const [reservaFilter, setReservaFilter] = useState<"Todas" | "Con conflicto" | "Sin conflicto">("Todas");
+  const [campañaFilter, setCampañaFilter] = useState<"Todas" | "Activa" | "Pausada" | "Finalizada">("Todas");
+
+  const filteredQuotes = cotizaciones.filter((q) => {
+    const matchesStatus = quoteStatusFilter === "Todas" || q.estado === quoteStatusFilter;
+    const matchesSearch = !workflowSearch.trim() || 
+      q.clienteNombre.toLowerCase().includes(workflowSearch.toLowerCase()) ||
+      q.mediakitNombre.toLowerCase().includes(workflowSearch.toLowerCase()) ||
+      q.id.toLowerCase().includes(workflowSearch.toLowerCase());
+    return matchesStatus && matchesSearch;
+  });
+
+  const filteredReservas = reservas.filter((r) => {
+    const matchesConflict = 
+      reservaFilter === "Todas" || 
+      (reservaFilter === "Con conflicto" && r.conflictiva) ||
+      (reservaFilter === "Sin conflicto" && !r.conflictiva);
+    const matchesSearch = !workflowSearch.trim() ||
+      r.clienteNombre.toLowerCase().includes(workflowSearch.toLowerCase()) ||
+      r.screenNombre.toLowerCase().includes(workflowSearch.toLowerCase()) ||
+      r.id.toLowerCase().includes(workflowSearch.toLowerCase());
+    return matchesConflict && matchesSearch;
+  });
+
+  const filteredCampañas = campañas.filter((c) => {
+    const matchesStatus = campañaFilter === "Todas" || c.estado === campañaFilter;
+    const matchesSearch = !workflowSearch.trim() ||
+      c.nombre.toLowerCase().includes(workflowSearch.toLowerCase()) ||
+      c.clienteNombre.toLowerCase().includes(workflowSearch.toLowerCase()) ||
+      c.id.toLowerCase().includes(workflowSearch.toLowerCase());
+    return matchesStatus && matchesSearch;
+  });
 
   const triggerToast = (msg: string) => {
     setShowToast(msg);
@@ -135,12 +171,100 @@ export const WorkflowModule: React.FC<WorkflowModuleProps> = ({
         </div>
       </div>
 
+      {/* Smart Search & Fast Status Filters (Reduces Cognitive Load) */}
+      <div className="bg-stone-50 border border-stone-200/80 p-4 rounded-2xl flex flex-col md:flex-row items-stretch md:items-center gap-4 text-left shadow-2xs">
+        <div className="relative flex-1">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400" />
+          <input
+            type="text"
+            placeholder={
+              activeWorkflowSubTab === "quotes"
+                ? "Buscador inteligente: busca cotización por cliente o propuesta..."
+                : activeWorkflowSubTab === "reservas"
+                ? "Buscador inteligente: busca reserva por cliente o pantalla..."
+                : "Buscador inteligente: busca campaña por nombre o cliente..."
+            }
+            value={workflowSearch}
+            onChange={(e) => setWorkflowSearch(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 text-xs border border-stone-200/80 bg-white rounded-xl focus:outline-none focus:border-[#06434a] font-medium text-stone-700 placeholder-stone-400"
+          />
+        </div>
+
+        {/* Dynamic Chips based on active sub tab */}
+        <div className="flex items-center gap-2 overflow-x-auto shrink-0 py-0.5">
+          <span className="text-[9px] font-black text-stone-400 uppercase tracking-wider font-mono shrink-0">Filtrar:</span>
+          
+          {activeWorkflowSubTab === "quotes" && (
+            <div className="flex gap-1.5">
+              {(["Todas", "Borrador", "Aceptada", "Pendiente"] as const).map((status) => {
+                const isActive = quoteStatusFilter === status;
+                return (
+                  <button
+                    key={status}
+                    onClick={() => setQuoteStatusFilter(status)}
+                    className={`px-3 py-1 rounded-full text-[10.5px] font-bold border transition-all cursor-pointer ${
+                      isActive
+                        ? "bg-[#06434a] border-[#06434a] text-white shadow-2xs"
+                        : "bg-white border-stone-200 text-stone-600 hover:bg-stone-100/50"
+                    }`}
+                  >
+                    {status}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {activeWorkflowSubTab === "reservas" && (
+            <div className="flex gap-1.5">
+              {(["Todas", "Con conflicto", "Sin conflicto"] as const).map((conf) => {
+                const isActive = reservaFilter === conf;
+                return (
+                  <button
+                    key={conf}
+                    onClick={() => setReservaFilter(conf)}
+                    className={`px-3 py-1 rounded-full text-[10.5px] font-bold border transition-all cursor-pointer ${
+                      isActive
+                        ? "bg-[#06434a] border-[#06434a] text-white shadow-2xs"
+                        : "bg-white border-stone-200 text-stone-600 hover:bg-stone-100/50"
+                    }`}
+                  >
+                    {conf}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {activeWorkflowSubTab === "campañas" && (
+            <div className="flex gap-1.5">
+              {(["Todas", "Activa", "Pausada", "Finalizada"] as const).map((status) => {
+                const isActive = campañaFilter === status;
+                return (
+                  <button
+                    key={status}
+                    onClick={() => setCampañaFilter(status)}
+                    className={`px-3 py-1 rounded-full text-[10.5px] font-bold border transition-all cursor-pointer ${
+                      isActive
+                        ? "bg-[#06434a] border-[#06434a] text-white shadow-2xs"
+                        : "bg-white border-stone-200 text-stone-600 hover:bg-stone-100/50"
+                    }`}
+                  >
+                    {status}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* Sub-tab Content: Quotes */}
       {activeWorkflowSubTab === "quotes" && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* Quotes list */}
           <div className="lg:col-span-8 space-y-4">
-            {cotizaciones.map((quote) => (
+            {filteredQuotes.map((quote) => (
               <div
                 key={quote.id}
                 onClick={() => setSelectedQuoteId(quote.id)}
@@ -183,6 +307,14 @@ export const WorkflowModule: React.FC<WorkflowModuleProps> = ({
 
               </div>
             ))}
+
+            {filteredQuotes.length === 0 && (
+              <div className="py-12 text-center border border-dashed border-stone-200 rounded-2xl text-stone-400 bg-stone-50/20">
+                <FileText className="h-10 w-10 mx-auto text-stone-300 mb-2" />
+                <span className="text-xs font-bold block">No se encontraron cotizaciones</span>
+                <span className="text-[10px] text-stone-400 block mt-0.5">Prueba buscando otro término o ajustando los filtros.</span>
+              </div>
+            )}
           </div>
 
           {/* Quote inspector & negotiator */}
@@ -268,129 +400,145 @@ export const WorkflowModule: React.FC<WorkflowModuleProps> = ({
       {/* Sub-tab Content: Reservations with Conflict Detection */}
       {activeWorkflowSubTab === "reservas" && (
         <div className="space-y-4 text-left">
-          <div className="bg-white border border-stone-200 rounded-2xl overflow-hidden shadow-2xs">
-            <table className="w-full text-left text-xs text-stone-600">
-              <thead className="bg-stone-50 border-b border-stone-200 text-[10px] font-bold text-stone-400 uppercase tracking-widest font-mono">
-                <tr>
-                  <th className="p-4">ID / Cliente</th>
-                  <th className="p-4">Soporte Reservado</th>
-                  <th className="p-4">Fechas Solicitadas</th>
-                  <th className="p-4">Alertas de Conflicto</th>
-                  <th className="p-4 text-right">Acción</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-stone-100 font-medium">
-                {reservas.map((res) => {
-                  return (
-                    <tr key={res.id} className="hover:bg-stone-50/50">
-                      <td className="p-4">
-                        <span className="block text-[8px] font-mono font-bold text-stone-400">RESERVA: {res.id}</span>
-                        <span className="font-bold text-stone-900">{res.clienteNombre}</span>
-                      </td>
-                      <td className="p-4">
-                        <span className="font-bold text-stone-800">{res.screenNombre}</span>
-                        <span className="block text-[10px] text-stone-400">ID: {res.screenId}</span>
-                      </td>
-                      <td className="p-4 font-mono text-[10px]">
-                        {res.fechaInicio} al {res.fechaFin}
-                      </td>
-                      <td className="p-4">
-                        {res.conflictiva ? (
-                          <div className="inline-flex items-center gap-1.5 bg-red-50 text-red-700 border border-red-200 px-2.5 py-1 rounded-full text-[10px] font-bold">
-                            <AlertTriangle className="h-3.5 w-3.5 text-red-600" />
-                            <span>Conflicto Overbooking</span>
-                          </div>
-                        ) : (
-                          <span className="text-emerald-600 text-[11px] font-bold">✓ Sin superposiciones</span>
-                        )}
-                      </td>
-                      <td className="p-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          {res.conflictiva && (
-                            <button
-                              onClick={() => setShowAiResolutionModal(res.id)}
-                              className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white text-[10px] font-extrabold uppercase rounded-lg flex items-center gap-1 cursor-pointer transition-colors"
-                            >
-                              <Sparkles className="h-3 w-3 text-amber-100 animate-pulse" />
-                              <span>IA Resolver</span>
-                            </button>
+          {filteredReservas.length > 0 ? (
+            <div className="bg-white border border-stone-200 rounded-2xl overflow-hidden shadow-2xs">
+              <table className="w-full text-left text-xs text-stone-600">
+                <thead className="bg-stone-50 border-b border-stone-200 text-[10px] font-bold text-stone-400 uppercase tracking-widest font-mono">
+                  <tr>
+                    <th className="p-4">ID / Cliente</th>
+                    <th className="p-4">Soporte Reservado</th>
+                    <th className="p-4">Fechas Solicitadas</th>
+                    <th className="p-4">Alertas de Conflicto</th>
+                    <th className="p-4 text-right">Acción</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-stone-100 font-medium">
+                  {filteredReservas.map((res) => {
+                    return (
+                      <tr key={res.id} className="hover:bg-stone-50/50">
+                        <td className="p-4">
+                          <span className="block text-[8px] font-mono font-bold text-stone-400">RESERVA: {res.id}</span>
+                          <span className="font-bold text-stone-900">{res.clienteNombre}</span>
+                        </td>
+                        <td className="p-4">
+                          <span className="font-bold text-stone-800">{res.screenNombre}</span>
+                          <span className="block text-[10px] text-stone-400">ID: {res.screenId}</span>
+                        </td>
+                        <td className="p-4 font-mono text-[10px]">
+                          {res.fechaInicio} al {res.fechaFin}
+                        </td>
+                        <td className="p-4">
+                          {res.conflictiva ? (
+                            <div className="inline-flex items-center gap-1.5 bg-red-50 text-red-700 border border-red-200 px-2.5 py-1 rounded-full text-[10px] font-bold">
+                              <AlertTriangle className="h-3.5 w-3.5 text-red-600" />
+                              <span>Conflicto Overbooking</span>
+                            </div>
+                          ) : (
+                            <span className="text-emerald-600 text-[11px] font-bold">✓ Sin superposiciones</span>
                           )}
+                        </td>
+                        <td className="p-4 text-right">
+                          <div className="flex items-center justify-end gap-2">
+                            {res.conflictiva && (
+                              <button
+                                onClick={() => setShowAiResolutionModal(res.id)}
+                                className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white text-[10px] font-extrabold uppercase rounded-lg flex items-center gap-1 cursor-pointer transition-colors"
+                              >
+                                <Sparkles className="h-3 w-3 text-amber-100 animate-pulse" />
+                                <span>IA Resolver</span>
+                              </button>
+                            )}
 
-                          {res.estado !== "Confirmada" && (
-                            <button
-                              onClick={() => {
-                                onApproveReserva(res.id);
-                                triggerToast("¡Reserva confirmada de manera formal! Se ha creado la campaña comercial.");
-                              }}
-                              disabled={res.conflictiva}
-                              className="px-3 py-1.5 bg-[#06434a] hover:bg-[#0b5e67] disabled:opacity-50 text-white text-[10px] font-extrabold uppercase rounded-lg cursor-pointer transition-colors"
-                            >
-                              Confirmar Reserva
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                            {res.estado !== "Confirmada" && (
+                              <button
+                                onClick={() => {
+                                  onApproveReserva(res.id);
+                                  triggerToast("¡Reserva confirmada de manera formal! Se ha creado la campaña comercial.");
+                                }}
+                                disabled={res.conflictiva}
+                                className="px-3 py-1.5 bg-[#06434a] hover:bg-[#0b5e67] disabled:opacity-50 text-white text-[10px] font-extrabold uppercase rounded-lg cursor-pointer transition-colors"
+                              >
+                                Confirmar Reserva
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="py-12 text-center border border-dashed border-stone-200 rounded-2xl text-stone-400 bg-stone-50/20">
+              <FileText className="h-10 w-10 mx-auto text-stone-300 mb-2" />
+              <span className="text-xs font-bold block">No se encontraron reservas</span>
+              <span className="text-[10px] text-stone-400 block mt-0.5">Prueba buscando otro término o cambiando los filtros de conflicto.</span>
+            </div>
+          )}
         </div>
       )}
 
       {/* Sub-tab Content: Campaigns progress */}
       {activeWorkflowSubTab === "campañas" && (
         <div className="space-y-4 text-left">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {campañas.map((camp) => (
-              <div
-                key={camp.id}
-                className="bg-white border border-stone-200 rounded-2xl p-5 hover:border-stone-300 transition-all shadow-2xs space-y-4"
-              >
-                <div className="flex items-start justify-between gap-4 border-b border-stone-100 pb-3">
-                  <div>
-                    <span className="text-[8px] font-mono font-bold text-stone-400">CAMPAÑA ID: {camp.id}</span>
-                    <h3 className="text-xs font-bold text-stone-900 mt-1 font-display">
-                      {camp.nombre}
-                    </h3>
-                    <p className="text-[10px] text-stone-500 font-semibold mt-0.5">
-                      Cliente: {camp.clienteNombre}
-                    </p>
+          {filteredCampañas.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {filteredCampañas.map((camp) => (
+                <div
+                  key={camp.id}
+                  className="bg-white border border-stone-200 rounded-2xl p-5 hover:border-stone-300 transition-all shadow-2xs space-y-4"
+                >
+                  <div className="flex items-start justify-between gap-4 border-b border-stone-100 pb-3">
+                    <div>
+                      <span className="text-[8px] font-mono font-bold text-stone-400">CAMPAÑA ID: {camp.id}</span>
+                      <h3 className="text-xs font-bold text-stone-900 mt-1 font-display">
+                        {camp.nombre}
+                      </h3>
+                      <p className="text-[10px] text-stone-500 font-semibold mt-0.5">
+                        Cliente: {camp.clienteNombre}
+                      </p>
+                    </div>
+
+                    <span className={`text-[7px] font-extrabold px-1.5 py-0.5 rounded-md uppercase tracking-wider ${
+                      camp.estado === "Activa"
+                        ? "bg-emerald-50 text-emerald-700 border border-emerald-100 animate-pulse"
+                        : "bg-blue-50 text-blue-700 border border-blue-100"
+                    }`}>
+                      {camp.estado}
+                    </span>
                   </div>
 
-                  <span className={`text-[7px] font-extrabold px-1.5 py-0.5 rounded-md uppercase tracking-wider ${
-                    camp.estado === "Activa"
-                      ? "bg-emerald-50 text-emerald-700 border border-emerald-100 animate-pulse"
-                      : "bg-blue-50 text-blue-700 border border-blue-100"
-                  }`}>
-                    {camp.estado}
-                  </span>
-                </div>
+                  <div className="space-y-2 text-xs">
+                    <div className="flex justify-between text-stone-500 font-semibold text-[11px]">
+                      <span>Soporte: <strong className="text-stone-800">{camp.screenNombre}</strong></span>
+                      <span className="font-mono text-stone-850 font-black">{camp.progreso}% transcurrido</span>
+                    </div>
 
-                <div className="space-y-2 text-xs">
-                  <div className="flex justify-between text-stone-500 font-semibold text-[11px]">
-                    <span>Soporte: <strong className="text-stone-800">{camp.screenNombre}</strong></span>
-                    <span className="font-mono text-stone-850 font-black">{camp.progreso}% transcurrido</span>
+                    {/* Progress bar */}
+                    <div className="w-full bg-stone-100 h-2 rounded-full overflow-hidden">
+                      <div
+                        className="bg-[#06434a] h-full rounded-full transition-all duration-500"
+                        style={{ width: `${camp.progreso}%` }}
+                      />
+                    </div>
                   </div>
 
-                  {/* Progress bar */}
-                  <div className="w-full bg-stone-100 h-2 rounded-full overflow-hidden">
-                    <div
-                      className="bg-[#06434a] h-full rounded-full transition-all duration-500"
-                      style={{ width: `${camp.progreso}%` }}
-                    />
+                  <div className="flex items-center justify-between text-[10px] text-stone-400 font-bold pt-1">
+                    <span>Inicio: {camp.fechaInicio}</span>
+                    <span>Fin: {camp.fechaFin}</span>
                   </div>
-                </div>
 
-                <div className="flex items-center justify-between text-[10px] text-stone-400 font-bold pt-1">
-                  <span>Inicio: {camp.fechaInicio}</span>
-                  <span>Fin: {camp.fechaFin}</span>
                 </div>
-
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <div className="py-12 text-center border border-dashed border-stone-200 rounded-2xl text-stone-400 bg-stone-50/20">
+              <FileText className="h-10 w-10 mx-auto text-stone-300 mb-2" />
+              <span className="text-xs font-bold block">No se encontraron campañas</span>
+              <span className="text-[10px] text-stone-400 block mt-0.5">Prueba buscando otro término o ajustando los filtros de estado.</span>
+            </div>
+          )}
         </div>
       )}
 

@@ -397,16 +397,22 @@ export const SidebarMenuItem = React.forwardRef<
 SidebarMenuItem.displayName = "SidebarMenuItem"
 
 const sidebarMenuButtonVariants = cva(
-  "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold transition-all cursor-pointer select-none text-stone-300 hover:bg-stone-800/50 hover:text-white focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50",
+  "w-full flex items-center gap-3 rounded-lg font-semibold transition-all cursor-pointer select-none text-stone-300 hover:bg-stone-800/50 hover:text-white focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50",
   {
     variants: {
       variant: {
         default: "",
         active: "bg-stone-800 text-white shadow-xs",
       },
+      size: {
+        default: "h-9 px-3 text-sm",
+        sm: "h-7 px-2 text-xs",
+        lg: "h-12 px-3 text-sm",
+      },
     },
     defaultVariants: {
       variant: "default",
+      size: "default",
     },
   }
 )
@@ -415,12 +421,15 @@ export interface SidebarMenuButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof sidebarMenuButtonVariants> {
   asChild?: boolean
+  tooltip?: string
+  size?: "default" | "sm" | "lg"
+  variant?: "default" | "active"
 }
 
 export const SidebarMenuButton = React.forwardRef<
   HTMLButtonElement,
   SidebarMenuButtonProps
->(({ className, variant, asChild = false, onClick, ...props }, ref) => {
+>(({ className, variant, size, asChild = false, onClick, tooltip, ...props }, ref) => {
   const Comp = asChild ? Slot : "button"
   const { state, isMobile, setOpenMobile } = useSidebar()
 
@@ -437,13 +446,33 @@ export const SidebarMenuButton = React.forwardRef<
   return (
     <Comp
       ref={ref}
-      className={cn(sidebarMenuButtonVariants({ variant, className }), state === "collapsed" && "justify-center px-0 w-9 h-9 mx-auto")}
+      className={cn(sidebarMenuButtonVariants({ variant, size, className }), state === "collapsed" && "justify-center px-0 w-9 h-9 mx-auto")}
       onClick={handleClick}
       {...props}
     />
   )
 })
 SidebarMenuButton.displayName = "SidebarMenuButton"
+
+export const SidebarMenuAction = React.forwardRef<
+  HTMLButtonElement,
+  React.ComponentProps<"button"> & {
+    showOnHover?: boolean
+  }
+>(({ className, showOnHover = false, ...props }, ref) => {
+  return (
+    <button
+      ref={ref}
+      className={cn(
+        "absolute right-2 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-md p-0 text-stone-400 outline-none transition-all hover:bg-stone-850 hover:text-white focus-visible:ring-1",
+        showOnHover && "opacity-0 group-hover:opacity-100 transition-opacity",
+        className
+      )}
+      {...props}
+    />
+  )
+})
+SidebarMenuAction.displayName = "SidebarMenuAction"
 
 export const SidebarInset = React.forwardRef<
   HTMLDivElement,

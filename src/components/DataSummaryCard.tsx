@@ -1,5 +1,5 @@
 import React from 'react';
-import { BaseCard } from '@/components/ui/BaseCard';
+import { BaseCard } from '@/src/components/ui/BaseCard';
 import { IconType } from 'react-icons';
 
 interface DataSummaryCardProps {

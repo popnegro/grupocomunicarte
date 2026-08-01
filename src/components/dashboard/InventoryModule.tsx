@@ -23,7 +23,9 @@ import {
   EyeOff, 
   Settings2,
   Archive,
-  RotateCcw
+  RotateCcw,
+  Upload,
+  Image
 } from "lucide-react";
 
 interface InventoryModuleProps {
@@ -68,24 +70,109 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
     brillo: "6000 nits",
     refreshRate: "3840 Hz",
     formato: "MP4, JPG",
-    cobertura: "Zona comercial"
+    cobertura: "Zona comercial",
+    video: ""
   });
 
   const selectedScreen = screens.find((s) => s.id === activeScreenId);
 
-  // Filtered screens: includes soft-delete check by inspecting a simulated isArchived flag or Pausado status
-  const filteredScreens = screens.filter((screen) => {
-    const matchesCity = selectedCityFilter === "Todas" || screen.ciudad === selectedCityFilter;
-    const matchesCat = selectedCategoryFilter === "Todas" || screen.categoria === selectedCategoryFilter;
-    const matchesSearch = screen.nombre.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          screen.zona.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    // Simulate soft delete / archiving via screen.status. We can treat status === "Pausado" as archived
-    const isScreenArchived = screen.status === "Pausado" || screen.status === "No disponible";
-    const matchesArchive = showArchived ? isScreenArchived : !isScreenArchived;
+  // Filtered screens: includes soft-delete check and smart semantic search
+  const filteredScreens = (() => {
+    // 1. Soft-delete archive filter
+    const isScreenArchived = (s: DoohScreen) => s.status === "Pausado" || s.status === "No disponible";
+    let list = screens.filter((s) => (showArchived ? isScreenArchived(s) : !isScreenArchived(s)));
 
-    return matchesCity && matchesCat && matchesSearch && matchesArchive;
-  });
+    // 2. If no search query, apply standard fast-filter chips
+    if (!searchQuery.trim()) {
+      if (selectedCityFilter !== "Todas") {
+        list = list.filter((s) => s.ciudad === selectedCityFilter);
+      }
+      if (selectedCategoryFilter !== "Todas") {
+        list = list.filter((s) => s.categoria === selectedCategoryFilter);
+      }
+      return list;
+    }
+
+    // 3. Intelligent/Semantic Search parsing
+    const query = searchQuery.toLowerCase().trim();
+    const tokens = query.split(/\s+/).filter(Boolean);
+
+    // Parse semantic filters
+    let intentCity: "Mendoza" | "Buenos Aires" | null = null;
+    let intentCategory: "Pantallas LED" | "Tradicionales" | "LED Móvil" | null = null;
+    let isCheap = false;
+    let isPremium = false;
+    let isHighImpact = false;
+
+    tokens.forEach((token) => {
+      // City aliases
+      if (["mendoza", "mza", "mndz", "cuyo"].includes(token)) {
+        intentCity = "Mendoza";
+      } else if (["buenos", "aires", "ba", "bsas", "capital", "federal"].includes(token)) {
+        intentCity = "Buenos Aires";
+      }
+
+      // Category aliases
+      if (token.includes("led") || token === "digital" || token === "pantalla") {
+        intentCategory = "Pantallas LED";
+      } else if (token.includes("trad") || token === "estático" || token === "estatico" || token === "cartel" || token === "valla" || token === "lona") {
+        intentCategory = "Tradicionales";
+      } else if (token.includes("móvil") || token.includes("movil") || token === "camión" || token === "pantallamovil") {
+        intentCategory = "LED Móvil";
+      }
+
+      // Numerical/Tariff intent
+      if (["barato", "barata", "baratas", "economico", "económico", "accesible"].includes(token)) {
+        isCheap = true;
+      }
+      if (["premium", "exclusivo", "exclusiva", "vip", "alto-precio", "abc1"].includes(token)) {
+        isPremium = true;
+      }
+      if (["concurrido", "impactos", "impacto", "tráfico", "trafico", "transitada", "transitado", "popular", "alto"].includes(token)) {
+        isHighImpact = true;
+      }
+    });
+
+    // Run matching
+    list = list.filter((screen) => {
+      // Basic match
+      const textFields = [
+        screen.nombre,
+        screen.zona,
+        screen.categoria || "",
+        screen.ciudad || "",
+        screen.tipo || "",
+        screen.nota || "",
+        screen.cobertura || "",
+      ].join(" ").toLowerCase();
+
+      const matchesAllTokens = tokens.every((t) => {
+        // Skip semantic tokens in pure text matching so they act as filters
+        if (["barato", "barata", "baratas", "economico", "económico", "premium", "vip", "abc1", "concurrido", "impactos", "tráfico", "trafico"].includes(t)) {
+          return true;
+        }
+        return textFields.includes(t);
+      });
+
+      // Override or confirm via semantic analysis
+      let matchesSemantic = true;
+      if (intentCity && screen.ciudad !== intentCity) matchesSemantic = false;
+      if (intentCategory && screen.categoria !== intentCategory) matchesSemantic = false;
+
+      return matchesAllTokens && matchesSemantic;
+    });
+
+    // Apply semantic sorting
+    if (isCheap) {
+      list.sort((a, b) => a.precio - b.precio);
+    } else if (isPremium) {
+      list.sort((a, b) => b.precio - a.precio);
+    } else if (isHighImpact) {
+      list.sort((a, b) => b.impactos - a.impactos);
+    }
+
+    return list;
+  })();
 
   const handleDuplicate = (screen: DoohScreen) => {
     const duplicated: DoohScreen = {
@@ -119,6 +206,7 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
       refreshRate: newScreenForm.refreshRate,
       formato: newScreenForm.formato,
       cobertura: newScreenForm.cobertura,
+      video: newScreenForm.video,
     };
 
     onAddScreen(screen);
@@ -139,7 +227,8 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
       brillo: "6000 nits",
       refreshRate: "3840 Hz",
       formato: "MP4, JPG",
-      cobertura: "Zona comercial"
+      cobertura: "Zona comercial",
+      video: ""
     });
   };
 
@@ -184,49 +273,76 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
           </div>
         </div>
 
-        {/* Filters bar */}
-        <div className="bg-white border border-stone-200 rounded-2xl p-4 flex flex-col md:flex-row items-stretch md:items-center gap-4 shadow-2xs">
-          
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-stone-400" />
-            <input
-              type="text"
-              placeholder="Buscar por nombre, zona..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 text-xs border border-stone-200/80 rounded-xl focus:outline-none focus:border-[#06434a]"
-            />
-          </div>
-
-          <div className="flex items-center gap-3">
-            <div className="space-y-0.5">
-              <label className="block text-[8px] font-bold text-stone-400 uppercase tracking-wider">Ciudad</label>
-              <select
-                value={selectedCityFilter}
-                onChange={(e) => setSelectedCityFilter(e.target.value)}
-                className="px-3 py-1.5 text-xs font-semibold bg-stone-50 border border-stone-200/80 rounded-xl text-stone-700 cursor-pointer"
-              >
-                <option value="Todas">Todas</option>
-                <option value="Mendoza">Mendoza</option>
-                <option value="Buenos Aires">Buenos Aires</option>
-              </select>
+        {/* Filters bar (Refactored to eliminate unnecessary borders & redundant dropdowns) */}
+        <div className="bg-stone-50 border border-stone-150 rounded-2xl p-5 flex flex-col gap-4 text-left shadow-2xs">
+          <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400" />
+              <input
+                type="text"
+                placeholder="Buscador inteligente: Ej: 'mendoza led barato'..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 text-xs border border-stone-200/80 rounded-xl bg-white focus:outline-none focus:border-[#06434a] font-medium text-stone-700 placeholder-stone-400"
+              />
             </div>
 
-            <div className="space-y-0.5">
-              <label className="block text-[8px] font-bold text-stone-400 uppercase tracking-wider">Categoría</label>
-              <select
-                value={selectedCategoryFilter}
-                onChange={(e) => setSelectedCategoryFilter(e.target.value)}
-                className="px-3 py-1.5 text-xs font-semibold bg-stone-50 border border-stone-200/80 rounded-xl text-stone-700 cursor-pointer"
-              >
-                <option value="Todas">Todas</option>
-                <option value="Pantallas LED">Pantallas LED</option>
-                <option value="Tradicionales">Tradicionales</option>
-                <option value="LED Móvil">LED Móvil</option>
-              </select>
+            {/* Semantic Search Hint */}
+            <div className="hidden md:block shrink-0 bg-[#06434a]/4 border border-[#06434a]/10 px-3 py-1.5 rounded-xl text-stone-600">
+              <p className="text-[10px] font-bold">
+                💡 <span className="text-stone-500">Prueba buscar:</span> <span className="font-mono text-[#06434a] font-extrabold">"mendoza led barato"</span> o <span className="font-mono text-[#06434a] font-extrabold">"premium concurrido"</span>
+              </p>
             </div>
           </div>
 
+          {/* Quick Filter Chips (Eliminates redundant dropdowns) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1 border-t border-stone-150">
+            {/* Ciudad Chips */}
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+              <span className="text-[9px] font-black text-stone-400 uppercase tracking-wider font-mono shrink-0">Filtrar por Ciudad:</span>
+              <div className="flex flex-wrap gap-1.5">
+                {(["Todas", "Mendoza", "Buenos Aires"] as const).map((city) => {
+                  const isActive = selectedCityFilter === city;
+                  return (
+                    <button
+                      key={city}
+                      onClick={() => setSelectedCityFilter(city)}
+                      className={`px-3 py-1 rounded-full text-[10.5px] font-bold border transition-all cursor-pointer ${
+                        isActive
+                          ? "bg-[#06434a] border-[#06434a] text-white shadow-2xs"
+                          : "bg-white border-stone-200 text-stone-600 hover:bg-stone-100/50"
+                      }`}
+                    >
+                      {city}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Categoría Chips */}
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+              <span className="text-[9px] font-black text-stone-400 uppercase tracking-wider font-mono shrink-0">Filtrar por Categoría:</span>
+              <div className="flex flex-wrap gap-1.5">
+                {(["Todas", "Pantallas LED", "Tradicionales", "LED Móvil"] as const).map((cat) => {
+                  const isActive = selectedCategoryFilter === cat;
+                  return (
+                    <button
+                      key={cat}
+                      onClick={() => setSelectedCategoryFilter(cat)}
+                      className={`px-3 py-1 rounded-full text-[10.5px] font-bold border transition-all cursor-pointer ${
+                        isActive
+                          ? "bg-[#06434a] border-[#06434a] text-white shadow-2xs"
+                          : "bg-white border-stone-200 text-stone-600 hover:bg-stone-100/50"
+                      }`}
+                    >
+                      {cat}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Grid listing */}
@@ -568,28 +684,107 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
                     <span className="text-[10px] font-semibold text-stone-600">Material fotográfico y técnico</span>
                   </div>
 
-                  <div className="space-y-1">
-                    <label className="block text-[8px] font-extrabold text-stone-400 uppercase tracking-widest">Fotografía de Referencia (URL)</label>
-                    <input
-                      type="text"
-                      className="w-full px-2.5 py-1.5 text-[11px] border border-stone-200 rounded-lg bg-stone-50/50 focus:outline-none font-mono text-[10px]"
-                      defaultValue="https://images.unsplash.com/photo-1541535650810-10d26f5c2ab3?q=80&w=600"
-                    />
+                  {/* Drag and Drop Zone */}
+                  <div className="space-y-1.5">
+                    <label className="block text-[8px] font-extrabold text-stone-400 uppercase tracking-widest font-mono">
+                      Cargar Archivo Local (Imagen o Video)
+                    </label>
+                    <div
+                      onDragOver={(e) => e.preventDefault()}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        const file = e.dataTransfer.files?.[0];
+                        if (file) {
+                          const reader = new FileReader();
+                          reader.onload = (event) => {
+                            if (event.target?.result) {
+                              onUpdateScreen(selectedScreen.id, { video: event.target.result as string });
+                            }
+                          };
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                      className="border-2 border-dashed border-stone-200 hover:border-[#06434a]/60 bg-stone-50/50 hover:bg-[#06434a]/3 rounded-2xl p-5 text-center cursor-pointer transition-all space-y-2 group relative"
+                    >
+                      <input
+                        type="file"
+                        accept="image/*,video/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onload = (event) => {
+                              if (event.target?.result) {
+                                onUpdateScreen(selectedScreen.id, { video: event.target.result as string });
+                              }
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                      />
+                      <Upload className="h-6 w-6 text-stone-400 group-hover:text-[#06434a] mx-auto transition-colors" />
+                      <div className="space-y-1">
+                        <p className="text-[10px] font-bold text-stone-800 group-hover:text-[#06434a] transition-colors">
+                          Arrastrá un archivo aquí o hacé clic
+                        </p>
+                        <p className="text-[9px] text-stone-550 leading-normal">
+                          Formatos soportados: MP4, WEBM, PNG, JPG, WEBP. El contenido se guardará en memoria local.
+                        </p>
+                      </div>
+                    </div>
                   </div>
 
+                  {/* Active Media Preview */}
+                  {selectedScreen.video && (
+                    <div className="space-y-1.5 p-3 bg-stone-50 rounded-xl border border-stone-200/60">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[8px] font-extrabold text-stone-500 uppercase tracking-widest">
+                          Vista Previa del Archivo
+                        </span>
+                        <button
+                          onClick={() => onUpdateScreen(selectedScreen.id, { video: "" })}
+                          className="text-[9px] font-bold text-red-600 hover:text-red-700 hover:underline cursor-pointer"
+                        >
+                          Quitar Archivo
+                        </button>
+                      </div>
+                      <div className="relative aspect-[16/9] bg-stone-900 rounded-lg overflow-hidden border border-stone-200">
+                        {selectedScreen.video.startsWith("data:video/") || 
+                         selectedScreen.video.toLowerCase().match(/\.(mp4|webm|mov|ogg|m4v)$/) ? (
+                          <video
+                            src={selectedScreen.video}
+                            autoPlay
+                            muted
+                            loop
+                            playsInline
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <img
+                            src={selectedScreen.video}
+                            alt="Preview"
+                            className="w-full h-full object-cover"
+                            referrerPolicy="no-referrer"
+                          />
+                        )}
+                      </div>
+                    </div>
+                  )}
+
                   <div className="space-y-1">
-                    <label className="block text-[8px] font-extrabold text-stone-400 uppercase tracking-widest">Video Drone (YouTube/Vimeo)</label>
+                    <label className="block text-[8px] font-extrabold text-stone-400 uppercase tracking-widest">Dirección URL Alternativa (Video o Imagen)</label>
                     <input
                       type="text"
                       value={selectedScreen.video || ""}
                       onChange={(e) => onUpdateScreen(selectedScreen.id, { video: e.target.value })}
                       className="w-full px-2.5 py-1.5 text-[11px] border border-stone-200 rounded-lg bg-stone-50/50 focus:outline-none font-mono text-[10px]"
-                      placeholder="https://..."
+                      placeholder="https://example.com/movie.mp4"
                     />
                   </div>
 
                   <div className="space-y-1">
-                    <label className="block text-[8px] font-extrabold text-stone-400 uppercase tracking-widest">PDF Ficha Técnica Oficial (URL)</label>
+                    <label className="block text-[8px] font-extrabold text-stone-400 uppercase tracking-widest font-mono">PDF Ficha Técnica Oficial (URL)</label>
                     <input
                       type="text"
                       className="w-full px-2.5 py-1.5 text-[11px] border border-stone-200 rounded-lg bg-stone-50/50 focus:outline-none font-mono text-[10px]"
@@ -816,6 +1011,72 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
                   onChange={(e) => setNewScreenForm({ ...newScreenForm, nota: e.target.value })}
                   className="w-full px-3 py-2 border border-stone-200 rounded-xl bg-stone-50/50 focus:outline-none focus:border-[#06434a]"
                 />
+              </div>
+
+              {/* Local File Uploader */}
+              <div className="space-y-1.5">
+                <label className="block text-[8px] font-extrabold text-stone-400 uppercase tracking-widest font-mono">
+                  Cargar Encabezado (Imagen o Video)
+                </label>
+                <div
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    const file = e.dataTransfer.files?.[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onload = (event) => {
+                        if (event.target?.result) {
+                          setNewScreenForm({ ...newScreenForm, video: event.target.result as string });
+                        }
+                      };
+                      reader.readAsDataURL(file);
+                    }
+                  }}
+                  className="border border-dashed border-stone-200 hover:border-[#06434a]/60 bg-stone-50/50 hover:bg-[#06434a]/3 rounded-xl p-4 text-center cursor-pointer transition-all space-y-1 relative group"
+                >
+                  <input
+                    type="file"
+                    accept="image/*,video/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                          if (event.target?.result) {
+                            setNewScreenForm({ ...newScreenForm, video: event.target.result as string });
+                          }
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    }}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  />
+                  <Upload className="h-5 w-5 text-stone-400 group-hover:text-[#06434a] mx-auto transition-colors" />
+                  <p className="text-[10px] font-bold text-stone-800 group-hover:text-[#06434a] transition-colors">
+                    {newScreenForm.video ? "¡Archivo cargado con éxito!" : "Arrastrá un archivo aquí o hacé clic"}
+                  </p>
+                  <p className="text-[8px] text-stone-550 leading-none">
+                    Soporta MP4, WEBM, PNG, JPG, WEBP
+                  </p>
+                </div>
+
+                {newScreenForm.video && (
+                  <div className="relative aspect-[16/9] max-h-32 bg-stone-900 rounded-lg overflow-hidden border border-stone-200 mt-2">
+                    {newScreenForm.video.startsWith("data:video/") ? (
+                      <video src={newScreenForm.video} autoPlay muted loop playsInline className="w-full h-full object-cover" />
+                    ) : (
+                      <img src={newScreenForm.video} alt="Preview" className="w-full h-full object-cover" />
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setNewScreenForm({ ...newScreenForm, video: "" })}
+                      className="absolute top-2 right-2 bg-stone-900/80 text-white hover:bg-stone-950 p-1 rounded-full text-[9px] font-bold flex items-center justify-center cursor-pointer"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                )}
               </div>
 
               <div className="border-t border-stone-100 pt-4 flex items-center justify-end gap-2.5">

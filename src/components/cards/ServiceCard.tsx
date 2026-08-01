@@ -23,7 +23,7 @@ export function ServiceCard({
   cta,
 }: ServiceCardProps) {
   return (
-    <BaseCard variant="default" padding="0" className="overflow-hidden group">
+    <BaseCard variant="default" padding="none" className="overflow-hidden group">
       {/* Image */}
       <div className="relative w-full h-48 overflow-hidden">
         <img

@@ -23,7 +23,8 @@ import {
   TrendingUp, 
   Check, 
   MapPin, 
-  Layers 
+  Layers,
+  Search
 } from "lucide-react";
 
 interface MediaKitModuleProps {
@@ -67,6 +68,7 @@ export const MediaKitModule: React.FC<MediaKitModuleProps> = ({
 
   // Inline Notion editor states
   const [newCommentText, setNewCommentText] = useState("");
+  const [quickSearchQuery, setQuickSearchQuery] = useState("");
 
   const triggerToast = (msg: string) => {
     setShowToast(msg);
@@ -74,6 +76,55 @@ export const MediaKitModule: React.FC<MediaKitModuleProps> = ({
   };
 
   const activeMediaKit = mediaKits.find((m) => m.id === activeMediaKitId);
+
+  const handleQuickAddSupport = (screenId: string) => {
+    if (!activeMediaKit) return;
+    const screen = screens.find((s) => s.id === screenId);
+    if (!screen) return;
+
+    const newSoportes = [
+      ...activeMediaKit.soportesEdicionInline,
+      {
+        id: screenId,
+        notas: "Pautado base estándar de 15 segundos por spot.",
+        prioridad: "Media" as const,
+        duracionSem: 4,
+      }
+    ];
+    const newScreenIds = [...activeMediaKit.screenIds, screenId];
+
+    onUpdateMediaKit(activeMediaKit.id, {
+      soportesEdicionInline: newSoportes,
+      screenIds: newScreenIds,
+      version: activeMediaKit.version + 1,
+      historial: [
+        {
+          id: `h-add-${Date.now()}`,
+          action: `Soporte ${screen.nombre} agregado en 1-Clic.`,
+          date: "Justo ahora",
+          user: "Comercial Ejec."
+        },
+        ...activeMediaKit.historial
+      ]
+    });
+
+    triggerToast(`¡${screen.nombre} agregado a la propuesta!`);
+  };
+
+  const quickAvailableScreens = activeMediaKit
+    ? screens.filter(
+        (s) =>
+          s.ciudad === activeMediaKit.ciudad &&
+          (s.status === "Disponible" || s.status === "Activo") &&
+          !activeMediaKit.screenIds.includes(s.id)
+      )
+    : [];
+
+  const filteredQuickScreens = quickAvailableScreens.filter((s) => {
+    if (!quickSearchQuery) return true;
+    const q = quickSearchQuery.toLowerCase();
+    return s.nombre.toLowerCase().includes(q) || s.zona.toLowerCase().includes(q);
+  });
 
   // Manual creation wizard calculations
   const availableWizardScreens = screens.filter(
@@ -678,7 +729,75 @@ export const MediaKitModule: React.FC<MediaKitModuleProps> = ({
         )}
       </div>
 
-      {/* 3. Manual Creation Wizard Modal */}
+      {/* 3. Right Sidebar: Available Screens for Quick Add (1-Clic Builder) */}
+      {activeMediaKit && (
+        <div className="w-full lg:w-80 border-l border-stone-200 bg-stone-50/30 flex flex-col overflow-y-auto shrink-0 p-5 space-y-4">
+          <div className="text-left">
+            <span className="text-[8px] bg-teal-50 border border-teal-100 text-teal-700 font-bold tracking-widest uppercase px-2 py-0.5 rounded-full">
+              Disponibles en {activeMediaKit.ciudad}
+            </span>
+            <h3 className="text-xs font-black text-stone-900 font-display mt-1.5 uppercase tracking-wider">
+              Añadir en 1-Clic
+            </h3>
+            <p className="text-[10px] text-stone-400 mt-0.5 leading-relaxed">
+              Haz clic para agregarlo instantáneamente y actualizar el presupuesto y métricas.
+            </p>
+          </div>
+
+          {/* Quick Search */}
+          <div className="relative">
+            <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-stone-400" />
+            <input
+              type="text"
+              placeholder="Buscar soporte libre..."
+              value={quickSearchQuery}
+              onChange={(e) => setQuickSearchQuery(e.target.value)}
+              className="w-full pl-8 pr-3 py-1.5 text-xs border border-stone-200 bg-white rounded-lg focus:outline-none focus:border-[#06434a] text-stone-700 font-medium"
+            />
+          </div>
+
+          <div className="space-y-2.5">
+            {filteredQuickScreens.map((s) => (
+              <div
+                key={s.id}
+                className="p-3.5 bg-white border border-stone-200 hover:border-stone-300 rounded-xl flex flex-col justify-between gap-2.5 transition-all group shadow-2xs"
+              >
+                <div className="text-left">
+                  <div className="flex items-center justify-between gap-1">
+                    <span className="text-[7.5px] font-mono font-bold text-stone-400 uppercase tracking-wider">{s.categoria || "OOH"}</span>
+                    <span className="text-[8.5px] text-[#06434a] font-bold font-mono bg-[#06434a]/5 px-2 py-0.5 rounded-md border border-[#06434a]/10">
+                      ${s.precio.toLocaleString()}/sem
+                    </span>
+                  </div>
+                  <h4 className="text-[10.5px] font-bold text-stone-900 mt-1 leading-tight truncate">
+                    {s.nombre}
+                  </h4>
+                  <p className="text-[9px] text-stone-400 mt-0.5 truncate">
+                    {s.zona} • {(s.impactos / 1000).toFixed(1)}k imp/día
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => handleQuickAddSupport(s.id)}
+                  className="w-full py-1.5 bg-stone-50 hover:bg-[#06434a] hover:text-[#fafaf9] text-[#06434a] text-[10px] font-bold rounded-lg border border-stone-200 hover:border-[#06434a] transition-all flex items-center justify-center gap-1 cursor-pointer"
+                >
+                  <Plus className="h-3 w-3" />
+                  <span>Añadir a Propuesta</span>
+                </button>
+              </div>
+            ))}
+
+            {filteredQuickScreens.length === 0 && (
+              <div className="py-8 text-center border border-dashed border-stone-200 rounded-2xl text-stone-400">
+                <span className="text-[10px] font-medium block">Sin soportes adicionales</span>
+                <span className="text-[8px] text-stone-400 block mt-0.5">Todos los disponibles ya fueron agregados o no coinciden.</span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* 4. Manual Creation Wizard Modal */}
       {showCreateWizard && (
         <div className="fixed inset-0 bg-stone-900/40 backdrop-blur-xs flex items-center justify-center z-50 animate-in fade-in duration-150 p-4">
           <div className="bg-white border border-stone-200 rounded-3xl p-6 md:p-8 max-w-xl w-full shadow-2xl space-y-6 text-left animate-in zoom-in-95 duration-150">

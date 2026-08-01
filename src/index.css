@@ -3,18 +3,18 @@
 @import "leaflet/dist/leaflet.css";
 
 :root {
-  /* Fluid font sizes using clamp() to adapt perfectly across viewports */
-  --font-size-xs: clamp(0.75rem, 0.72rem + 0.15vw, 0.8125rem);
-  --font-size-sm: clamp(0.8125rem, 0.78rem + 0.2vw, 0.9375rem);
-  --font-size-base: clamp(0.9375rem, 0.9rem + 0.25vw, 1.0625rem);
-  --font-size-lg: clamp(1.0625rem, 1.02rem + 0.3vw, 1.1875rem);
-  --font-size-xl: clamp(1.1875rem, 1.1rem + 0.4vw, 1.375rem);
-  --font-size-2xl: clamp(1.375rem, 1.25rem + 0.6vw, 1.625rem);
-  --font-size-3xl: clamp(1.625rem, 1.45rem + 0.8vw, 2.0rem);
-  --font-size-4xl: clamp(2.0rem, 1.75rem + 1.2vw, 2.5rem);
-  --font-size-5xl: clamp(2.5rem, 2.15rem + 1.6vw, 3.25rem);
+  /* Fluid font sizes using clamp() adhering strictly to 1.125 modular scale (Major Second) starting at 16px */
+  --font-size-xs: clamp(0.75rem, 0.73rem + 0.1vw, 0.79rem);
+  --font-size-sm: clamp(0.85rem, 0.83rem + 0.15vw, 0.889rem);
+  --font-size-base: clamp(0.95rem, 0.93rem + 0.2vw, 1.0rem);
+  --font-size-lg: clamp(1.05rem, 1.02rem + 0.25vw, 1.125rem);
+  --font-size-xl: clamp(1.15rem, 1.12rem + 0.3vw, 1.266rem);
+  --font-size-2xl: clamp(1.3rem, 1.25rem + 0.4vw, 1.424rem);
+  --font-size-3xl: clamp(1.45rem, 1.4rem + 0.5vw, 1.602rem);
+  --font-size-4xl: clamp(1.6rem, 1.55rem + 0.6vw, 1.802rem);
+  --font-size-5xl: clamp(1.8rem, 1.7rem + 0.8vw, 2.027rem);
 
-  /* Typography Font Families */
+  /* Typography Font Families - Standardized */
   --text-display: "Poppins", system-ui, -apple-system, sans-serif;
   --text-body: "Inter", system-ui, -apple-system, sans-serif;
 }
@@ -22,20 +22,24 @@
 @theme {
   /* Brand Theme Colors */
   --color-primary: #06434a;
-  --color-primary-hover: #0a545d;
+  --color-primary-hover: #0b5e67;
   --color-secondary: #07be8a;
   --color-secondary-hover: #06a376;
   --color-neutral-slate-dark: #172023;
-  --color-neutral-slate-light: #fafaf9;
+  --color-neutral-slate-light: #f5f5f4;
   --color-danger-rose: #f43f5e;
   --color-warning-amber: #f59e0b;
 
+  /* Standard override to completely eliminate pure black (#000000) and pure white (#ffffff) */
+  --color-white: #fafaf9;
+  --color-black: #172023;
+
   /* standard shadcn/ui variables in Tailwind v4 style */
-  --color-background: #fafaf9;
+  --color-background: #f5f5f4;
   --color-foreground: #172023;
-  --color-card: #ffffff;
+  --color-card: #fafaf9;
   --color-card-foreground: #172023;
-  --color-popover: #ffffff;
+  --color-popover: #fafaf9;
   --color-popover-foreground: #172023;
   --color-muted: #f5f5f4;
   --color-muted-foreground: #78716c;
@@ -46,6 +50,23 @@
   --color-border: #e7e5e4;
   --color-input: #e7e5e4;
   --color-ring: #06434a;
+
+  /* Border Radius Scale (Aligned with DESIGN_SYSTEM) */
+  --radius-xs: 2px;
+  --radius-sm: 6px;
+  --radius-base: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-pill: 9999px;
+
+  /* Shadows & Elevations (Obsidian-tinted natural shadows for extreme sophistication) */
+  --shadow-xs: 0 1px 2px rgba(23, 32, 35, 0.04);
+  --shadow-sm: 0 1px 3px rgba(23, 32, 35, 0.08), 0 1px 2px rgba(23, 32, 35, 0.05);
+  --shadow-base: 0 4px 6px -1px rgba(23, 32, 35, 0.08), 0 2px 4px -1px rgba(23, 32, 35, 0.05);
+  --shadow-lg: 0 10px 15px -3px rgba(23, 32, 35, 0.08), 0 4px 6px -2px rgba(23, 32, 35, 0.04);
+  --shadow-xl: 0 20px 25px -5px rgba(23, 32, 35, 0.08), 0 10px 10px -5px rgba(23, 32, 35, 0.03);
+  --shadow-stripe: 0 15px 35px rgba(23, 32, 35, 0.06), 0 5px 15px rgba(23, 32, 35, 0.04);
+  --shadow-linear: 0 1px 1px rgba(23, 32, 35, 0.04), 0 12px 24px rgba(23, 32, 35, 0.04);
 
   /* Spacing Scale (8px Grid & Múltiplos) */
   --spacing-micro: 0.25rem;      /* 4px */
@@ -81,7 +102,7 @@
     letter-spacing: -0.011em;
   }
 
-  p, li, span, label, input, select, textarea, button {
+  p, li, span, label, input, select, textarea, button, table, th, td, optgroup, option {
     font-family: var(--text-body);
   }
 
@@ -137,5 +158,11 @@
     line-height: 1.4;
     letter-spacing: -0.01em;
     @apply text-stone-900;
+  }
+
+  /* Accessibility focus ring - WCAG 2.2 AA compliant focus state */
+  *:focus-visible {
+    outline: 2px solid var(--color-primary) !important;
+    outline-offset: 2px !important;
   }
 }

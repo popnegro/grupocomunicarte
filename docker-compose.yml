@@ -25,4 +25,7 @@ services:
       - "8080:3000" # Mapeamos el puerto 3000 del contenedor al 8080 de tu máquina
     env_file:
       - .env # Carga las variables de entorno desde el archivo .env
+    environment:
+      # Asegúrate de que esta variable esté definida en tu entorno o en el archivo .env
+      - DATABASE_URL=${DATABASE_URL}
     restart: unless-stopped # Reinicia el contenedor automáticamente si falla

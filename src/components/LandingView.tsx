@@ -1,26 +1,25 @@
 import React, { useState } from "react";
-import { useCms } from "@/components/CmsContext";
+import { useCms } from "./CmsContext";
 import { motion } from "motion/react";
 import * as LucideIcons from "lucide-react";
-import { Navigation } from "@/components/Navigation";
-import { Hero } from "@/components/landing/Hero";
-import { FeaturedCarousel } from "@/components/landing/FeaturedCarousel";
-import { InventoryCatalog } from "@/components/landing/InventoryCatalog";
-import { Footer } from "@/components/Footer";
-import { SubpageLayout } from "@/components/SubpageLayout";
+import { Navigation } from "./Navigation";
+import { Hero } from "./landing/Hero";
+import { InventoryCatalog } from "./landing/InventoryCatalog";
+import { Footer } from "./Footer";
+import { SubpageLayout } from "./SubpageLayout";
 
 export const LandingView: React.FC = () => {
   const {
+    addLead,
     setActiveView,
-    activeSlug,
-    setActiveSlug,
     screens,
     cart,
     toggleCart,
     clearCart,
     weeks,
     setWeeks,
-    addLead,
+    activeSlug,
+    setActiveSlug,
   } = useCms();
 
   // Selected city & catalog tab state (excision of San Juan)
@@ -163,9 +162,6 @@ export const LandingView: React.FC = () => {
             onExploreClick={() => handleScrollTo("espacios")}
           />
 
-          {/* 2b. Featured Screens Carousel proposal */}
-          <FeaturedCarousel screens={screens} />
-
           {/* 3. Refactored "Soluciones" Section */}
           <section id="soluciones" className="bg-stone-50 border-y border-stone-200/80 py-24 font-sans">
             <div className="max-w-7xl mx-auto px-6 space-y-16">
@@ -186,7 +182,7 @@ export const LandingView: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {SOLUCIONES_CARDS.map((sol) => (
                   <div
-                    key={sol.id} 
+                    key={sol.id}
                     className="p-6 bg-white border border-stone-200/60 rounded-xl shadow-xs hover:border-[#06434a]/30 transition-all duration-300 flex flex-col justify-between h-full group text-left"
                   >
                     <div className="space-y-4">
@@ -328,7 +324,7 @@ export const LandingView: React.FC = () => {
 
               {/* Institutional Video block with elegant mockup */}
               <div className="lg:col-span-5 flex justify-center">
-                <div className="w-full max-w-sm aspect-video rounded-2xl overflow-hidden bg-stone-900 border border-stone-200 shadow-md group shrink-0 relative">
+                <div className="w-full max-w-sm aspect-[16/9] rounded-2xl overflow-hidden bg-stone-900 border border-stone-200 shadow-md group shrink-0 relative">
                   <div className="absolute inset-0 bg-gradient-to-br from-stone-950 via-stone-900 to-stone-850 flex flex-col items-center justify-center space-y-3.5">
                     <div className="h-12 w-12 rounded-full bg-white text-stone-950 flex items-center justify-center shadow-lg transform group-hover:scale-105 transition-transform duration-300 cursor-pointer">
                       <LucideIcons.Play className="h-5 w-5 text-stone-950 fill-stone-950 translate-x-0.5" />
@@ -361,7 +357,7 @@ export const LandingView: React.FC = () => {
               <div className="space-y-4">
                 {[
                   {
-                    id: "faq-1", 
+                    id: "faq-1",
                     q: "¿Qué es la publicidad DOOH y cómo funciona en la plataforma?",
                     a: "El DOOH (Digital Out Of Home) es la digitalización de la publicidad en vía pública. Nuestra plataforma permite explorar nuestra red en tiempo real, filtrar soportes por plaza y volumen de impactos diarios, y armar propuestas (MediaKits) listas para cotizar con nuestro equipo de asesores."
                   },
@@ -417,8 +413,8 @@ export const LandingView: React.FC = () => {
 
           {/* 6. General Contact Form section */}
           <section id="contacto" className="py-24 bg-stone-900 text-white relative overflow-hidden font-sans">
-            <div className="absolute inset-0 bg-[linear-gradient(to_right,#2a2522_1px,transparent_1px),linear-gradient(to_bottom,#2a2522_1px,transparent_1px)] bg-size-[4rem_4rem] opacity-20 pointer-events-none" />
- 
+            <div className="absolute inset-0 bg-[linear-gradient(to_right,#2a2522_1px,transparent_1px),linear-gradient(to_bottom,#2a2522_1px,transparent_1px)] bg-[size:4rem_4rem] opacity-20 pointer-events-none" />
+
             <div className="max-w-6xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center relative z-10">
               
               <div className="lg:col-span-6 space-y-6 text-left">
@@ -450,7 +446,7 @@ export const LandingView: React.FC = () => {
               </div>
 
               {/* Form */}
-              <div className="lg:col-span-6 rounded-4xl border border-stone-200 bg-white p-6 text-stone-900 shadow-2xl md:p-8">
+              <div className="lg:col-span-6 bg-white text-stone-900 rounded-3xl p-6 md:p-8 shadow-2xl border border-stone-200">
                 <h3 className="text-md font-bold text-stone-900 mb-1 font-display">Completa tu consulta comercial</h3>
                 <p className="text-stone-500 text-xs mb-6">Nos contactaremos contigo en menos de 24 horas hábiles.</p>
 
@@ -471,7 +467,7 @@ export const LandingView: React.FC = () => {
                             placeholder="Ana de la Cruz"
                             value={contactForm.name}
                             onChange={(e) => setContactForm({ ...contactForm, name: e.target.value })}
-                            className="w-full px-3 py-2 text-xs border border-stone-200 rounded-lg bg-stone-50 focus:outline-none focus:border-[#06434a]"
+                            className="w-full px-3 py-2 text-xs border border-stone-200 rounded-xl bg-stone-50 focus:outline-none focus:border-[#06434a]"
                           />
                         </div>
                         <div className="space-y-1">
@@ -483,7 +479,7 @@ export const LandingView: React.FC = () => {
                             placeholder="Acme Corp"
                             value={contactForm.company}
                             onChange={(e) => setContactForm({ ...contactForm, company: e.target.value })}
-                            className="w-full px-3 py-2 text-xs border border-stone-200 rounded-lg bg-stone-50 focus:outline-none focus:border-[#06434a]"
+                            className="w-full px-3 py-2 text-xs border border-stone-200 rounded-xl bg-stone-50 focus:outline-none focus:border-[#06434a]"
                           />
                         </div>
                       </div>
@@ -499,7 +495,7 @@ export const LandingView: React.FC = () => {
                             placeholder="nombre@empresa.com"
                             value={contactForm.email}
                             onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })}
-                            className="w-full px-3 py-2 text-xs border border-stone-200 rounded-lg bg-stone-50 focus:outline-none focus:border-[#06434a]"
+                            className="w-full px-3 py-2 text-xs border border-stone-200 rounded-xl bg-stone-50 focus:outline-none focus:border-[#06434a]"
                           />
                         </div>
                         <div className="space-y-1">
@@ -511,7 +507,7 @@ export const LandingView: React.FC = () => {
                             placeholder="+54 9 261 1234567"
                             value={contactForm.phone}
                             onChange={(e) => setContactForm({ ...contactForm, phone: e.target.value })}
-                            className="w-full px-3 py-2 text-xs border border-stone-200 rounded-lg bg-stone-50 focus:outline-none focus:border-[#06434a]"
+                            className="w-full px-3 py-2 text-xs border border-stone-200 rounded-xl bg-stone-50 focus:outline-none focus:border-[#06434a]"
                           />
                         </div>
                       </div>
@@ -523,7 +519,7 @@ export const LandingView: React.FC = () => {
                         <select
                           value={contactForm.spacePreference}
                           onChange={(e) => setContactForm({ ...contactForm, spacePreference: e.target.value })}
-                          className="w-full px-3 py-2 text-xs border border-stone-200 rounded-lg bg-stone-50 font-semibold text-stone-700 focus:outline-none cursor-pointer"
+                          className="w-full px-3 py-2 text-xs border border-stone-200 rounded-xl bg-stone-50 font-semibold text-stone-700 focus:outline-none cursor-pointer"
                         >
                           <option value="Mendoza">Plaza Mendoza</option>
                           <option value="Buenos Aires">Plaza Buenos Aires</option>
@@ -540,7 +536,7 @@ export const LandingView: React.FC = () => {
                           rows={3}
                           value={contactForm.message}
                           onChange={(e) => setContactForm({ ...contactForm, message: e.target.value })}
-                          className="w-full px-3 py-2 text-xs border border-stone-200 rounded-lg bg-stone-50 focus:outline-none focus:border-[#06434a]"
+                          className="w-full px-3 py-2 text-xs border border-stone-200 rounded-xl bg-stone-50 focus:outline-none focus:border-[#06434a]"
                         />
                       </div>
 
@@ -596,6 +592,7 @@ export const LandingView: React.FC = () => {
           }}
           screens={screens}
           cart={cart}
+          toggleCart={toggleCart}
           clearCart={clearCart}
           weeks={weeks}
           setWeeks={setWeeks}

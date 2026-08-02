@@ -35,7 +35,7 @@ export const DESIGN_SYSTEM = {
     neutral: {
       dark: "#172023", // Obsidian dark slate
       light: "#fafaf9", // Warm sandstone paper
-      white: "#fafaf9",
+      white: "#ffffff",
       stone: {
         50: "bg-[#fafaf9]",
         100: "bg-stone-100",

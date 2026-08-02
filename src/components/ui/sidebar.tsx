@@ -3,8 +3,8 @@ import { Slot } from "@radix-ui/react-slot"
 import { VariantProps, cva } from "class-variance-authority"
 import { PanelLeft } from "lucide-react"
 
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
+import { cn } from "@/src/lib/utils"
+import { Button } from "@/src/components/ui/button"
 
 const SIDEBAR_COOKIE_NAME = "sidebar:state"
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
@@ -368,19 +368,6 @@ export const SidebarGroupContent = React.forwardRef<
 })
 SidebarGroupContent.displayName = "SidebarGroupContent"
 
-export const SidebarMenuAction = React.forwardRef<
-  HTMLButtonElement,
-  React.ComponentProps<typeof Button>
->(({ className, ...props }, ref) => {
-  return (
-    <Button
-      ref={ref}
-      variant="ghost"
-      size="icon"
-      className={cn("h-7 w-7 text-muted-foreground data-[show-on-hover=true]:opacity-0 group-hover/item:opacity-100", className)}
-      {...props} />
-  )
-})
 export const SidebarMenu = React.forwardRef<
   HTMLUListElement,
   React.ComponentProps<"ul">
@@ -474,3 +461,4 @@ export const SidebarInset = React.forwardRef<
   )
 })
 SidebarInset.displayName = "SidebarInset"
+

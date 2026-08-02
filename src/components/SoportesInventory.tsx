@@ -1,10 +1,10 @@
 import React, { useState, useMemo } from "react";
-import { useCms } from "@/components/CmsContext";
-import { ScreenCard } from "@/components/ScreenCard";
-import { DoohScreen } from "@/types";
+import { useCms } from "./CmsContext";
+import { ScreenCard } from "./ScreenCard";
+import { DoohScreen } from "../types";
 import { Search, MapPin, Tv, ArrowUpDown, Shield, SlidersHorizontal, Eye, DollarSign } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { Input } from "./ui/input";
+import { Button } from "./ui/button";
 
 interface SoportesInventoryProps {
   initialCity?: string;
@@ -31,7 +31,7 @@ export const SoportesInventory: React.FC<SoportesInventoryProps> = ({
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
   // Filter & sort logic
-  const { filteredAndSortedScreens, stats } = useMemo(() => {
+  const filteredAndSortedScreens = useMemo(() => {
     let result = [...screens];
 
     // Filter by Search Query
@@ -73,18 +73,24 @@ export const SoportesInventory: React.FC<SoportesInventoryProps> = ({
       return sortOrder === "asc" ? comparison : -comparison;
     });
 
-    const totalCount = result.length;
-    const totalImpacts = result.reduce((sum, s) => sum + s.impactos, 0);
+    return result;
+  }, [screens, searchQuery, selectedCity, selectedTipo, selectedCategoria, sortBy, sortOrder]);
+
+  // Derived metrics for the filtered inventory
+  const stats = useMemo(() => {
+    const totalCount = filteredAndSortedScreens.length;
+    const totalImpacts = filteredAndSortedScreens.reduce((sum, s) => sum + s.impactos, 0);
     const averagePrice =
       totalCount > 0
-        ? Math.round(result.reduce((sum, s) => sum + s.precio, 0) / totalCount)
+        ? Math.round(filteredAndSortedScreens.reduce((sum, s) => sum + s.precio, 0) / totalCount)
         : 0;
 
     return {
-      filteredAndSortedScreens: result,
-      stats: { totalCount, totalImpacts, averagePrice },
+      totalCount,
+      totalImpacts,
+      averagePrice,
     };
-  }, [screens, searchQuery, selectedCity, selectedTipo, selectedCategoria, sortBy, sortOrder]);
+  }, [filteredAndSortedScreens]);
 
   const toggleSort = (field: "impactos" | "precio" | "nombre") => {
     if (sortBy === field) {
@@ -97,7 +103,7 @@ export const SoportesInventory: React.FC<SoportesInventoryProps> = ({
 
   return (
     <div className="space-y-8 font-sans">
-      {/* Dynamic Inventory Stats Panel */} 
+      {/* Dynamic Inventory Stats Panel */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
         <div className="bg-white border border-stone-200/80 rounded-2xl p-5 flex items-center gap-4 shadow-xs">
           <div className="p-3 bg-stone-100 text-stone-700 rounded-xl">
@@ -138,7 +144,7 @@ export const SoportesInventory: React.FC<SoportesInventoryProps> = ({
       </div>
 
       {/* Main Filter & Action Dashboard bar */}
-      <div className="space-y-5 rounded-2xl border border-stone-200/80 bg-white p-6 shadow-xs">
+      <div className="bg-white border border-stone-200/80 rounded-2xl p-6 space-y-5 shadow-xs">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-stone-100 pb-5">
           <div className="space-y-1">
             <h3 className="text-base font-bold text-stone-900 flex items-center gap-2">
@@ -291,7 +297,7 @@ export const SoportesInventory: React.FC<SoportesInventoryProps> = ({
 
       {/* Grid List */}
       {filteredAndSortedScreens.length > 0 ? (
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2" role="region" aria-label="Resultados de soportes publicitarios">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6" role="region" aria-label="Resultados de soportes publicitarios">
           {filteredAndSortedScreens.map((screen) => (
             <div key={screen.id} className="h-full">
               <ScreenCard screen={screen} />

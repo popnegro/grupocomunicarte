@@ -1,14 +1,12 @@
 import React from "react";
 import { Role } from "./types";
-import { Shield, Sparkles, User, Bell, ChevronDown, Menu, ChevronLeft, Home } from "lucide-react";
-import { useCms } from "../CmsContext";
+import { Shield, Sparkles, User, Bell, ChevronDown } from "lucide-react";
 
 interface DashboardHeaderProps {
   userRole: Role;
   setUserRole: (role: Role) => void;
   title: string;
   description: string;
-  onToggleMobileSidebar?: () => void;
 }
 
 export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
@@ -16,10 +14,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   setUserRole,
   title,
   description,
-  onToggleMobileSidebar,
 }) => {
-  const { setActiveView } = useCms();
-
   const getRoleBadge = (role: Role) => {
     switch (role) {
       case "admin":
@@ -38,43 +33,17 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   const badge = getRoleBadge(userRole);
 
   return (
-    <header className="border-b border-stone-200/80 bg-white py-5 px-6 md:px-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 sticky top-0 z-40">
-      <div className="flex items-center gap-3 w-full md:w-auto">
-        <button
-          onClick={() => setActiveView("landing")}
-          className="hidden sm:flex items-center gap-2 text-xs font-bold text-[#06434a] hover:bg-[#06434a]/5 px-4 py-2 rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-[#06434a]/30"
-          aria-label="Volver a landing principal"
-        >
-          <ChevronLeft className="h-4 w-4" />
-          <span className="uppercase tracking-wider">Landing</span>
-        </button>
-        <button
-          onClick={() => setActiveView("landing")}
-          className="sm:hidden p-2 text-[#06434a] hover:bg-stone-100 rounded-lg min-h-[44px] min-w-[44px]"
-          aria-label="Volver a landing"
-        >
-          <Home className="h-4 w-4" />
-        </button>
-        {onToggleMobileSidebar && (
-          <button
-            onClick={onToggleMobileSidebar}
-            aria-label="Toggle Menu"
-            className="md:hidden p-2 -ml-2 rounded-lg text-stone-500 hover:bg-stone-50 hover:text-stone-900 shrink-0 min-h-[44px] min-w-[44px] flex items-center justify-center cursor-pointer"
-          >
-            <Menu className="h-5 w-5" />
-          </button>
-        )}
-        <div>
-          <h1 className="text-xl font-bold tracking-tight text-stone-900 font-display flex items-center gap-2">
-            {title}
-            <span className="text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-100 px-2 py-0.5 rounded-full font-extrabold uppercase font-mono tracking-wider">
-              v2.0 Active
-            </span>
-          </h1>
-          <p className="text-[11px] text-stone-500 max-w-xl font-medium mt-0.5 leading-relaxed">
-            {description}
-          </p>
-        </div>
+    <header className="border-b border-stone-200/80 bg-white py-5 px-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 sticky top-0 z-40">
+      <div>
+        <h1 className="text-xl font-bold tracking-tight text-stone-900 font-display flex items-center gap-2">
+          {title}
+          <span className="text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-100 px-2 py-0.5 rounded-full font-extrabold uppercase font-mono tracking-wider">
+            v2.0 Active
+          </span>
+        </h1>
+        <p className="text-[11px] text-stone-500 max-w-xl font-medium mt-0.5 leading-relaxed">
+          {description}
+        </p>
       </div>
 
       <div className="flex items-center gap-4 shrink-0 w-full md:w-auto justify-end">

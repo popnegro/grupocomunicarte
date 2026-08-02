@@ -16,7 +16,7 @@ export const SectionHeading: React.FC<SectionHeadingProps> = ({
   className = "",
 }) => {
   return (
-    <div id={id} className={`mx-auto max-w-2xl space-y-3.5 text-center ${className}`}>
+    <div id={id} className={`text-center max-w-2xl mx-auto space-y-3.5 ${className}`}>
       <span className="inline-block text-[10px] bg-[#06434a]/10 border border-[#06434a]/20 text-[#06434a] font-bold tracking-widest uppercase px-3.5 py-1.5 rounded-full font-sans">
         {badge}
       </span>

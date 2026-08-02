@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from "react";
-import { LandingContent, Lead, OnboardingAnswers, SeoAuditReport, GrowthRecommendation, DoohScreen } from "@/types";
-import { sitemap } from "@/lib/sitemap";
+import React, { createContext, useContext, useState, useEffect } from "react";
+import { LandingContent, Lead, OnboardingAnswers, SeoAuditReport, GrowthRecommendation, DoohScreen } from "../types";
+import { sitemap } from "../lib/sitemap";
 
 const SEED_SCREENS: DoohScreen[] = [
   // MENDOZA PLAZA
@@ -403,9 +403,8 @@ const DEFAULT_LANDING_CONTENT: LandingContent = {
 interface CmsContextProps {
   content: LandingContent;
   leads: Lead[];
-  onboardingAnswers: Partial<OnboardingAnswers>; // Changed to Partial
-  onboardingDone: boolean; // New
-  activeView: "landing" | "dashboard" | "onboarding"; // Added onboarding
+  onboardingAnswers: OnboardingAnswers | null;
+  activeView: "landing" | "dashboard";
   currentDashboardTab: string;
   activeSlug: string;
   setActiveSlug: (slug: string) => void;
@@ -419,10 +418,8 @@ interface CmsContextProps {
   updateSeo: (seo: Partial<LandingContent["seo"]>) => void;
   resetToDefault: () => void;
   addLead: (lead: Omit<Lead, "id" | "date">) => Promise<Lead | null>;
-  // saveOnboarding: (answers: OnboardingAnswers) => void; // Removed
-  onboardUser: () => void; // New
-  updateOnboardingAnswer: (field: keyof OnboardingAnswers, value: any) => void; // New
-  setActiveView: (view: "landing" | "dashboard" | "onboarding") => void; // Added onboarding
+  saveOnboarding: (answers: OnboardingAnswers) => void;
+  setActiveView: (view: "landing" | "dashboard") => void;
   setCurrentDashboardTab: (tab: string) => void;
   // DOOH screens and cart logic
   screens: DoohScreen[];
@@ -464,26 +461,12 @@ export const CmsProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   });
 
   const [leads, setLeads] = useState<Lead[]>([]);
-  const [onboardingAnswers, setOnboardingAnswers] = useState<Partial<OnboardingAnswers>>(() => {
-    const saved = localStorage.getItem("smartweb_onboarding_answers");
-    return saved ? JSON.parse(saved) : {};
-  });
-  const [onboardingDone, setOnboardingDone] = useState<boolean>(() => {
-    const saved = localStorage.getItem("smartweb_onboarding_done");
-    return saved ? JSON.parse(saved) : false;
+  const [onboardingAnswers, setOnboardingAnswers] = useState<OnboardingAnswers | null>(() => {
+    const saved = localStorage.getItem("smartweb_onboarding");
+    return saved ? JSON.parse(saved) : null;
   });
 
-  const [activeView, setActiveView] = useState<"landing" | "dashboard" | "onboarding">(() => {
-    const savedOnboardingDone = localStorage.getItem("smartweb_onboarding_done");
-    if (savedOnboardingDone && JSON.parse(savedOnboardingDone) === false) {
-      return "onboarding";
-    }
-
-    const hash = window.location.hash;
-    if (hash.startsWith("#/dashboard")) return "dashboard";
-    if (hash.startsWith("#/onboarding")) return "onboarding"; // New check for direct onboarding link
-    return "landing";
-  });
+  const [activeView, setActiveView] = useState<"landing" | "dashboard">("landing");
   const [currentDashboardTab, setCurrentDashboardTab] = useState<string>("dashboard");
   const [activeSlug, setActiveSlug] = useState<string>("/");
   const [loadingAI, setLoadingAI] = useState(false);
@@ -521,11 +504,11 @@ export const CmsProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     localStorage.setItem("smartweb_dooh_cart", JSON.stringify(cart));
   }, [cart]);
 
-  const toggleCart = useCallback((id: string) => {
+  const toggleCart = (id: string) => {
     setCart((prev) =>
       prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
     );
-  }, []);
+  };
 
   const clearCart = () => {
     setCart([]);
@@ -652,19 +635,9 @@ export const CmsProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return null;
   };
 
-  // New onboarding functions
-  const onboardUser = () => {
-    setOnboardingDone(true);
-    localStorage.setItem("smartweb_onboarding_done", JSON.stringify(true));
-    setActiveView("dashboard"); // Redirect to dashboard after onboarding
-  };
-
-  const updateOnboardingAnswer = (field: keyof OnboardingAnswers, value: any) => {
-    setOnboardingAnswers((prev) => {
-      const updatedAnswers = { ...prev, [field]: value };
-      localStorage.setItem("smartweb_onboarding_answers", JSON.stringify(updatedAnswers));
-      return updatedAnswers;
-    });
+  const saveOnboarding = (answers: OnboardingAnswers) => {
+    setOnboardingAnswers(answers);
+    localStorage.setItem("smartweb_onboarding", JSON.stringify(answers));
   };
 
   // AI Content Generator: Triggers backend Gemini API call
@@ -815,8 +788,6 @@ export const CmsProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         const parts = hash.split("/");
         const tab = parts[2] || "dashboard";
         setCurrentDashboardTab(tab);
-      } else if (hash.startsWith("#/onboarding")) { // New case
-        setActiveView("onboarding");
       } else {
         setActiveView("landing");
         const slug = hash.replace("#", "");
@@ -831,50 +802,46 @@ export const CmsProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return () => window.removeEventListener("hashchange", handleHashChange);
   }, []);
 
-  const contextValue = useMemo(() => ({
-    content,
-    leads,
-    onboardingAnswers,
-    onboardingDone, // New
-    activeView,
-    currentDashboardTab,
-    activeSlug,
-    setActiveSlug,
-    updateHero,
-    updateBenefit,
-    addBenefit,
-    deleteBenefit,
-    updateFaq,
-    addFaq,
-    deleteFaq,
-    updateSeo,
-    resetToDefault,
-    addLead,
-    onboardUser, // New
-    updateOnboardingAnswer, // New
-    setActiveView,
-    setCurrentDashboardTab,
-    screens,
-    setScreens,
-    cart,
-    toggleCart,
-    clearCart,
-    weeks,
-    setWeeks,
-    updateScreenStatus,
-    updateScreen,
-    loadingAI,
-    generateAIContent,
-    seoReport,
-    runSeoAudit,
-    growthRecs,
-    runGrowthRecs,
-    fetchLeads,
-  }), [content, leads, onboardingAnswers, onboardingDone, activeView, currentDashboardTab, activeSlug, screens, cart, weeks, loadingAI, seoReport, growthRecs, toggleCart]);
-
   return (
     <CmsContext.Provider
-      value={contextValue}
+      value={{
+        content,
+        leads,
+        onboardingAnswers,
+        activeView,
+        currentDashboardTab,
+        activeSlug,
+        setActiveSlug,
+        updateHero,
+        updateBenefit,
+        addBenefit,
+        deleteBenefit,
+        updateFaq,
+        addFaq,
+        deleteFaq,
+        updateSeo,
+        resetToDefault,
+        addLead,
+        saveOnboarding,
+        setActiveView,
+        setCurrentDashboardTab,
+        screens,
+        setScreens,
+        cart,
+        toggleCart,
+        clearCart,
+        weeks,
+        setWeeks,
+        updateScreenStatus,
+        updateScreen,
+        loadingAI,
+        generateAIContent,
+        seoReport,
+        runSeoAudit,
+        growthRecs,
+        runGrowthRecs,
+        fetchLeads,
+      }}
     >
       {children}
     </CmsContext.Provider>

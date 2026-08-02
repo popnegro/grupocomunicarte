@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useCms } from "../CmsContext";
 import { MediaKit, Cotizacion, Reserva, Campaña, Cliente, Role } from "./types";
 import { motion, AnimatePresence } from "motion/react";
@@ -133,25 +133,39 @@ export const DashboardHome: React.FC<DashboardHomeProps> = ({
     setTimeout(() => setShowToast(null), 4000);
   };
 
-  // Compute Dynamic Metrics
-  const activeCampCount = campañas.filter(c => c.estado === "Activa").length;
+  // Compute Dynamic Metrics with useMemo for high-performance rendering
+  const activeCampCount = useMemo(() => {
+    return campañas.filter(c => c.estado === "Activa").length;
+  }, [campañas]);
   
-  // Real dynamic screens metrics from useCms
-  const totalScreensCount = screens.length;
-  const occupiedScreensCount = screens.filter(s => s.status === "Activo" || s.status === "No disponible").length;
-  const availableScreensCount = screens.filter(s => s.status === "Disponible" || s.status === "Activo").length; // active/dispo
-  const maintScreensCount = screens.filter(s => s.status === "Pausado" || s.status === "No disponible").length;
+  // Real dynamic screens metrics from useCms with useMemo
+  const screenMetrics = useMemo(() => {
+    const total = screens.length;
+    const occupied = screens.filter(s => s.status === "Activo" || s.status === "No disponible").length;
+    const available = screens.filter(s => s.status === "Disponible" || s.status === "Activo").length; // active/dispo
+    const maint = screens.filter(s => s.status === "Pausado" || s.status === "No disponible").length;
+    const rate = total
+      ? Math.round((screens.filter(s => s.status === "Activo" || s.status === "No disponible").length / total) * 100)
+      : 81;
+    return { total, occupied, available, maint, rate };
+  }, [screens]);
 
-  const occupancyRate = totalScreensCount 
-    ? Math.round((screens.filter(s => s.status === "Activo" || s.status === "No disponible").length / totalScreensCount) * 100) 
-    : 81;
+  const totalScreensCount = screenMetrics.total;
+  const occupiedScreensCount = screenMetrics.occupied;
+  const availableScreensCount = screenMetrics.available;
+  const maintScreensCount = screenMetrics.maint;
+  const occupancyRate = screenMetrics.rate;
 
-  const totalClientsCount = clientes.length;
+  const totalClientsCount = useMemo(() => {
+    return clientes.length;
+  }, [clientes]);
 
-  // Real projected revenue: SUM of active quotes totals + base valuation
-  const baseRevenue = 3850000;
-  const dynamicQuotesTotal = cotizaciones.reduce((sum, q) => sum + (q.estado === "Aceptada" ? q.total : q.total * 0.3), 0);
-  const projectedRevenue = baseRevenue + dynamicQuotesTotal;
+  // Real projected revenue: SUM of active quotes totals + base valuation with useMemo
+  const projectedRevenue = useMemo(() => {
+    const baseRevenue = 3850000;
+    const dynamicQuotesTotal = cotizaciones.reduce((sum, q) => sum + (q.estado === "Aceptada" ? q.total : q.total * 0.3), 0);
+    return baseRevenue + dynamicQuotesTotal;
+  }, [cotizaciones]);
 
   // Quick Action Submissions
   const handleCreateCampaña = (e: React.FormEvent) => {
@@ -422,7 +436,7 @@ export const DashboardHome: React.FC<DashboardHomeProps> = ({
       </AnimatePresence>
 
       {/* 1. HEADER: EXECUTIVE SUMMARY & ORGANIZATION BANNER */}
-      <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-6 bg-white border border-stone-200/80 rounded-[32px] p-5 md:p-6 shadow-2xs">
+      <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-6 bg-white border border-stone-200/80 rounded-2xl p-5 md:p-6 shadow-2xs">
         <div className="space-y-2 text-left">
           <div className="flex items-center gap-2">
             <span className="text-[9px] font-black text-[#06434a] bg-[#06434a]/8 border border-[#06434a]/15 px-2.5 py-1 rounded-md uppercase tracking-wider">
@@ -457,8 +471,8 @@ export const DashboardHome: React.FC<DashboardHomeProps> = ({
 
         {/* Global Organizations and Notifications Selector */}
         <div className="flex items-center gap-3 shrink-0 self-start lg:self-auto">
-          <div className="bg-stone-50 border border-stone-200 p-1 rounded-xl md:rounded-lg flex items-center shadow-inner">
-            <span className="text-[11px] font-extrabold text-stone-600 px-3 py-1 bg-white border border-stone-200/60 rounded-lg md:rounded-md shadow-2xs">
+          <div className="bg-stone-50 border border-stone-200 p-1 rounded-xl flex items-center shadow-inner">
+            <span className="text-[11px] font-extrabold text-stone-600 px-3 py-1 bg-white border border-stone-200/60 rounded-lg shadow-2xs">
               Mendoza Plaza Lider
             </span>
             <button 
@@ -914,7 +928,7 @@ export const DashboardHome: React.FC<DashboardHomeProps> = ({
         <div className="lg:col-span-4 space-y-6">
           
           {/* A. SMART SUGGESTIONS (Gemini Revenue Optimization) */}
-          <div className="bg-gradient-to-b from-[#FAF9F5] to-stone-50 border border-stone-200/80 rounded-[28px] p-5 space-y-4 shadow-2xs text-left">
+          <div className="bg-gradient-to-b from-[#FAF9F5] to-stone-50 border border-stone-200/80 rounded-2xl p-5 space-y-4 shadow-2xs text-left">
             <div className="flex items-center justify-between border-b border-stone-200/60 pb-3">
               <div className="flex items-center gap-1.5">
                 <Sparkles className="h-4.5 w-4.5 text-amber-500 animate-pulse" />
@@ -967,7 +981,7 @@ export const DashboardHome: React.FC<DashboardHomeProps> = ({
           </div>
 
           {/* B. PRÓXIMOS VENCIMIENTOS (Active Campaigns expiring soon) */}
-          <div className="bg-white border border-stone-200/80 rounded-[28px] p-5 shadow-2xs space-y-4 text-left">
+          <div className="bg-white border border-stone-200/80 rounded-2xl p-5 shadow-2xs space-y-4 text-left">
             <div className="flex items-center justify-between border-b border-stone-100 pb-3">
               <div className="flex items-center gap-2">
                 <Clock className="h-4 w-4 text-stone-500" />
@@ -1022,7 +1036,7 @@ export const DashboardHome: React.FC<DashboardHomeProps> = ({
           </div>
 
           {/* C. ACTIVIDAD RECIENTE (Real-time Audit logs) */}
-          <div className="bg-white border border-stone-200/80 rounded-[28px] p-5 shadow-2xs space-y-4 text-left">
+          <div className="bg-white border border-stone-200/80 rounded-2xl p-5 shadow-2xs space-y-4 text-left">
             <div className="flex items-center justify-between border-b border-stone-100 pb-3">
               <div className="flex items-center gap-2">
                 <CheckCircle className="h-4 w-4 text-emerald-500" />

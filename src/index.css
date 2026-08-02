@@ -3,18 +3,18 @@
 @import "leaflet/dist/leaflet.css";
 
 :root {
-  /* Fluid font sizes using clamp() adhering strictly to 1.125 modular scale (Major Second) starting at 16px */
-  --font-size-xs: clamp(0.75rem, 0.73rem + 0.1vw, 0.79rem);
-  --font-size-sm: clamp(0.85rem, 0.83rem + 0.15vw, 0.889rem);
-  --font-size-base: clamp(0.95rem, 0.93rem + 0.2vw, 1.0rem);
-  --font-size-lg: clamp(1.05rem, 1.02rem + 0.25vw, 1.125rem);
-  --font-size-xl: clamp(1.15rem, 1.12rem + 0.3vw, 1.266rem);
-  --font-size-2xl: clamp(1.3rem, 1.25rem + 0.4vw, 1.424rem);
-  --font-size-3xl: clamp(1.45rem, 1.4rem + 0.5vw, 1.602rem);
-  --font-size-4xl: clamp(1.6rem, 1.55rem + 0.6vw, 1.802rem);
-  --font-size-5xl: clamp(1.8rem, 1.7rem + 0.8vw, 2.027rem);
+  /* Fluid font sizes using clamp() to adapt perfectly across viewports */
+  --font-size-xs: clamp(0.75rem, 0.72rem + 0.15vw, 0.8125rem);
+  --font-size-sm: clamp(0.8125rem, 0.78rem + 0.2vw, 0.9375rem);
+  --font-size-base: clamp(0.9375rem, 0.9rem + 0.25vw, 1.0625rem);
+  --font-size-lg: clamp(1.0625rem, 1.02rem + 0.3vw, 1.1875rem);
+  --font-size-xl: clamp(1.1875rem, 1.1rem + 0.4vw, 1.375rem);
+  --font-size-2xl: clamp(1.375rem, 1.25rem + 0.6vw, 1.625rem);
+  --font-size-3xl: clamp(1.625rem, 1.45rem + 0.8vw, 2.0rem);
+  --font-size-4xl: clamp(2.0rem, 1.75rem + 1.2vw, 2.5rem);
+  --font-size-5xl: clamp(2.5rem, 2.15rem + 1.6vw, 3.25rem);
 
-  /* Typography Font Families - Standardized */
+  /* Typography Font Families */
   --text-display: "Poppins", system-ui, -apple-system, sans-serif;
   --text-body: "Inter", system-ui, -apple-system, sans-serif;
 }
@@ -22,125 +22,42 @@
 @theme {
   /* Brand Theme Colors */
   --color-primary: #06434a;
-  --color-primary-50: #e8f0f0;
-  --color-primary-100: #c5d8da;
-  --color-primary-200: #9fbabc;
-  --color-primary-300: #7b999d;
-  --color-primary-400: #5d7e82;
-  --color-primary-500: #44646a;
-  --color-primary-600: #304d53;
-  --color-primary-700: #203a3f;
-  --color-primary-800: #12292d;
-  --color-primary-900: #0a1c1e;
-  --color-primary-950: #030f10;
-
-  --color-secondary: #f0b435;
-  --color-secondary-50: #fef8eb;
-  --color-secondary-100: #faeac4;
-  --color-secondary-200: #f6db9a;
-  --color-secondary-300: #f3cc71;
-  --color-secondary-400: #f0be4d;
-  --color-secondary-500: #eeaf2d;
-  --color-secondary-600: #de9f24;
-  --color-secondary-700: #cd911e;
-  --color-secondary-800: #bc8218;
-  --color-secondary-900: #a46d10;
-  --color-secondary-950: #885c0b;
-
-  --color-accent: #07be8a;
-  --color-accent-50: #e6fdf6;
-  --color-accent-100: #c3faeb;
-  --color-accent-200: #9af6dd;
-  --color-accent-300: #71f1ce;
-  --color-accent-400: #47ebc0;
-  --color-accent-500: #20e6b1;
-  --color-accent-600: #0cce9e;
-  --color-accent-700: #0aab85;
-  --color-accent-800: #08886b;
-  --color-accent-900: #05664f;
-  --color-accent-950: #034b39;
-
-  --color-success: #10b981;
-  --color-warning: #f59e0b;
-  --color-error: #ef4444;
-
-  /* Standard override to completely eliminate pure black (#000000) and pure white (#ffffff) */
-  --color-white: #fafaf9;
-  --color-black: #172023;
+  --color-primary-hover: #0a545d;
+  --color-secondary: #07be8a;
+  --color-secondary-hover: #06a376;
+  --color-neutral-slate-dark: #172023;
+  --color-neutral-slate-light: #fafaf9;
+  --color-danger-rose: #f43f5e;
+  --color-warning-amber: #f59e0b;
 
   /* standard shadcn/ui variables in Tailwind v4 style */
-  --color-background: #f5f5f4;
+  --color-background: #fafaf9;
   --color-foreground: #172023;
-  --color-card: #fafaf9;
+  --color-card: #ffffff;
   --color-card-foreground: #172023;
-  --color-popover: #fafaf9;
+  --color-popover: #ffffff;
   --color-popover-foreground: #172023;
   --color-muted: #f5f5f4;
   --color-muted-foreground: #78716c;
+  --color-accent: #f5f5f4;
+  --color-accent-foreground: #172023;
   --color-destructive: #f43f5e;
   --color-destructive-foreground: #fafaf9;
   --color-border: #e7e5e4;
   --color-input: #e7e5e4;
   --color-ring: #06434a;
 
-  /* Border Radius Scale (Aligned with DESIGN_SYSTEM) */
-  --radius-none: 0;
-  --radius-sm: 0.125rem;   /* 2px */
-  --radius-md: 0.25rem;    /* 4px */
-  --radius-lg: 0.5rem;     /* 8px */
-  --radius-xl: 0.75rem;    /* 12px */
-  --radius-2xl: 1rem;      /* 16px */
-  --radius-3xl: 1.5rem;    /* 24px */
-  --radius-4xl: 2rem;      /* 32px */
-  --radius-5xl: 2.5rem;    /* 40px */
-  --radius-full: 9999px;
-
-  /* Shadows & Elevations (Obsidian-tinted natural shadows for extreme sophistication) */
-  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.03);
-  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px 0 rgba(0, 0, 0, 0.03);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
-  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02);
-  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.05);
-  --shadow-inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06);
-  --shadow-outline: 0 0 0 3px rgba(66, 153, 225, 0.5);
-
-  /* Spacing Scale (Aligned with DESIGN_SYSTEM) */
-  --spacing-px: 1px;
-  --spacing-0: 0;
-  --spacing-0-5: 0.125rem; /* 2px */
-  --spacing-1: 0.25rem;    /* 4px */
-  --spacing-1-5: 0.375rem; /* 6px */
-  --spacing-2: 0.5rem;     /* 8px */
-  --spacing-2-5: 0.625rem; /* 10px */
-  --spacing-3: 0.75rem;    /* 12px */
-  --spacing-3-5: 0.875rem; /* 14px */
-  --spacing-4: 1rem;       /* 16px */
-  --spacing-5: 1.25rem;    /* 20px */
-  --spacing-6: 1.5rem;     /* 24px */
-  --spacing-7: 1.75rem;    /* 28px */
-  --spacing-8: 2rem;       /* 32px */
-  --spacing-9: 2.25rem;    /* 36px */
-  --spacing-10: 2.5rem;    /* 40px */
-  --spacing-11: 2.75rem;   /* 44px */
-  --spacing-12: 3rem;      /* 48px */
-  --spacing-14: 3.5rem;    /* 56px */
-  --spacing-16: 4rem;      /* 64px */
-  --spacing-20: 5rem;      /* 80px */
-  --spacing-24: 6rem;      /* 96px */
-  --spacing-32: 8rem;      /* 128px */
-  --spacing-40: 10rem;     /* 160px */
-  --spacing-48: 12rem;     /* 192px */
-  --spacing-56: 14rem;     /* 224px */
-  --spacing-64: 16rem;     /* 256px */
-  --spacing-72: 18rem;     /* 288px */
-  --spacing-80: 20rem;     /* 320px */
-  --spacing-96: 24rem;     /* 384px */
+  /* Spacing Scale (8px Grid & Múltiplos) */
+  --spacing-micro: 0.25rem;      /* 4px */
+  --spacing-tight: 0.5rem;      /* 8px */
+  --spacing-base: 1rem;         /* 16px */
+  --spacing-generous: 1.5rem;   /* 24px */
+  --spacing-section: 3rem;      /* 48px */
 
   /* Typography Font Families connected to CSS custom properties */
-  --font-display: 'Playfair Display', serif;
-  --font-sans: 'Inter', sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
+  --font-display: var(--text-display);
+  --font-sans: var(--text-body);
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
   /* Fluid Font Sizes mapped to Tailwind v4 utilities */
   --text-xs: var(--font-size-xs);
@@ -157,29 +74,24 @@
 /* Custom Base resets & utility classes aligning with AA standards */
 @layer base {
   body {
-    @apply bg-background text-stone-900 font-sans antialiased selection:bg-[#C47D50]/15;
+    @apply bg-neutral-slate-light text-stone-900 font-sans antialiased selection:bg-[#C47D50]/15;
     font-family: var(--text-body);
     font-size: var(--font-size-base);
     line-height: 1.625;
     letter-spacing: -0.011em;
   }
 
-  p, li, span, label, input, select, textarea, button, table, th, td, optgroup, option {
+  p, li, span, label, input, select, textarea, button {
     font-family: var(--text-body);
   }
 
   h1 {
     font-family: var(--text-display);
-    font-size: clamp(3rem, 3.5vw + 1rem, 3.5rem); /* 48px→56px */
+    font-size: var(--font-size-5xl);
     font-weight: 800;
     line-height: 1.15;
     letter-spacing: -0.03em;
     @apply text-stone-950;
-  }
-
-  /* Apply consistently in both contexts */
-  .dashboard h1 {
-    font-size: clamp(3rem, 3.5vw + 1rem, 3.5rem); /* Same size */
   }
 
   h2 {
@@ -225,11 +137,5 @@
     line-height: 1.4;
     letter-spacing: -0.01em;
     @apply text-stone-900;
-  }
-
-  /* Accessibility focus ring - WCAG 2.2 AA compliant focus state */
-  *:focus-visible {
-    outline: 2px solid var(--color-primary) !important;
-    outline-offset: 2px !important;
   }
 }

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { MediaKit, Cliente, Role, MediaKitSupport } from "./types";
 import { DoohScreen } from "../../types";
 import { 
@@ -23,9 +23,9 @@ import {
   TrendingUp, 
   Check, 
   MapPin, 
-  Layers,
-  Search
+  Layers 
 } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
 
 interface MediaKitModuleProps {
   mediaKits: MediaKit[];
@@ -68,78 +68,36 @@ export const MediaKitModule: React.FC<MediaKitModuleProps> = ({
 
   // Inline Notion editor states
   const [newCommentText, setNewCommentText] = useState("");
-  const [quickSearchQuery, setQuickSearchQuery] = useState("");
 
   const triggerToast = (msg: string) => {
     setShowToast(msg);
     setTimeout(() => setShowToast(null), 3000);
   };
 
-  const activeMediaKit = mediaKits.find((m) => m.id === activeMediaKitId);
+  const activeMediaKit = useMemo(() => {
+    return mediaKits.find((m) => m.id === activeMediaKitId);
+  }, [mediaKits, activeMediaKitId]);
 
-  const handleQuickAddSupport = (screenId: string) => {
-    if (!activeMediaKit) return;
-    const screen = screens.find((s) => s.id === screenId);
-    if (!screen) return;
-
-    const newSoportes = [
-      ...activeMediaKit.soportesEdicionInline,
-      {
-        id: screenId,
-        notas: "Pautado base estándar de 15 segundos por spot.",
-        prioridad: "Media" as const,
-        duracionSem: 4,
-      }
-    ];
-    const newScreenIds = [...activeMediaKit.screenIds, screenId];
-
-    onUpdateMediaKit(activeMediaKit.id, {
-      soportesEdicionInline: newSoportes,
-      screenIds: newScreenIds,
-      version: activeMediaKit.version + 1,
-      historial: [
-        {
-          id: `h-add-${Date.now()}`,
-          action: `Soporte ${screen.nombre} agregado en 1-Clic.`,
-          date: "Justo ahora",
-          user: "Comercial Ejec."
-        },
-        ...activeMediaKit.historial
-      ]
-    });
-
-    triggerToast(`¡${screen.nombre} agregado a la propuesta!`);
-  };
-
-  const quickAvailableScreens = activeMediaKit
-    ? screens.filter(
-        (s) =>
-          s.ciudad === activeMediaKit.ciudad &&
-          (s.status === "Disponible" || s.status === "Activo") &&
-          !activeMediaKit.screenIds.includes(s.id)
-      )
-    : [];
-
-  const filteredQuickScreens = quickAvailableScreens.filter((s) => {
-    if (!quickSearchQuery) return true;
-    const q = quickSearchQuery.toLowerCase();
-    return s.nombre.toLowerCase().includes(q) || s.zona.toLowerCase().includes(q);
-  });
-
-  // Manual creation wizard calculations
-  const availableWizardScreens = screens.filter(
-    (s) => s.ciudad === wizardCiudad && s.status === "Disponible"
-  );
+  // Manual creation wizard calculations with useMemo
+  const availableWizardScreens = useMemo(() => {
+    return screens.filter(
+      (s) => s.ciudad === wizardCiudad && s.status === "Disponible"
+    );
+  }, [screens, wizardCiudad]);
   
-  const wizardTotalCost = wizardScreenIds.reduce((sum, id) => {
-    const screen = screens.find((s) => s.id === id);
-    return sum + (screen?.precio || 0);
-  }, 0);
+  const wizardTotalCost = useMemo(() => {
+    return wizardScreenIds.reduce((sum, id) => {
+      const screen = screens.find((s) => s.id === id);
+      return sum + (screen?.precio || 0);
+    }, 0);
+  }, [wizardScreenIds, screens]);
 
-  const wizardTotalImpacts = wizardScreenIds.reduce((sum, id) => {
-    const screen = screens.find((s) => s.id === id);
-    return sum + (screen?.impactos || 0);
-  }, 0);
+  const wizardTotalImpacts = useMemo(() => {
+    return wizardScreenIds.reduce((sum, id) => {
+      const screen = screens.find((s) => s.id === id);
+      return sum + (screen?.impactos || 0);
+    }, 0);
+  }, [wizardScreenIds, screens]);
 
   const handleToggleWizardScreen = (id: string) => {
     setWizardScreenIds((prev) =>
@@ -344,26 +302,40 @@ export const MediaKitModule: React.FC<MediaKitModuleProps> = ({
     triggerToast(`Restaurada la versión v${v} de la propuesta.`);
   };
 
-  // Calculates running totals of active MediaKit in real-time
-  const activeMediaKitCost = activeMediaKit?.soportesEdicionInline.reduce((sum, item) => {
-    const screen = screens.find((s) => s.id === item.id);
-    return sum + (screen?.precio || 0) * item.duracionSem;
-  }, 0) || 0;
+  // Calculates running totals of active MediaKit in real-time with useMemo
+  const activeMediaKitCost = useMemo(() => {
+    if (!activeMediaKit) return 0;
+    return activeMediaKit.soportesEdicionInline.reduce((sum, item) => {
+      const screen = screens.find((s) => s.id === item.id);
+      return sum + (screen?.precio || 0) * item.duracionSem;
+    }, 0);
+  }, [activeMediaKit, screens]);
 
-  const activeMediaKitImpacts = activeMediaKit?.screenIds.reduce((sum, id) => {
-    const screen = screens.find((s) => s.id === id);
-    return sum + (screen?.impactos || 0);
-  }, 0) || 0;
+  const activeMediaKitImpacts = useMemo(() => {
+    if (!activeMediaKit) return 0;
+    return activeMediaKit.screenIds.reduce((sum, id) => {
+      const screen = screens.find((s) => s.id === id);
+      return sum + (screen?.impactos || 0);
+    }, 0);
+  }, [activeMediaKit, screens]);
 
   return (
     <div className="flex flex-col lg:flex-row h-full font-sans max-w-7xl mx-auto items-stretch relative">
       
-      {showToast && (
-        <div className="fixed bottom-6 right-6 z-50 bg-stone-900 text-stone-100 text-xs font-bold py-3 px-5 rounded-xl shadow-lg border border-stone-800 flex items-center gap-2 animate-in fade-in duration-200">
-          <Sparkles className="h-4 w-4 text-amber-400" />
-          <span>{showToast}</span>
-        </div>
-      )}
+      <AnimatePresence>
+        {showToast && (
+          <motion.div
+            initial={{ opacity: 0, y: 15, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 15, scale: 0.95 }}
+            transition={{ duration: 0.2 }}
+            className="fixed bottom-6 right-6 z-50 bg-stone-900 text-stone-100 text-xs font-bold py-3 px-5 rounded-lg shadow-lg border border-stone-800 flex items-center gap-2"
+          >
+            <Sparkles className="h-4 w-4 text-amber-400 shrink-0" />
+            <span>{showToast}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* 1. Left Sidebar: MediaKits List */}
       <div className="w-full lg:w-72 border-r border-stone-200/80 bg-stone-50/50 flex flex-col justify-between overflow-y-auto shrink-0 p-5 space-y-4">
@@ -729,312 +701,260 @@ export const MediaKitModule: React.FC<MediaKitModuleProps> = ({
         )}
       </div>
 
-      {/* 3. Right Sidebar: Available Screens for Quick Add (1-Clic Builder) */}
-      {activeMediaKit && (
-        <div className="w-full lg:w-80 border-l border-stone-200 bg-stone-50/30 flex flex-col overflow-y-auto shrink-0 p-5 space-y-4">
-          <div className="text-left">
-            <span className="text-[8px] bg-teal-50 border border-teal-100 text-teal-700 font-bold tracking-widest uppercase px-2 py-0.5 rounded-full">
-              Disponibles en {activeMediaKit.ciudad}
-            </span>
-            <h3 className="text-xs font-black text-stone-900 font-display mt-1.5 uppercase tracking-wider">
-              Añadir en 1-Clic
-            </h3>
-            <p className="text-[10px] text-stone-400 mt-0.5 leading-relaxed">
-              Haz clic para agregarlo instantáneamente y actualizar el presupuesto y métricas.
-            </p>
-          </div>
+      {/* 3. Manual Creation Wizard Modal */}
+      <AnimatePresence>
+        {showCreateWizard && (
+          <div className="fixed inset-0 bg-stone-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+              className="bg-white border border-stone-200 rounded-lg p-6 md:p-8 max-w-xl w-full shadow-2xl space-y-6 text-left"
+            >
+              <div className="flex items-center justify-between border-b border-stone-100 pb-4">
+                <h3 className="text-sm font-black text-stone-950 font-display uppercase tracking-wider">
+                  Asistente de Pautado Manual
+                </h3>
+                <button
+                  onClick={() => setShowCreateWizard(false)}
+                  className="p-1.5 hover:bg-stone-50 rounded-md text-stone-400 hover:text-stone-700 cursor-pointer"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
 
-          {/* Quick Search */}
-          <div className="relative">
-            <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-stone-400" />
-            <input
-              type="text"
-              placeholder="Buscar soporte libre..."
-              value={quickSearchQuery}
-              onChange={(e) => setQuickSearchQuery(e.target.value)}
-              className="w-full pl-8 pr-3 py-1.5 text-xs border border-stone-200 bg-white rounded-lg focus:outline-none focus:border-[#06434a] text-stone-700 font-medium"
-            />
-          </div>
+              <form onSubmit={handleSaveManualMediaKit} className="space-y-4 text-xs">
+                <div className="space-y-1">
+                  <label className="block text-[8px] font-extrabold text-stone-400 uppercase tracking-widest">Nombre del MediaKit *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Ej: Lanzamiento Otoño Toyota"
+                    value={wizardName}
+                    onChange={(e) => setWizardName(e.target.value)}
+                    className="w-full px-3 py-2 border border-stone-200 rounded-md bg-stone-50/50 focus:outline-none"
+                  />
+                </div>
 
-          <div className="space-y-2.5">
-            {filteredQuickScreens.map((s) => (
-              <div
-                key={s.id}
-                className="p-3.5 bg-white border border-stone-200 hover:border-stone-300 rounded-xl flex flex-col justify-between gap-2.5 transition-all group shadow-2xs"
-              >
-                <div className="text-left">
-                  <div className="flex items-center justify-between gap-1">
-                    <span className="text-[7.5px] font-mono font-bold text-stone-400 uppercase tracking-wider">{s.categoria || "OOH"}</span>
-                    <span className="text-[8.5px] text-[#06434a] font-bold font-mono bg-[#06434a]/5 px-2 py-0.5 rounded-md border border-[#06434a]/10">
-                      ${s.precio.toLocaleString()}/sem
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="block text-[8px] font-extrabold text-stone-400 uppercase tracking-widest">Cliente Destino</label>
+                    <select
+                      value={wizardClienteId}
+                      onChange={(e) => setWizardClienteId(e.target.value)}
+                      className="w-full px-3 py-2 border border-stone-200 rounded-md bg-stone-50 cursor-pointer"
+                    >
+                      {clientes.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.empresa} ({c.nombre})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="block text-[8px] font-extrabold text-stone-400 uppercase tracking-widest">Plaza de Comercialización</label>
+                    <select
+                      value={wizardCiudad}
+                      onChange={(e) => {
+                        setWizardCiudad(e.target.value as any);
+                        setWizardScreenIds([]); // clear selection when switching cities
+                      }}
+                      className="w-full px-3 py-2 border border-stone-200 rounded-md bg-stone-50 cursor-pointer"
+                    >
+                      <option value="Mendoza">Mendoza</option>
+                      <option value="Buenos Aires">Buenos Aires</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Checklist OOH available screens */}
+                <div className="space-y-2">
+                  <label className="block text-[8px] font-extrabold text-stone-400 uppercase tracking-widest">Soportes Disponibles en {wizardCiudad} *</label>
+                  <div className="border border-stone-100 rounded-md p-3 max-h-40 overflow-y-auto space-y-2 bg-stone-50/50">
+                    {availableWizardScreens.map((s) => (
+                      <label
+                        key={s.id}
+                        className="flex items-center gap-3 p-2 bg-white border border-stone-200 rounded-lg cursor-pointer hover:bg-stone-50 text-[11px] font-medium"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={wizardScreenIds.includes(s.id)}
+                          onChange={() => handleToggleWizardScreen(s.id)}
+                          className="rounded border-stone-300 text-[#06434a] focus:ring-[#06434a]"
+                        />
+                        <div className="flex-1 flex items-center justify-between min-w-0 pr-1">
+                          <span className="truncate text-stone-800 font-semibold">{s.nombre} ({s.zona})</span>
+                          <span className="shrink-0 font-mono text-stone-500 font-bold">${s.precio.toLocaleString()}/s</span>
+                        </div>
+                      </label>
+                    ))}
+
+                    {availableWizardScreens.length === 0 && (
+                      <p className="text-[10px] text-stone-400 py-4">No hay soportes libres en esta plaza.</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Live counter summary */}
+                <div className="border-t border-stone-100 pt-4 grid grid-cols-2 text-stone-700">
+                  <div className="text-left">
+                    <span className="block text-[8px] font-bold text-stone-400 uppercase">Impactos Promedio</span>
+                    <span className="text-xs font-black font-mono text-stone-800">
+                      {(wizardTotalImpacts / 1000).toFixed(1)}k impactos/día
                     </span>
                   </div>
-                  <h4 className="text-[10.5px] font-bold text-stone-900 mt-1 leading-tight truncate">
-                    {s.nombre}
-                  </h4>
-                  <p className="text-[9px] text-stone-400 mt-0.5 truncate">
-                    {s.zona} • {(s.impactos / 1000).toFixed(1)}k imp/día
-                  </p>
+                  <div className="text-right">
+                    <span className="block text-[8px] font-bold text-stone-400 uppercase">Tarifa Total / Sem</span>
+                    <span className="text-xs font-black font-mono text-[#06434a]">
+                      ${wizardTotalCost.toLocaleString()}
+                    </span>
+                  </div>
                 </div>
 
-                <button
-                  onClick={() => handleQuickAddSupport(s.id)}
-                  className="w-full py-1.5 bg-stone-50 hover:bg-[#06434a] hover:text-[#fafaf9] text-[#06434a] text-[10px] font-bold rounded-lg border border-stone-200 hover:border-[#06434a] transition-all flex items-center justify-center gap-1 cursor-pointer"
-                >
-                  <Plus className="h-3 w-3" />
-                  <span>Añadir a Propuesta</span>
-                </button>
-              </div>
-            ))}
-
-            {filteredQuickScreens.length === 0 && (
-              <div className="py-8 text-center border border-dashed border-stone-200 rounded-2xl text-stone-400">
-                <span className="text-[10px] font-medium block">Sin soportes adicionales</span>
-                <span className="text-[8px] text-stone-400 block mt-0.5">Todos los disponibles ya fueron agregados o no coinciden.</span>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* 4. Manual Creation Wizard Modal */}
-      {showCreateWizard && (
-        <div className="fixed inset-0 bg-stone-900/40 backdrop-blur-xs flex items-center justify-center z-50 animate-in fade-in duration-150 p-4">
-          <div className="bg-white border border-stone-200 rounded-3xl p-6 md:p-8 max-w-xl w-full shadow-2xl space-y-6 text-left animate-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between border-b border-stone-100 pb-4">
-              <h3 className="text-sm font-black text-stone-950 font-display uppercase tracking-wider">
-                Asistente de Pautado Manual
-              </h3>
-              <button
-                onClick={() => setShowCreateWizard(false)}
-                className="p-1.5 hover:bg-stone-50 rounded-xl text-stone-400 hover:text-stone-700 cursor-pointer"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-
-            <form onSubmit={handleSaveManualMediaKit} className="space-y-4 text-xs">
-              <div className="space-y-1">
-                <label className="block text-[8px] font-extrabold text-stone-400 uppercase tracking-widest">Nombre del MediaKit *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Ej: Lanzamiento Otoño Toyota"
-                  value={wizardName}
-                  onChange={(e) => setWizardName(e.target.value)}
-                  className="w-full px-3 py-2 border border-stone-200 rounded-xl bg-stone-50/50 focus:outline-none"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="block text-[8px] font-extrabold text-stone-400 uppercase tracking-widest">Cliente Destino</label>
-                  <select
-                    value={wizardClienteId}
-                    onChange={(e) => setWizardClienteId(e.target.value)}
-                    className="w-full px-3 py-2 border border-stone-200 rounded-xl bg-stone-50 cursor-pointer"
+                <div className="border-t border-stone-100 pt-4 flex items-center justify-end gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() => setShowCreateWizard(false)}
+                    className="px-4 py-2 border border-stone-200 text-stone-600 font-bold uppercase text-[10px] rounded-full hover:bg-stone-50 cursor-pointer"
                   >
-                    {clientes.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.empresa} ({c.nombre})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="block text-[8px] font-extrabold text-stone-400 uppercase tracking-widest">Plaza de Comercialización</label>
-                  <select
-                    value={wizardCiudad}
-                    onChange={(e) => {
-                      setWizardCiudad(e.target.value as any);
-                      setWizardScreenIds([]); // clear selection when switching cities
-                    }}
-                    className="w-full px-3 py-2 border border-stone-200 rounded-xl bg-stone-50 cursor-pointer"
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={wizardScreenIds.length === 0}
+                    className="px-5 py-2 bg-[#06434a] hover:bg-[#0b5e67] text-white font-extrabold uppercase text-[10px] rounded-full cursor-pointer shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <option value="Mendoza">Mendoza</option>
-                    <option value="Buenos Aires">Buenos Aires</option>
-                  </select>
+                    Guardar Borrador
+                  </button>
                 </div>
-              </div>
-
-              {/* Checklist OOH available screens */}
-              <div className="space-y-2">
-                <label className="block text-[8px] font-extrabold text-stone-400 uppercase tracking-widest">Soportes Disponibles en {wizardCiudad} *</label>
-                <div className="border border-stone-100 rounded-xl p-3 max-h-40 overflow-y-auto space-y-2 bg-stone-50/50">
-                  {availableWizardScreens.map((s) => (
-                    <label
-                      key={s.id}
-                      className="flex items-center gap-3 p-2 bg-white border border-stone-200 rounded-lg cursor-pointer hover:bg-stone-50 text-[11px] font-medium"
-                    >
-                      <input
-                        type="checkbox"
-                        checked={wizardScreenIds.includes(s.id)}
-                        onChange={() => handleToggleWizardScreen(s.id)}
-                        className="rounded border-stone-300 text-[#06434a] focus:ring-[#06434a]"
-                      />
-                      <div className="flex-1 flex items-center justify-between min-w-0 pr-1">
-                        <span className="truncate text-stone-800 font-semibold">{s.nombre} ({s.zona})</span>
-                        <span className="shrink-0 font-mono text-stone-500 font-bold">${s.precio.toLocaleString()}/s</span>
-                      </div>
-                    </label>
-                  ))}
-
-                  {availableWizardScreens.length === 0 && (
-                    <p className="text-[10px] text-stone-400 py-4">No hay soportes libres en esta plaza.</p>
-                  )}
-                </div>
-              </div>
-
-              {/* Live counter summary */}
-              <div className="border-t border-stone-100 pt-4 grid grid-cols-2 text-stone-700">
-                <div className="text-left">
-                  <span className="block text-[8px] font-bold text-stone-400 uppercase">Impactos Promedio</span>
-                  <span className="text-xs font-black font-mono text-stone-800">
-                    {(wizardTotalImpacts / 1000).toFixed(1)}k impactos/día
-                  </span>
-                </div>
-                <div className="text-right">
-                  <span className="block text-[8px] font-bold text-stone-400 uppercase">Tarifa Total / Sem</span>
-                  <span className="text-xs font-black font-mono text-[#06434a]">
-                    ${wizardTotalCost.toLocaleString()}
-                  </span>
-                </div>
-              </div>
-
-              <div className="border-t border-stone-100 pt-4 flex items-center justify-end gap-2.5">
-                <button
-                  type="button"
-                  onClick={() => setShowCreateWizard(false)}
-                  className="px-4 py-2 border border-stone-200 text-stone-600 font-bold uppercase text-[10px] rounded-full hover:bg-stone-50 cursor-pointer"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  disabled={wizardScreenIds.length === 0}
-                  className="px-5 py-2 bg-[#06434a] hover:bg-[#0b5e67] text-white font-extrabold uppercase text-[10px] rounded-full cursor-pointer shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Guardar Borrador
-                </button>
-              </div>
-            </form>
+              </form>
+            </motion.div>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
 
       {/* 4. AI-Assisted Creator Modal */}
-      {showAiWizard && (
-        <div className="fixed inset-0 bg-stone-900/40 backdrop-blur-xs flex items-center justify-center z-50 animate-in fade-in duration-150 p-4">
-          <div className="bg-white border border-stone-200 rounded-3xl p-6 md:p-8 max-w-xl w-full shadow-2xl space-y-6 text-left animate-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between border-b border-stone-100 pb-4">
-              <h3 className="text-sm font-black text-stone-950 font-display uppercase tracking-wider flex items-center gap-1.5">
-                <Sparkles className="h-4.5 w-4.5 text-amber-500 animate-spin" />
-                <span>Generador de MediaKit con IA</span>
-              </h3>
-              <button
-                onClick={() => setShowAiWizard(false)}
-                className="p-1.5 hover:bg-stone-50 rounded-xl text-stone-400 hover:text-stone-700 cursor-pointer"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-
-            <form onSubmit={handleGenerateAiProposal} className="space-y-4 text-xs">
-              <div className="space-y-1">
-                <label className="block text-[8px] font-extrabold text-stone-400 uppercase tracking-widest">Nombre de la Empresa Cliente *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Ej: Coca-Cola S.A."
-                  value={aiClient}
-                  onChange={(e) => setAiClient(e.target.value)}
-                  className="w-full px-3 py-2 border border-stone-200 rounded-xl bg-stone-50/50 focus:outline-none focus:border-stone-300"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="block text-[8px] font-extrabold text-stone-400 uppercase tracking-widest">Plaza de Destino</label>
-                  <select
-                    value={aiCiudad}
-                    onChange={(e) => setAiCiudad(e.target.value as any)}
-                    className="w-full px-3 py-2 border border-stone-200 rounded-xl bg-stone-50 cursor-pointer"
-                  >
-                    <option value="Mendoza">Mendoza</option>
-                    <option value="Buenos Aires">Buenos Aires</option>
-                  </select>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="block text-[8px] font-extrabold text-stone-400 uppercase tracking-widest">Presupuesto Estimado Mensual ($)</label>
-                  <select
-                    value={aiBudget}
-                    onChange={(e) => setAiBudget(e.target.value)}
-                    className="w-full px-3 py-2 border border-stone-200 rounded-xl bg-stone-50 cursor-pointer"
-                  >
-                    <option value="1500000">$1,500,000</option>
-                    <option value="3000000">$3,000,000</option>
-                    <option value="6000000">$6,000,000</option>
-                    <option value="12000000">$12,000,000</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <label className="block text-[8px] font-extrabold text-stone-400 uppercase tracking-widest">Objetivo Comercial Principal</label>
-                <div className="grid grid-cols-3 gap-3">
-                  {([
-                    { id: "Branding", label: "Branding", desc: "Mix equilibrado" },
-                    { id: "High Density", label: "Densidad", desc: "Muchos impactos" },
-                    { id: "Premium", label: "Premium", desc: "Zonas ABC1" }
-                  ] as const).map((opt) => (
-                    <label
-                      key={opt.id}
-                      className={`border p-3 rounded-xl cursor-pointer flex flex-col justify-between text-left transition-all ${
-                        aiGoal === opt.id 
-                          ? "bg-[#06434a]/4 border-[#06434a] text-[#06434a]" 
-                          : "bg-white border-stone-200 hover:bg-stone-50 text-stone-600"
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        name="aigoal"
-                        checked={aiGoal === opt.id}
-                        onChange={() => setAiGoal(opt.id)}
-                        className="sr-only"
-                      />
-                      <span className="text-[11px] font-extrabold uppercase leading-none block">{opt.label}</span>
-                      <span className="text-[8px] text-stone-400 font-bold mt-1.5 block">{opt.desc}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              <div className="p-3.5 bg-stone-50 rounded-2xl border border-stone-100 text-stone-600 leading-relaxed text-[10px]">
-                💡 <strong className="text-stone-800">Cómo funciona:</strong> Nuestro motor inteligente analizará la disponibilidad física en la plaza de {aiCiudad}, filtrará por soportes libres e identificará el set óptimo que maximiza el alcance por cada peso invertido.
-              </div>
-
-              <div className="border-t border-stone-100 pt-4 flex items-center justify-end gap-2.5">
+      <AnimatePresence>
+        {showAiWizard && (
+          <div className="fixed inset-0 bg-stone-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+              className="bg-white border border-stone-200 rounded-lg p-6 md:p-8 max-w-xl w-full shadow-2xl space-y-6 text-left"
+            >
+              <div className="flex items-center justify-between border-b border-stone-100 pb-4">
+                <h3 className="text-sm font-black text-stone-950 font-display uppercase tracking-wider flex items-center gap-1.5">
+                  <Sparkles className="h-4.5 w-4.5 text-amber-500 animate-spin" />
+                  <span>Generador de MediaKit con IA</span>
+                </h3>
                 <button
-                  type="button"
                   onClick={() => setShowAiWizard(false)}
-                  className="px-4 py-2 border border-stone-200 text-stone-600 font-bold uppercase text-[10px] rounded-full hover:bg-stone-50 cursor-pointer"
+                  className="p-1.5 hover:bg-stone-50 rounded-md text-stone-400 hover:text-stone-700 cursor-pointer"
                 >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="px-6 py-2 bg-[#06434a] hover:bg-[#0b5e67] text-white font-extrabold uppercase text-[10px] rounded-full cursor-pointer shadow-sm flex items-center gap-1"
-                >
-                  <Sparkles className="h-3.5 w-3.5 text-amber-300 animate-pulse" />
-                  <span>Generar Propuesta IA</span>
+                  <X className="h-4 w-4" />
                 </button>
               </div>
-            </form>
+
+              <form onSubmit={handleGenerateAiProposal} className="space-y-4 text-xs">
+                <div className="space-y-1">
+                  <label className="block text-[8px] font-extrabold text-stone-400 uppercase tracking-widest">Nombre de la Empresa Cliente *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Ej: Coca-Cola S.A."
+                    value={aiClient}
+                    onChange={(e) => setAiClient(e.target.value)}
+                    className="w-full px-3 py-2 border border-stone-200 rounded-md bg-stone-50/50 focus:outline-none focus:border-stone-300"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="block text-[8px] font-extrabold text-stone-400 uppercase tracking-widest">Plaza de Destino</label>
+                    <select
+                      value={aiCiudad}
+                      onChange={(e) => setAiCiudad(e.target.value as any)}
+                      className="w-full px-3 py-2 border border-stone-200 rounded-md bg-stone-50 cursor-pointer"
+                    >
+                      <option value="Mendoza">Mendoza</option>
+                      <option value="Buenos Aires">Buenos Aires</option>
+                    </select>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="block text-[8px] font-extrabold text-stone-400 uppercase tracking-widest">Presupuesto Estimado Mensual ($)</label>
+                    <select
+                      value={aiBudget}
+                      onChange={(e) => setAiBudget(e.target.value)}
+                      className="w-full px-3 py-2 border border-stone-200 rounded-md bg-stone-50 cursor-pointer"
+                    >
+                      <option value="1500000">$1,500,000</option>
+                      <option value="3000000">$3,000,000</option>
+                      <option value="6000000">$6,000,000</option>
+                      <option value="12000000">$12,000,000</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="block text-[8px] font-extrabold text-stone-400 uppercase tracking-widest">Objetivo Comercial Principal</label>
+                  <div className="grid grid-cols-3 gap-3">
+                    {([
+                      { id: "Branding", label: "Branding", desc: "Mix equilibrado" },
+                      { id: "High Density", label: "Densidad", desc: "Muchos impactos" },
+                      { id: "Premium", label: "Premium", desc: "Zonas ABC1" }
+                    ] as const).map((opt) => (
+                      <label
+                        key={opt.id}
+                        className={`border p-3 rounded-lg cursor-pointer flex flex-col justify-between text-left transition-all ${
+                          aiGoal === opt.id 
+                            ? "bg-[#06434a]/4 border-[#06434a] text-[#06434a]" 
+                            : "bg-white border-stone-200 hover:bg-stone-50 text-stone-600"
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="aigoal"
+                          checked={aiGoal === opt.id}
+                          onChange={() => setAiGoal(opt.id)}
+                          className="sr-only"
+                        />
+                        <span className="text-[11px] font-extrabold uppercase leading-none block">{opt.label}</span>
+                        <span className="text-[8px] text-stone-400 font-bold mt-1.5 block">{opt.desc}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="p-3.5 bg-stone-50 rounded-lg border border-stone-100 text-stone-600 leading-relaxed text-[10px]">
+                  💡 <strong className="text-stone-800">Cómo funciona:</strong> Nuestro motor inteligente analizará la disponibilidad física en la plaza de {aiCiudad}, filtrará por soportes libres e identificará el set óptimo que maximiza el alcance por cada peso invertido.
+                </div>
+
+                <div className="border-t border-stone-100 pt-4 flex items-center justify-end gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() => setShowAiWizard(false)}
+                    className="px-4 py-2 border border-stone-200 text-stone-600 font-bold uppercase text-[10px] rounded-full hover:bg-stone-50 cursor-pointer"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-6 py-2 bg-[#06434a] hover:bg-[#0b5e67] text-white font-extrabold uppercase text-[10px] rounded-full cursor-pointer shadow-sm flex items-center gap-1"
+                  >
+                    <Sparkles className="h-3.5 w-3.5 text-amber-300 animate-pulse" />
+                    <span>Generar Propuesta IA</span>
+                  </button>
+                </div>
+              </form>
+            </motion.div>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
 
     </div>
   );

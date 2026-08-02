@@ -13,6 +13,7 @@ import {
   Target,
   FileCheck
 } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
 
 interface RevenueModuleProps {
   screens: DoohScreen[];
@@ -87,12 +88,20 @@ export const RevenueModule: React.FC<RevenueModuleProps> = ({
   return (
     <div className="p-8 max-w-7xl mx-auto font-sans space-y-8 text-left">
       
-      {showToast && (
-        <div className="fixed bottom-6 right-6 z-50 bg-stone-900 text-stone-100 text-xs font-bold py-3 px-5 rounded-xl shadow-lg border border-stone-800 flex items-center gap-2 animate-in fade-in duration-200">
-          <CheckCircle className="h-4 w-4 text-emerald-400" />
-          <span>{showToast}</span>
-        </div>
-      )}
+      <AnimatePresence>
+        {showToast && (
+          <motion.div
+            initial={{ opacity: 0, y: 15, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 15, scale: 0.95 }}
+            transition={{ duration: 0.2 }}
+            className="fixed bottom-6 right-6 z-50 bg-stone-900 text-stone-100 text-xs font-bold py-3 px-5 rounded-lg shadow-lg border border-stone-800 flex items-center gap-2"
+          >
+            <CheckCircle className="h-4 w-4 text-emerald-400 shrink-0" />
+            <span>{showToast}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Title */}
       <div className="border-b border-stone-200 pb-5">
@@ -112,7 +121,7 @@ export const RevenueModule: React.FC<RevenueModuleProps> = ({
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {stats.map((item) => (
-            <div key={item.plaza} className="bg-white border border-stone-200 rounded-2xl p-5 flex items-center justify-between shadow-2xs">
+            <div key={item.plaza} className="bg-white border border-stone-200 rounded-lg p-5 flex items-center justify-between shadow-2xs">
               <div className="space-y-1.5">
                 <span className="block text-[10px] font-bold text-stone-400 uppercase font-mono">Plaza {item.plaza}</span>
                 <span className="text-2xl font-black text-stone-900 font-mono block">
@@ -123,13 +132,21 @@ export const RevenueModule: React.FC<RevenueModuleProps> = ({
                 </span>
               </div>
 
-              {/* simulated mini circular chart */}
+              {/* simulated mini circular chart with motion */}
               <div className="relative h-14 w-14 flex items-center justify-center">
                 <svg className="absolute transform -rotate-90 w-full h-full">
                   <circle cx="28" cy="28" r="24" className="stroke-stone-100 fill-transparent" strokeWidth="4" />
-                  <circle cx="28" cy="28" r="24" className="stroke-[#06434a] fill-transparent" strokeWidth="4" 
+                  <motion.circle 
+                    cx="28" 
+                    cy="28" 
+                    r="24" 
+                    className="stroke-[#06434a] fill-transparent" 
+                    strokeWidth="4" 
+                    strokeLinecap="round"
+                    initial={{ strokeDashoffset: 2 * Math.PI * 24 }}
+                    animate={{ strokeDashoffset: 2 * Math.PI * 24 * (1 - item.rate / 100) }}
+                    transition={{ duration: 0.8, ease: "easeOut", delay: 0.1 }}
                     strokeDasharray={`${2 * Math.PI * 24}`}
-                    strokeDashoffset={`${2 * Math.PI * 24 * (1 - item.rate / 100)}`}
                   />
                 </svg>
                 <span className="text-[10px] font-black text-[#06434a] font-mono">{item.rate}%</span>

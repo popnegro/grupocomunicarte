@@ -81,7 +81,7 @@ export const ReportsModule: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         
         {/* SVG Bezier Line Chart */}
-        <div className="lg:col-span-8 bg-white border border-stone-200 rounded-[32px] p-6 shadow-2xs space-y-4">
+        <div className="lg:col-span-8 bg-white border border-stone-200 rounded-3xl p-6 shadow-2xs space-y-4">
           <div className="flex items-center justify-between">
             <h4 className="text-xs font-black text-stone-900 uppercase tracking-wider font-mono">
               Evolución de Ingresos y Tendencia Comercial
@@ -90,7 +90,7 @@ export const ReportsModule: React.FC = () => {
           </div>
 
           {/* Render beautiful custom scalable responsive SVG line chart */}
-          <div className="h-64 w-full bg-stone-50/50 rounded-lg p-4 border border-stone-100 flex flex-col justify-between relative">
+          <div className="h-64 w-full bg-stone-50/50 rounded-2xl p-4 border border-stone-100 flex flex-col justify-between relative">
             <div className="flex-1 w-full relative">
               <svg viewBox="0 0 500 200" className="w-full h-full" preserveAspectRatio="none">
                 {/* Horizontal guide grids */}
@@ -118,15 +118,15 @@ export const ReportsModule: React.FC = () => {
                 <defs>
                   <linearGradient id="chart-glow" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="#06434a" />
-                    <stop offset="100%" stopColor="#fafaf9" />
+                    <stop offset="100%" stopColor="#FFFFFF" />
                   </linearGradient>
                 </defs>
 
                 {/* Point indicators */}
-                <circle cx="10" cy="160" r="4.5" fill="#06434a" stroke="#fafaf9" strokeWidth="2" />
-                <circle cx="180" cy="135" r="4.5" fill="#06434a" stroke="#fafaf9" strokeWidth="2" />
-                <circle cx="350" cy="85" r="4.5" fill="#06434a" stroke="#fafaf9" strokeWidth="2" />
-                <circle cx="490" cy="25" r="4.5" fill="#06434a" stroke="#fafaf9" strokeWidth="2" />
+                <circle cx="10" cy="160" r="4.5" fill="#06434a" stroke="white" strokeWidth="2" />
+                <circle cx="180" cy="135" r="4.5" fill="#06434a" stroke="white" strokeWidth="2" />
+                <circle cx="350" cy="85" r="4.5" fill="#06434a" stroke="white" strokeWidth="2" />
+                <circle cx="490" cy="25" r="4.5" fill="#06434a" stroke="white" strokeWidth="2" />
               </svg>
             </div>
 
@@ -140,7 +140,7 @@ export const ReportsModule: React.FC = () => {
         </div>
 
         {/* Regional performance breakdown metrics */}
-        <div className="lg:col-span-4 bg-white border border-stone-200 rounded-[32px] p-6 shadow-2xs space-y-4 text-left">
+        <div className="lg:col-span-4 bg-white border border-stone-200 rounded-3xl p-6 shadow-2xs space-y-4 text-left">
           <h4 className="text-xs font-black text-stone-900 uppercase tracking-wider font-mono">
             Rendimiento por Canal
           </h4>
@@ -180,7 +180,7 @@ export const ReportsModule: React.FC = () => {
             </div>
           </div>
 
-          <div className="p-3 bg-[#06434a]/5 border border-[#06434a]/10 rounded-lg text-stone-700 space-y-1">
+          <div className="p-3 bg-[#06434a]/5 border border-[#06434a]/10 rounded-xl text-stone-700 space-y-1">
             <span className="text-[8px] font-extrabold text-[#06434a] uppercase tracking-widest">Resumen Analítico</span>
             <p className="text-[10px] text-[#06434a] leading-relaxed">
               Las pantallas LED fijas representan el <strong className="font-bold">65.8% del volumen de facturación</strong>. El LED Móvil registra el mayor ritmo de crecimiento intermensual (+18%).

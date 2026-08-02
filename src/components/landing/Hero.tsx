@@ -1,7 +1,7 @@
 import React from "react";
 import { motion } from "motion/react";
 import { TrendingUp, MapPin, Sparkles, ChevronRight, Check } from "lucide-react";
-import { DoohScreen } from "@/types";
+import { DoohScreen } from "../../types";
 
 interface HeroProps {
   screens: DoohScreen[];

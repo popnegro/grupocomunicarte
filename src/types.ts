@@ -42,7 +42,6 @@ export interface Lead {
   id: string;
   name: string;
   email: string;
-  phone?: string;
   company: string;
   source: string; // "Formulario Web" | "Quiz de Onboarding"
   status: "new" | "contacted" | "qualified" | "closed";
@@ -51,12 +50,11 @@ export interface Lead {
 }
 
 export interface OnboardingAnswers {
-  companyName: string;
+  businessName: string;
   industry: string;
-  clientType: string[]; // for checkbox, can be multiple
   targetAudience: string;
-  mainGoals: string[]; // for checkbox, can be multiple
-  integrationNeeds?: string;
+  tone: string;
+  goals: string[];
 }
 
 export interface SeoAuditReport {

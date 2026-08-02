@@ -7,6 +7,9 @@ import { Hero } from "./landing/Hero";
 import { InventoryCatalog } from "./landing/InventoryCatalog";
 import { Footer } from "./Footer";
 import { SubpageLayout } from "./SubpageLayout";
+import { InteractiveMap } from "./InteractiveMap";
+import { ZeroBaseRedesign } from "./landing/ZeroBaseRedesign";
+import { PmvAuditDrawer } from "./landing/PmvAuditDrawer";
 
 export const LandingView: React.FC = () => {
   const {
@@ -25,6 +28,11 @@ export const LandingView: React.FC = () => {
   // Selected city & catalog tab state (excision of San Juan)
   const [selectedCity, setSelectedCity] = useState<"Mendoza" | "Buenos Aires">("Mendoza");
   const [catalogTab, setCatalogTab] = useState<"tarjetas" | "mapa" | "mediakit">("tarjetas");
+  
+  // Zero-Base Redesign & Audit states
+  const [isZeroBase, setIsZeroBase] = useState(true);
+  const [showAuditPanel, setShowAuditPanel] = useState(false);
+  const [auditTab, setAuditTab] = useState<"summary" | "scores" | "roadmap">("summary");
 
   // General B2B Contact form states
   const [contactForm, setContactForm] = useState({
@@ -128,7 +136,7 @@ export const LandingView: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-[#FAF9F5] text-stone-800 selection:bg-stone-200/50 font-sans antialiased overflow-x-hidden">
+    <div className="min-h-screen bg-[#FAF9F5] text-stone-800 selection:bg-stone-200/50 font-sans antialiased overflow-x-hidden pb-12">
       {/* 1. Navigation with unified action buttons */}
       <Navigation
         activeSlug={activeSlug}
@@ -148,19 +156,70 @@ export const LandingView: React.FC = () => {
         cartCount={cart.length}
       />
 
+      {/* Zero-Base Demo Mode Toggle Banner */}
+      <div className="bg-stone-900 text-white border-b border-stone-800 relative z-30">
+        <div className="max-w-7xl mx-auto px-6 py-3 flex flex-col md:flex-row items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-2">
+            <span className="flex h-2.5 w-2.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="font-semibold tracking-wide text-left">
+              {isZeroBase 
+                ? "✨ REDISEÑO ZERO-BASE ACTIVO: Interfaz purgada de sobreingeniería para un PMV de alta conversión." 
+                : "⚙️ DEMO COMPLETA: Interfaz con simuladores y módulos avanzados. ¿Deseas ver el Rediseño Zero-Base?"
+              }
+            </span>
+          </div>
+          <div className="flex items-center gap-3 shrink-0">
+            <button
+              onClick={() => setIsZeroBase(!isZeroBase)}
+              className={`px-4 py-1.5 rounded-full font-extrabold uppercase text-[10px] tracking-wider transition-all cursor-pointer ${
+                isZeroBase 
+                  ? "bg-amber-500 text-stone-950 hover:bg-amber-400" 
+                  : "bg-white/10 hover:bg-white/20 text-white border border-white/20"
+              }`}
+            >
+              {isZeroBase ? "Volver a Demo Completa" : "Activar Rediseño Zero-Base"}
+            </button>
+            <button
+              onClick={() => {
+                setShowAuditPanel(true);
+              }}
+              className="px-4 py-1.5 bg-[#06434a] hover:bg-[#0b5e67] text-white rounded-full font-extrabold uppercase text-[10px] tracking-wider transition-all cursor-pointer flex items-center gap-1.5"
+            >
+              <LucideIcons.Shield className="h-3.5 w-3.5 text-amber-500" />
+              <span>Ver Auditoría PMV</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
       {activeSlug === "/" ? (
         <>
-          {/* 2. Hero & Plaza selection */}
-          <Hero
-            screens={screens}
-            selectedCity={selectedCity}
-            onCitySelect={(city) => {
-              setSelectedCity(city);
-              // Wait briefly to allow React state mapping before scrolling
-              setTimeout(() => handleScrollTo("espacios"), 100);
-            }}
-            onExploreClick={() => handleScrollTo("espacios")}
-          />
+          {isZeroBase ? (
+            <ZeroBaseRedesign
+              screens={screens}
+              selectedCity={selectedCity}
+              setSelectedCity={setSelectedCity}
+              cart={cart}
+              toggleCart={toggleCart}
+              contactForm={contactForm}
+              setContactForm={setContactForm}
+              contactSubmitted={contactSubmitted}
+              setContactSubmitted={setContactSubmitted}
+              isSubmittingContact={isSubmittingContact}
+              handleContactSubmit={handleContactSubmit}
+            />
+          ) : (
+            <Hero
+              screens={screens}
+              selectedCity={selectedCity}
+              onCitySelect={(city) => {
+                setSelectedCity(city);
+                // Wait briefly to allow React state mapping before scrolling
+                setTimeout(() => handleScrollTo("espacios"), 100);
+              }}
+              onExploreClick={() => handleScrollTo("espacios")}
+            />
+          )}
 
           {/* 3. Refactored "Soluciones" Section */}
           <section id="soluciones" className="bg-stone-50 border-y border-stone-200/80 py-24 font-sans">
@@ -224,12 +283,14 @@ export const LandingView: React.FC = () => {
           </section>
 
           {/* 4. Active Catalog Marketplace (Grid, Map & MediaKit) */}
-          <InventoryCatalog
-            selectedCity={selectedCity}
-            onCityChange={setSelectedCity}
-            activeTab={catalogTab}
-            setActiveTab={setCatalogTab}
-          />
+          {!isZeroBase && (
+            <InventoryCatalog
+              selectedCity={selectedCity}
+              onCityChange={setSelectedCity}
+              activeTab={catalogTab}
+              setActiveTab={setCatalogTab}
+            />
+          )}
 
           {/* NEW: Casos de Éxito / Case Studies Section */}
           <section id="casos-exito" className="bg-white border-t border-stone-200/80 py-24 font-sans">
@@ -616,6 +677,22 @@ export const LandingView: React.FC = () => {
           }
         }}
       />
+
+      {/* Floating Audit Toggle Button */}
+      <div className="fixed bottom-6 right-6 z-40">
+        <button
+          onClick={() => {
+            setShowAuditPanel(true);
+          }}
+          className="bg-stone-900 hover:bg-stone-800 text-white border border-stone-700/80 p-3.5 rounded-full shadow-2xl flex items-center gap-2 hover:scale-105 active:scale-95 transition-all cursor-pointer font-sans relative"
+        >
+          <LucideIcons.Shield className="h-5 w-5 text-amber-500 animate-pulse" />
+          <span className="text-xs font-black uppercase tracking-wider hidden md:inline-block pr-1">Auditoría PMV & CRO</span>
+        </button>
+      </div>
+
+      {/* Slide-over PMV Audit drawer */}
+      <PmvAuditDrawer isOpen={showAuditPanel} onClose={() => setShowAuditPanel(false)} />
     </div>
   );
 };

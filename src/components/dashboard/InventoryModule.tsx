@@ -45,6 +45,8 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
   // Filters state
   const [selectedCityFilter, setSelectedCityFilter] = useState<string>("Todas");
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>("Todas");
+  const [selectedTypeFilter, setSelectedTypeFilter] = useState<"Todas" | "OOH" | "DOOH">("Todas");
+  const [selectedStatusFilter, setSelectedStatusFilter] = useState<string>("Todas");
   const [searchQuery, setSearchQuery] = useState("");
   const [showArchived, setShowArchived] = useState(false);
 
@@ -84,13 +86,31 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
       const matchesSearch = screen.nombre.toLowerCase().includes(searchQuery.toLowerCase()) || 
                             screen.zona.toLowerCase().includes(searchQuery.toLowerCase());
       
-      // Simulate soft delete / archiving via screen.status. We can treat status === "Pausado" as archived
-      const isScreenArchived = screen.status === "Pausado" || screen.status === "No disponible";
-      const matchesArchive = showArchived ? isScreenArchived : !isScreenArchived;
+      // Filter by Type (OOH vs DOOH)
+      let matchesType = true;
+      if (selectedTypeFilter === "DOOH") {
+        matchesType = screen.categoria === "Pantallas LED" || screen.categoria === "LED Móvil";
+      } else if (selectedTypeFilter === "OOH") {
+        matchesType = screen.categoria === "Tradicionales";
+      }
 
-      return matchesCity && matchesCat && matchesSearch && matchesArchive;
+      // Filter by Status (Disponible, Activo, Pausado, No disponible)
+      let matchesStatus = true;
+      if (selectedStatusFilter === "Disponible") {
+        matchesStatus = screen.status === "Disponible";
+      } else if (selectedStatusFilter === "Booked") {
+        matchesStatus = screen.status === "Activo" || screen.status === "No disponible" || screen.status === "Pausado";
+      } else if (selectedStatusFilter !== "Todas") {
+        matchesStatus = screen.status === selectedStatusFilter;
+      } else {
+        // Simulate soft delete / archiving via screen.status when no status filter is selected
+        const isScreenArchived = screen.status === "Pausado" || screen.status === "No disponible";
+        matchesStatus = showArchived ? isScreenArchived : !isScreenArchived;
+      }
+
+      return matchesCity && matchesCat && matchesSearch && matchesType && matchesStatus;
     });
-  }, [screens, selectedCityFilter, selectedCategoryFilter, searchQuery, showArchived]);
+  }, [screens, selectedCityFilter, selectedCategoryFilter, searchQuery, showArchived, selectedTypeFilter, selectedStatusFilter]);
 
   const handleDuplicate = (screen: DoohScreen) => {
     const duplicated: DoohScreen = {
@@ -203,7 +223,7 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
             />
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <div className="space-y-0.5">
               <label className="block text-[8px] font-bold text-stone-400 uppercase tracking-wider">Ciudad</label>
               <select
@@ -228,6 +248,35 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
                 <option value="Pantallas LED">Pantallas LED</option>
                 <option value="Tradicionales">Tradicionales</option>
                 <option value="LED Móvil">LED Móvil</option>
+              </select>
+            </div>
+
+            <div className="space-y-0.5">
+              <label className="block text-[8px] font-bold text-stone-400 uppercase tracking-wider">Tipo Soporte</label>
+              <select
+                value={selectedTypeFilter}
+                onChange={(e) => setSelectedTypeFilter(e.target.value as any)}
+                className="px-3 py-1.5 text-xs font-semibold bg-stone-50 border border-stone-200/80 rounded-xl text-stone-700 cursor-pointer"
+              >
+                <option value="Todas">OOH & DOOH</option>
+                <option value="DOOH">DOOH (Digitales)</option>
+                <option value="OOH">OOH (Estáticos)</option>
+              </select>
+            </div>
+
+            <div className="space-y-0.5">
+              <label className="block text-[8px] font-bold text-stone-400 uppercase tracking-wider">Disponibilidad</label>
+              <select
+                value={selectedStatusFilter}
+                onChange={(e) => setSelectedStatusFilter(e.target.value)}
+                className="px-3 py-1.5 text-xs font-semibold bg-stone-50 border border-stone-200/80 rounded-xl text-stone-700 cursor-pointer"
+              >
+                <option value="Todas">Todas</option>
+                <option value="Disponible">Disponible (Available)</option>
+                <option value="Booked">Reservado/Ocupado (Booked)</option>
+                <option value="Activo">Activo (En vuelo)</option>
+                <option value="Pausado">Pausado (Plaificado/Maint.)</option>
+                <option value="No disponible">No disponible</option>
               </select>
             </div>
           </div>

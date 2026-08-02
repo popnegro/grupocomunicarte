@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { ChevronLeft, ChevronRight, Sparkles, Tv, ArrowRight, Eye } from "lucide-react";
-import { DoohScreen } from "../../types";
-import { ScreenCard } from "../ScreenCard";
+import { DoohScreen } from "@/types";
+import { ScreenCard } from "@/components/ScreenCard";
 
 interface FeaturedCarouselProps {
   screens: DoohScreen[];
@@ -68,14 +68,14 @@ export const FeaturedCarousel: React.FC<FeaturedCarouselProps> = ({ screens }) =
             <button
               onClick={handlePrev}
               aria-label="Soporte anterior"
-              className="h-11 w-11 rounded-full border border-stone-200 bg-white text-stone-700 hover:border-[#06434a] hover:text-[#06434a] hover:bg-stone-50 active:scale-95 transition-all flex items-center justify-center cursor-pointer shadow-2xs focus-visible:ring-2 focus-visible:ring-[#06434a] focus-visible:outline-none min-h-[44px] min-w-[44px]"
+              className="h-11 w-11 rounded-full border border-stone-200 bg-white text-stone-700 hover:border-[#06434a] hover:text-[#06434a] hover:bg-stone-50 active:scale-95 transition-all flex items-center justify-center cursor-pointer shadow-2xs focus-visible:ring-2 focus-visible:ring-[#06434a] focus-visible:outline-none min-h-11 min-w-11"
             >
               <ChevronLeft className="h-5 w-5" />
             </button>
             <button
               onClick={handleNext}
               aria-label="Siguiente soporte"
-              className="h-11 w-11 rounded-full border border-stone-200 bg-white text-stone-700 hover:border-[#06434a] hover:text-[#06434a] hover:bg-stone-50 active:scale-95 transition-all flex items-center justify-center cursor-pointer shadow-2xs focus-visible:ring-2 focus-visible:ring-[#06434a] focus-visible:outline-none min-h-[44px] min-w-[44px]"
+              className="h-11 w-11 rounded-full border border-stone-200 bg-white text-stone-700 hover:border-[#06434a] hover:text-[#06434a] hover:bg-stone-50 active:scale-95 transition-all flex items-center justify-center cursor-pointer shadow-2xs focus-visible:ring-2 focus-visible:ring-[#06434a] focus-visible:outline-none min-h-11 min-w-11"
             >
               <ChevronRight className="h-5 w-5" />
             </button>

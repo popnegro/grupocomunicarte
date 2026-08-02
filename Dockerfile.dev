@@ -1,20 +1,17 @@
-# Usar una imagen oficial de Node.js completa para máxima compatibilidad.
-FROM node:20
+# Usa una imagen base de Node.js para el entorno de desarrollo
+FROM node:20-slim
 
-# Establecer el directorio de trabajo dentro del contenedor
+# Establece el directorio de trabajo dentro del contenedor
 WORKDIR /app
 
-# Copiar los archivos de definición de paquetes (package.json y package-lock.json)
-COPY package*.json ./
+# Copia los archivos de definición de dependencias
+COPY package.json package-lock.json ./
 
-# Instalar las dependencias del proyecto
+# Instala las dependencias (incluyendo devDependencies)
 RUN npm install
 
-# Copiar el resto del código de la aplicación (será sobreescrito por el volumen, pero es buena práctica tenerlo)
-COPY . .
-
-# Exponer el puerto 3000 que usa tu aplicación de desarrollo
+# Expone el puerto que Vite usará para el servidor de desarrollo
 EXPOSE 3000
 
-# El comando por defecto para iniciar el contenedor, que correrá el script "dev"
+# El comando por defecto para iniciar el servidor de desarrollo
 CMD ["npm", "run", "dev"]

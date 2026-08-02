@@ -1,5 +1,5 @@
 // components/cards/ServiceCard.tsx
-import { BaseCard } from '@/src/components/ui/BaseCard';
+import { Card, CardContent } from "../cards"; // Changed import to our new card components
 import { ReactNode } from 'react';
 
 interface ServiceCardProps {
@@ -23,7 +23,7 @@ export function ServiceCard({
   cta,
 }: ServiceCardProps) {
   return (
-    <BaseCard variant="default" padding="none" className="overflow-hidden group">
+    <Card variant="base" padding="none" className="overflow-hidden group">
       {/* Image */}
       <div className="relative w-full h-48 overflow-hidden">
         <img
@@ -39,7 +39,7 @@ export function ServiceCard({
       </div>
 
       {/* Content */}
-      <div className="p-6">
+      <CardContent className="p-6">
         <h3 className="text-xl font-semibold mb-2">{title}</h3>
         <p className="text-gray-600 text-base mb-4">{description}</p>
 
@@ -60,7 +60,7 @@ export function ServiceCard({
         >
           {cta.label}
         </a>
-      </div>
-    </BaseCard>
+      </CardContent>
+    </Card>
   );
 }

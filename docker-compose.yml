@@ -9,6 +9,7 @@ services:
       dockerfile: Dockerfile.dev # Usa el Dockerfile de desarrollo
     ports:
       - "3000:3000"
+      - "9229:9229" # Expone el puerto del inspector de Node.js
     volumes:
       # Sincroniza tu código local con el del contenedor para ver cambios en vivo
       - .:/app

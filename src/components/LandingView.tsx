@@ -1,26 +1,26 @@
 import React, { useState } from "react";
-import { useCms } from "./CmsContext";
+import { useCms } from "@/components/CmsContext";
 import { motion } from "motion/react";
 import * as LucideIcons from "lucide-react";
-import { Navigation } from "./Navigation";
-import { Hero } from "./landing/Hero";
-import { FeaturedCarousel } from "./landing/FeaturedCarousel";
-import { InventoryCatalog } from "./landing/InventoryCatalog";
-import { Footer } from "./Footer";
-import { SubpageLayout } from "./SubpageLayout";
+import { Navigation } from "@/components/Navigation";
+import { Hero } from "@/components/landing/Hero";
+import { FeaturedCarousel } from "@/components/landing/FeaturedCarousel";
+import { InventoryCatalog } from "@/components/landing/InventoryCatalog";
+import { Footer } from "@/components/Footer";
+import { SubpageLayout } from "@/components/SubpageLayout";
 
 export const LandingView: React.FC = () => {
   const {
-    addLead,
     setActiveView,
+    activeSlug,
+    setActiveSlug,
     screens,
     cart,
     toggleCart,
     clearCart,
     weeks,
     setWeeks,
-    activeSlug,
-    setActiveSlug,
+    addLead,
   } = useCms();
 
   // Selected city & catalog tab state (excision of San Juan)
@@ -186,7 +186,7 @@ export const LandingView: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {SOLUCIONES_CARDS.map((sol) => (
                   <div
-                    key={sol.id}
+                    key={sol.id} 
                     className="p-6 bg-white border border-stone-200/60 rounded-xl shadow-xs hover:border-[#06434a]/30 transition-all duration-300 flex flex-col justify-between h-full group text-left"
                   >
                     <div className="space-y-4">
@@ -328,7 +328,7 @@ export const LandingView: React.FC = () => {
 
               {/* Institutional Video block with elegant mockup */}
               <div className="lg:col-span-5 flex justify-center">
-                <div className="w-full max-w-sm aspect-[16/9] rounded-2xl overflow-hidden bg-stone-900 border border-stone-200 shadow-md group shrink-0 relative">
+                <div className="w-full max-w-sm aspect-video rounded-2xl overflow-hidden bg-stone-900 border border-stone-200 shadow-md group shrink-0 relative">
                   <div className="absolute inset-0 bg-gradient-to-br from-stone-950 via-stone-900 to-stone-850 flex flex-col items-center justify-center space-y-3.5">
                     <div className="h-12 w-12 rounded-full bg-white text-stone-950 flex items-center justify-center shadow-lg transform group-hover:scale-105 transition-transform duration-300 cursor-pointer">
                       <LucideIcons.Play className="h-5 w-5 text-stone-950 fill-stone-950 translate-x-0.5" />
@@ -361,7 +361,7 @@ export const LandingView: React.FC = () => {
               <div className="space-y-4">
                 {[
                   {
-                    id: "faq-1",
+                    id: "faq-1", 
                     q: "¿Qué es la publicidad DOOH y cómo funciona en la plataforma?",
                     a: "El DOOH (Digital Out Of Home) es la digitalización de la publicidad en vía pública. Nuestra plataforma permite explorar nuestra red en tiempo real, filtrar soportes por plaza y volumen de impactos diarios, y armar propuestas (MediaKits) listas para cotizar con nuestro equipo de asesores."
                   },
@@ -417,8 +417,8 @@ export const LandingView: React.FC = () => {
 
           {/* 6. General Contact Form section */}
           <section id="contacto" className="py-24 bg-stone-900 text-white relative overflow-hidden font-sans">
-            <div className="absolute inset-0 bg-[linear-gradient(to_right,#2a2522_1px,transparent_1px),linear-gradient(to_bottom,#2a2522_1px,transparent_1px)] bg-[size:4rem_4rem] opacity-20 pointer-events-none" />
-
+            <div className="absolute inset-0 bg-[linear-gradient(to_right,#2a2522_1px,transparent_1px),linear-gradient(to_bottom,#2a2522_1px,transparent_1px)] bg-size-[4rem_4rem] opacity-20 pointer-events-none" />
+ 
             <div className="max-w-6xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center relative z-10">
               
               <div className="lg:col-span-6 space-y-6 text-left">
@@ -450,7 +450,7 @@ export const LandingView: React.FC = () => {
               </div>
 
               {/* Form */}
-              <div className="lg:col-span-6 bg-white text-stone-900 rounded-[32px] p-6 md:p-8 shadow-2xl border border-stone-200">
+              <div className="lg:col-span-6 rounded-4xl border border-stone-200 bg-white p-6 text-stone-900 shadow-2xl md:p-8">
                 <h3 className="text-md font-bold text-stone-900 mb-1 font-display">Completa tu consulta comercial</h3>
                 <p className="text-stone-500 text-xs mb-6">Nos contactaremos contigo en menos de 24 horas hábiles.</p>
 
@@ -596,7 +596,6 @@ export const LandingView: React.FC = () => {
           }}
           screens={screens}
           cart={cart}
-          toggleCart={toggleCart}
           clearCart={clearCart}
           weeks={weeks}
           setWeeks={setWeeks}

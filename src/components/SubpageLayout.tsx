@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import * as LucideIcons from "lucide-react";
-import { findSitemapItemBySlug, getBreadcrumbsForSlug, sitemap, SitemapItem } from "../lib/sitemap";
-import { InteractiveMap } from "./InteractiveMap";
-import { ScreenCard } from "./ScreenCard";
-import { DoohScreen, Lead } from "../types";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { SoportesInventory } from "./SoportesInventory";
+import { useCms } from "./CmsContext";
+import { sitemap, SitemapItem } from "@/lib/sitemap";
+import { InteractiveMap } from "@/components/InteractiveMap";
+import { ScreenCard } from "@/components/ScreenCard";
+import { DoohScreen, Lead } from "@/types";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { SoportesInventory } from "@/components/SoportesInventory";
 
 // Shared Premium Buenos Aires Screens
 const BUENOS_AIRES_SCREENS: DoohScreen[] = [
@@ -66,11 +67,24 @@ interface SubpageLayoutProps {
   handleNavigate: (slug: string) => void;
   screens: DoohScreen[];
   cart: string[];
-  toggleCart: (id: string) => void;
   clearCart: () => void;
   weeks: number;
   setWeeks: (weeks: number) => void;
   addLead: (lead: Omit<Lead, "id" | "date">) => Promise<Lead | null>;
+}
+
+function findSitemapItemBySlug(slug: string): SitemapItem | null {
+  const find = (items: SitemapItem[]): SitemapItem | null => {
+    for (const item of items) {
+      if (item.slug === slug) return item;
+      if (item.children) {
+        const found = find(item.children);
+        if (found) return found;
+      }
+    }
+    return null;
+  };
+  return find(sitemap);
 }
 
 export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
@@ -78,7 +92,6 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
   handleNavigate,
   screens,
   cart,
-  toggleCart,
   clearCart,
   weeks,
   setWeeks,
@@ -86,6 +99,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
 }) => {
   const item = findSitemapItemBySlug(slug);
   const breadcrumbs = getBreadcrumbsForSlug(slug);
+  const { toggleCart } = useCms();
 
   // Dynamic Browser Simulation Tooltip copy
   const [copiedUrl, setCopiedUrl] = useState(false);
@@ -133,8 +147,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
   const availableZones = useMemo(() => ["Todas", ...Array.from(new Set(activeScreens.map((s) => s.zona)))], [activeScreens]);
 
   // Cart calculation helpers
-  const allKnownScreens = useMemo(() => [...screens, ...BUENOS_AIRES_SCREENS], [screens]);
-  const cartScreens = useMemo(() => allKnownScreens.filter((s) => cart.includes(s.id)), [allKnownScreens, cart]);
+  const cartScreens = useMemo(() => screens.filter((s) => cart.includes(s.id)), [screens, cart]);
   const cartSubtotal = useMemo(() => cartScreens.reduce((sum, s) => sum + s.precio, 0), [cartScreens]);
   const cartTotalImpacts = useMemo(() => cartScreens.reduce((sum, s) => sum + s.impactos, 0) * 7 * weeks, [cartScreens, weeks]);
   const cartTotalInvestment = useMemo(() => cartSubtotal * weeks, [cartSubtotal, weeks]);
@@ -242,6 +255,23 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
     null,
     2
   );
+
+  function getBreadcrumbsForSlug(slug: string): SitemapItem[] {
+    const path: SitemapItem[] = [];
+    const findPath = (items: SitemapItem[], currentPath: SitemapItem[]): boolean => {
+      for (const item of items) {
+        const newPath = [...currentPath, item];
+        if (item.slug === slug) {
+          path.push(...newPath);
+          return true;
+        }
+        if (item.children && findPath(item.children, newPath)) return true;
+      }
+      return false;
+    };
+    findPath(sitemap, []);
+    return path;
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-6 py-8 space-y-8">
@@ -390,9 +420,9 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
           {/* Right Column: Dynamic Image with Custom Fallback */}
           <div className="lg:col-span-5 flex justify-center">
             <div className="w-full max-w-xs aspect-video sm:aspect-4/3 bg-[#172023] border border-[#e7e5e4] shadow-[0_12px_32px_-8px_rgba(6,67,74,0.08)] rounded-xl overflow-hidden relative group">
-              {item.imageUrl ? (
+              {item.imageUrl ? ( 
                 <img
-                  src={item.imageUrl}
+                  src={item.imageUrl as string}
                   alt={item.name}
                   referrerPolicy="no-referrer"
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
@@ -400,7 +430,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
               ) : (
                 /* Dynamic content-aware vector illustration */
                 <div className="w-full h-full p-5 flex flex-col justify-between relative overflow-hidden select-none">
-                  <div className="absolute inset-0 opacity-5 bg-[radial-gradient(#07BE8A_1.5px,transparent_1.5px)] bg-[size:10px_10px]" />
+                  <div className="absolute inset-0 opacity-5 bg-[radial-gradient(var(--color-accent)_1.5px,transparent_1.5px)] bg-size-[10px_10px]" />
                   <div className="absolute -bottom-10 -left-10 w-36 h-36 bg-[#06434a]/20 rounded-full blur-2xl" />
                   
                   <div className="flex items-center justify-between z-10">
@@ -416,12 +446,12 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
                       {item.name}
                     </div>
                     <div className="flex items-center gap-1">
-                      <span className="h-1.5 w-1.5 rounded-full bg-[#07BE8A]" />
+                      <span className="h-1.5 w-1.5 rounded-full bg-accent" />
                       <span className="text-[9px] font-mono font-medium text-stone-300 truncate">Keyword: "{item.keyword}"</span>
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between border-t border-white/5 pt-3 z-10 text-[9px] font-sans font-medium text-stone-400">
+                  <div className="flex items-center justify-between z-10 border-t border-white/5 pt-3 text-[9px] font-sans font-medium text-stone-400">
                     <span>Indexado Google</span>
                     <span className="text-[#07BE8A] font-bold">100% Optimizado</span>
                   </div>
@@ -499,7 +529,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
                 </div>
 
                 {/* Simulated Map */}
-                <div className="h-[320px] bg-slate-50 rounded-xl border border-slate-200 shadow-inner overflow-hidden relative">
+                <div className="h-80 bg-slate-50 rounded-xl border border-slate-200 shadow-inner overflow-hidden relative">
                   <InteractiveMap
                     screens={filteredScreens}
                     selectedScreenId={selectedScreenId}
@@ -661,7 +691,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
           {slug.startsWith("/mediakit") && (
             <div className="space-y-6">
               <div className="bg-slate-950 text-white rounded-2xl p-6 md:p-8 space-y-4 relative overflow-hidden">
-                <div className="absolute inset-0 bg-[linear-gradient(to_right,#1f2937_1px,transparent_1px),linear-gradient(to_bottom,#1f2937_1px,transparent_1px)] bg-[size:3rem_3rem] opacity-20" />
+                <div className="absolute inset-0 bg-[linear-gradient(to_right,#1f2937_1px,transparent_1px),linear-gradient(to_bottom,#1f2937_1px,transparent_1px)] bg-size-[3rem_3rem] opacity-20" />
                 <div className="relative z-10 space-y-3">
                   <span className="text-[10px] bg-white/10 text-white border border-white/20 font-bold uppercase tracking-widest px-3 py-1 rounded-full">
                     Centro de Descargas Oficial
@@ -707,12 +737,12 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
               {/* Technical specifications checklist */}
               <div className="bg-white border border-slate-200 rounded-2xl p-6 space-y-6 shadow-xs">
                 <div className="border-b border-slate-150 pb-3">
-                  <h3 className="font-extrabold text-slate-900 text-sm">Especificaciones Técnicas para Creativos</h3>
+                  <h3 className="text-sm font-extrabold text-slate-900">Especificaciones Técnicas para Creativos</h3>
                   <p className="text-slate-500 text-[11px] mt-0.5">Asegura la mejor fidelidad en nuestras pantallas LED gigantes.</p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-                  <div className="border border-slate-150 rounded-xl p-4 space-y-3">
+                  <div className="space-y-3 rounded-xl border border-slate-150 p-4">
                     <div className="flex items-center gap-2 font-bold text-slate-800">
                       <LucideIcons.Monitor className="h-4.5 w-4.5 text-slate-600" />
                       <span>Pantallas LED Digitales (DOOH)</span>
@@ -725,7 +755,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
                     </ul>
                   </div>
 
-                  <div className="border border-slate-150 rounded-xl p-4 space-y-3">
+                  <div className="space-y-3 rounded-xl border border-slate-150 p-4">
                     <div className="flex items-center gap-2 font-bold text-slate-800">
                       <LucideIcons.Layers className="h-4.5 w-4.5 text-slate-600" />
                       <span>Soportes Físicos (Vallas / Monopostes)</span>
@@ -758,7 +788,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
 
               {/* Show complete screen collection with interactive simulation */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {allKnownScreens.map((screen) => (
+                {screens.map((screen: DoohScreen) => (
                   <ScreenCard
                     key={screen.id}
                     screen={screen}
@@ -804,7 +834,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
               </div>
             </div>
           )}
-
+          
           {/* GENERAL SERVICES INFORMATION VIEWS (For /servicios and children) */}
           {slug.startsWith("/servicios") && (
             <div className="space-y-6">
@@ -876,7 +906,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
           )}
 
           {/* DEFAULT / OTHERS STATS */}
-          {!slug.startsWith("/contacto") && !slug.startsWith("/mediakit") && !slug.startsWith("/nosotros") && !slug.startsWith("/servicios") && !slug.startsWith("/blog") && !slug.startsWith("/soportes") && !isMendoza && !isBA && (
+          {!slug.startsWith("/contacto") && !slug.startsWith("/mediakit") && !slug.startsWith("/nosotros") && !slug.startsWith("/servicios") && !slug.startsWith("/blog") && !slug.startsWith("/soportes") && !isMendoza && !isBA && ( 
             <div className="bg-white border border-slate-200 rounded-2xl p-6 space-y-4 shadow-xs">
               <h3 className="font-extrabold text-slate-900 text-sm">Contenido de la Sección</h3>
               <p className="text-slate-500 text-xs leading-relaxed">
@@ -895,7 +925,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
         <div className="lg:col-span-4 space-y-6">
           
           {/* Action Call for Planificador */}
-          <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4 shadow-sm">
+          <div className="space-y-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
             <div className="flex items-center justify-between border-b border-slate-150 pb-3">
               <div className="flex items-center gap-2">
                 <LucideIcons.Calculator className="h-4.5 w-4.5 text-slate-900" />
@@ -922,7 +952,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
             ) : (
               <div className="space-y-4">
                 {/* Active screens selection */}
-                <div className="flex flex-wrap gap-1 max-h-24 overflow-y-auto pr-1">
+                <div className="flex max-h-24 flex-wrap gap-1 overflow-y-auto pr-1">
                   {cartScreens.map((screen) => (
                     <div
                       key={screen.id}
@@ -1006,7 +1036,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
           </div>
 
           {/* SEO DEEP LINKING CLUSTER NAVIGATION */}
-          <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4 shadow-sm">
+          <div className="space-y-4 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
             <h4 className="font-extrabold text-slate-900 text-xs uppercase tracking-wider border-b border-slate-150 pb-2">
               Explorar Secciones
             </h4>
@@ -1016,7 +1046,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
               <div className="space-y-2">
                 <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block">Secciones Relacionadas</span>
                 <div className="flex flex-col gap-1.5 text-xs">
-                  {siblingPages.slice(0, 5).map((sib) => (
+                  {siblingPages.slice(0, 5).map((sib: SitemapItem) => (
                     <button
                       key={sib.slug}
                       onClick={() => handleNavigate(sib.slug)}
@@ -1035,7 +1065,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
               <div className="space-y-2 pt-2 border-t border-slate-150">
                 <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest block">Sub-categorías</span>
                 <div className="flex flex-col gap-1.5 text-xs">
-                  {childPages.map((child) => (
+                  {childPages.map((child: SitemapItem) => (
                     <button
                       key={child.slug}
                       onClick={() => handleNavigate(child.slug)}

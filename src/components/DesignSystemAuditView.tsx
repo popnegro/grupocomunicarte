@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import {
   Shield,
@@ -36,12 +36,12 @@ import {
 } from "lucide-react";
 
 // Import real shadcn/ui components
-import { Badge } from "./ui/badge";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "./ui/tabs";
-import { Button } from "./ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 
 // Import central Design System tokens
-import { DESIGN_SYSTEM } from "../lib/designSystem";
+import { DESIGN_SYSTEM } from "@/lib/designSystem";
 
 interface DesignSystemAuditProps {
   onClose?: () => void;
@@ -93,8 +93,8 @@ export const DesignSystemAuditView: React.FC<DesignSystemAuditProps> = () => {
       {/* Upper Enterprise Framework Header Banner */}
       <div className="bg-[#172023] text-white p-6 border-b border-stone-800 relative overflow-hidden">
         {/* Decorative Grid Mesh Background */}
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#1f2c31_1px,transparent_1px),linear-gradient(to_bottom,#1f2c31_1px,transparent_1px)] bg-[size:2rem_2rem] opacity-30 pointer-events-none" />
-        
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#1f2c31_1px,transparent_1px),linear-gradient(to_bottom,#1f2c31_1px,transparent_1px)] bg-size-[2rem_2rem] opacity-30 pointer-events-none" />
+         
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
           <div className="space-y-2">
             <div className="flex items-center gap-2 flex-wrap">
@@ -109,8 +109,8 @@ export const DesignSystemAuditView: React.FC<DesignSystemAuditProps> = () => {
               </Badge>
             </div>
             
-            <h1 className="text-2xl font-black tracking-tight text-white flex items-center gap-2">
-              <Shield className="h-6 w-6 text-[#07be8a]" />
+            <h1 className="text-2xl font-black tracking-tight text-white flex items-center gap-2 font-display">
+              <Shield className="h-6 w-6 text-accent" />
               Design System & Playroom
             </h1>
             <p className="text-xs text-stone-400 max-w-3xl leading-relaxed">
@@ -118,7 +118,7 @@ export const DesignSystemAuditView: React.FC<DesignSystemAuditProps> = () => {
             </p>
           </div>
 
-          <div className="flex items-center gap-3 bg-[#1e292d] border border-stone-800 p-3 rounded-xl self-start md:self-auto shrink-0">
+          <div className="flex shrink-0 items-center gap-3 self-start rounded-xl border border-stone-800 bg-[#1e292d] p-3 md:self-auto">
             <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
             <div className="text-left leading-none">
               <span className="block text-[9px] text-stone-400 font-bold uppercase tracking-widest">Salud de Código</span>
@@ -130,7 +130,7 @@ export const DesignSystemAuditView: React.FC<DesignSystemAuditProps> = () => {
         {/* Navigation Tabs */}
         <div className="mt-6 border-t border-stone-800 pt-4">
           <Tabs value={activeSubTab} onValueChange={(val) => setActiveSubTab(val as any)} className="w-full">
-            <TabsList className="bg-stone-950/40 border border-stone-800 p-1 flex h-auto overflow-x-auto justify-start scrollbar-none gap-1 rounded-xl">
+            <TabsList className="h-auto flex-wrap justify-start gap-1 rounded-xl border border-stone-800 bg-stone-950/40 p-1 sm:flex-nowrap sm:overflow-x-auto sm:scrollbar-none">
               <TabsTrigger value="tokens" className="data-[state=active]:bg-[#06434a] data-[state=active]:text-white text-stone-400 font-bold text-xs flex items-center gap-2 py-2 px-4 rounded-lg cursor-pointer hover:bg-stone-800 hover:text-white transition-all">
                 <Sliders className="h-3.5 w-3.5" />
                 Tokens de Diseño (Colores, Typo, Spacing)
@@ -153,14 +153,14 @@ export const DesignSystemAuditView: React.FC<DesignSystemAuditProps> = () => {
       </div>
 
       {/* Main Playroom Workspace */}
-      <div className="p-6 bg-stone-50 min-h-[500px]">
+      <div className="p-6 bg-stone-50 min-h-125">
         <AnimatePresence mode="wait">
           
           {/* TAB 1: DESIGN TOKENS (Colors, Typography, Spacing) */}
           {activeSubTab === "tokens" && (
             <motion.div
               key="tokens-view"
-              initial={{ opacity: 0, y: 8 }}
+              initial={{ opacity: 0, y: 8 }} 
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
               className="space-y-8"
@@ -181,7 +181,7 @@ export const DesignSystemAuditView: React.FC<DesignSystemAuditProps> = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                   
                   {/* Primary Color Card */}
-                  <div className="border border-stone-200 rounded-xl overflow-hidden bg-white shadow-2xs flex flex-col">
+                  <div className="flex flex-col overflow-hidden rounded-xl border border-stone-200 bg-white shadow-2xs">
                     <div className="h-20 bg-[#06434a] relative p-3 flex items-end justify-between">
                       <span className="text-[10px] font-mono text-white bg-black/40 backdrop-blur-xs px-2 py-0.5 rounded font-bold">#06434a</span>
                     </div>
@@ -197,9 +197,9 @@ export const DesignSystemAuditView: React.FC<DesignSystemAuditProps> = () => {
                   </div>
 
                   {/* Secondary Mint Card */}
-                  <div className="border border-stone-200 rounded-xl overflow-hidden bg-white shadow-2xs flex flex-col">
-                    <div className="h-20 bg-[#07be8a] relative p-3 flex items-end justify-between">
-                      <span className="text-[10px] font-mono text-white bg-black/40 backdrop-blur-xs px-2 py-0.5 rounded font-bold">#07be8a</span>
+                  <div className="flex flex-col overflow-hidden rounded-xl border border-stone-200 bg-white shadow-2xs">
+                    <div className="h-20 bg-accent relative p-3 flex items-end justify-between">
+                      <span className="text-[10px] font-mono text-white bg-black/40 backdrop-blur-xs px-2 py-0.5 rounded font-bold">#07BE8A</span>
                     </div>
                     <div className="p-3 space-y-1.5 flex-1 flex flex-col justify-between">
                       <div>
@@ -213,7 +213,7 @@ export const DesignSystemAuditView: React.FC<DesignSystemAuditProps> = () => {
                   </div>
 
                   {/* Obsidian Dark Card */}
-                  <div className="border border-stone-200 rounded-xl overflow-hidden bg-white shadow-2xs flex flex-col">
+                  <div className="flex flex-col overflow-hidden rounded-xl border border-stone-200 bg-white shadow-2xs">
                     <div className="h-20 bg-[#172023] relative p-3 flex items-end justify-between">
                       <span className="text-[10px] font-mono text-white bg-white/10 backdrop-blur-xs px-2 py-0.5 rounded font-bold">#172023</span>
                     </div>
@@ -229,7 +229,7 @@ export const DesignSystemAuditView: React.FC<DesignSystemAuditProps> = () => {
                   </div>
 
                   {/* Light Stone Card */}
-                  <div className="border border-stone-200 rounded-xl overflow-hidden bg-white shadow-2xs flex flex-col">
+                  <div className="flex flex-col overflow-hidden rounded-xl border border-stone-200 bg-white shadow-2xs">
                     <div className="h-20 bg-[#fafaf9] border-b border-stone-100 relative p-3 flex items-end justify-between">
                       <span className="text-[10px] font-mono text-stone-800 bg-white border border-stone-200 px-2 py-0.5 rounded font-bold">#fafaf9</span>
                     </div>
@@ -245,8 +245,8 @@ export const DesignSystemAuditView: React.FC<DesignSystemAuditProps> = () => {
                   </div>
 
                   {/* Semantic Warning Card */}
-                  <div className="border border-stone-200 rounded-xl overflow-hidden bg-white shadow-2xs flex flex-col">
-                    <div className="h-20 bg-[#f59e0b] relative p-3 flex items-end justify-between">
+                  <div className="flex flex-col overflow-hidden rounded-xl border border-stone-200 bg-white shadow-2xs">
+                    <div className="h-20 bg-warning relative p-3 flex items-end justify-between">
                       <span className="text-[10px] font-mono text-white bg-black/40 backdrop-blur-xs px-2 py-0.5 rounded font-bold">#f59e0b</span>
                     </div>
                     <div className="p-3 space-y-1.5 flex-1 flex flex-col justify-between">
@@ -261,8 +261,8 @@ export const DesignSystemAuditView: React.FC<DesignSystemAuditProps> = () => {
                   </div>
 
                   {/* Semantic Danger Card */}
-                  <div className="border border-stone-200 rounded-xl overflow-hidden bg-white shadow-2xs flex flex-col">
-                    <div className="h-20 bg-[#f43f5e] relative p-3 flex items-end justify-between">
+                  <div className="flex flex-col overflow-hidden rounded-xl border border-stone-200 bg-white shadow-2xs">
+                    <div className="h-20 bg-destructive relative p-3 flex items-end justify-between">
                       <span className="text-[10px] font-mono text-white bg-black/40 backdrop-blur-xs px-2 py-0.5 rounded font-bold">#f43f5e</span>
                     </div>
                     <div className="p-3 space-y-1.5 flex-1 flex flex-col justify-between">
@@ -303,7 +303,7 @@ export const DesignSystemAuditView: React.FC<DesignSystemAuditProps> = () => {
                       <p className="text-[11px] text-stone-400">Titulares de Landing, impactos monumentales.</p>
                     </div>
                     <div className="text-left md:text-right max-w-lg">
-                      <span className="font-display font-black text-2xl tracking-tight leading-none text-stone-950 block">Grupo Comunicarte S.A.</span>
+                      <span className="font-display font-black text-2xl tracking-tight text-stone-950">Grupo Comunicarte S.A.</span>
                     </div>
                   </div>
 
@@ -317,7 +317,7 @@ export const DesignSystemAuditView: React.FC<DesignSystemAuditProps> = () => {
                       <p className="text-[11px] text-stone-400">Títulos principales de sección, dashboard de control.</p>
                     </div>
                     <div className="text-left md:text-right max-w-lg">
-                      <span className="font-display font-extrabold text-xl tracking-tight text-stone-900 block">Soporte Digital Activo</span>
+                      <span className="font-display font-extrabold text-xl tracking-tight text-stone-900">Soporte Digital Activo</span>
                     </div>
                   </div>
 
@@ -331,7 +331,7 @@ export const DesignSystemAuditView: React.FC<DesignSystemAuditProps> = () => {
                       <p className="text-[11px] text-stone-400">Tarjetas de información, subsecciones internas.</p>
                     </div>
                     <div className="text-left md:text-right max-w-lg">
-                      <span className="font-display font-bold text-md text-stone-900 block">Filtro de Pantallas LED</span>
+                      <span className="font-display font-bold text-md text-stone-900">Filtro de Pantallas LED</span>
                     </div>
                   </div>
 
@@ -359,7 +359,7 @@ export const DesignSystemAuditView: React.FC<DesignSystemAuditProps> = () => {
                       <p className="text-[11px] text-stone-400">Identificadores, badges, metadatos estructurados.</p>
                     </div>
                     <div className="text-left md:text-right max-w-lg">
-                      <span className="font-mono text-[10px] font-bold text-stone-400 uppercase tracking-widest block">ID-PANTALLA-LED-MZA-01</span>
+                      <span className="font-mono text-[10px] font-bold text-stone-400 uppercase tracking-widest">ID-PANTALLA-LED-MZA-01</span>
                     </div>
                   </div>
                 </div>
@@ -511,7 +511,10 @@ export const DesignSystemAuditView: React.FC<DesignSystemAuditProps> = () => {
                     <h4 className="text-xs font-extrabold">Botones del Sistema (Buttons)</h4>
                   </div>
 
-                  <div className="flex flex-wrap gap-1">
+                  <div
+                    role="group"
+                    aria-label="Controles de estado del botón de demostración"
+                    className="flex flex-wrap gap-1">
                     {["default", "hover", "active", "loading", "disabled"].map((st) => (
                       <button
                         key={st}
@@ -532,6 +535,7 @@ export const DesignSystemAuditView: React.FC<DesignSystemAuditProps> = () => {
                     playgroundTheme === "dark" ? "border-stone-700" : "border-stone-300"
                   }`}>
                     <Button
+                      aria-live="polite"
                       disabled={btnState === "disabled" || btnState === "loading"}
                       className={`w-full py-2.5 transition-all flex items-center justify-center gap-2 cursor-pointer ${
                         btnState === "hover" 
@@ -545,7 +549,7 @@ export const DesignSystemAuditView: React.FC<DesignSystemAuditProps> = () => {
                     >
                       {btnState === "loading" ? (
                         <>
-                          <div className="h-3.5 w-3.5 rounded-full border-2 border-stone-400 border-t-stone-800 animate-spin" />
+                          <div role="status" className="h-3.5 w-3.5 rounded-full border-2 border-stone-400 border-t-stone-800 animate-spin" />
                           <span>Procesando...</span>
                         </>
                       ) : (
@@ -567,7 +571,10 @@ export const DesignSystemAuditView: React.FC<DesignSystemAuditProps> = () => {
                     <h4 className="text-xs font-extrabold">Badges de Venta & DOOH</h4>
                   </div>
 
-                  <div className="flex flex-wrap gap-1">
+                  <div
+                    role="group"
+                    aria-label="Controles de estado del badge de demostración"
+                    className="flex flex-wrap gap-1">
                     {["success", "warning", "danger", "info", "neutral"].map((st) => (
                       <button
                         key={st}
@@ -618,7 +625,10 @@ export const DesignSystemAuditView: React.FC<DesignSystemAuditProps> = () => {
                     <h4 className="text-xs font-extrabold">Campos de Entrada (Input Fields)</h4>
                   </div>
 
-                  <div className="flex flex-wrap gap-1">
+                  <div
+                    role="group"
+                    aria-label="Controles de estado del campo de entrada de demostración"
+                    className="flex flex-wrap gap-1">
                     {["default", "focus", "error", "filled"].map((st) => (
                       <button
                         key={st}
@@ -638,12 +648,15 @@ export const DesignSystemAuditView: React.FC<DesignSystemAuditProps> = () => {
                   <div className={`h-24 rounded-lg flex flex-col justify-center p-3.5 border border-dashed ${
                     playgroundTheme === "dark" ? "border-stone-700" : "border-stone-300"
                   } space-y-1`}>
-                    <label className="text-[10px] font-bold text-stone-400 uppercase">Tarifa Diaria (USD)</label>
+                    <label htmlFor="playground-input" className="text-[10px] font-bold text-stone-400 uppercase">Tarifa Diaria (USD)</label>
                     <input
+                      id="playground-input"
                       type="text"
                       readOnly
                       value={inputState === "filled" || inputState === "error" ? "95,000" : ""}
                       placeholder={inputState === "focus" ? "Escribe tarifa..." : "Ingrese valor"}
+                      aria-invalid={inputState === "error"}
+                      aria-describedby={inputState === "error" ? "input-error-msg" : undefined}
                       className={`w-full px-3 py-1.5 text-xs rounded-lg outline-hidden font-semibold transition-all ${
                         inputState === "default" 
                           ? "border border-stone-200 bg-white text-stone-800" 
@@ -655,7 +668,7 @@ export const DesignSystemAuditView: React.FC<DesignSystemAuditProps> = () => {
                       }`}
                     />
                     {inputState === "error" && (
-                      <span className="text-[9px] text-rose-600 font-bold block">✘ El monto mínimo de pauta es $5,000</span>
+                      <span id="input-error-msg" className="text-[9px] text-rose-600 font-bold block">✘ El monto mínimo de pauta es $5,000</span>
                     )}
                   </div>
                 </div>
@@ -683,28 +696,28 @@ export const DesignSystemAuditView: React.FC<DesignSystemAuditProps> = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Bad corner alignment */}
-                  <div className="border border-stone-150 p-4 rounded-xl bg-stone-50/50 space-y-2">
-                    <span className="block text-xs font-bold text-rose-700 flex items-center gap-1">
+                  <div className="border border-stone-150 p-4 rounded-xl bg-stone-50/50 space-y-2 flex flex-col">
+                    <span className="flex items-center gap-1 text-xs font-bold text-rose-700">
                       <AlertTriangle className="h-3.5 w-3.5" />
                       Alineación Incorrecta (Ambos de 16px)
                     </span>
                     <p className="text-[11px] text-stone-500">Produce un ensanchamiento óptico o espacio de aire que se ve poco profesional en interfaces enterprise.</p>
-                    <div className="p-4 bg-stone-200 rounded-[16px] flex justify-center">
-                      <div className="w-full bg-[#06434a] p-4 text-white text-center rounded-[16px] text-xs font-bold">
+                    <div className="p-4 bg-stone-200 rounded-2xl justify-center">
+                      <div className="w-full bg-[#06434a] p-4 text-white text-center rounded-2xl text-xs font-bold">
                         Borde Incorrecto
                       </div>
                     </div>
                   </div>
 
                   {/* Correct mathematical corner alignment */}
-                  <div className="border border-stone-150 p-4 rounded-xl bg-stone-50/50 space-y-2">
-                    <span className="block text-xs font-bold text-emerald-700 flex items-center gap-1">
+                  <div className="border border-stone-150 p-4 rounded-xl bg-stone-50/50 space-y-2 flex flex-col">
+                    <span className="flex items-center gap-1 text-xs font-bold text-emerald-700">
                       <CheckCircle2 className="h-3.5 w-3.5" />
                       Alineación Matemática Perfecta (Exterior 24px - Padding 16px = Interno 8px)
                     </span>
                     <p className="text-[11px] text-stone-500">Crea un paralelismo óptico limpio y consistente idéntico a las interfaces premium de Apple y Stripe.</p>
-                    <div className="p-4 bg-stone-200 rounded-[24px] flex justify-center">
-                      <div className="w-full bg-[#06434a] p-4 text-white text-center rounded-[8px] text-xs font-bold">
+                    <div className="p-4 bg-stone-200 rounded-3xl justify-center">
+                      <div className="w-full bg-[#06434a] p-4 text-white text-center rounded-lg text-xs font-bold">
                         Borde Perfecto
                       </div>
                     </div>
@@ -774,7 +787,7 @@ export const DesignSystemAuditView: React.FC<DesignSystemAuditProps> = () => {
                   </div>
 
                   {/* Sandbox rendering animations */}
-                  <div className="col-span-2 border border-stone-150 bg-stone-100/40 rounded-xl flex items-center justify-center p-6 min-h-[160px] overflow-hidden relative">
+                  <div className="relative col-span-2 flex min-h-40 items-center justify-center overflow-hidden rounded-xl border border-stone-150 bg-stone-100/40 p-6">
                     <AnimatePresence mode="wait">
                       {!animateTrigger ? (
                         <motion.div
@@ -842,7 +855,7 @@ export const DesignSystemAuditView: React.FC<DesignSystemAuditProps> = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {checklist.map((item) => (
                     <div
-                      key={item.id}
+                      key={item.id} 
                       onClick={() => toggleCheck(item.id)}
                       className="flex items-start gap-3 p-3 rounded-xl border border-stone-150 bg-stone-50/40 hover:bg-white hover:border-[#06434a]/20 transition-all cursor-pointer select-none"
                     >
@@ -852,13 +865,13 @@ export const DesignSystemAuditView: React.FC<DesignSystemAuditProps> = () => {
                             ? "bg-[#06434a] border-[#06434a] text-white" 
                             : "border-stone-300 bg-white"
                         }`}>
-                          {item.checked && <Check className="h-3 w-3 stroke-[3]" />}
+                          {item.checked && <Check className="h-3 w-3 stroke-3" />}
                         </div>
                       </div>
                       <div className="space-y-0.5">
                         <div className="flex items-center gap-1.5">
                           <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-full ${
-                            item.category === "Perceptible" 
+                            item.category === "Perceptible"
                               ? "bg-purple-100 text-purple-700" 
                               : item.category === "Operable" 
                               ? "bg-sky-100 text-sky-700"
@@ -887,7 +900,7 @@ export const DesignSystemAuditView: React.FC<DesignSystemAuditProps> = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 font-mono text-[11px]">
                   {/* Bad Practice */}
-                  <div className="p-4 bg-black border border-stone-800 rounded-xl space-y-2 text-stone-400">
+                  <div className="flex flex-col space-y-2 rounded-xl border border-stone-800 bg-black p-4 text-stone-400">
                     <span className="text-xs font-bold text-rose-500 block font-sans">❌ Práctica Incorrecta (Amateur Black)</span>
                     <p className="text-[10px] leading-relaxed font-sans">La interfaz de fondo negro puro con textos en blanco brillante genera fatiga visual en pantallas de operadores DOOH tras 2 horas de uso.</p>
                     <div className="space-y-1 bg-stone-900/60 p-2 rounded border border-stone-800">
@@ -897,7 +910,7 @@ export const DesignSystemAuditView: React.FC<DesignSystemAuditProps> = () => {
                   </div>
 
                   {/* Elite Practice */}
-                  <div className="p-4 bg-[#172023] border border-stone-800 rounded-xl space-y-2 text-stone-300">
+                  <div className="flex flex-col space-y-2 rounded-xl border border-stone-800 bg-[#172023] p-4 text-stone-300">
                     <span className="text-xs font-bold text-[#07be8a] block font-sans">✔ Práctica de Élite (Saturated Obsidian Dark)</span>
                     <p className="text-[10px] leading-relaxed font-sans">Fondo de base de obsidiana con 5% de saturación de marca, textos primarios en off-white calmo que previene el estrés ocular.</p>
                     <div className="space-y-1 bg-[#1e292d] p-2 rounded border border-stone-700">

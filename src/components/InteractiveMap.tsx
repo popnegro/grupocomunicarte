@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import L from "leaflet";
 import { DoohScreen } from "../types";
-import { useCms } from "./CmsContext";
+import { useCms } from "@/components/CmsContext";
 
 interface InteractiveMapProps {
   screens: DoohScreen[];
@@ -15,7 +15,6 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
   onSelectScreen,
 }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
-  const observerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<{ [key: string]: L.Marker }>({});
   const activeMarkersRef = useRef<L.Layer[]>([]);
@@ -23,8 +22,6 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
   const initialBoundsFitRef = useRef(false);
   const prevScreenIdsRef = useRef<string>("");
   const [currentZoom, setCurrentZoom] = useState(13);
-  const [isMapVisible, setIsMapVisible] = useState(false);
-  const [mapBounds, setMapBounds] = useState<L.LatLngBounds | null>(null);
   const { cart, toggleCart } = useCms();
 
   // Create custom SVG markers
@@ -38,16 +35,16 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
         : (tipo === "LeadMóvil" || tipo === "Móvil")
         ? "#f59e0b" // Amber / Orange
         : "#7c3aed"; // Violet
-    const border = isInCart ? "#172023" : "#fafaf9";
+    const border = isInCart ? "#0f172a" : "#ffffff";
     const scale = isInCart ? 1.25 : 1.0;
-    const ringColor = isInCart ? "rgba(23, 32, 35, 0.25)" : "rgba(23, 32, 35, 0.1)";
+    const ringColor = isInCart ? "rgba(15, 23, 42, 0.25)" : "rgba(0,0,0,0.1)";
 
     return L.divIcon({
       html: `
         <div style="transform: scale(${scale}); filter: drop-shadow(0px 3px 6px ${ringColor}); display: flex; align-items: center; justify-content: center; transition: all 0.2s ease;">
           <svg width="24" height="32" viewBox="0 0 24 32" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M12 0C5.37258 0 0 5.37258 0 12C0 21 12 32 12 32C12 32 24 21 24 12C24 5.37258 18.6274 0 12 0Z" fill="${color}" stroke="${border}" stroke-width="2"/>
-            <circle cx="12" cy="12" r="4.5" fill="${isInCart ? '#fafaf9' : border}"/>
+            <circle cx="12" cy="12" r="4.5" fill="${isInCart ? '#ffffff' : border}"/>
           </svg>
         </div>
       `,
@@ -71,11 +68,11 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
 
     return L.divIcon({
       html: `
-        <div class="relative flex items-center justify-center rounded-full bg-[#172023] border-2 border-[#fafaf9] shadow-lg text-[#fafaf9] font-black text-xs cursor-pointer transition-transform hover:scale-110 duration-200" style="width: 38px; height: 38px;">
+        <div class="relative flex items-center justify-center rounded-full bg-slate-950 border-2 border-white shadow-lg text-white font-black text-xs cursor-pointer transition-transform hover:scale-110 duration-200" style="width: 38px; height: 38px;">
           <!-- Glowing outer ring -->
-          <span class="absolute inset-0 rounded-full animate-pulse opacity-25 bg-[#172023]" style="transform: scale(1.25); z-index: -1;"></span>
+          <span class="absolute inset-0 rounded-full animate-pulse opacity-25 bg-slate-950" style="transform: scale(1.25); z-index: -1;"></span>
           <!-- Dynamic Type indicator mini dot -->
-          <span class="absolute -top-0.5 -right-0.5 h-3 w-3 rounded-full border border-[#fafaf9]" style="background-color: ${color};"></span>
+          <span class="absolute -top-0.5 -right-0.5 h-3 w-3 rounded-full border border-white" style="background-color: ${color};"></span>
           <span>${count}</span>
         </div>
       `,
@@ -124,31 +121,13 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
     return clusters;
   };
 
-  // 1. Intersection Observer for Smart Viewport Lazy Loading
+  // Initialize Map
   useEffect(() => {
-    if (!observerRef.current) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsMapVisible(true);
-          observer.disconnect();
-        }
-      },
-      { rootMargin: "250px" } // Load slightly before reaching the screen
-    );
-
-    observer.observe(observerRef.current);
-    return () => observer.disconnect();
-  }, []);
-
-  // 2. Initialize Map when it becomes visible
-  useEffect(() => {
-    if (!isMapVisible || !mapContainerRef.current || mapRef.current) return;
+    if (!mapContainerRef.current || mapRef.current) return;
 
     // Center on Mendoza coordinates of SEED_SCREENS (roughly -32.889, -68.845)
     const map = L.map(mapContainerRef.current, {
-      center: [-32.89, -68.84],
+      center: [-32.89, -68.84], 
       zoom: 13,
       zoomControl: true,
     });
@@ -166,21 +145,10 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
 
     mapRef.current = map;
 
-    // Function to calculate and update current viewable bounds
-    const updateBounds = () => {
-      setMapBounds(map.getBounds());
-    };
-
-    // Set zoom level and visible bounds when map moves/zooms
+    // Set current zoom in react state to trigger cluster updates
     map.on("zoomend", () => {
       setCurrentZoom(map.getZoom());
-      updateBounds();
     });
-
-    map.on("moveend", updateBounds);
-
-    // Run initial visible bounds fetch
-    updateBounds();
 
     // Handle popup open events to register click events for custom buttons inside popup
     map.on("popupopen", (e) => {
@@ -205,22 +173,9 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
         mapRef.current = null;
       }
     };
-  }, [isMapVisible]);
+  }, []);
 
-  // 3. Resize Observer: Seamlessly adjust to DOM container dimension changes
-  useEffect(() => {
-    const map = mapRef.current;
-    if (!map || !mapContainerRef.current) return;
-
-    const resizeObserver = new ResizeObserver(() => {
-      map.invalidateSize();
-    });
-
-    resizeObserver.observe(mapContainerRef.current);
-    return () => resizeObserver.disconnect();
-  }, [isMapVisible]);
-
-  // 4. Update Markers/Polylines when visible screens change (Viewport inteligente & Pin optimization)
+  // Update Markers when screens, cart, or currentZoom change
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
@@ -252,7 +207,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
           const isFirstOrLast = index === 0 || index === screen.ruta!.length - 1;
           const stopMarker = L.circleMarker([stop.lat, stop.lng], {
             radius: isFirstOrLast ? 7 : 5,
-            fillColor: isFirstOrLast ? "#f59e0b" : "#fafaf9",
+            fillColor: isFirstOrLast ? "#f59e0b" : "#ffffff",
             color: "#f59e0b",
             weight: 2.5,
             fillOpacity: 1,
@@ -269,15 +224,8 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
       }
     });
 
-    // Viewport inteligente: filter screens down to ONLY those visible in the current viewport bounds (+ safety pad)
-    let visibleScreens = activeScreens;
-    if (mapBounds) {
-      const paddedBounds = mapBounds.pad(0.15); // Add a 15% safety pad to render pins just off-screen
-      visibleScreens = activeScreens.filter((s) => paddedBounds.contains(L.latLng(s.lat, s.lng)));
-    }
-
-    // Compute screen clusters for the current zoom level using only visible screens
-    const clusters = getClusters(visibleScreens, currentZoom);
+    // Compute screen clusters for the current zoom level
+    const clusters = getClusters(activeScreens, currentZoom);
 
     // Track if filters have changed to pan the map
     const screenIdsStr = activeScreens.map((s) => s.id).sort().join(",");
@@ -305,7 +253,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
             : String(screen.impactos);
 
         const popupHtml = `
-          <div class="p-2 font-sans text-slate-800 max-w-[200px]">
+          <div class="p-2 font-sans text-slate-800 max-w-50">
             <span class="text-[10px] font-bold tracking-wider text-slate-400 uppercase block mb-0.5">${screen.tipo}</span>
             <h4 class="text-xs font-black text-slate-950 mb-1 leading-tight">${screen.nombre}</h4>
             <p class="text-[11px] text-slate-500 mb-2">${screen.zona}</p>
@@ -323,7 +271,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
 
             <button 
               data-screen-id="${screen.id}" 
-              class="popup-cart-btn w-full bg-[#172023] hover:bg-[#06434a] text-[#fafaf9] font-bold text-[10px] py-1.5 px-2.5 rounded-md transition-all shadow-sm flex items-center justify-center gap-1 cursor-pointer"
+              class="popup-cart-btn w-full bg-slate-950 hover:bg-slate-800 text-white font-bold text-[10px] py-1.5 px-2.5 rounded-md transition-all shadow-sm flex items-center justify-center gap-1 cursor-pointer"
             >
               <span>${isInCart ? "Quitar de Cotización" : "Agregar a Cotización"}</span>
             </button>
@@ -370,12 +318,12 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
           if (map.getZoom() >= 17) {
             // Render beautiful catalog list in a popup at high zoom
             let listHtml = `
-              <div class="p-2.5 font-sans text-slate-800 max-w-[240px] space-y-2">
+              <div class="p-2.5 font-sans text-slate-800 max-w-60 space-y-2">
                 <div class="border-b border-slate-100 pb-1.5">
                   <span class="text-[9px] font-extrabold text-slate-400 uppercase tracking-wide block">Grupo de Pantallas (${cluster.screens.length})</span>
                   <h4 class="text-xs font-black text-slate-900">${cluster.screens[0].zona}</h4>
                 </div>
-                <div class="max-h-[160px] overflow-y-auto space-y-1.5 pr-1" style="scrollbar-width: thin;">
+                <div class="max-h-40 overflow-y-auto space-y-1.5 pr-1" style="scrollbar-width: thin;">
             `;
 
             cluster.screens.forEach((screen) => {
@@ -388,7 +336,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
                   </div>
                   <button 
                     data-screen-id="${screen.id}" 
-                    class="popup-cart-btn px-2.5 py-1 bg-[#172023] hover:bg-[#06434a] text-[#fafaf9] font-bold text-[8px] uppercase rounded-md shrink-0 cursor-pointer"
+                    class="popup-cart-btn px-2.5 py-1 bg-slate-950 hover:bg-slate-800 text-white font-bold text-[8px] uppercase rounded-md shrink-0 cursor-pointer"
                   >
                     ${isInCart ? "Quitar" : "Agregar"}
                   </button>
@@ -415,7 +363,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
         activeMarkersRef.current.push(clusterMarker);
       }
     });
-  }, [screens, cart, currentZoom, mapBounds]);
+  }, [screens, cart, currentZoom]);
 
   // Focus on selected screen
   useEffect(() => {
@@ -438,21 +386,11 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
   }, [selectedScreenId]);
 
   return (
-    <div ref={observerRef} className="relative w-full h-full rounded-xl overflow-hidden border border-slate-200 shadow-sm bg-slate-50">
-      {isMapVisible ? (
-        <div ref={mapContainerRef} className="w-full h-full min-h-[350px]" style={{ zIndex: 1 }} />
-      ) : (
-        <div className="w-full h-full min-h-[350px] flex flex-col items-center justify-center text-stone-400 py-16">
-          <svg className="animate-spin h-6 w-6 text-stone-400 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
-          <span className="text-xs font-semibold">Cargando mapa interactivo...</span>
-        </div>
-      )}
+    <div className="relative w-full h-full rounded-xl overflow-hidden border border-slate-200 shadow-sm bg-slate-50">
+      <div ref={mapContainerRef} className="h-full min-h-87.5 w-full" style={{ zIndex: 1 }} />
       
       {/* Mini Legend Overlay */}
-      <div className="absolute bottom-3 left-3 z-10 bg-[#fafaf9]/90 backdrop-blur-md border border-slate-100 rounded-lg p-2 shadow-sm text-[10px] flex flex-col gap-1 text-slate-600">
+      <div className="absolute bottom-3 left-3 z-10 bg-white/90 backdrop-blur-md border border-slate-100 rounded-lg p-2 shadow-sm text-[10px] flex flex-col gap-1 text-slate-600">
         <span className="font-bold text-slate-800 uppercase tracking-wider mb-1 block">Referencias</span>
         <div className="flex items-center gap-1.5">
           <span className="h-2 w-2 rounded-full bg-sky-500" />

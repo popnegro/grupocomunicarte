@@ -1,5 +1,5 @@
 // components/cards/FeatureCard.tsx
-import { BaseCard } from '@/src/components/ui/BaseCard';
+import { Card, CardContent } from "../cards"; // Changed import to our new card components
 import { ReactNode } from 'react';
 import { cn } from '@/src/lib/utils';
 
@@ -30,27 +30,29 @@ export function FeatureCard({
   };
 
   return (
-    <BaseCard variant="default" padding="lg" className="group">
-      {/* Icon Container */}
-      <div className={cn(colorClasses[color], 'text-4xl mb-4 transition-transform group-hover:scale-110')}>
-        {icon}
-      </div>
+    <Card variant="base" padding="lg" className="group">
+      <CardContent>
+        {/* Icon Container */}
+        <div className={cn(colorClasses[color], 'text-4xl mb-4 transition-transform group-hover:scale-110')}>
+          {icon}
+        </div>
 
-      {/* Content */}
-      <h3 className="text-2xl font-semibold mb-2 text-gray-800">{title}</h3>
-      <p className="text-gray-600 text-base mb-4">{description}</p>
+        {/* Content */}
+        <h3 className="text-2xl font-semibold mb-2 text-gray-800">{title}</h3>
+        <p className="text-gray-600 text-base mb-4">{description}</p>
 
-      {/* CTA */}
-      {action && (
-        <a
-          href={action.href}
-          onClick={action.onClick}
-          className="inline-flex items-center text-primary-400 font-medium text-sm hover:text-primary-500 transition-colors"
-        >
-          {action.label}
-          <span className="ml-2">→</span>
-        </a>
-      )}
-    </BaseCard>
+        {/* CTA */}
+        {action && (
+          <a
+            href={action.href}
+            onClick={action.onClick}
+            className="inline-flex items-center text-primary-400 font-medium text-sm hover:text-primary-500 transition-colors"
+          >
+            {action.label}
+            <span className="ml-2">→</span>
+          </a>
+        )}
+      </CardContent>
+    </Card>
   );
 }

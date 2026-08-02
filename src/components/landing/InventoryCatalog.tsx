@@ -1,10 +1,10 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { useCms } from "../CmsContext";
-import { DoohScreen } from "../../types";
-import { ScreenCard } from "../ScreenCard";
-import { InteractiveMap } from "../InteractiveMap";
-import { 
+import { useCms } from "@/components/CmsContext";
+import { DoohScreen } from "@/types";
+import { ScreenCard } from "@/components/ScreenCard";
+import { InteractiveMap } from "@/components/InteractiveMap";
+import {
   Search, 
   MapPin, 
   SlidersHorizontal, 
@@ -33,9 +33,9 @@ import {
   Truck,
   Filter
 } from "lucide-react";
-import { Input } from "@/src/components/ui/input";
-import { Button } from "@/src/components/ui/button";
-import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/src/components/ui/dialog";
+import { Input } from "@/components/ui";
+import { Button } from "@/components/ui";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui";
 
 interface InventoryCatalogProps {
   selectedCity: "Mendoza" | "Buenos Aires";
@@ -169,7 +169,7 @@ export const InventoryCatalog: React.FC<InventoryCatalogProps> = ({
       const matchesSearch = searchTerms.every((term) => 
         s.nombre.toLowerCase().includes(term) ||
         s.zona.toLowerCase().includes(term) ||
-        s.categoria.toLowerCase().includes(term) ||
+        (s.categoria || '').toLowerCase().includes(term) ||
         (s.nota && s.nota.toLowerCase().includes(term))
       );
 
@@ -332,7 +332,7 @@ Mensaje del cliente: ${checkoutForm.message || "Sin mensaje adicional."}
 
       {/* FILTER PANEL - (Only displayed if tab is Tarjetas or Mapa) */}
       {activeTab !== "mediakit" && (
-        <div className="sticky top-[80px] z-30 bg-[#FAF9F5]/95 backdrop-blur-md border border-stone-200/80 rounded-xl p-4 md:p-5 space-y-4 shadow-sm hover:shadow-md transition-all duration-300">
+        <div className="sticky top-20 z-30 bg-[#FAF9F5]/95 backdrop-blur-md border border-stone-200/80 rounded-xl p-4 md:p-5 space-y-4 shadow-sm hover:shadow-md transition-all duration-300">
           <style dangerouslySetInnerHTML={{__html: `
             .scrollbar-none::-webkit-scrollbar { display: none; }
             .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
@@ -395,7 +395,7 @@ Mensaje del cliente: ${checkoutForm.message || "Sin mensaje adicional."}
                     {isSelected && (
                       <motion.div
                         layoutId="activePlazaRedesign"
-                        className="absolute inset-0 bg-[#06434a] rounded-lg -z-0"
+                        className="absolute inset-0 bg-[#06434a] rounded-lg z-0"
                         transition={{ type: "spring", stiffness: 380, damping: 30 }}
                       />
                     )}
@@ -540,7 +540,7 @@ Mensaje del cliente: ${checkoutForm.message || "Sin mensaje adicional."}
       )}
 
       {/* DYNAMIC TAB CONTENT VIEWPORT */}
-      <div className="min-h-[400px]">
+      <div className="min-h-100">
         {/* VIEW 1: GRID VIEW OF CARDS */}
         {activeTab === "tarjetas" && (
           <div className="space-y-6">
@@ -594,7 +594,7 @@ Mensaje del cliente: ${checkoutForm.message || "Sin mensaje adicional."}
         {activeTab === "mapa" && (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
             {/* Split map sidebar */}
-            <div className="lg:col-span-4 max-h-[500px] overflow-y-auto border border-stone-200 rounded-xl bg-white p-4 space-y-3" style={{ scrollbarWidth: "thin" }}>
+            <div className="lg:col-span-4 max-h-125 overflow-y-auto border border-stone-200 rounded-xl bg-white p-4 space-y-3" style={{ scrollbarWidth: "thin" }}>
               <h3 className="text-xs font-bold text-stone-900 uppercase tracking-wider border-b border-stone-100 pb-2">
                 Listado en Mapa ({filteredScreens.length})
               </h3>
@@ -634,7 +634,7 @@ Mensaje del cliente: ${checkoutForm.message || "Sin mensaje adicional."}
             </div>
 
             {/* Main Interactive Leaflet Map */}
-            <div className="lg:col-span-8 h-[500px] rounded-xl overflow-hidden shadow-xs relative border border-stone-200">
+            <div className="lg:col-span-8 h-125 rounded-xl overflow-hidden shadow-xs relative border border-stone-200">
               <InteractiveMap
                 screens={filteredScreens}
                 selectedScreenId={selectedScreenId}
@@ -893,7 +893,7 @@ Mensaje del cliente: ${checkoutForm.message || "Sin mensaje adicional."}
               <div className="space-y-12">
                 <div className="text-center py-12 bg-stone-50/50 border border-dashed border-stone-200 rounded-[24px] max-w-lg mx-auto p-8 space-y-5 shadow-xs">
                   <div className="h-14 w-14 bg-stone-100 rounded-full flex items-center justify-center mx-auto text-stone-400 shadow-inner">
-                    <FileDown className="h-6 w-6" />
+                <FileDown className="h-6 w-6" />
                   </div>
                   <div className="space-y-2">
                     <h4 className="font-bold text-stone-900 text-base font-display">Tu MediaKit está vacío</h4>
@@ -1038,7 +1038,7 @@ Mensaje del cliente: ${checkoutForm.message || "Sin mensaje adicional."}
 
       {/* DETAILED SIDE-BY-SIDE COMPARATIVE MODAL */}
       <Dialog open={isCompareModalOpen} onOpenChange={setIsCompareModalOpen}>
-        <DialogContent className="max-w-5xl p-0 overflow-hidden bg-white border border-stone-200 shadow-2xl rounded-[24px] max-h-[92vh] flex flex-col">
+        <DialogContent className="max-w-5xl p-0 overflow-hidden bg-white border border-stone-200 shadow-2xl rounded-3xl max-h-[92vh] flex flex-col">
           <DialogTitle className="sr-only">Comparación Técnica de Soportes</DialogTitle>
           <DialogDescription className="sr-only">Tabla comparativa de dimensiones, resolución, brillo y audiencia de los soportes seleccionados</DialogDescription>
 
@@ -1067,7 +1067,7 @@ Mensaje del cliente: ${checkoutForm.message || "Sin mensaje adicional."}
 
           {/* Comparative Table Viewport */}
           <div className="p-6 md:p-8 overflow-x-auto overflow-y-auto max-h-[60vh]">
-            <div className="min-w-[600px] grid grid-cols-4 gap-6 text-xs">
+            <div className="min-w-150 grid grid-cols-4 gap-6 text-xs">
               
               {/* Row: Technical labels */}
               <div className="space-y-6 pt-10 text-stone-400 font-bold uppercase tracking-wider text-[10px]">

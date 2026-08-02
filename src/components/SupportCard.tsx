@@ -1,6 +1,6 @@
 import React from "react";
-import { Card } from "@/src/components/ui/card";
-import { DynamicIcon } from "./DynamicIcon";
+import { Card } from "@/components/ui";
+import { DynamicIcon } from "@/components/DynamicIcon";
 
 export interface SupportCardProps {
   icon: string;
@@ -25,7 +25,7 @@ export const SupportCard: React.FC<SupportCardProps> = ({
   iconColorClass = "text-[#06434a]",
   iconBgClass = "bg-[#06434a]/10",
 }) => {
-  return (
+  return ( 
     <Card className="bg-white/95 backdrop-blur-xs border border-[#E7E5E4] rounded-xl p-6.5 space-y-4 hover:border-[#06434a]/35 shadow-[0_6px_24px_-8px_rgba(40,30,20,0.02)] hover:shadow-[0_16px_40px_-12px_rgba(40,30,20,0.06)] transition-all duration-300 flex flex-col justify-between">
       <div className="space-y-4">
         <div className={`p-3 ${iconBgClass} ${iconColorClass} rounded-xl inline-block`}>

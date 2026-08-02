@@ -8,24 +8,24 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/src/components/ui/card"
+} from "@/components/ui"
 import {
   ChartConfig,
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
-} from "@/src/components/ui/chart"
+} from "@/components/ui"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/src/components/ui/select"
+} from "@/components/ui"
 import {
   ToggleGroup,
   ToggleGroupItem,
-} from "@/src/components/ui/toggle-group"
+} from "@/components/ui"
 const chartData = [
   { date: "2024-04-01", desktop: 222, mobile: 150 },
   { date: "2024-04-02", desktop: 97, mobile: 180 },
@@ -163,7 +163,7 @@ export function ChartAreaInteractive() {
       <CardHeader className="relative">
         <CardTitle>Total Visitors</CardTitle>
         <CardDescription>
-          <span className="@[540px]/card:block hidden">
+          <span className="hidden @[540px]/card:block">
             Total for the last 3 months
           </span>
           <span className="@[540px]/card:hidden">Last 3 months</span>
@@ -174,7 +174,7 @@ export function ChartAreaInteractive() {
             value={timeRange}
             onValueChange={setTimeRange}
             variant="outline"
-            className="@[767px]/card:flex hidden"
+            className="hidden @[767px]/card:flex"
           >
             <ToggleGroupItem value="90d" className="h-8 px-2.5">
               Last 3 months
@@ -188,7 +188,7 @@ export function ChartAreaInteractive() {
           </ToggleGroup>
           <Select value={timeRange} onValueChange={setTimeRange}>
             <SelectTrigger
-              className="@[767px]/card:hidden flex w-40"
+              className="flex w-40 @[767px]/card:hidden"
               aria-label="Select a value"
             >
               <SelectValue placeholder="Last 3 months" />

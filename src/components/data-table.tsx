@@ -54,16 +54,16 @@ import { Area, AreaChart, CartesianGrid, XAxis } from "recharts"
 import { toast } from "sonner"
 import { z } from "zod"
 
-import { useIsMobile } from "@/src/hooks/use-mobile"
-import { Badge } from "@/src/components/ui/badge"
-import { Button } from "@/src/components/ui/button"
+import { useIsMobile } from "@/hooks/use-mobile";
+import { Badge } from "@/components/ui";
+import { Button } from "@/components/ui";
 import {
   ChartConfig,
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
-} from "@/src/components/ui/chart"
-import { Checkbox } from "@/src/components/ui/checkbox"
+} from "@/components/ui";
+import { Checkbox } from "@/components/ui";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -71,17 +71,17 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/src/components/ui/dropdown-menu"
-import { Input } from "@/src/components/ui/input"
-import { Label } from "@/src/components/ui/label"
+} from "@/components/ui";
+import { Input } from "@/components/ui";
+import { Label } from "@/components/ui";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/src/components/ui/select"
-import { Separator } from "@/src/components/ui/separator"
+} from "@/components/ui";
+import { Separator } from "@/components/ui";
 import {
   Sheet,
   SheetClose,
@@ -91,7 +91,7 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from "@/src/components/ui/sheet"
+} from "@/components/ui";
 import {
   Table,
   TableBody,
@@ -99,13 +99,13 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/src/components/ui/table"
+} from "@/components/ui";
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from "@/src/components/ui/tabs"
+} from "@/components/ui";
 
 export const schema = z.object({
   id: z.number(),
@@ -415,7 +415,7 @@ export function DataTable({
       <div className="flex items-center justify-between px-4 lg:px-6">
         <Label htmlFor="view-selector" className="sr-only">
           View
-        </Label>
+        </Label> 
         <Select defaultValue="outline">
           <SelectTrigger
             className="@4xl/main:hidden flex w-fit"
@@ -430,7 +430,7 @@ export function DataTable({
             <SelectItem value="focus-documents">Focus Documents</SelectItem>
           </SelectContent>
         </Select>
-        <TabsList className="@4xl/main:flex hidden">
+        <TabsList className="hidden @4xl/main:flex">
           <TabsTrigger value="outline">Outline</TabsTrigger>
           <TabsTrigger value="past-performance" className="gap-1">
             Past Performance{" "}
@@ -548,7 +548,7 @@ export function DataTable({
           </DndContext>
         </div>
         <div className="flex items-center justify-between px-4">
-          <div className="hidden flex-1 text-sm text-muted-foreground lg:flex">
+          <div className="hidden flex-1 text-sm text-muted-foreground lg:flex"> 
             {table.getFilteredSelectedRowModel().rows.length} of{" "}
             {table.getFilteredRowModel().rows.length} row(s) selected.
           </div>

@@ -1,5 +1,5 @@
 import React from "react";
-import { BaseCard } from "./BaseCard";
+import { BaseCard } from "@components/BaseCard";
 import { Cpu, Film, Layers, CheckCircle } from "lucide-react";
 
 export interface MediaCardProps {
@@ -86,7 +86,7 @@ export const MediaCard: React.FC<MediaCardProps> = ({
       backgroundColor="white"
       className={isActive ? "border-[#C47D50] ring-2 ring-[#C47D50]/10" : ""}
     >
-      <div className="space-y-1.5 pt-1 text-xs text-stone-500 font-sans font-normal">
+      <div className="space-y-1.5 pt-1 font-sans text-xs font-normal text-stone-500">
         <div className="flex items-center gap-2">
           <Layers className="h-3.5 w-3.5 text-stone-400 shrink-0" />
           <span>Formatos admitidos: MP4 (H.264), JPG, PNG</span>

@@ -398,7 +398,7 @@ export const SitemapSeoView: React.FC = () => {
               {/* Search bar & Legend */}
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-4 border border-slate-200 rounded-xl shadow-3xs">
                 <div className="relative flex-1 max-w-md">
-                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" /> 
                   <input
                     type="text"
                     placeholder="Buscar página, slug o palabra clave..."
@@ -409,10 +409,10 @@ export const SitemapSeoView: React.FC = () => {
                 </div>
                 <div className="flex flex-wrap items-center gap-3 text-xs font-bold text-slate-600">
                   <span className="text-slate-400">Intenciones:</span>
-                  <span className="flex items-center gap-1.5 bg-sky-100 text-sky-700 px-2 py-0.5 rounded-full text-[10px] uppercase">Informational</span>
-                  <span className="flex items-center gap-1.5 bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full text-[10px] uppercase">Commercial</span>
-                  <span className="flex items-center gap-1.5 bg-rose-100 text-rose-700 px-2 py-0.5 rounded-full text-[10px] uppercase">Transactional</span>
-                  <span className="flex items-center gap-1.5 bg-slate-150 text-slate-700 px-2 py-0.5 rounded-full text-[10px] uppercase">Navigational</span>
+                  <span className="flex items-center gap-1.5 rounded-full bg-sky-100 px-2 py-0.5 text-[10px] uppercase text-sky-700">Informational</span>
+                  <span className="flex items-center gap-1.5 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] uppercase text-emerald-700">Commercial</span>
+                  <span className="flex items-center gap-1.5 rounded-full bg-rose-100 px-2 py-0.5 text-[10px] uppercase text-rose-700">Transactional</span>
+                  <span className="flex items-center gap-1.5 rounded-full bg-slate-150 px-2 py-0.5 text-[10px] uppercase text-slate-700">Navigational</span>
                 </div>
               </div>
 
@@ -425,22 +425,22 @@ export const SitemapSeoView: React.FC = () => {
 
               {/* Fast stats cards for sitemap depth */}
               <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-                <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-3xs">
+                <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-3xs">
                   <span className="block text-[10px] font-bold text-slate-400 uppercase font-mono">Profundidad Máxima</span>
                   <span className="text-md font-black text-slate-900">3 Niveles</span>
                   <span className="block text-[9px] text-emerald-600 font-bold mt-1">Cumple regla estricta UX</span>
                 </div>
-                <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-3xs">
+                <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-3xs">
                   <span className="block text-[10px] font-bold text-slate-400 uppercase font-mono">Páginas Huérfanas</span>
                   <span className="text-md font-black text-slate-900">0</span>
                   <span className="block text-[9px] text-emerald-600 font-bold mt-1">100% enlazado interno</span>
                 </div>
-                <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-3xs">
+                <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-3xs">
                   <span className="block text-[10px] font-bold text-slate-400 uppercase font-mono">Clústeres de Intención</span>
                   <span className="text-md font-black text-slate-900">4 Categorías</span>
                   <span className="block text-[9px] text-indigo-600 font-bold mt-1">Estructura SEO semántica</span>
                 </div>
-                <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-3xs">
+                <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-3xs">
                   <span className="block text-[10px] font-bold text-slate-400 uppercase font-mono">Escalabilidad de URL</span>
                   <span className="text-md font-black text-slate-900">Infinita</span>
                   <span className="block text-[9px] text-emerald-600 font-bold mt-1">Listo para Headless CMS</span>
@@ -462,7 +462,7 @@ export const SitemapSeoView: React.FC = () => {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 
                 {/* 1. Diagnóstico de Debilidades de la Estructura Anterior */}
-                <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-2xs space-y-4">
+                <div className="space-y-4 rounded-xl border border-slate-200 bg-white p-5 shadow-2xs">
                   <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2 text-rose-700">
                     <AlertTriangle className="h-4.5 w-4.5 text-rose-500" />
                     Diagnóstico de Estructura Anterior (Problemas Críticos)
@@ -470,21 +470,21 @@ export const SitemapSeoView: React.FC = () => {
 
                   <div className="space-y-3 text-xs text-slate-600 leading-relaxed">
                     <div className="p-3 bg-rose-50/50 border border-rose-100 rounded-lg space-y-1">
-                      <strong className="text-rose-800">1. Contenido mezclado y ambiguo:</strong>
+                      <strong className="text-rose-800">1. Contenido mezclado y ambiguo:</strong> 
                       <p>
                         Páginas como <code>/Nosotros/Soluciones</code> o <code>/Nosotros/Soportes y Formatos</code> mezclaban la presentación institucional con ofertas de venta. Esto diluía el valor de rastreo SEO y confundía al robot de Google.
                       </p>
                     </div>
 
                     <div className="p-3 bg-rose-50/50 border border-rose-100 rounded-lg space-y-1">
-                      <strong className="text-rose-800">2. Mala categorización de Espacios por Provincia:</strong>
+                      <strong className="text-rose-800">2. Mala categorización de Espacios por Provincia:</strong> 
                       <p>
                         Ubicaciones como <code>/Espacios Publicitarios/Mendoza</code> limitaban el crecimiento de landing pages geolocalizadas. Impidía competir en búsquedas de nicho provinciales en el largo plazo.
                       </p>
                     </div>
 
                     <div className="p-3 bg-rose-50/50 border border-rose-100 rounded-lg space-y-1">
-                      <strong className="text-rose-800">3. Embudo de conversión roto:</strong>
+                      <strong className="text-rose-800">3. Embudo de conversión roto:</strong> 
                       <p>
                         No existía un camino claro hacia la cotización comercial directa, empujando a los usuarios B2B a un formulario genérico de contacto sin segmentar por presupuesto u objetivos de campaña.
                       </p>
@@ -493,7 +493,7 @@ export const SitemapSeoView: React.FC = () => {
                 </div>
 
                 {/* 2. Soluciones Aplicadas */}
-                <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-2xs space-y-4">
+                <div className="space-y-4 rounded-xl border border-slate-200 bg-white p-5 shadow-2xs">
                   <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2 text-emerald-700">
                     <CheckCircle2 className="h-4.5 w-4.5 text-emerald-500" />
                     Soluciones Aplicadas en el Rediseño Multipage
@@ -501,21 +501,21 @@ export const SitemapSeoView: React.FC = () => {
 
                   <div className="space-y-3 text-xs text-slate-600 leading-relaxed">
                     <div className="p-3 bg-emerald-50/50 border border-emerald-100 rounded-lg space-y-1">
-                      <strong className="text-emerald-800">1. Clusterización Semántica Estricta:</strong>
+                      <strong className="text-emerald-800">1. Clusterización Semántica Estricta:</strong> 
                       <p>
                         Se dividió el sitio en secciones claras: <code>/nosotros</code> para lo institucional, <code>/servicios</code> para la oferta, <code>/espacios-publicitarios</code> para formatos físicos, y <code>/ubicaciones</code> para geolocalización.
                       </p>
                     </div>
 
                     <div className="p-3 bg-emerald-50/50 border border-emerald-100 rounded-lg space-y-1">
-                      <strong className="text-emerald-800">2. Enrutamiento Amigable y Corto:</strong>
+                      <strong className="text-emerald-800">2. Enrutamiento Amigable y Corto:</strong> 
                       <p>
                         Las URLs se optimizaron según la intención de búsqueda de B2B, pasando de estructuras anidadas complejas a un máximo de 2 subdirectorios (por ejemplo: <code>/ubicaciones/mendoza</code>).
                       </p>
                     </div>
 
                     <div className="p-3 bg-emerald-50/50 border border-emerald-100 rounded-lg space-y-1">
-                      <strong className="text-emerald-800">3. Puertas de Entrada B2B para Captación:</strong>
+                      <strong className="text-emerald-800">3. Puertas de Entrada B2B para Captación:</strong> 
                       <p>
                         Se crearon accesos dedicados a <code>/contacto/cotizacion</code> y <code>/mediakit</code> con tarifas claras, lo que incrementa el ratio de envío de formularios por empresas interesadas.
                       </p>
@@ -526,7 +526,7 @@ export const SitemapSeoView: React.FC = () => {
               </div>
 
               {/* Comparative flow chart style */}
-              <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-2xs">
+              <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-2xs">
                 <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider font-mono mb-2">Comparación de Reducción de Clics</span>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="p-4 border border-rose-100 bg-rose-50/20 rounded-xl">
@@ -570,7 +570,7 @@ export const SitemapSeoView: React.FC = () => {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 
                 {/* Justificación UX */}
-                <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-2xs space-y-4">
+                <div className="space-y-4 rounded-xl border border-slate-200 bg-white p-5 shadow-2xs">
                   <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2 text-indigo-700">
                     <BookOpen className="h-4.5 w-4.5 text-indigo-500" />
                     Justificación de Experiencia de Usuario (UX Architect)
@@ -604,7 +604,7 @@ export const SitemapSeoView: React.FC = () => {
                 </div>
 
                 {/* Justificación SEO */}
-                <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-2xs space-y-4">
+                <div className="space-y-4 rounded-xl border border-slate-200 bg-white p-5 shadow-2xs">
                   <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2 text-emerald-700">
                     <Globe className="h-4.5 w-4.5 text-emerald-500" />
                     Justificación SEO Estratégico (SEO Strategist)
@@ -637,7 +637,7 @@ export const SitemapSeoView: React.FC = () => {
               </div>
 
               {/* Mega Menu Visual Blueprint */}
-              <div className="bg-slate-900 text-white rounded-[28px] p-5 border border-slate-800 space-y-3">
+              <div className="space-y-3 rounded-[28px] border border-slate-800 bg-slate-900 p-5 text-white">
                 <span className="block text-[10px] font-bold text-emerald-400 uppercase tracking-wider font-mono">Plano de Megamenú Principal (Desktop Visual Spec)</span>
                 
                 <div className="bg-slate-950 p-4 rounded-lg border border-slate-800 grid grid-cols-1 md:grid-cols-3 gap-6 text-xs">
@@ -682,7 +682,7 @@ export const SitemapSeoView: React.FC = () => {
               className="space-y-6"
             >
               {/* Interactive URL Generator card */}
-              <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-2xs space-y-4">
+              <div className="space-y-4 rounded-xl border border-slate-200 bg-white p-5 shadow-2xs">
                 <div className="border-b border-slate-100 pb-2">
                   <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
                     <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" />
@@ -783,7 +783,7 @@ export const SitemapSeoView: React.FC = () => {
               </div>
 
               {/* Simulated Breadcrumbs code visualization to show Grade AA coding */}
-              <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-2xs space-y-2">
+              <div className="space-y-2 rounded-xl border border-slate-200 bg-white p-5 shadow-2xs">
                 <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider font-mono">Estructura JSON-LD para Google de Breadcrumbs (Marcado Schema.org)</span>
                 <pre className="p-3.5 bg-slate-50 border border-slate-150 rounded-lg text-[10px] font-mono text-slate-600 overflow-x-auto">
 {`{
@@ -825,7 +825,7 @@ export const SitemapSeoView: React.FC = () => {
               className="space-y-6"
             >
               {/* Scalability stats banner */}
-              <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-2xs space-y-4">
+              <div className="space-y-4 rounded-xl border border-slate-200 bg-white p-5 shadow-2xs">
                 <div className="border-b border-slate-100 pb-2">
                   <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider flex items-center gap-1.5">
                     <span className="h-1.5 w-1.5 rounded-full bg-indigo-600" />
@@ -890,7 +890,7 @@ export const SitemapSeoView: React.FC = () => {
               </div>
 
               {/* Next.js App Router compatibility visualization */}
-              <div className="bg-slate-900 text-white p-5 rounded-[28px] border border-slate-800 space-y-3">
+              <div className="space-y-3 rounded-[28px] border border-slate-800 bg-slate-900 p-5 text-white">
                 <div className="flex items-center justify-between">
                   <span className="block text-[10px] font-bold text-emerald-400 uppercase tracking-wider font-mono">Simulación de Estructura de Carpetas de Código (Next.js App Router compatible)</span>
                   <span className="text-[9px] bg-slate-800 text-slate-300 font-mono px-2 py-0.5 rounded">app/ Directory Schema</span>

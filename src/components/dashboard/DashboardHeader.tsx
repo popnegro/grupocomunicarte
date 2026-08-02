@@ -1,6 +1,7 @@
 import React from "react";
 import { Role } from "./types";
-import { Shield, Sparkles, User, Bell, ChevronDown, Menu } from "lucide-react";
+import { Shield, Sparkles, User, Bell, ChevronDown, Menu, ChevronLeft, Home } from "lucide-react";
+import { useCms } from "../CmsContext";
 
 interface DashboardHeaderProps {
   userRole: Role;
@@ -17,6 +18,8 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   description,
   onToggleMobileSidebar,
 }) => {
+  const { setActiveView } = useCms();
+
   const getRoleBadge = (role: Role) => {
     switch (role) {
       case "admin":
@@ -37,6 +40,21 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   return (
     <header className="border-b border-stone-200/80 bg-white py-5 px-6 md:px-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 sticky top-0 z-40">
       <div className="flex items-center gap-3 w-full md:w-auto">
+        <button
+          onClick={() => setActiveView("landing")}
+          className="hidden sm:flex items-center gap-2 text-xs font-bold text-[#06434a] hover:bg-[#06434a]/5 px-4 py-2 rounded-xl transition-all focus:outline-none focus:ring-2 focus:ring-[#06434a]/30"
+          aria-label="Volver a landing principal"
+        >
+          <ChevronLeft className="h-4 w-4" />
+          <span className="uppercase tracking-wider">Landing</span>
+        </button>
+        <button
+          onClick={() => setActiveView("landing")}
+          className="sm:hidden p-2 text-[#06434a] hover:bg-stone-100 rounded-lg min-h-[44px] min-w-[44px]"
+          aria-label="Volver a landing"
+        >
+          <Home className="h-4 w-4" />
+        </button>
         {onToggleMobileSidebar && (
           <button
             onClick={onToggleMobileSidebar}

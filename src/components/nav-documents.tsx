@@ -10,7 +10,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/src/components/ui/dropdown-menu"
+} from "@/components/ui"
 import {
   SidebarGroup,
   SidebarGroupLabel,
@@ -19,7 +19,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
-} from "@/src/components/ui/sidebar"
+} from "@/components/ui"
 
 export function NavDocuments({
   items,
@@ -48,7 +48,7 @@ export function NavDocuments({
               <DropdownMenuTrigger asChild>
                 <SidebarMenuAction
                   showOnHover
-                  className="rounded-sm data-[state=open]:bg-accent"
+                  className="data-[state=open]:bg-accent rounded-sm"
                 >
                   <MoreHorizontalIcon />
                   <span className="sr-only">More</span>

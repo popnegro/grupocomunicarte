@@ -104,7 +104,7 @@ export const OperationsNocView: React.FC = () => {
       </div>
 
       {/* NOC Performance Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
         <div className="bg-white border border-slate-200 p-4.5 rounded-2xl shadow-xs space-y-1">
           <div className="flex items-center justify-between">
             <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Estado General de Red</span>
@@ -166,7 +166,7 @@ export const OperationsNocView: React.FC = () => {
 
       {/* Render selected sub-tab */}
       {activeTab === "board" ? (
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-5">
           {(["Planificación", "Impresión/Assets", "Carga Digital", "Auditoría", "Mantenimiento"] as const).map((stage) => {
             const stageTasks = tasks.filter((t) => t.stage === stage);
             return (
@@ -299,7 +299,7 @@ export const OperationsNocView: React.FC = () => {
 
           {/* Incident reporting status guidelines */}
           <div className="lg:col-span-4 space-y-6">
-            <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-4 text-xs">
+            <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-5 text-xs shadow-sm">
               <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider border-b border-slate-100 pb-3">
                 Protocolo de Emergencias NOC
               </h3>

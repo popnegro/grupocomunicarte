@@ -89,7 +89,7 @@ export const B2BMarketplaceView: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Upper Title Panel */}
-      <div className="p-6 bg-slate-900 text-white rounded-2xl shadow-md flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col gap-4 rounded-2xl bg-slate-900 p-6 text-white shadow-md md:flex-row md:items-center md:justify-between">
         <div className="space-y-1">
           <span className="px-2.5 py-0.5 bg-amber-500 text-slate-950 text-[10px] font-black rounded-full uppercase tracking-wider">
             Portal Agencia & B2B
@@ -177,7 +177,7 @@ export const B2BMarketplaceView: React.FC = () => {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6" key="marketplace">
             {/* Left Column: Screen browser catalogs */}
             <div className="lg:col-span-8 space-y-5">
-              {/* Filter controls */}
+              {/* Filter controls */} 
               <div className="bg-white border border-slate-200 p-4.5 rounded-2xl shadow-xs flex flex-col md:flex-row gap-4 items-start md:items-center justify-between text-xs font-bold text-slate-400 uppercase tracking-wider">
                 <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto">
                   {/* Zone Filter dropdown */}
@@ -220,7 +220,7 @@ export const B2BMarketplaceView: React.FC = () => {
                   const isSelected = cart.includes(screen.id);
                   return (
                     <div
-                      key={screen.id}
+                      key={screen.id} 
                       className={`bg-white border rounded-2xl shadow-xs overflow-hidden flex flex-col transition-all group ${
                         isSelected ? "border-slate-900" : "border-slate-200 hover:border-slate-300"
                       }`}
@@ -292,7 +292,7 @@ export const B2BMarketplaceView: React.FC = () => {
 
             {/* Right Column: Checkout Proposal Form */}
             <div className="lg:col-span-4 space-y-6">
-              <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-5">
+              <div className="space-y-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
                 <div className="border-b border-slate-100 pb-3 flex items-center justify-between">
                   <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider">
                     Cotización Estimada ({cart.length})
@@ -315,7 +315,7 @@ export const B2BMarketplaceView: React.FC = () => {
                 ) : (
                   <div className="space-y-4">
                     {/* Compact cart list preview */}
-                    <div className="max-h-40 overflow-y-auto divide-y divide-slate-100 pr-1 text-xs">
+                    <div className="max-h-40 divide-y divide-slate-100 overflow-y-auto pr-1 text-xs">
                       {cartScreens.map((sc) => (
                         <div key={sc.id} className="py-2.5 flex items-center justify-between gap-2">
                           <div className="min-w-0">

@@ -1,32 +1,32 @@
-import React, { useState } from "react";
+import React, { useState, Suspense, lazy } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { useCms } from "./CmsContext";
 import { DoohScreen } from "../types";
 
 // Import Shared modular Types & Mock Databases
 import { Role, MediaKit, Cotizacion, Reserva, Campaña, Cliente, ChangeLog, LedVehicle } from "./dashboard/types";
-import { 
-  INITIAL_CLIENTES, 
-  INITIAL_MEDIAKITS, 
-  INITIAL_COTIZACIONES, 
-  INITIAL_RESERVAS, 
-  INITIAL_CAMPAÑAS, 
-  INITIAL_LOGS, 
-  INITIAL_VEHICLES 
+import {
+  INITIAL_CLIENTES,
+  INITIAL_MEDIAKITS,
+  INITIAL_COTIZACIONES,
+  INITIAL_RESERVAS,
+  INITIAL_CAMPAÑAS,
+  INITIAL_LOGS,
+  INITIAL_VEHICLES
 } from "./dashboard/mockData";
 
 // Import Modular panels
-import { DashboardHeader } from "./dashboard/DashboardHeader";
-import { DashboardHome } from "./dashboard/DashboardHome";
-import { InventoryModule } from "./dashboard/InventoryModule";
-import { MediaKitModule } from "./dashboard/MediaKitModule";
-import { WorkflowModule } from "./dashboard/WorkflowModule";
-import { LedMovilModule } from "./dashboard/LedMovilModule";
-import { RevenueModule } from "./dashboard/RevenueModule";
-import { CalendarModule } from "./dashboard/CalendarModule";
-import { ClientsModule } from "./dashboard/ClientsModule";
-import { ReportsModule } from "./dashboard/ReportsModule";
-import { AdministrationModule } from "./dashboard/AdministrationModule";
+const DashboardHeader = lazy(() => import("./dashboard/DashboardHeader").then(module => ({ default: module.DashboardHeader })));
+const DashboardHome = lazy(() => import("./dashboard/DashboardHome").then(module => ({ default: module.DashboardHome })));
+const InventoryModule = lazy(() => import("./dashboard/InventoryModule").then(module => ({ default: module.InventoryModule })));
+const MediaKitModule = lazy(() => import("./dashboard/MediaKitModule").then(module => ({ default: module.MediaKitModule })));
+const WorkflowModule = lazy(() => import("./dashboard/WorkflowModule").then(module => ({ default: module.WorkflowModule })));
+const LedMovilModule = lazy(() => import("./dashboard/LedMovilModule").then(module => ({ default: module.LedMovilModule })));
+const RevenueModule = lazy(() => import("./dashboard/RevenueModule").then(module => ({ default: module.RevenueModule })));
+const CalendarModule = lazy(() => import("./dashboard/CalendarModule").then(module => ({ default: module.CalendarModule })));
+const ClientsModule = lazy(() => import("./dashboard/ClientsModule").then(module => ({ default: module.ClientsModule })));
+const ReportsModule = lazy(() => import("./dashboard/ReportsModule").then(module => ({ default: module.ReportsModule })));
+const AdministrationModule = lazy(() => import("./dashboard/AdministrationModule").then(module => ({ default: module.AdministrationModule })));
 
 // Lucide Icons
 import {
@@ -47,8 +47,8 @@ import {
   Globe,
   Shield
 } from "lucide-react";
-import { SitemapSeoView } from "./SitemapSeoView";
-import { DesignSystemAuditView } from "./DesignSystemAuditView";
+const SitemapSeoView = lazy(() => import("./SitemapSeoView").then(module => ({ default: module.SitemapSeoView })));
+const DesignSystemAuditView = lazy(() => import("./DesignSystemAuditView").then(module => ({ default: module.DesignSystemAuditView })));
 
 export const DashboardView: React.FC = () => {
   const {
@@ -381,122 +381,124 @@ export const DashboardView: React.FC = () => {
 
         {/* Sub-view router container */}
         <div className="flex-1 overflow-y-auto relative bg-[#FAF9F5]">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activeTab}
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -6 }}
-              transition={{ duration: 0.12, ease: "easeOut" }}
-              className="w-full min-h-full"
-            >
-              {activeTab === "dashboard" && (
-                <DashboardHome
-                  mediaKits={mediaKits}
-                  cotizaciones={cotizaciones}
-                  reservas={reservas}
-                  campañas={campañas}
-                  clientes={clientes}
-                  userRole={userRole}
-                  onNavigateToTab={setActiveTab}
-                  onApproveReserva={handleApproveReserva}
-                  onApproveCotizacion={handleApproveCotizacion}
-                  setCampañas={setCampañas}
-                  setClientes={setClientes}
-                  setCotizaciones={setCotizaciones}
-                  setReservas={setReservas}
-                  addLog={addLog}
-                />
-              )}
+          <Suspense fallback={<div className="flex items-center justify-center h-full"><Sparkles className="h-8 w-8 text-slate-300 animate-spin" /></div>}>
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeTab}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.12, ease: "easeOut" }}
+                className="w-full min-h-full"
+              >
+                {activeTab === "dashboard" && (
+                  <DashboardHome
+                    mediaKits={mediaKits}
+                    cotizaciones={cotizaciones}
+                    reservas={reservas}
+                    campañas={campañas}
+                    clientes={clientes}
+                    userRole={userRole}
+                    onNavigateToTab={setActiveTab}
+                    onApproveReserva={handleApproveReserva}
+                    onApproveCotizacion={handleApproveCotizacion}
+                    setCampañas={setCampañas}
+                    setClientes={setClientes}
+                    setCotizaciones={setCotizaciones}
+                    setReservas={setReservas}
+                    addLog={addLog}
+                  />
+                )}
 
-              {activeTab === "inventario" && (
-                <InventoryModule
-                  screens={screens}
-                  userRole={userRole}
-                  onUpdateScreen={handleUpdateScreen}
-                  onAddScreen={handleAddScreen}
-                  onDeleteScreen={handleDeleteScreen}
-                />
-              )}
+                {activeTab === "inventario" && (
+                  <InventoryModule
+                    screens={screens}
+                    userRole={userRole}
+                    onUpdateScreen={handleUpdateScreen}
+                    onAddScreen={handleAddScreen}
+                    onDeleteScreen={handleDeleteScreen}
+                  />
+                )}
 
-              {activeTab === "mediakit" && (
-                <MediaKitModule
-                  mediaKits={mediaKits}
-                  clientes={clientes}
-                  screens={screens}
-                  userRole={userRole}
-                  onUpdateMediaKit={handleUpdateMediaKit}
-                  onAddMediaKit={handleAddMediaKit}
-                  onDeleteMediaKit={(id) => setMediaKits((prev) => prev.filter((m) => m.id !== id))}
-                  onGenerateQuoteFromMediaKit={handleGenerateQuoteFromMediaKit}
-                />
-              )}
+                {activeTab === "mediakit" && (
+                  <MediaKitModule
+                    mediaKits={mediaKits}
+                    clientes={clientes}
+                    screens={screens}
+                    userRole={userRole}
+                    onUpdateMediaKit={handleUpdateMediaKit}
+                    onAddMediaKit={handleAddMediaKit}
+                    onDeleteMediaKit={(id) => setMediaKits((prev) => prev.filter((m) => m.id !== id))}
+                    onGenerateQuoteFromMediaKit={handleGenerateQuoteFromMediaKit}
+                  />
+                )}
 
-              {activeTab === "reservas" && (
-                <WorkflowModule
-                  cotizaciones={cotizaciones}
-                  reservas={reservas}
-                  campañas={campañas}
-                  screens={screens}
-                  userRole={userRole}
-                  onUpdateCotizacion={(id, data) => setCotizaciones((prev) => prev.map((q) => (q.id === id ? { ...q, ...data } : q)))}
-                  onUpdateReserva={(id, data) => setReservas((prev) => prev.map((r) => (r.id === id ? { ...r, ...data } : r)))}
-                  onUpdateCampaña={(id, data) => setCampañas((prev) => prev.map((c) => (c.id === id ? { ...c, ...data } : c)))}
-                  onApproveCotizacion={handleApproveCotizacion}
-                  onApproveReserva={handleApproveReserva}
-                />
-              )}
+                {activeTab === "reservas" && (
+                  <WorkflowModule
+                    cotizaciones={cotizaciones}
+                    reservas={reservas}
+                    campañas={campañas}
+                    screens={screens}
+                    userRole={userRole}
+                    onUpdateCotizacion={(id, data) => setCotizaciones((prev) => prev.map((q) => (q.id === id ? { ...q, ...data } : q)))}
+                    onUpdateReserva={(id, data) => setReservas((prev) => prev.map((r) => (r.id === id ? { ...r, ...data } : r)))}
+                    onUpdateCampaña={(id, data) => setCampañas((prev) => prev.map((c) => (c.id === id ? { ...c, ...data } : c)))}
+                    onApproveCotizacion={handleApproveCotizacion}
+                    onApproveReserva={handleApproveReserva}
+                  />
+                )}
 
-              {activeTab === "led-movil" && (
-                <LedMovilModule
-                  vehicles={vehicles}
-                  onUpdateVehicle={(id, data) => setVehicles((prev) => prev.map((v) => (v.id === id ? { ...v, ...data } : v)))}
-                  onAddVehicle={(vh) => setVehicles((prev) => [...prev, vh])}
-                />
-              )}
+                {activeTab === "led-movil" && (
+                  <LedMovilModule
+                    vehicles={vehicles}
+                    onUpdateVehicle={(id, data) => setVehicles((prev) => prev.map((v) => (v.id === id ? { ...v, ...data } : v)))}
+                    onAddVehicle={(vh) => setVehicles((prev) => [...prev, vh])}
+                  />
+                )}
 
-              {activeTab === "revenue" && (
-                <RevenueModule
-                  screens={screens}
-                  onUpdateScreenPrice={handleUpdateScreenPrice}
-                />
-              )}
+                {activeTab === "revenue" && (
+                  <RevenueModule
+                    screens={screens}
+                    onUpdateScreenPrice={handleUpdateScreenPrice}
+                  />
+                )}
 
-              {activeTab === "calendario" && (
-                <CalendarModule
-                  screens={screens}
-                  onUpdateScreenStatus={(id, status) => handleUpdateScreen(id, { status: status as any })}
-                />
-              )}
+                {activeTab === "calendario" && (
+                  <CalendarModule
+                    screens={screens}
+                    onUpdateScreenStatus={(id, status) => handleUpdateScreen(id, { status: status as any })}
+                  />
+                )}
 
-              {activeTab === "clientes" && (
-                <ClientsModule
-                  clientes={clientes}
-                  userRole={userRole}
-                  onAddCliente={(cliente) => setClientes((prev) => [...prev, cliente])}
-                />
-              )}
+                {activeTab === "clientes" && (
+                  <ClientsModule
+                    clientes={clientes}
+                    userRole={userRole}
+                    onAddCliente={(cliente) => setClientes((prev) => [...prev, cliente])}
+                  />
+                )}
 
-              {activeTab === "reportes" && (
-                <ReportsModule />
-              )}
+                {activeTab === "reportes" && (
+                  <ReportsModule />
+                )}
 
-              {activeTab === "seo" && (
-                <SitemapSeoView />
-              )}
+                {activeTab === "seo" && (
+                  <SitemapSeoView />
+                )}
 
-              {activeTab === "administracion" && (
-                <AdministrationModule
-                  logs={logs}
-                  userRole={userRole}
-                />
-              )}
+                {activeTab === "administracion" && (
+                  <AdministrationModule
+                    logs={logs}
+                    userRole={userRole}
+                  />
+                )}
 
-              {activeTab === "design-system" && (
-                <DesignSystemAuditView />
-              )}
-            </motion.div>
-          </AnimatePresence>
+                {activeTab === "design-system" && (
+                  <DesignSystemAuditView />
+                )}
+              </motion.div>
+            </AnimatePresence>
+          </Suspense>
         </div>
       </main>
 

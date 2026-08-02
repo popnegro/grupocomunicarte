@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "motion/react";
-import { cn } from "@/src/lib/utils";
+import { cn } from "@/lib/utils";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 
 export interface BaseCardProps extends Omit<
@@ -108,7 +108,7 @@ export const BaseCard: React.FC<BaseCardProps> = ({
           className={cn(
             "relative overflow-hidden w-full select-none",
             aspectClasses[imageAspectRatio],
-            borderRadius === "xl" ? "rounded-t-2xl" : borderRadius === "2xl" ? "rounded-t-3xl" : "rounded-t-[32px]"
+            borderRadius === "xl" ? "rounded-t-xl" : borderRadius === "2xl" ? "rounded-t-[20px]" : "rounded-t-3xl"
           )}
         >
           <motion.img

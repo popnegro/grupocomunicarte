@@ -1,7 +1,5 @@
 import React from "react";
-import { Card, CardContent } from "@/src/components/ui/card";
-import { Badge } from "@/src/components/ui/badge";
-import { Skeleton } from "@/src/components/ui/skeleton";
+import { Card as DSCard } from "../design-system";
 import { TrendingUp, TrendingDown, Minus, HelpCircle } from "lucide-react";
 
 interface MetricCardProps {
@@ -29,14 +27,14 @@ export const MetricCard: React.FC<MetricCardProps> = ({
 }) => {
   if (loading) {
     return (
-      <Card className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm space-y-3">
+      <DSCard variant="premium" className="space-y-3">
         <div className="flex justify-between items-center">
-          <Skeleton className="h-4 w-28" />
-          <Skeleton className="h-6 w-6 rounded-full" />
+          <div className="h-4 w-28 bg-stone-100 rounded animate-pulse" />
+          <div className="h-6 w-6 rounded-full bg-stone-100 animate-pulse" />
         </div>
-        <Skeleton className="h-8 w-20" />
-        <Skeleton className="h-3 w-32" />
-      </Card>
+        <div className="h-8 w-20 bg-stone-100 rounded animate-pulse" />
+        <div className="h-3 w-32 bg-stone-100 rounded animate-pulse" />
+      </DSCard>
     );
   }
 
@@ -57,7 +55,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
       })
       .join(" ");
 
-    const strokeColor = trend === "up" ? "#10b981" : trend === "down" ? "#f43f5e" : "#64748b";
+    const strokeColor = trend === "up" ? "#10b981" : trend === "down" ? "#f43f5e" : "#78716c";
 
     return (
       <svg className="h-6 w-20 shrink-0 overflow-visible" viewBox={`0 0 ${width} ${height}`}>
@@ -74,24 +72,24 @@ export const MetricCard: React.FC<MetricCardProps> = ({
   };
 
   return (
-    <Card className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden group">
+    <DSCard variant="premium" className="group">
       {/* Background Accent Highlight */}
       <div className={`absolute top-0 left-0 w-full h-[3px] transition-colors ${
         trend === "up" 
           ? "bg-emerald-500/80" 
           : trend === "down" 
           ? "bg-rose-500/80" 
-          : "bg-slate-300"
+          : "bg-[#06434a]/40"
       }`} />
 
       <div className="space-y-3">
         <div className="flex justify-between items-start">
-          <div className="flex items-center gap-1.5 text-slate-400 group-hover:text-slate-500 transition-colors">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-500">{title}</span>
+          <div className="flex items-center gap-1.5 text-stone-400 group-hover:text-stone-500 transition-colors">
+            <span className="text-xs font-bold uppercase tracking-wider text-stone-500">{title}</span>
             {tooltip && (
               <div className="relative group/tooltip">
                 <HelpCircle className="h-3.5 w-3.5 cursor-help" />
-                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 hidden group-hover/tooltip:block bg-slate-900 text-white text-[10px] py-1 px-2 rounded whitespace-nowrap shadow-md z-50">
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 hidden group-hover/tooltip:block bg-stone-900 text-white text-[10px] py-1 px-2 rounded whitespace-nowrap shadow-md z-50">
                   {tooltip}
                 </div>
               </div>
@@ -103,7 +101,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
                 ? "bg-emerald-50 text-emerald-600" 
                 : trend === "down" 
                 ? "bg-rose-50 text-rose-600" 
-                : "bg-slate-50 text-slate-600"
+                : "bg-stone-50 text-stone-600"
             }`}>
               {icon}
             </div>
@@ -112,7 +110,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
 
         <div className="flex items-end justify-between gap-2">
           <div>
-            <div className="text-2xl font-black text-slate-900 tracking-tight">{value}</div>
+            <div className="text-2xl font-black text-stone-900 tracking-tight">{value}</div>
             
             {/* Variation / Trend indicators */}
             <div className="flex items-center gap-1.5 mt-1">
@@ -129,14 +127,14 @@ export const MetricCard: React.FC<MetricCardProps> = ({
                 </span>
               )}
               {trend === "neutral" && (
-                <span className="text-slate-500 bg-slate-50 border border-slate-150 font-bold text-[10px] px-1.5 py-0.5 rounded flex items-center gap-0.5">
+                <span className="text-stone-500 bg-stone-50 border border-stone-150 font-bold text-[10px] px-1.5 py-0.5 rounded flex items-center gap-0.5">
                   <Minus className="h-3 w-3" />
                   Estable
                 </span>
               )}
 
               {variation && (
-                <span className="text-[10px] text-slate-400 font-medium">{variation}</span>
+                <span className="text-[10px] text-stone-400 font-medium">{variation}</span>
               )}
             </div>
           </div>
@@ -145,6 +143,6 @@ export const MetricCard: React.FC<MetricCardProps> = ({
           {renderSparkline()}
         </div>
       </div>
-    </Card>
+    </DSCard>
   );
 };

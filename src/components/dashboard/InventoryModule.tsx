@@ -27,6 +27,7 @@ import {
   Archive,
   RotateCcw
 } from "lucide-react";
+import { FileUpload } from "./FileUpload";
 
 interface InventoryModuleProps {
   screens: DoohScreen[];
@@ -50,6 +51,9 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
   const [selectedStatusFilter, setSelectedStatusFilter] = useState<string>("Todas");
   const [searchQuery, setSearchQuery] = useState("");
   const [showArchived, setShowArchived] = useState(false);
+
+  // Delete confirmation state
+  const [screenToDelete, setScreenToDelete] = useState<string | null>(null);
 
   // Inspector panel state
   const [activeScreenId, setActiveScreenId] = useState<string | null>(null);
@@ -379,8 +383,7 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
                 {userRole === "admin" && (
                   <button
                     onClick={() => {
-                      onDeleteScreen(screen.id);
-                      setActiveScreenId(null);
+                      setScreenToDelete(screen.id);
                     }}
                     title="Eliminar del Sistema"
                     className="p-1.5 rounded-lg border border-red-100 bg-red-50 hover:bg-red-100 text-red-600 transition-colors cursor-pointer"
@@ -652,11 +655,13 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
                     </div>
 
                     <div className="space-y-1">
-                      <label className="block text-[8px] font-extrabold text-stone-400 uppercase tracking-widest">Fotografía de Referencia (URL)</label>
-                      <input
-                        type="text"
-                        className="w-full px-2.5 py-1.5 text-[11px] border border-stone-200 rounded-lg bg-stone-50/50 focus:outline-none font-mono text-[10px]"
-                        defaultValue="https://images.unsplash.com/photo-1541535650810-10d26f5c2ab3?q=80&w=600"
+                      <label className="block text-[8px] font-extrabold text-stone-400 uppercase tracking-widest">Fotografía de Referencia (Subida Directa a Firebase Storage)</label>
+                      <FileUpload
+                        onUploadSuccess={(url) => {
+                          onUpdateScreen(selectedScreen.id, { video: url });
+                        }}
+                        folderPath="soportes/fotos"
+                        accept="image/*"
                       />
                     </div>
 
@@ -925,6 +930,50 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
                   </button>
                 </div>
               </form>
+            </motion.div>
+          </div>
+        )}
+
+        {screenToDelete && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-xs">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white border border-stone-200 shadow-2xl rounded-2xl max-w-md w-full overflow-hidden p-6 text-left space-y-6"
+            >
+              <div className="space-y-2">
+                <h3 className="text-base font-bold text-stone-900 font-display">
+                  ¿Confirmar Eliminación del Soporte?
+                </h3>
+                <p className="text-xs text-stone-500 leading-relaxed">
+                  Esta operación es destructiva y permanente. Se eliminarán todas las especificaciones y datos técnicos del soporte del catálogo oficial de la plataforma.
+                </p>
+                <div className="p-3 bg-red-50 border border-red-100 rounded-xl text-[11px] text-red-700 leading-normal font-semibold">
+                  ADVERTENCIA: Esta acción no se puede deshacer y removerá la pantalla de cualquier MediaKit o circuito activo.
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setScreenToDelete(null)}
+                  className="px-4 py-2 border border-stone-250 text-stone-600 font-bold uppercase text-[10px] rounded-lg hover:bg-stone-50 cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onDeleteScreen(screenToDelete);
+                    setScreenToDelete(null);
+                    setActiveScreenId(null);
+                  }}
+                  className="px-5 py-2 bg-red-600 hover:bg-red-700 text-white font-extrabold uppercase text-[10px] rounded-lg cursor-pointer shadow-sm transition-colors"
+                >
+                  Eliminar Soporte
+                </button>
+              </div>
             </motion.div>
           </div>
         )}

@@ -7,6 +7,7 @@ import { users, leads, screens, clientes, mediakits, changelogs } from "./src/db
 import { eq, desc } from "drizzle-orm";
 import { requireAuth, AuthRequest } from "./src/middleware/auth.ts";
 import { getOrCreateUser } from "./src/db/users.ts";
+import { GoogleSlidesBackendService } from "./src/services/googleSlidesBackend.ts";
 import { SEED_SCREENS, INITIAL_CLIENTES, INITIAL_MEDIAKITS, INITIAL_LOGS } from "./src/db/seedData.ts";
 
 dotenv.config();
@@ -120,6 +121,166 @@ app.post("/api/auth/sync", requireAuth, async (req: AuthRequest, res: Response) 
     res.json({ success: true, user: dbUser });
   } catch (error: any) {
     console.error("Auth sync error:", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// --- GOOGLE WORKSPACE API ENDPOINTS ---
+
+// GET Google OAuth redirect URL
+app.get("/api/auth/google/url", requireAuth, async (req: AuthRequest, res: Response) => {
+  try {
+    const dbUser = await getOrCreateUser(req.user.uid, req.user.email || "");
+    const authUrl = GoogleSlidesBackendService.isConfigured()
+      ? GoogleSlidesBackendService.getAuthUrl(dbUser.id)
+      : "";
+    res.json({ success: true, url: authUrl, configured: GoogleSlidesBackendService.isConfigured() });
+  } catch (error: any) {
+    console.error("Error getting google auth URL:", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// GET Google OAuth callback
+app.get("/api/auth/google/callback", async (req: Request, res: Response) => {
+  const { code, state } = req.query;
+  if (!code || !state) {
+    return res.status(400).send("Faltan parámetros requeridos (code, state).");
+  }
+
+  try {
+    const userId = parseInt(state as string, 10);
+    await GoogleSlidesBackendService.exchangeCodeAndSave(userId, code as string);
+    // Redirect to frontend app with a success parameter so the UI knows it succeeded!
+    res.send(`
+      <html>
+        <head>
+          <title>Autenticación Exitosa</title>
+          <style>
+            body { font-family: sans-serif; text-align: center; padding: 50px; background-color: #fcfbf9; color: #1c1917; }
+            .card { max-width: 450px; margin: 0 auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #e7e5e4; }
+            h1 { color: #06434a; font-size: 24px; margin-bottom: 10px; }
+            p { font-size: 15px; color: #78716c; line-height: 1.5; }
+            .btn { display: inline-block; background-color: #06434a; color: white; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: bold; margin-top: 20px; }
+          </style>
+        </head>
+        <body>
+          <div class="card">
+            <h1>¡Conexión Exitosa con Google!</h1>
+            <p>Hemos vinculado tu cuenta de Google Drive y Google Slides con éxito. Ya puedes volver a la plataforma y exportar tus MediaKits de forma directa.</p>
+            <button class="btn" onclick="window.close()">Cerrar Ventana</button>
+          </div>
+        </body>
+      </html>
+    `);
+  } catch (error: any) {
+    console.error("Google OAuth callback error:", error);
+    res.status(500).send(`Error de autenticación: ${error.message}`);
+  }
+});
+
+// POST Export MediaKit to Google Slides
+app.post("/api/mediakits/:id/export-slides", requireAuth, async (req: AuthRequest, res: Response) => {
+  const { id } = req.params;
+  const { clientEmail } = req.body;
+  const authHeaderToken = req.headers["x-google-access-token"] as string;
+
+  try {
+    const dbUser = await getOrCreateUser(req.user.uid, req.user.email || "");
+    
+    // 1. Fetch MediaKit
+    const [mediaKit] = await db.select().from(mediakits).where(eq(mediakits.id, id)).limit(1);
+    if (!mediaKit) {
+      return res.status(404).json({ success: false, error: "MediaKit no encontrado." });
+    }
+
+    // 2. Resolve Access Token
+    let accessToken = "";
+    if (GoogleSlidesBackendService.isConfigured()) {
+      try {
+        accessToken = await GoogleSlidesBackendService.getAccessToken(dbUser.id);
+      } catch (err: any) {
+        console.warn("Could not get stored Google Access Token, trying client-provided fallback:", err.message);
+      }
+    }
+
+    // Fallback to token passed by client-side login if available
+    if (!accessToken && authHeaderToken) {
+      accessToken = authHeaderToken;
+    }
+
+    if (!accessToken) {
+      return res.status(401).json({
+        success: false,
+        error: "Se requiere autenticación con Google.",
+        needsAuth: true,
+      });
+    }
+
+    // 3. Resolve MediaKit Screens
+    const screenIds: string[] = mediaKit.screenIds ? JSON.parse(mediaKit.screenIds) : [];
+    const dbScreens = await db.select().from(screens);
+    const mediaKitScreensList = dbScreens.filter(s => screenIds.includes(s.id));
+
+    // 4. Create Presentation (Clone template if defined, otherwise create a new blank presentation)
+    const templateId = process.env.GOOGLE_SLIDES_TEMPLATE_ID;
+    const presentationName = `MediaKit - ${mediaKit.nombre} (${mediaKit.clienteNombre})`;
+    let presentationId = "";
+
+    if (templateId) {
+      presentationId = await GoogleSlidesBackendService.cloneTemplate(accessToken, templateId, presentationName);
+    } else {
+      // Create new fresh presentation via Slides API
+      const createRes = await fetch("https://slides.googleapis.com/v1/presentations", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ title: presentationName }),
+      });
+      if (!createRes.ok) {
+        const errText = await createRes.text();
+        throw new Error(`Failed to create fresh Google Slides presentation: ${createRes.statusText} - ${errText}`);
+      }
+      const newPresentation = (await createRes.json()) as { presentationId: string };
+      presentationId = newPresentation.presentationId;
+    }
+
+    // 5. Populate and Share presentation
+    await GoogleSlidesBackendService.populatePresentation(accessToken, presentationId, {
+      title: mediaKit.nombre,
+      clientName: mediaKit.clienteNombre,
+      city: mediaKit.ciudad || "Mendoza",
+      screens: mediaKitScreensList,
+      metaId: mediaKit.id,
+      notes: mediaKit.objetivo || "",
+    });
+
+    await GoogleSlidesBackendService.sharePresentation(accessToken, presentationId, clientEmail);
+
+    const presentationUrl = `https://docs.google.com/presentation/d/${presentationId}/edit`;
+
+    // 6. Append audit log to changelogs
+    try {
+      const logId = `log-${Math.floor(100000 + Math.random() * 900000)}`;
+      await db.insert(changelogs).values({
+        id: logId,
+        user: dbUser.email,
+        action: `Exportó MediaKit "${mediaKit.nombre}" a Google Slides`,
+        date: new Date().toISOString(),
+      });
+    } catch (logErr) {
+      console.error("Failed to append changelog:", logErr);
+    }
+
+    res.json({
+      success: true,
+      presentationId,
+      presentationUrl,
+    });
+  } catch (error: any) {
+    console.error("Export to Google Slides error:", error);
     res.status(500).json({ success: false, error: error.message });
   }
 });

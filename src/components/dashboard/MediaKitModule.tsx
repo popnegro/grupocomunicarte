@@ -2,6 +2,8 @@ import React, { useState, useMemo } from "react";
 import { MediaKit, Cliente, Role, MediaKitSupport } from "./types";
 import { DoohScreen } from "../../types";
 import { downloadMediaKitAsHtml } from "../../utils/mediaKitExport";
+import { useAuth } from "../AuthContext";
+import { GoogleAuthProvider } from "firebase/auth";
 import { 
   FileText, 
   Sparkles, 
@@ -55,6 +57,143 @@ export const MediaKitModule: React.FC<MediaKitModuleProps> = ({
   const [showAiWizard, setShowAiWizard] = useState(false);
   const [showToast, setShowToast] = useState<string | null>(null);
   const [showPrintPreview, setShowPrintPreview] = useState(false);
+
+  // Deletion and removal confirmation states
+  const [mediaKitToDelete, setMediaKitToDelete] = useState<string | null>(null);
+  const [supportToRemove, setSupportToRemove] = useState<string | null>(null);
+
+  // Google Slides export states
+  const { token: authIdToken, googleAccessToken, setGoogleAccessToken } = useAuth();
+  const [showSlidesModal, setShowSlidesModal] = useState(false);
+  const [slidesClientEmail, setSlidesClientEmail] = useState("");
+  const [isExportingSlides, setIsExportingSlides] = useState(false);
+  const [slidesExportResult, setSlidesExportResult] = useState<{ url: string } | null>(null);
+
+  const handleExportToGoogleSlides = async (e?: React.FormEvent, forceToken?: string) => {
+    if (e) e.preventDefault();
+    if (!activeMediaKit) return;
+    setIsExportingSlides(true);
+    setSlidesExportResult(null);
+
+    const activeToken = forceToken || googleAccessToken || "";
+
+    try {
+      // Try calling backend export
+      let response = await fetch(`/api/mediakits/${activeMediaKit.id}/export-slides`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${authIdToken}`,
+          "X-Google-Access-Token": activeToken,
+        },
+        body: JSON.stringify({
+          clientEmail: slidesClientEmail || (activeMediaKit.clienteNombre.toLowerCase().replace(/\s+/g, "") + "@gmail.com"),
+        }),
+      });
+
+      if (response.status === 401) {
+        const resData = await response.json();
+        if (resData.needsAuth) {
+          // Check backend auth URL
+          const urlRes = await fetch("/api/auth/google/url", {
+            headers: { "Authorization": `Bearer ${authIdToken}` }
+          });
+          const urlData = await urlRes.json();
+          if (urlData.success && urlData.url) {
+            // Open OAuth URL in a new window/tab
+            const width = 500, height = 650;
+            const left = (window.innerWidth - width) / 2;
+            const top = (window.innerHeight - height) / 2;
+            const authWindow = window.open(
+              urlData.url,
+              "GoogleAuth",
+              `width=${width},height=${height},left=${left},top=${top}`
+            );
+            
+            // Poll to check if window is closed
+            const timer = setInterval(async () => {
+              if (!authWindow || authWindow.closed) {
+                clearInterval(timer);
+                triggerToast("Verificando autenticación y reintentando exportación...");
+                
+                // Fetch to check if credentials are now saved on the backend
+                let retryResponse = await fetch(`/api/mediakits/${activeMediaKit.id}/export-slides`, {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${authIdToken}`,
+                  },
+                  body: JSON.stringify({
+                    clientEmail: slidesClientEmail || (activeMediaKit.clienteNombre.toLowerCase().replace(/\s+/g, "") + "@gmail.com"),
+                  }),
+                });
+                
+                if (retryResponse.ok) {
+                  const retryData = await retryResponse.json();
+                  if (retryData.success) {
+                    setSlidesExportResult({ url: retryData.presentationUrl });
+                    triggerToast("¡Presentación de Google Slides exportada con éxito!");
+                    return;
+                  }
+                }
+                
+                // Fallback inside timer to frontend login if backend auth failed or is not fully configured
+                triggerToast("Iniciando autenticación interactiva de Google...");
+                const { googleAuthProvider, signInWithPopup, auth } = await import("../../lib/firebase");
+                const loginRes = await signInWithPopup(auth, googleAuthProvider);
+                const credential = GoogleAuthProvider.credentialFromResult(loginRes);
+                if (credential?.accessToken) {
+                  setGoogleAccessToken(credential.accessToken);
+                  triggerToast("¡Autenticación con Google exitosa! Generando presentación...");
+                  handleExportToGoogleSlides(undefined, credential.accessToken);
+                }
+              }
+            }, 1000);
+            setIsExportingSlides(false);
+            return;
+          } else {
+            // Fallback: Trigger Google Login popup on the frontend to get the accessToken
+            triggerToast("Iniciando autenticación interactiva de Google...");
+            const { googleAuthProvider, signInWithPopup, auth } = await import("../../lib/firebase");
+            const loginRes = await signInWithPopup(auth, googleAuthProvider);
+            const credential = GoogleAuthProvider.credentialFromResult(loginRes);
+            if (credential?.accessToken) {
+              setGoogleAccessToken(credential.accessToken);
+              triggerToast("¡Autenticación con Google exitosa! Generando presentación...");
+              
+              // Retry with the new access token
+              response = await fetch(`/api/mediakits/${activeMediaKit.id}/export-slides`, {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  "Authorization": `Bearer ${authIdToken}`,
+                  "X-Google-Access-Token": credential.accessToken,
+                },
+                body: JSON.stringify({
+                  clientEmail: slidesClientEmail || (activeMediaKit.clienteNombre.toLowerCase().replace(/\s+/g, "") + "@gmail.com"),
+                }),
+              });
+            } else {
+              throw new Error("No se pudo obtener el token de acceso de Google.");
+            }
+          }
+        }
+      }
+
+      const data = await response.json();
+      if (data.success) {
+        setSlidesExportResult({ url: data.presentationUrl });
+        triggerToast("¡Presentación de Google Slides exportada con éxito!");
+      } else {
+        throw new Error(data.error || "Error al exportar a Google Slides.");
+      }
+    } catch (error: any) {
+      console.error("Export Slides Error:", error);
+      triggerToast(`Error: ${error.message}`);
+    } finally {
+      setIsExportingSlides(false);
+    }
+  };
 
   // Manual wizard state
   const [wizardName, setWizardName] = useState("");
@@ -457,6 +596,18 @@ export const MediaKitModule: React.FC<MediaKitModuleProps> = ({
               {/* Action buttons */}
               <div className="flex items-center gap-1.5">
                 <button
+                  onClick={() => {
+                    setSlidesClientEmail(activeMediaKit.clienteNombre.toLowerCase().replace(/\s+/g, "") + "@gmail.com");
+                    setSlidesExportResult(null);
+                    setShowSlidesModal(true);
+                  }}
+                  className="p-2 bg-amber-500/10 hover:bg-amber-500/15 text-amber-700 border border-amber-500/20 rounded-xl cursor-pointer transition-colors flex items-center gap-1.5"
+                  title="Exportar a Google Slides"
+                >
+                  <Sparkles className="h-4 w-4 text-amber-500 shrink-0" />
+                  <span className="text-[10px] font-bold">Google Slides</span>
+                </button>
+                <button
                   onClick={() => setShowPrintPreview(true)}
                   className="p-2 bg-[#06434a]/10 hover:bg-[#06434a]/15 text-[#06434a] border border-[#06434a]/20 rounded-xl cursor-pointer transition-colors flex items-center gap-1.5"
                   title="Exportar a PDF"
@@ -471,6 +622,16 @@ export const MediaKitModule: React.FC<MediaKitModuleProps> = ({
                 >
                   <Copy className="h-4 w-4" />
                 </button>
+
+                {userRole === "admin" && (
+                  <button
+                    onClick={() => setMediaKitToDelete(activeMediaKit.id)}
+                    className="p-2 border border-red-200 hover:bg-red-50 text-red-600 rounded-xl cursor-pointer transition-colors"
+                    title="Eliminar MediaKit"
+                  >
+                    <Trash className="h-4 w-4" />
+                  </button>
+                )}
 
                 {(activeMediaKit.estado !== "Aceptado" && activeMediaKit.estado !== "Convertido") && (
                   <button
@@ -562,7 +723,7 @@ export const MediaKitModule: React.FC<MediaKitModuleProps> = ({
                           </div>
 
                           <button
-                            onClick={() => handleRemoveSupportFromMediaKit(item.id)}
+                            onClick={() => setSupportToRemove(item.id)}
                             className="p-1.5 text-stone-400 hover:text-red-600 hover:bg-red-50 rounded-lg cursor-pointer transition-colors shrink-0"
                             title="Remover Soporte"
                           >
@@ -1099,6 +1260,19 @@ export const MediaKitModule: React.FC<MediaKitModuleProps> = ({
                 <button
                   type="button"
                   onClick={() => {
+                    setSlidesClientEmail(activeMediaKit.clienteNombre.toLowerCase().replace(/\s+/g, "") + "@gmail.com");
+                    setSlidesExportResult(null);
+                    setShowPrintPreview(false);
+                    setShowSlidesModal(true);
+                  }}
+                  className="px-4 py-2 bg-amber-500/10 hover:bg-amber-500/15 text-amber-700 border border-amber-500/20 rounded-lg cursor-pointer transition-colors flex items-center gap-1.5"
+                >
+                  <Sparkles className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+                  <span>Exportar Google Slides</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
                     downloadMediaKitAsHtml(
                       activeMediaKitScreens,
                       activeMediaKit.nombre,
@@ -1120,6 +1294,200 @@ export const MediaKitModule: React.FC<MediaKitModuleProps> = ({
                 </button>
               </div>
 
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* 6. Google Slides Export Dialog Modal */}
+      <AnimatePresence>
+        {showSlidesModal && activeMediaKit && (
+          <div className="fixed inset-0 bg-stone-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+              className="bg-white border border-stone-200 rounded-2xl p-6 md:p-8 max-w-md w-full shadow-2xl space-y-5 text-left"
+            >
+              <div className="flex items-center justify-between border-b border-stone-100 pb-4">
+                <h3 className="text-xs font-black text-stone-950 font-display uppercase tracking-wider flex items-center gap-1.5">
+                  <Sparkles className="h-4.5 w-4.5 text-amber-500" />
+                  <span>Exportar a Google Slides</span>
+                </h3>
+                <button
+                  onClick={() => setShowSlidesModal(false)}
+                  className="p-1.5 hover:bg-stone-50 rounded-md text-stone-400 hover:text-stone-700 cursor-pointer"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+
+              {!slidesExportResult ? (
+                <form onSubmit={(e) => handleExportToGoogleSlides(e)} className="space-y-4 text-xs">
+                  <p className="text-stone-500 leading-relaxed">
+                    Esta herramienta clonará una plantilla de presentación profesional de Grupo Comunicarte en Google Drive, insertará las pantallas seleccionadas, las métricas, la cobertura e impactos diarios, y configurará el diseño automáticamente.
+                  </p>
+
+                  <div className="space-y-1">
+                    <label className="block text-[8px] font-extrabold text-stone-400 uppercase tracking-widest">
+                      Compartir automáticamente con (Email Cliente)
+                    </label>
+                    <input
+                      type="email"
+                      placeholder="ejemplo@cliente.com"
+                      value={slidesClientEmail}
+                      onChange={(e) => setSlidesClientEmail(e.target.value)}
+                      className="w-full px-3 py-2 border border-stone-200 rounded-md bg-stone-50/50 focus:outline-none"
+                    />
+                    <span className="text-[9px] text-stone-400 font-medium block">
+                      El archivo se creará en tu Google Drive y se compartirá con el email ingresado con permisos de lectura.
+                    </span>
+                  </div>
+
+                  <div className="border-t border-stone-100 pt-4 flex items-center justify-end gap-2.5">
+                    <button
+                      type="button"
+                      onClick={() => setShowSlidesModal(false)}
+                      className="px-4 py-2 border border-stone-200 text-stone-600 font-bold uppercase text-[10px] rounded-full hover:bg-stone-50 cursor-pointer"
+                    >
+                      Cancelar
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={isExportingSlides}
+                      className="px-5 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-extrabold uppercase text-[10px] rounded-full cursor-pointer shadow-xs disabled:opacity-50 flex items-center gap-1.5"
+                    >
+                      {isExportingSlides ? (
+                        <>
+                          <div className="h-3 w-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          <span>Exportando...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="h-3.5 w-3.5 text-amber-200 animate-pulse" />
+                          <span>Comenzar Exportación</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <div className="space-y-5 text-center py-4 text-xs">
+                  <div className="h-12 w-12 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto border border-emerald-100">
+                    <Check className="h-6 w-6" />
+                  </div>
+                  <div className="space-y-1">
+                    <h4 className="font-extrabold text-stone-900 text-sm">¡Presentación Creada con Éxito!</h4>
+                    <p className="text-stone-500">La propuesta ha sido generada y compartida con {slidesClientEmail || "el cliente"}.</p>
+                  </div>
+
+                  <div className="p-3 bg-stone-50 border border-stone-150 rounded-xl font-mono text-[10px] text-stone-600 break-all select-all">
+                    {slidesExportResult.url}
+                  </div>
+
+                  <div className="flex gap-2.5 justify-center pt-2">
+                    <button
+                      onClick={() => setShowSlidesModal(false)}
+                      className="px-4 py-2 border border-stone-200 text-stone-600 font-bold uppercase text-[10px] rounded-full hover:bg-stone-50 cursor-pointer"
+                    >
+                      Cerrar
+                    </button>
+                    <a
+                      href={slidesExportResult.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-5 py-2 bg-[#06434a] hover:bg-[#0b5e67] text-white font-extrabold uppercase text-[10px] rounded-full shadow-xs flex items-center gap-1"
+                    >
+                      <span>Abrir Google Slides</span>
+                    </a>
+                  </div>
+                </div>
+              )}
+            </motion.div>
+          </div>
+        )}
+
+        {mediaKitToDelete && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-xs">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white border border-stone-200 shadow-2xl rounded-2xl max-w-md w-full overflow-hidden p-6 text-left space-y-6"
+            >
+              <div className="space-y-2">
+                <h3 className="text-base font-bold text-stone-900 font-display">
+                  ¿Confirmar Eliminación de la Propuesta?
+                </h3>
+                <p className="text-xs text-stone-500 leading-relaxed">
+                  Esta operación eliminará de forma permanente el MediaKit actual del sistema. No se puede deshacer.
+                </p>
+                <div className="p-3 bg-red-50 border border-red-100 rounded-xl text-[11px] text-red-700 leading-normal font-semibold">
+                  ADVERTENCIA: Esta acción es destructiva y borrará todas las configuraciones asociadas a este MediaKit.
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setMediaKitToDelete(null)}
+                  className="px-4 py-2 border border-stone-250 text-stone-600 font-bold uppercase text-[10px] rounded-lg hover:bg-stone-50 cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onDeleteMediaKit(mediaKitToDelete);
+                    setMediaKitToDelete(null);
+                    setActiveMediaKitId(mediaKits.find(m => m.id !== mediaKitToDelete)?.id || null);
+                  }}
+                  className="px-5 py-2 bg-red-600 hover:bg-red-700 text-white font-extrabold uppercase text-[10px] rounded-lg cursor-pointer shadow-sm transition-colors"
+                >
+                  Eliminar Propuesta
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+
+        {supportToRemove && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-stone-900/40 backdrop-blur-xs">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white border border-stone-200 shadow-2xl rounded-2xl max-w-md w-full overflow-hidden p-6 text-left space-y-6"
+            >
+              <div className="space-y-2">
+                <h3 className="text-base font-bold text-stone-900 font-display">
+                  ¿Remover Soporte de la Propuesta?
+                </h3>
+                <p className="text-xs text-stone-500 leading-relaxed">
+                  ¿Estás seguro de que deseas remover este soporte publicitario del circuito actual del MediaKit?
+                </p>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setSupportToRemove(null)}
+                  className="px-4 py-2 border border-stone-250 text-stone-600 font-bold uppercase text-[10px] rounded-lg hover:bg-stone-50 cursor-pointer"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleRemoveSupportFromMediaKit(supportToRemove);
+                    setSupportToRemove(null);
+                  }}
+                  className="px-5 py-2 bg-red-600 hover:bg-red-700 text-white font-extrabold uppercase text-[10px] rounded-lg cursor-pointer shadow-sm transition-colors"
+                >
+                  Remover Soporte
+                </button>
+              </div>
             </motion.div>
           </div>
         )}

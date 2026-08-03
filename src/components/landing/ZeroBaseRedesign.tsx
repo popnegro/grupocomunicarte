@@ -4,6 +4,7 @@ import * as LucideIcons from "lucide-react";
 import { InteractiveMap } from "../InteractiveMap";
 import { DoohScreen } from "../../types";
 import { SpecsOverlay } from "./SpecsOverlay";
+import { Badge, Button, Input } from "../../design-system";
 
 interface ZeroBaseRedesignProps {
   screens: DoohScreen[];
@@ -47,7 +48,7 @@ export const ZeroBaseRedesign: React.FC<ZeroBaseRedesignProps> = ({
   handleContactSubmit,
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedType, setSelectedType] = useState<"Todos" | "DOOH" | "OOH">("Todos");
+  const [selectedCategory, setSelectedCategory] = useState<"Todos" | "Tradicionales" | "Pantallas LED" | "LED Móvil">("Todos");
   const [selectedStatus, setSelectedStatus] = useState<"Todos" | "Disponible" | "Activo">("Todos");
   const [selectedScreenForSpecs, setSelectedScreenForSpecs] = useState<DoohScreen | null>(null);
 
@@ -61,14 +62,8 @@ export const ZeroBaseRedesign: React.FC<ZeroBaseRedesignProps> = ({
       // Filter by selectedStatus
       if (selectedStatus !== "Todos" && sc.status !== selectedStatus) return false;
 
-      // Filter by selectedType (DOOH/OOH)
-      if (selectedType === "DOOH") {
-        const isDooh = sc.categoria === "Pantallas LED" || sc.categoria === "LED Móvil";
-        if (!isDooh) return false;
-      } else if (selectedType === "OOH") {
-        const isOoh = sc.categoria === "Tradicionales";
-        if (!isOoh) return false;
-      }
+      // Filter by selectedCategory (Tradicionales, Pantallas LED, LED Móvil)
+      if (selectedCategory !== "Todos" && sc.categoria !== selectedCategory) return false;
 
       // Filter by Search Query (name or zone)
       if (searchQuery.trim() !== "") {
@@ -79,7 +74,7 @@ export const ZeroBaseRedesign: React.FC<ZeroBaseRedesignProps> = ({
 
       return true;
     });
-  }, [screens, selectedCity, selectedType, selectedStatus, searchQuery]);
+  }, [screens, selectedCity, selectedCategory, selectedStatus, searchQuery]);
 
   return (
     <motion.main 
@@ -91,9 +86,9 @@ export const ZeroBaseRedesign: React.FC<ZeroBaseRedesignProps> = ({
     >
       {/* Minimalist Typographic Header */}
       <div className="max-w-3xl space-y-4 text-left">
-        <span className="text-[10px] bg-[#06434a]/10 text-[#06434a] border border-[#06434a]/20 font-mono font-bold px-3 py-1 rounded-full uppercase tracking-wider select-none">
+        <Badge variant="primary" className="px-3 py-1 text-[10px]">
           REDISEÑO ZERO-BASE / PMV ACTIVO
-        </span>
+        </Badge>
         <h1 className="text-4xl md:text-6xl font-serif text-stone-900 tracking-tight font-black leading-none font-display">
           Publicidad Exterior Premium, <span className="text-[#06434a] italic">Simplificada.</span>
         </h1>
@@ -172,13 +167,14 @@ export const ZeroBaseRedesign: React.FC<ZeroBaseRedesignProps> = ({
                 {/* Format dropdown (OOH/DOOH) */}
                 <div>
                   <select
-                    value={selectedType}
-                    onChange={(e) => setSelectedType(e.target.value as any)}
+                    value={selectedCategory}
+                    onChange={(e) => setSelectedCategory(e.target.value as any)}
                     className="w-full px-2.5 py-1.5 text-[11px] font-bold bg-white border border-stone-200 rounded-lg text-stone-700 focus:outline-none focus:border-[#06434a] cursor-pointer"
                   >
-                    <option value="Todos">Formatos: Todos (OOH/DOOH)</option>
-                    <option value="DOOH">Digital (DOOH)</option>
-                    <option value="OOH">Estático (OOH)</option>
+                    <option value="Todos">Formatos: Todos</option>
+                    <option value="Tradicionales">Tradicionales</option>
+                    <option value="Pantallas LED">Pantallas LED</option>
+                    <option value="LED Móvil">LED Móvil</option>
                   </select>
                 </div>
 
@@ -274,7 +270,7 @@ export const ZeroBaseRedesign: React.FC<ZeroBaseRedesignProps> = ({
                   Sincronizado (Auto-Save)
                 </span>
               </div>
-              <span className="text-[10px] bg-[#e6f2f3] text-[#06434a] px-2 py-0.5 rounded-full font-mono font-bold">{cart.length} Soportes</span>
+              <Badge variant="primary" className="px-2 py-0.5">{cart.length} Soportes</Badge>
             </div>
 
             {cart.length === 0 ? (
@@ -313,50 +309,43 @@ export const ZeroBaseRedesign: React.FC<ZeroBaseRedesignProps> = ({
                   <h4 className="text-[10px] font-black text-stone-400 uppercase tracking-widest font-mono">Formulario de Reserva Directa</h4>
                   
                   {!contactSubmitted ? (
-                    <form onSubmit={handleContactSubmit} className="space-y-3 text-xs">
-                      <div className="space-y-1">
-                        <label className="block text-[8px] font-bold text-stone-400 uppercase tracking-wider">Nombre Completo *</label>
-                        <input
-                          type="text"
-                          required
-                          placeholder="Ana de la Cruz"
-                          value={contactForm.name}
-                          onChange={(e) => setContactForm({ ...contactForm, name: e.target.value })}
-                          className="w-full px-3 py-2 border border-stone-200 rounded-lg bg-stone-50 focus:outline-none focus:border-[#06434a]"
-                        />
-                      </div>
+                    <form onSubmit={handleContactSubmit} className="space-y-4">
+                      <Input
+                        label="Nombre Completo *"
+                        type="text"
+                        required
+                        placeholder="Ana de la Cruz"
+                        value={contactForm.name}
+                        onChange={(e) => setContactForm({ ...contactForm, name: e.target.value })}
+                      />
 
-                      <div className="space-y-1">
-                        <label className="block text-[8px] font-bold text-stone-400 uppercase tracking-wider">Correo Corporativo *</label>
-                        <input
-                          type="email"
-                          required
-                          placeholder="nombre@empresa.com"
-                          value={contactForm.email}
-                          onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })}
-                          className="w-full px-3 py-2 border border-stone-200 rounded-lg bg-stone-50 focus:outline-none focus:border-[#06434a]"
-                        />
-                      </div>
+                      <Input
+                        label="Correo Corporativo *"
+                        type="email"
+                        required
+                        placeholder="nombre@empresa.com"
+                        value={contactForm.email}
+                        onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })}
+                      />
 
-                      <div className="space-y-1">
-                        <label className="block text-[8px] font-bold text-stone-400 uppercase tracking-wider">Teléfono / WhatsApp</label>
-                        <input
-                          type="tel"
-                          placeholder="+54 9 261 1234567"
-                          value={contactForm.phone}
-                          onChange={(e) => setContactForm({ ...contactForm, phone: e.target.value })}
-                          className="w-full px-3 py-2 border border-stone-200 rounded-lg bg-stone-50 focus:outline-none focus:border-[#06434a]"
-                        />
-                      </div>
+                      <Input
+                        label="Teléfono / WhatsApp"
+                        type="tel"
+                        placeholder="+54 9 261 1234567"
+                        value={contactForm.phone}
+                        onChange={(e) => setContactForm({ ...contactForm, phone: e.target.value })}
+                      />
 
-                      <button
+                      <Button
                         type="submit"
                         disabled={isSubmittingContact}
-                        className="w-full bg-[#06434a] hover:bg-[#0b5e67] disabled:bg-stone-300 text-white font-extrabold text-[10px] uppercase tracking-wider py-3 rounded-lg shadow-sm transition-all cursor-pointer flex items-center justify-center gap-2"
+                        loading={isSubmittingContact}
+                        variant="primary"
+                        className="w-full py-3 flex items-center justify-center gap-2 text-[10px]"
                       >
                         <LucideIcons.Send className="h-3.5 w-3.5" />
-                        <span>{isSubmittingContact ? "Enviando..." : "Enviar Cotización de Circuito"}</span>
-                      </button>
+                        <span>Enviar Cotización de Circuito</span>
+                      </Button>
                     </form>
                   ) : (
                     <div className="text-center py-4 space-y-3 bg-emerald-50 rounded-xl p-4 border border-emerald-100">

@@ -1,4 +1,5 @@
 import React from "react";
+import { Badge } from "../design-system";
 
 interface SectionHeadingProps {
   id?: string;
@@ -17,9 +18,9 @@ export const SectionHeading: React.FC<SectionHeadingProps> = ({
 }) => {
   return (
     <div id={id} className={`text-center max-w-2xl mx-auto space-y-3.5 ${className}`}>
-      <span className="inline-block text-[10px] bg-[#06434a]/10 border border-[#06434a]/20 text-[#06434a] font-bold tracking-widest uppercase px-3.5 py-1.5 rounded-full font-sans">
+      <Badge variant="primary">
         {badge}
-      </span>
+      </Badge>
       <h2 className="text-3xl md:text-4xl tracking-tight text-stone-900 font-display font-semibold">
         {title}
       </h2>

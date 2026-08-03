@@ -271,8 +271,8 @@ export const SpecsOverlay: React.FC<SpecsOverlayProps> = ({
           <div className="pt-4 border-t border-stone-200/60 flex items-center justify-between gap-4">
             <div className="text-left">
               <span className="block text-[8px] font-bold text-stone-400 uppercase tracking-wider">Inversión Estimada</span>
-              <span className="text-lg font-black text-stone-900 font-mono">
-                ${screen.precio.toLocaleString()}<span className="text-[10px] text-stone-500 font-bold font-sans">/mes</span>
+              <span className="text-sm font-black text-stone-900 font-sans uppercase tracking-wide">
+                Tarifa bajo cotización
               </span>
             </div>
 

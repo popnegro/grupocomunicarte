@@ -32,13 +32,8 @@ if (sqlHost && sqlDbName && user) {
     ssl: !dbUrl.includes("localhost") && !dbUrl.includes("127.0.0.1") ? { rejectUnauthorized: false } : false,
   };
 } else {
-  // Setup placeholder config to avoid syntax/startup crash during development build if env is unpopulated
-  config.dbCredentials = {
-    host: "localhost",
-    user: "postgres",
-    password: "password",
-    database: "postgres",
-  };
+  // Throw an error if no database configuration is found for Drizzle Kit
+  throw new Error("Drizzle config error: No database configuration found. Please set SQL_* or DATABASE_URL/POSTGRES_URL environment variables.");
 }
 
 export default defineConfig(config);

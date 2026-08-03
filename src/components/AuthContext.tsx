@@ -1,13 +1,15 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { User, onAuthStateChanged, signOut } from "firebase/auth";
+import { User, onAuthStateChanged, signOut, GoogleAuthProvider } from "firebase/auth";
 import { auth, googleAuthProvider, signInWithPopup } from "../lib/firebase.ts";
 
 interface AuthContextProps {
   user: User | null;
   loading: boolean;
   token: string | null;
+  googleAccessToken: string | null;
   loginWithGoogle: () => Promise<User>;
   logout: () => Promise<void>;
+  setGoogleAccessToken: (token: string | null) => void;
 }
 
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
@@ -15,6 +17,7 @@ const AuthContext = createContext<AuthContextProps | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
+  const [googleAccessToken, setGoogleAccessToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -40,6 +43,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else {
         setUser(null);
         setToken(null);
+        setGoogleAccessToken(null);
       }
       setLoading(false);
     });
@@ -51,6 +55,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setLoading(true);
     try {
       const result = await signInWithPopup(auth, googleAuthProvider);
+      const credential = GoogleAuthProvider.credentialFromResult(result);
+      if (credential?.accessToken) {
+        setGoogleAccessToken(credential.accessToken);
+      }
+      
       const idToken = await result.user.getIdToken(true);
       setToken(idToken);
       setUser(result.user);
@@ -79,6 +88,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await signOut(auth);
       setUser(null);
       setToken(null);
+      setGoogleAccessToken(null);
       setLoading(false);
     } catch (error) {
       setLoading(false);
@@ -88,7 +98,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, token, loginWithGoogle, logout }}>
+    <AuthContext.Provider value={{ user, loading, token, googleAccessToken, loginWithGoogle, logout, setGoogleAccessToken }}>
       {children}
     </AuthContext.Provider>
   );

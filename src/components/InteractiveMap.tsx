@@ -264,8 +264,8 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
                 <span class="text-[10px] font-bold text-slate-700">${formattedImpacts}/día</span>
               </div>
               <div>
-                <span class="text-[8px] font-bold text-slate-400 uppercase block">Precio/Sem</span>
-                <span class="text-[10px] font-bold text-slate-700">${screen.precio === 0 ? "Consultar" : `$${screen.precio.toLocaleString()}`}</span>
+                <span class="text-[8px] font-bold text-slate-400 uppercase block">Cotización</span>
+                <span class="text-[9px] font-black text-amber-600 block uppercase tracking-wide">Bajo pedido</span>
               </div>
             </div>
 
@@ -332,7 +332,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
                 <div class="flex items-center justify-between gap-2.5 p-1.5 bg-slate-50 border border-slate-100 rounded-lg">
                   <div class="min-w-0">
                     <span class="text-[10px] font-bold text-slate-900 block truncate">${screen.nombre}</span>
-                    <span class="text-[8px] font-bold text-slate-400 uppercase block">${screen.tipo} • ${screen.precio === 0 ? "Consultar" : `$${screen.precio.toLocaleString()}/s`}</span>
+                    <span class="text-[8px] font-bold text-slate-400 uppercase block">${screen.tipo} • Tarifa bajo cotización</span>
                   </div>
                   <button 
                     data-screen-id="${screen.id}" 

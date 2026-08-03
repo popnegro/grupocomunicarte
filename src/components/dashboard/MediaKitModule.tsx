@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { MediaKit, Cliente, Role, MediaKitSupport } from "./types";
 import { DoohScreen } from "../../types";
+import { downloadMediaKitAsHtml } from "../../utils/mediaKitExport";
 import { 
   FileText, 
   Sparkles, 
@@ -53,6 +54,7 @@ export const MediaKitModule: React.FC<MediaKitModuleProps> = ({
   const [showCreateWizard, setShowCreateWizard] = useState(false);
   const [showAiWizard, setShowAiWizard] = useState(false);
   const [showToast, setShowToast] = useState<string | null>(null);
+  const [showPrintPreview, setShowPrintPreview] = useState(false);
 
   // Manual wizard state
   const [wizardName, setWizardName] = useState("");
@@ -77,6 +79,22 @@ export const MediaKitModule: React.FC<MediaKitModuleProps> = ({
   const activeMediaKit = useMemo(() => {
     return mediaKits.find((m) => m.id === activeMediaKitId);
   }, [mediaKits, activeMediaKitId]);
+
+  const activeMediaKitScreens = useMemo(() => {
+    if (!activeMediaKit) return [];
+    return activeMediaKit.soportesEdicionInline
+      .map((item) => {
+        const scr = screens.find((s) => s.id === item.id);
+        if (scr) {
+          return {
+            ...scr,
+            nota: item.notas || scr.nota,
+          };
+        }
+        return null;
+      })
+      .filter((s): s is DoohScreen => s !== null);
+  }, [activeMediaKit, screens]);
 
   // Manual creation wizard calculations with useMemo
   const availableWizardScreens = useMemo(() => {
@@ -439,11 +457,12 @@ export const MediaKitModule: React.FC<MediaKitModuleProps> = ({
               {/* Action buttons */}
               <div className="flex items-center gap-1.5">
                 <button
-                  onClick={() => triggerToast("Simulando descarga de PDF de presentación comercial...")}
-                  className="p-2 border border-stone-200 hover:bg-stone-50 text-stone-600 rounded-xl cursor-pointer transition-colors"
+                  onClick={() => setShowPrintPreview(true)}
+                  className="p-2 bg-[#06434a]/10 hover:bg-[#06434a]/15 text-[#06434a] border border-[#06434a]/20 rounded-xl cursor-pointer transition-colors flex items-center gap-1.5"
                   title="Exportar a PDF"
                 >
                   <Download className="h-4 w-4" />
+                  <span className="text-[10px] font-bold">PDF / Exportar</span>
                 </button>
                 <button
                   onClick={() => triggerToast("Enlace de MediaKit web copiado al portapapeles.")}
@@ -951,6 +970,156 @@ export const MediaKitModule: React.FC<MediaKitModuleProps> = ({
                   </button>
                 </div>
               </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* 5. PDF/Print Preview Modal */}
+      <AnimatePresence>
+        {showPrintPreview && activeMediaKit && (
+          <div className="fixed inset-0 bg-stone-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 md:p-10 overflow-y-auto">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+              className="bg-white border border-stone-200 rounded-2xl w-full max-w-4xl h-[90vh] flex flex-col justify-between shadow-2xl relative overflow-hidden"
+            >
+              {/* Header */}
+              <div className="p-5 border-b border-stone-100 flex items-center justify-between bg-stone-50/50">
+                <div className="text-left">
+                  <span className="text-[9px] bg-[#06434a]/8 text-[#06434a] font-extrabold uppercase px-2.5 py-0.5 rounded-md tracking-wider">
+                    Vista Previa de Exportación PDF
+                  </span>
+                  <h3 className="text-sm font-black text-stone-950 font-display mt-1 uppercase tracking-wide">
+                    {activeMediaKit.nombre}
+                  </h3>
+                </div>
+                <button
+                  onClick={() => setShowPrintPreview(false)}
+                  className="p-1.5 hover:bg-stone-100 rounded-lg text-stone-400 hover:text-stone-700 cursor-pointer transition-colors"
+                >
+                  <X className="h-4.5 w-4.5" />
+                </button>
+              </div>
+
+              {/* Scrollable Preview Body containing styled HTML presentation replica */}
+              <div className="flex-1 overflow-y-auto p-8 bg-stone-100/50 flex justify-center">
+                <div className="bg-white border border-stone-200 rounded-xl shadow-xs w-full max-w-3xl p-10 text-stone-800 text-xs text-left space-y-8 select-none pointer-events-none">
+                  
+                  {/* Mock Page Header */}
+                  <div className="flex justify-between items-start border-b-2 border-[#06434a] pb-5">
+                    <div>
+                      <div className="h-8 w-8 rounded-lg bg-[#06434a] flex items-center justify-center text-white font-black text-sm mb-2">C</div>
+                      <span className="text-[9px] font-black tracking-widest text-stone-400 uppercase">Grupo Comunicarte</span>
+                      <h1 className="font-display text-xl font-bold text-[#06434a] mt-1">{activeMediaKit.nombre}</h1>
+                      <p className="text-[10px] text-stone-400 font-medium">Propuesta Comercial de Pauta Exterior OOH/DOOH</p>
+                    </div>
+                    <div className="text-right text-[10px] text-stone-500 space-y-1">
+                      <div>Propuesta ID: <span className="font-mono font-bold text-[#06434a] bg-stone-100 px-1.5 py-0.5 rounded">{activeMediaKit.id}</span></div>
+                      <div>Versión: <strong>v{activeMediaKit.version}.0</strong></div>
+                      <div>Fecha: <strong>{activeMediaKit.fecha}</strong></div>
+                      <div>Plaza: <strong>{activeMediaKit.ciudad}</strong></div>
+                    </div>
+                  </div>
+
+                  {/* Summary grid */}
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="bg-stone-50 border-l-4 border-[#06434a] p-3 rounded-r-lg">
+                      <span className="block text-[8px] font-bold text-stone-400 uppercase tracking-widest">Soportes elegidos</span>
+                      <span className="text-sm font-black text-stone-800 mt-1 block">{activeMediaKitScreens.length} Pantallas</span>
+                    </div>
+                    <div className="bg-stone-50 border-l-4 border-emerald-600 p-3 rounded-r-lg">
+                      <span className="block text-[8px] font-bold text-stone-400 uppercase tracking-widest">Impacto Estimado</span>
+                      <span className="text-sm font-black text-emerald-600 mt-1 block">{(activeMediaKitScreens.reduce((sum, s) => sum + s.impactos, 0) / 1000).toFixed(1)}k / día</span>
+                    </div>
+                    <div className="bg-stone-50 border-l-4 border-amber-600 p-3 rounded-r-lg">
+                      <span className="block text-[8px] font-bold text-stone-400 uppercase tracking-widest">Inversión Mensual</span>
+                      <span className="text-sm font-black text-stone-850 mt-1 block">
+                        ${(activeMediaKitScreens.reduce((sum, s) => sum + s.precio, 0) * 4).toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* SVG Infographics simulation */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="border border-stone-200 rounded-lg p-4 bg-white text-center">
+                      <span className="block text-[8px] font-bold text-stone-400 uppercase text-left mb-2">Mapa Vectorial de Red</span>
+                      <div className="h-32 bg-stone-50 rounded flex items-center justify-center border border-stone-100">
+                        <span className="text-[9px] text-stone-400 font-mono">[ Red de Soportes Geolocalizados: {activeMediaKitScreens.length} puntos ]</span>
+                      </div>
+                    </div>
+                    <div className="border border-stone-200 rounded-lg p-4 bg-white text-center">
+                      <span className="block text-[8px] font-bold text-stone-400 uppercase text-left mb-2">Impactos por Pantalla</span>
+                      <div className="h-32 bg-stone-50 rounded flex items-center justify-center border border-stone-100">
+                        <span className="text-[9px] text-stone-400 font-mono">[ Audiencia estimada / día ]</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Soportes Table replica */}
+                  <div className="border border-stone-200 rounded-lg overflow-hidden">
+                    <table className="w-full text-[10px]">
+                      <thead>
+                        <tr className="bg-stone-50 border-b border-stone-200 text-stone-500 font-bold uppercase text-[8px]">
+                          <th className="p-2.5 text-center">Item</th>
+                          <th className="p-2.5 text-left">Soporte</th>
+                          <th className="p-2.5 text-left">Dimensiones</th>
+                          <th className="p-2.5 text-right">Impactos/Día</th>
+                          <th className="p-2.5 text-right">Tarifa Sem.</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-stone-100">
+                        {activeMediaKitScreens.map((scr, idx) => (
+                          <tr key={scr.id}>
+                            <td className="p-2.5 text-center text-stone-400 font-mono">{(idx + 1).toString().padStart(2, "0")}</td>
+                            <td className="p-2.5 font-bold text-stone-900">{scr.nombre}</td>
+                            <td className="p-2.5 text-stone-500">{scr.dimensiones || "Estándar"}</td>
+                            <td className="p-2.5 text-right text-emerald-600 font-bold">{(scr.impactos / 1000).toFixed(1)}k</td>
+                            <td className="p-2.5 text-right text-[#06434a] font-bold">${scr.precio.toLocaleString()}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                </div>
+              </div>
+
+              {/* Action triggers */}
+              <div className="p-5 border-t border-stone-100 flex items-center justify-end gap-3 bg-stone-50/30">
+                <button
+                  type="button"
+                  onClick={() => setShowPrintPreview(false)}
+                  className="px-4 py-2 border border-stone-200 text-stone-600 font-bold uppercase text-[10px] rounded-lg hover:bg-stone-50 cursor-pointer transition-colors"
+                >
+                  Cerrar Vista
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    downloadMediaKitAsHtml(
+                      activeMediaKitScreens,
+                      activeMediaKit.nombre,
+                      activeMediaKit.clienteNombre,
+                      activeMediaKit.ciudad,
+                      {
+                        id: activeMediaKit.id,
+                        version: activeMediaKit.version,
+                        notes: activeMediaKit.soportesEdicionInline.map((s) => s.notas).filter(Boolean).join(" | "),
+                      }
+                    );
+                    setShowPrintPreview(false);
+                    triggerToast("Se ha descargado el lote comercial listo para impresión PDF.");
+                  }}
+                  className="px-5 py-2 bg-[#06434a] hover:bg-[#0b5e67] text-white font-extrabold uppercase text-[10px] rounded-lg cursor-pointer shadow-sm flex items-center gap-1.5 transition-colors"
+                >
+                  <Download className="h-3.5 w-3.5" />
+                  <span>Descargar Archivo PDF-Listo (.HTML)</span>
+                </button>
+              </div>
+
             </motion.div>
           </div>
         )}

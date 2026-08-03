@@ -467,7 +467,7 @@ export const CmsProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   });
 
   const [activeView, setActiveView] = useState<"landing" | "dashboard">("landing");
-  const [currentDashboardTab, setCurrentDashboardTab] = useState<string>("dashboard");
+  const [currentDashboardTab, setCurrentDashboardTab] = useState<string>("inventario");
   const [activeSlug, setActiveSlug] = useState<string>("/");
   const [loadingAI, setLoadingAI] = useState(false);
   const [seoReport, setSeoReport] = useState<SeoAuditReport | null>(null);
@@ -786,7 +786,7 @@ export const CmsProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       } else if (hash.startsWith("#/dashboard")) {
         setActiveView("dashboard");
         const parts = hash.split("/");
-        const tab = parts[2] || "dashboard";
+        const tab = parts[2] || "inventario";
         setCurrentDashboardTab(tab);
       } else {
         setActiveView("landing");

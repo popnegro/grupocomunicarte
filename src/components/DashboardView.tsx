@@ -3,57 +3,31 @@ import { useCms } from "./CmsContext";
 import { DoohScreen } from "../types";
 
 // Import Shared modular Types & Mock Databases
-import { Role, MediaKit, Cotizacion, Reserva, Campaña, Cliente, ChangeLog, LedVehicle } from "./dashboard/types";
+import { Role, MediaKit, Cliente, ChangeLog } from "./dashboard/types";
 import { 
   INITIAL_CLIENTES, 
   INITIAL_MEDIAKITS, 
-  INITIAL_COTIZACIONES, 
-  INITIAL_RESERVAS, 
-  INITIAL_CAMPAÑAS, 
   INITIAL_LOGS, 
-  INITIAL_VEHICLES 
 } from "./dashboard/mockData";
 
 // Import Modular panels
 import { DashboardHeader } from "./dashboard/DashboardHeader";
-import { DashboardHome } from "./dashboard/DashboardHome";
 import { InventoryModule } from "./dashboard/InventoryModule";
 import { MediaKitModule } from "./dashboard/MediaKitModule";
-import { WorkflowModule } from "./dashboard/WorkflowModule";
-import { LedMovilModule } from "./dashboard/LedMovilModule";
-import { RevenueModule } from "./dashboard/RevenueModule";
-import { CalendarModule } from "./dashboard/CalendarModule";
-import { ClientsModule } from "./dashboard/ClientsModule";
-import { ReportsModule } from "./dashboard/ReportsModule";
-import { AdministrationModule } from "./dashboard/AdministrationModule";
 
 // Lucide Icons
 import {
-  LayoutDashboard,
   Tv,
   FileText,
-  Calendar,
-  Layers,
-  Users,
-  Briefcase,
-  Radio,
-  TrendingUp,
-  BarChart3,
-  Settings2,
   ChevronLeft,
   ChevronRight,
-  Sparkles,
-  Globe,
-  Shield
+  Globe
 } from "lucide-react";
-import { SitemapSeoView } from "./SitemapSeoView";
-import { DesignSystemAuditView } from "./DesignSystemAuditView";
 
 export const DashboardView: React.FC = () => {
   const {
     screens,
     setScreens,
-    updateScreen,
     currentDashboardTab: activeTab,
     setCurrentDashboardTab: setActiveTab,
     setActiveView,
@@ -67,12 +41,8 @@ export const DashboardView: React.FC = () => {
 
   // Core commercial databases states
   const [mediaKits, setMediaKits] = useState<MediaKit[]>(INITIAL_MEDIAKITS);
-  const [cotizaciones, setCotizaciones] = useState<Cotizacion[]>(INITIAL_COTIZACIONES);
-  const [reservas, setReservas] = useState<Reserva[]>(INITIAL_RESERVAS);
-  const [campañas, setCampañas] = useState<Campaña[]>(INITIAL_CAMPAÑAS);
   const [clientes, setClientes] = useState<Cliente[]>(INITIAL_CLIENTES);
   const [logs, setLogs] = useState<ChangeLog[]>(INITIAL_LOGS);
-  const [vehicles, setVehicles] = useState<LedVehicle[]>(INITIAL_VEHICLES);
 
   // State audit-log generator helper
   const addLog = (action: string) => {
@@ -104,15 +74,6 @@ export const DashboardView: React.FC = () => {
     } else {
       addLog(`Editó especificaciones en soporte comercial: ${screen?.nombre || id}`);
     }
-  };
-
-  // State helper: Update screen price (from Revenue Pricing advisor)
-  const handleUpdateScreenPrice = (id: string, price: number) => {
-    setScreens((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, precio: price } : s))
-    );
-    const screen = screens.find((s) => s.id === id);
-    addLog(`Aplicó recomendación IA: Actualizó tarifa de ${screen?.nombre || id} a $${price.toLocaleString()}`);
   };
 
   // State helper: Delete screen (Hard delete)
@@ -147,102 +108,16 @@ export const DashboardView: React.FC = () => {
     }, 0);
 
     const qtId = `qt-gen-${Date.now()}`;
-    const newQuote: Cotizacion = {
-      id: qtId,
-      mediakitId: mkId,
-      mediakitNombre: mk.nombre,
-      clienteNombre: mk.clienteNombre,
-      descuentoPercent: 0,
-      validez: "2026-08-30",
-      condiciones: "Facturación directa con el 50% de anticipo.",
-      total: baseCost,
-      estado: "Pendiente"
-    };
-
-    setCotizaciones((prev) => [newQuote, ...prev]);
     
     // Update MediaKit state to reflecting "Cotizando"
     handleUpdateMediaKit(mkId, { estado: "Cotizando" });
-    setActiveTab("reservas"); // auto redirect to pipeline workflow
-    addLog(`Generó Cotización #${qtId} a partir de propuesta MediaKit: ${mk.nombre}`);
-  };
-
-  // State helper: Approve Quote -> Converts to Reservation (Workflow Transition 2)
-  const handleApproveCotizacion = (qtId: string) => {
-    const quote = cotizaciones.find((q) => q.id === qtId);
-    if (!quote) return;
-
-    // Update Quote status
-    setCotizaciones((prev) =>
-      prev.map((q) => (q.id === qtId ? { ...q, estado: "Aceptada" } : q))
-    );
-
-    // Locate matching MediaKit screens list
-    const mk = mediaKits.find((m) => m.id === quote.mediakitId);
-    const screenId = mk?.screenIds[0] || "sc-01";
-    const screenObj = screens.find((s) => s.id === screenId);
-
-    // Spawn Reservation
-    const rvId = `rv-gen-${Date.now()}`;
-    const newRes: Reserva = {
-      id: rvId,
-      mediakitId: quote.mediakitId,
-      clienteNombre: quote.clienteNombre,
-      screenId,
-      screenNombre: screenObj?.nombre || "Pantalla Seleccionada",
-      fechaInicio: "2026-08-01",
-      fechaFin: "2026-08-28",
-      estado: "Pendiente",
-      conflictiva: false
-    };
-
-    setReservas((prev) => [newRes, ...prev]);
-    addLog(`Cerró Cotización #${qtId}. Reserva generada para anunciante: ${quote.clienteNombre}`);
-  };
-
-  // State helper: Approve Reservation -> Converts to Active Campaign (Workflow Transition 3)
-  const handleApproveReserva = (rvId: string) => {
-    const res = reservas.find((r) => r.id === rvId);
-    if (!res) return;
-
-    // Update reservation state
-    setReservas((prev) =>
-      prev.map((r) => (r.id === rvId ? { ...r, estado: "Confirmada" } : r))
-    );
-
-    // Spawn Active Campaign
-    const cpId = `cp-gen-${Date.now()}`;
-    const newCamp: Campaña = {
-      id: cpId,
-      reservaId: rvId,
-      clienteNombre: res.clienteNombre,
-      nombre: `Campaña Oficial — ${res.clienteNombre}`,
-      screenId: res.screenId,
-      screenNombre: res.screenNombre,
-      fechaInicio: res.fechaInicio,
-      fechaFin: res.fechaFin,
-      progreso: 0,
-      estado: "Planificada"
-    };
-
-    setCampañas((prev) => [newCamp, ...prev]);
-    addLog(`Reserva #${rvId} firmada y confirmada. Planificado vuelo de Campaña #${cpId}`);
+    addLog(`Generó Cotización #${qtId} (Total: $${baseCost.toLocaleString()}) a partir de propuesta MediaKit: ${mk.nombre}`);
   };
 
   // Navigation mapping list
   const navItems = [
-    { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, desc: "¿Qué tengo que hacer hoy?" },
-    { id: "mediakit", label: "MediaKit Editor", icon: FileText, desc: "Notion Editor y Propuestas IA" },
-    { id: "inventario", label: "Inventario", icon: Tv, desc: "Backoffice CRUD de soportes fijos/LED" },
-    { id: "calendario", label: "Calendario", icon: Calendar, desc: "Timeline de ocupación de soportes" },
-    { id: "reservas", label: "Workflow Ventas", icon: Layers, desc: "Cotizaciones, Reservas y Overbooking" },
-    { id: "clientes", label: "Clientes CRM", icon: Users, desc: "Directorio de anunciantes" },
-    { id: "led-movil", label: "LED Móvil", icon: Radio, desc: "Planificador de circuitos GPS móviles" },
-    { id: "revenue", label: "Revenue IA", icon: TrendingUp, desc: "Optimización de tarifas" },
-    { id: "seo", label: "Estrategia SEO", icon: Globe, desc: "Arquitectura multipágina y sitemap" },
-    { id: "reportes", label: "Reportes", icon: BarChart3, desc: "Analíticas corporativas" },
-    { id: "administracion", label: "Administración", icon: Settings2, desc: "Logs de auditoría y RBAC" },
-    { id: "design-system", label: "Design System", icon: Shield, desc: "Consola de Tokens, Guías UX/UI y Accesibilidad" }
+    { id: "inventario", label: "Inventario Comercial", icon: Tv, desc: "Edición y administración del catálogo de soportes físicos y pantallas LED" },
+    { id: "mediakit", label: "Editor de MediaKits", icon: FileText, desc: "Diseño Notion-style y generación de propuestas comerciales inteligentes con IA" }
   ];
 
   return (
@@ -340,25 +215,6 @@ export const DashboardView: React.FC = () => {
 
         {/* Sub-view router container */}
         <div className="flex-1 overflow-y-auto relative bg-[#FAF9F5]">
-          {activeTab === "dashboard" && (
-            <DashboardHome
-              mediaKits={mediaKits}
-              cotizaciones={cotizaciones}
-              reservas={reservas}
-              campañas={campañas}
-              clientes={clientes}
-              userRole={userRole}
-              onNavigateToTab={setActiveTab}
-              onApproveReserva={handleApproveReserva}
-              onApproveCotizacion={handleApproveCotizacion}
-              setCampañas={setCampañas}
-              setClientes={setClientes}
-              setCotizaciones={setCotizaciones}
-              setReservas={setReservas}
-              addLog={addLog}
-            />
-          )}
-
           {activeTab === "inventario" && (
             <InventoryModule
               screens={screens}
@@ -380,70 +236,6 @@ export const DashboardView: React.FC = () => {
               onDeleteMediaKit={(id) => setMediaKits((prev) => prev.filter((m) => m.id !== id))}
               onGenerateQuoteFromMediaKit={handleGenerateQuoteFromMediaKit}
             />
-          )}
-
-          {activeTab === "reservas" && (
-            <WorkflowModule
-              cotizaciones={cotizaciones}
-              reservas={reservas}
-              campañas={campañas}
-              screens={screens}
-              userRole={userRole}
-              onUpdateCotizacion={(id, data) => setCotizaciones((prev) => prev.map((q) => (q.id === id ? { ...q, ...data } : q)))}
-              onUpdateReserva={(id, data) => setReservas((prev) => prev.map((r) => (r.id === id ? { ...r, ...data } : r)))}
-              onUpdateCampaña={(id, data) => setCampañas((prev) => prev.map((c) => (c.id === id ? { ...c, ...data } : c)))}
-              onApproveCotizacion={handleApproveCotizacion}
-              onApproveReserva={handleApproveReserva}
-            />
-          )}
-
-          {activeTab === "led-movil" && (
-            <LedMovilModule
-              vehicles={vehicles}
-              onUpdateVehicle={(id, data) => setVehicles((prev) => prev.map((v) => (v.id === id ? { ...v, ...data } : v)))}
-              onAddVehicle={(vh) => setVehicles((prev) => [...prev, vh])}
-            />
-          )}
-
-          {activeTab === "revenue" && (
-            <RevenueModule
-              screens={screens}
-              onUpdateScreenPrice={handleUpdateScreenPrice}
-            />
-          )}
-
-          {activeTab === "calendario" && (
-            <CalendarModule
-              screens={screens}
-              onUpdateScreenStatus={(id, status) => handleUpdateScreen(id, { status: status as any })}
-            />
-          )}
-
-          {activeTab === "clientes" && (
-            <ClientsModule
-              clientes={clientes}
-              userRole={userRole}
-              onAddCliente={(cliente) => setClientes((prev) => [...prev, cliente])}
-            />
-          )}
-
-          {activeTab === "reportes" && (
-            <ReportsModule />
-          )}
-
-          {activeTab === "seo" && (
-            <SitemapSeoView />
-          )}
-
-          {activeTab === "administracion" && (
-            <AdministrationModule
-              logs={logs}
-              userRole={userRole}
-            />
-          )}
-
-          {activeTab === "design-system" && (
-            <DesignSystemAuditView />
           )}
         </div>
       </main>

@@ -2,6 +2,7 @@ import React, { useState, useMemo } from "react";
 import { DoohScreen } from "../../types";
 import { Role } from "./types";
 import { motion, AnimatePresence } from "motion/react";
+import { downloadMediaKitAsHtml } from "../../utils/mediaKitExport";
 import { 
   Plus, 
   Trash2, 
@@ -561,6 +562,29 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
                         onChange={(e) => onUpdateScreen(selectedScreen.id, { nota: e.target.value })}
                         className="w-full px-2.5 py-1.5 text-[11px] border border-stone-200 rounded-lg bg-stone-50/50 focus:outline-none leading-relaxed"
                       />
+                    </div>
+
+                    {/* PDF/Print Export Action for Single Asset */}
+                    <div className="pt-2">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          downloadMediaKitAsHtml(
+                            [selectedScreen],
+                            `Ficha Comercial: ${selectedScreen.nombre}`,
+                            "Cliente Potencial",
+                            selectedScreen.ciudad || "Mendoza",
+                            {
+                              id: selectedScreen.id,
+                              notes: selectedScreen.nota || "Ficha técnica oficial de soporte exterior publicitario."
+                            }
+                          );
+                        }}
+                        className="w-full py-2 bg-[#06434a]/10 hover:bg-[#06434a]/15 text-[#06434a] border border-[#06434a]/20 font-extrabold uppercase text-[9px] rounded-lg cursor-pointer flex items-center justify-center gap-1.5 transition-colors"
+                      >
+                        <FileText className="h-3.5 w-3.5" />
+                        <span>Exportar Ficha / PDF-Listo</span>
+                      </button>
                     </div>
                   </div>
                 )}

@@ -1385,7 +1385,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
                 <div className="bg-slate-50 border border-slate-150 rounded-xl p-3 space-y-2 text-xs font-bold">
                   <div className="flex justify-between text-slate-500">
                     <span>Subtotal Neto:</span>
-                    <span className="text-slate-800">${cartSubtotal.toLocaleString("es-AR")} / sem</span>
+                    <span className="text-[#06434a] font-bold">Tarifa bajo cotización</span>
                   </div>
                   <div className="flex justify-between text-slate-500">
                     <span>Impactos estimados:</span>
@@ -1393,7 +1393,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
                   </div>
                   <div className="flex justify-between text-sm font-black border-t border-slate-200/60 pt-2 text-slate-950">
                     <span>Inversión Estimada:</span>
-                    <span className="text-slate-950">${cartTotalInvestment.toLocaleString("es-AR")}</span>
+                    <span className="text-[#06434a] font-extrabold">Bajo cotización</span>
                   </div>
                 </div>
 

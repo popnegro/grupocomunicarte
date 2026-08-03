@@ -139,10 +139,10 @@ export const SoportesInventory: React.FC<SoportesInventoryProps> = ({
           </div>
           <div>
             <span className="text-[10px] text-stone-400 uppercase font-black tracking-widest block">Tarifa Promedio</span>
-            <span className="text-2xl font-bold font-display text-stone-900">
-              ${stats.averagePrice.toLocaleString("es-AR")}
+            <span className="text-sm font-bold font-display text-[#06434a] block mt-1">
+              Tarifa bajo cotización
             </span>
-            <span className="text-[10px] text-stone-400 block mt-0.5">ARS por semana</span>
+            <span className="text-[10px] text-stone-400 block mt-0.5">Sujeto a plan de pauta</span>
           </div>
         </div>
       </div>
@@ -258,18 +258,6 @@ export const SoportesInventory: React.FC<SoportesInventoryProps> = ({
               aria-current={sortBy === "impactos" ? "true" : undefined}
             >
               <span>Impactos</span>
-              <ArrowUpDown className="h-3 w-3" aria-hidden="true" />
-            </button>
-            <button
-              type="button"
-              onClick={() => toggleSort("precio")}
-              className={`px-2.5 py-1 rounded-md font-bold transition-colors flex items-center gap-1 ${
-                sortBy === "precio" ? "bg-stone-100 text-[#06434a]" : "hover:text-stone-900"
-              }`}
-              aria-label={`Ordenar por tarifa semanal, orden ${sortBy === "precio" && sortOrder === "asc" ? "ascendente" : "descendente"}`}
-              aria-current={sortBy === "precio" ? "true" : undefined}
-            >
-              <span>Tarifa</span>
               <ArrowUpDown className="h-3 w-3" aria-hidden="true" />
             </button>
             <button

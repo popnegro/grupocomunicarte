@@ -12,6 +12,9 @@ import { SEED_SCREENS, INITIAL_CLIENTES, INITIAL_MEDIAKITS, INITIAL_LOGS } from 
 
 dotenv.config();
 
+import { validateConfig } from "./src/config/env.ts";
+validateConfig();
+
 const app = express();
 const PORT = 3000;
 

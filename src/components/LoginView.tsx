@@ -5,17 +5,26 @@ import { LogIn, Globe, Shield, ArrowRight } from "lucide-react";
 export const LoginView: React.FC = () => {
   const { loginWithGoogle } = useAuth();
   const [error, setError] = useState<string | null>(null);
+  const [isUnauthorizedDomain, setIsUnauthorizedDomain] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
     setError(null);
+    setIsUnauthorizedDomain(false);
     setLoading(true);
     try {
       await loginWithGoogle();
       // Redirect or state update will trigger automatically through AuthProvider
     } catch (err: any) {
       console.error(err);
-      setError("No se pudo iniciar sesión. Por favor, intenta de nuevo.");
+      const errMsg = err?.message || "";
+      const errCode = err?.code || "";
+      if (errCode === "auth/unauthorized-domain" || errMsg.includes("auth/unauthorized-domain")) {
+        setIsUnauthorizedDomain(true);
+        setError("Error: Dominio no autorizado en Firebase.");
+      } else {
+        setError("No se pudo iniciar sesión. Por favor, intenta de nuevo.");
+      }
     } finally {
       setLoading(false);
     }
@@ -46,11 +55,50 @@ export const LoginView: React.FC = () => {
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-10 px-6 shadow-sm border border-stone-150 rounded-2xl sm:px-10">
           
-          {error && (
+          {isUnauthorizedDomain ? (
+            <div className="mb-6 bg-red-50/70 border border-red-200 p-5 rounded-2xl text-left space-y-4">
+              <div className="flex items-start gap-2.5">
+                <span className="h-5 w-5 rounded-full bg-red-100 flex items-center justify-center text-red-600 font-extrabold text-xs shrink-0 mt-0.5">!</span>
+                <div>
+                  <h4 className="text-xs font-extrabold text-red-950 uppercase tracking-wide">Dominio no autorizado en Firebase</h4>
+                  <p className="text-[11px] text-red-700 mt-1 leading-relaxed">
+                    Firebase Auth bloquea el inicio de sesión desde dominios no registrados. Para autorizar este entorno de desarrollo/vista previa:
+                  </p>
+                </div>
+              </div>
+
+              <div className="bg-white border border-red-100 rounded-xl p-3 space-y-1.5 shadow-2xs">
+                <span className="text-[9px] uppercase font-extrabold text-stone-400 tracking-wider block">Copia este dominio actual:</span>
+                <div className="flex items-center justify-between gap-2 bg-stone-50 border border-stone-200 rounded-lg px-3 py-1.5 font-mono text-[11px] text-stone-700 select-all">
+                  <span className="break-all">{window.location.hostname}</span>
+                  <button 
+                    onClick={() => {
+                      navigator.clipboard.writeText(window.location.hostname);
+                    }}
+                    className="text-[9px] uppercase font-bold text-[#06434a] hover:underline cursor-pointer shrink-0"
+                  >
+                    Copiar
+                  </button>
+                </div>
+              </div>
+
+              <div className="text-[11px] text-red-700 space-y-1.5 leading-relaxed">
+                <p className="font-bold">Instrucciones para autorizarlo:</p>
+                <ol className="list-decimal pl-4 space-y-1.5">
+                  <li>Inicia sesión en tu <a href="https://console.firebase.google.com/" target="_blank" rel="noopener noreferrer" className="font-extrabold underline text-[#06434a] hover:text-[#0b5e67]">Consola de Firebase</a>.</li>
+                  <li>Selecciona tu proyecto (<strong className="font-mono text-stone-900 bg-white px-1.5 py-0.5 border border-stone-200 rounded">light-case-dn56p</strong>).</li>
+                  <li>Ve a la pestaña **Authentication** en el menú de la izquierda.</li>
+                  <li>Ingresa a la pestaña **Sign-in method** en la parte superior.</li>
+                  <li>Desplázate hacia abajo hasta **Dominios autorizados** (Authorized domains).</li>
+                  <li>Haz clic en **Agregar dominio** (Add domain) y pega el valor copiado arriba.</li>
+                </ol>
+              </div>
+            </div>
+          ) : error ? (
             <div className="mb-4 bg-red-50 border border-red-200 text-red-700 p-3.5 rounded-xl text-xs font-semibold">
               {error}
             </div>
-          )}
+          ) : null}
 
           <div className="space-y-6">
             <button

@@ -249,7 +249,7 @@ export const CampaignPlannerView: React.FC = () => {
                 <div className="bg-slate-50/50 border-b border-slate-100 px-6 py-5 flex items-center justify-between">
                   <div className="space-y-0.5">
                     <h3 className="text-sm font-bold text-slate-900">Propuesta de Distribución en Mendoza</h3>
-                    <p className="text-[10px] text-slate-400">Costo total de inversión: <strong className="text-slate-800">${plannedCircuit.totalCost?.toLocaleString("es-AR")} ARS</strong></p>
+                    <p className="text-[10px] text-slate-400">Costo total de inversión: <strong className="text-[#06434a] font-bold">Bajo cotización</strong></p>
                   </div>
                   <div className="flex gap-2">
                     <Button
@@ -301,8 +301,8 @@ export const CampaignPlannerView: React.FC = () => {
                                   <span className="font-semibold text-slate-500 font-mono">
                                     {screen.impactos.toLocaleString("es-AR")} imp/sem
                                   </span>
-                                  <span className="font-extrabold text-slate-950 font-mono">
-                                    ${screen.precio.toLocaleString("es-AR")}/sem
+                                  <span className="font-bold text-[#06434a]">
+                                    Bajo cotización
                                   </span>
                                 </div>
                               </div>

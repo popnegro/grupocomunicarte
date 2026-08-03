@@ -44,6 +44,7 @@ export const screens = pgTable("screens", {
   formato: text("formato"),
   cobertura: text("cobertura"),
   horarios: text("horarios"),
+  video: text("video"),
   ruta: text("ruta"), // Stringified JSON array of route waypoints { lat, lng, nombre }
 }, (table) => ({
   categoriaIdx: index("screens_categoria_idx").on(table.categoria),

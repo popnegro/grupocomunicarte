@@ -147,9 +147,9 @@ export const B2BMarketplaceView: React.FC = () => {
                 <span>Impactos Totales Estimados</span>
                 <span className="font-semibold text-slate-800 font-mono">{totalImpacts.toLocaleString("es-AR")}</span>
               </div>
-              <div className="flex justify-between border-t border-dashed border-slate-200 pt-2 text-sm font-black text-slate-950 font-mono">
+              <div className="flex justify-between border-t border-dashed border-slate-200 pt-2 text-sm font-black text-slate-950">
                 <span>Total Estimado Neto</span>
-                <span>${finalTotal.toLocaleString("es-AR")} ARS</span>
+                <span className="text-[#06434a] font-extrabold">Bajo cotización</span>
               </div>
             </div>
 
@@ -260,8 +260,8 @@ export const B2BMarketplaceView: React.FC = () => {
                           </div>
                           <div className="space-y-0.5 text-right">
                             <span className="text-[9px] text-slate-400 uppercase font-bold">Inversión/Semana</span>
-                            <span className="font-bold font-mono text-slate-950 text-[13px]">
-                              ${screen.precio.toLocaleString("es-AR")}
+                            <span className="font-bold text-slate-950 text-[13px]">
+                              Bajo cotización
                             </span>
                           </div>
                         </div>
@@ -323,7 +323,7 @@ export const B2BMarketplaceView: React.FC = () => {
                             <span className="text-[10px] text-slate-400 font-semibold block uppercase">{sc.zona}</span>
                           </div>
                           <div className="text-right shrink-0">
-                            <span className="font-mono font-bold text-slate-900">${sc.precio.toLocaleString("es-AR")}</span>
+                            <span className="font-bold text-[#06434a]">Bajo cotización</span>
                             <button
                               onClick={() => toggleCart(sc.id)}
                               className="text-[10px] text-rose-500 block hover:underline ml-auto"
@@ -361,31 +361,21 @@ export const B2BMarketplaceView: React.FC = () => {
                     <div className="border-t border-slate-100 pt-4 space-y-2 text-xs">
                       <div className="flex justify-between text-slate-500 font-medium">
                         <span>Suma de Tarifas Semanales</span>
-                        <span className="font-semibold text-slate-800 font-mono">${subtotalPerWeek.toLocaleString("es-AR")}</span>
+                        <span className="font-semibold text-[#06434a]">Bajo cotización</span>
                       </div>
                       <div className="flex justify-between text-slate-500 font-medium">
                         <span>Costo Bruto por {weeks} Semanas</span>
-                        <span className="font-semibold text-slate-800 font-mono">${rawTotal.toLocaleString("es-AR")}</span>
+                        <span className="font-semibold text-[#06434a]">Bajo cotización</span>
                       </div>
-
-                      {discountPercent > 0 && (
-                        <div className="flex justify-between text-emerald-600 font-semibold items-center">
-                          <span className="flex items-center gap-1">
-                            <Percent className="h-3.5 w-3.5 text-emerald-500" />
-                            Descuento Especial B2B ({discountPercent}%)
-                          </span>
-                          <span className="font-mono">-${discountAmount.toLocaleString("es-AR")}</span>
-                        </div>
-                      )}
-
+                      
                       <div className="flex justify-between text-slate-500 font-medium">
                         <span>Audiencia Semanal Acumulada</span>
                         <span className="font-semibold text-slate-800 font-mono">{(totalImpacts / weeks).toLocaleString("es-AR")} imp.</span>
                       </div>
 
-                      <div className="flex justify-between border-t border-slate-200 pt-3 text-sm font-black text-slate-950 font-mono">
+                      <div className="flex justify-between border-t border-slate-200 pt-3 text-sm font-black text-slate-950">
                         <span>Total Solicitado</span>
-                        <span>${finalTotal.toLocaleString("es-AR")} ARS</span>
+                        <span className="text-[#06434a] font-extrabold">Bajo cotización</span>
                       </div>
                     </div>
 

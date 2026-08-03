@@ -671,7 +671,6 @@ export const DashboardHome: React.FC<DashboardHomeProps> = ({
           <div className="bg-white border border-stone-200/80 rounded-2xl p-5 shadow-2xs space-y-4">
             <div className="flex items-center justify-between border-b border-stone-100 pb-3">
               <div className="flex items-center gap-2">
-                <Layers className="h-4 w-4 text-[#06434a]" />
                 <h3 className="text-xs font-extrabold text-stone-800 uppercase tracking-widest font-mono">
                   Matriz de Ocupación & Disponibilidad OOH
                 </h3>
@@ -733,7 +732,6 @@ export const DashboardHome: React.FC<DashboardHomeProps> = ({
           <div className="bg-white border border-stone-200/80 rounded-2xl p-5 shadow-2xs space-y-4">
             <div className="flex items-center justify-between border-b border-stone-100 pb-3">
               <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-[#06434a]" />
                 <h3 className="text-xs font-extrabold text-stone-800 uppercase tracking-widest font-mono">
                   Agenda Comercial & Plan de Vuelo (Agosto 2026)
                 </h3>
@@ -839,7 +837,6 @@ export const DashboardHome: React.FC<DashboardHomeProps> = ({
           <div className="bg-white border border-stone-200/80 rounded-2xl p-5 shadow-2xs space-y-4">
             <div className="flex items-center justify-between border-b border-stone-100 pb-3">
               <div className="flex items-center gap-2">
-                <TrendingUp className="h-4 w-4 text-[#06434a]" />
                 <h3 className="text-xs font-extrabold text-stone-800 uppercase tracking-widest font-mono">
                   Rendimiento Comercial & Ranking
                 </h3>
@@ -928,10 +925,9 @@ export const DashboardHome: React.FC<DashboardHomeProps> = ({
         <div className="lg:col-span-4 space-y-6">
           
           {/* A. SMART SUGGESTIONS (Gemini Revenue Optimization) */}
-          <div className="bg-gradient-to-b from-[#FAF9F5] to-stone-50 border border-stone-200/80 rounded-2xl p-5 space-y-4 shadow-2xs text-left">
+          <div className="bg-stone-50 border border-stone-200 rounded-2xl p-5 space-y-4 shadow-2xs text-left">
             <div className="flex items-center justify-between border-b border-stone-200/60 pb-3">
               <div className="flex items-center gap-1.5">
-                <Sparkles className="h-4.5 w-4.5 text-amber-500 animate-pulse" />
                 <h4 className="text-[11px] font-extrabold text-stone-800 uppercase tracking-wider font-mono">
                   Sugerencias de Revenue IA
                 </h4>
@@ -984,7 +980,6 @@ export const DashboardHome: React.FC<DashboardHomeProps> = ({
           <div className="bg-white border border-stone-200/80 rounded-2xl p-5 shadow-2xs space-y-4 text-left">
             <div className="flex items-center justify-between border-b border-stone-100 pb-3">
               <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-stone-500" />
                 <h4 className="text-xs font-extrabold text-stone-800 uppercase tracking-widest font-mono">
                   Próximos Vencimientos
                 </h4>
@@ -1039,7 +1034,6 @@ export const DashboardHome: React.FC<DashboardHomeProps> = ({
           <div className="bg-white border border-stone-200/80 rounded-2xl p-5 shadow-2xs space-y-4 text-left">
             <div className="flex items-center justify-between border-b border-stone-100 pb-3">
               <div className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4 text-emerald-500" />
                 <h4 className="text-xs font-extrabold text-stone-800 uppercase tracking-widest font-mono">
                   Actividad Reciente / Auditoría
                 </h4>

@@ -7,7 +7,7 @@ interface NavigationProps {
   activeSlug: string;
   onNavigate: (slug: string) => void;
   onSetActiveView: (view: "landing" | "dashboard") => void;
-  onSectionClick?: (section: "inicio" | "espacios" | "soluciones" | "nosotros" | "contacto") => void;
+  onSectionClick?: (section: "inicio" | "soportes" | "espacios" | "soluciones" | "nosotros" | "contacto") => void;
   logoSrc?: string;
   logoAlt?: string;
   brandName?: string;
@@ -29,12 +29,13 @@ export const Navigation: React.FC<NavigationProps> = ({
 
   const NAV_ITEMS = [
     { id: "inicio", name: "Inicio", icon: <LucideIcons.Home className="h-4 w-4" /> },
+    { id: "soportes", name: "Soportes", icon: <LucideIcons.Tv className="h-4 w-4" /> },
     { id: "espacios", name: "Espacios Publicitarios", icon: <LucideIcons.LayoutGrid className="h-4 w-4" /> },
     { id: "soluciones", name: "Soluciones", icon: <LucideIcons.Layers className="h-4 w-4" /> },
     { id: "nosotros", name: "Nosotros", icon: <LucideIcons.Info className="h-4 w-4" /> },
   ] as const;
 
-  const handleItemClick = (id: "inicio" | "espacios" | "soluciones" | "nosotros" | "contacto") => {
+  const handleItemClick = (id: "inicio" | "soportes" | "espacios" | "soluciones" | "nosotros" | "contacto") => {
     setActiveSection(id);
     setIsMobileMenuOpen(false);
     if (onSectionClick) {
@@ -92,6 +93,16 @@ export const Navigation: React.FC<NavigationProps> = ({
 
         {/* Action Buttons (Dashboard Access & Mobile Toggle) */}
         <div className="flex items-center gap-3">
+          <button
+            onClick={() => {
+              window.location.href = "/dashboard";
+            }}
+            className="hidden sm:flex items-center gap-1.5 text-xs font-bold text-stone-700 hover:text-stone-900 bg-white px-4 py-2.5 border border-stone-200 hover:bg-stone-50 active:scale-95 rounded-full transition-all cursor-pointer font-sans"
+          >
+            <LucideIcons.Lock className="h-3.5 w-3.5 text-[#06434a]" />
+            <span>Consola</span>
+          </button>
+
           <button
             id="nav-cta-contacto"
             onClick={() => handleItemClick("contacto")}

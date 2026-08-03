@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { useEffect } from "react";
+import { create } from "zustand";
 import { LandingContent, Lead, OnboardingAnswers, SeoAuditReport, GrowthRecommendation, DoohScreen } from "../types";
 import { sitemap } from "../lib/sitemap";
 
@@ -349,7 +350,6 @@ const SEED_SCREENS: DoohScreen[] = [
   }
 ];
 
-// Initial premium Spanish copy for SmartWeb B2B SaaS
 const DEFAULT_LANDING_CONTENT: LandingContent = {
   hero: {
     badge: "🚀 ACELERADOR COMERCIAL INTELIGENTE",
@@ -400,7 +400,7 @@ const DEFAULT_LANDING_CONTENT: LandingContent = {
   },
 };
 
-interface CmsContextProps {
+interface CmsStoreProps {
   content: LandingContent;
   leads: Lead[];
   onboardingAnswers: OnboardingAnswers | null;
@@ -421,17 +421,15 @@ interface CmsContextProps {
   saveOnboarding: (answers: OnboardingAnswers) => void;
   setActiveView: (view: "landing" | "dashboard") => void;
   setCurrentDashboardTab: (tab: string) => void;
-  // DOOH screens and cart logic
   screens: DoohScreen[];
-  setScreens: React.Dispatch<React.SetStateAction<DoohScreen[]>>;
-  cart: string[]; // Screen ids
+  setScreens: (screens: DoohScreen[] | ((prev: DoohScreen[]) => DoohScreen[])) => void;
+  cart: string[];
   toggleCart: (id: string) => void;
   clearCart: () => void;
   weeks: number;
   setWeeks: (weeks: number) => void;
   updateScreenStatus: (id: string, status: "Activo" | "Pausado" | "Disponible" | "No disponible") => void;
   updateScreen: (id: string, updated: Partial<DoohScreen>) => void;
-  // API triggers
   loadingAI: boolean;
   generateAIContent: (onboarding: OnboardingAnswers) => Promise<void>;
   seoReport: SeoAuditReport | null;
@@ -441,39 +439,23 @@ interface CmsContextProps {
   fetchLeads: () => Promise<void>;
 }
 
-const CmsContext = createContext<CmsContextProps | undefined>(undefined);
-
-function findSitemapItem(items: any[], slug: string): any | null {
-  for (const item of items) {
-    if (item.slug === slug) return item;
-    if (item.children && item.children.length > 0) {
-      const found = findSitemapItem(item.children, slug);
-      if (found) return found;
-    }
-  }
-  return null;
-}
-
-export const CmsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [content, setContent] = useState<LandingContent>(() => {
+export const useCmsStore = create<CmsStoreProps>((set, get) => ({
+  content: (() => {
     const saved = localStorage.getItem("smartweb_cms_content");
     return saved ? JSON.parse(saved) : DEFAULT_LANDING_CONTENT;
-  });
-
-  const [leads, setLeads] = useState<Lead[]>([]);
-  const [onboardingAnswers, setOnboardingAnswers] = useState<OnboardingAnswers | null>(() => {
+  })(),
+  leads: [],
+  onboardingAnswers: (() => {
     const saved = localStorage.getItem("smartweb_onboarding");
     return saved ? JSON.parse(saved) : null;
-  });
-
-  const [activeView, setActiveView] = useState<"landing" | "dashboard">("landing");
-  const [currentDashboardTab, setCurrentDashboardTab] = useState<string>("inventario");
-  const [activeSlug, setActiveSlug] = useState<string>("/");
-  const [loadingAI, setLoadingAI] = useState(false);
-  const [seoReport, setSeoReport] = useState<SeoAuditReport | null>(null);
-  const [growthRecs, setGrowthRecs] = useState<GrowthRecommendation[]>([]);
-
-  const [screens, setScreens] = useState<DoohScreen[]>(() => {
+  })(),
+  activeView: "landing",
+  currentDashboardTab: "inventario",
+  activeSlug: "/",
+  loadingAI: false,
+  seoReport: null,
+  growthRecs: [],
+  screens: (() => {
     const saved = localStorage.getItem("smartweb_dooh_screens");
     if (saved) {
       try {
@@ -486,130 +468,96 @@ export const CmsProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
     }
     return SEED_SCREENS;
-  });
-
-  const [cart, setCart] = useState<string[]>(() => {
+  })(),
+  cart: (() => {
     const saved = localStorage.getItem("smartweb_dooh_cart");
     return saved ? JSON.parse(saved) : [];
-  });
+  })(),
+  weeks: 4,
 
-  const [weeks, setWeeks] = useState<number>(4);
+  setActiveSlug: (slug) => set({ activeSlug: slug }),
 
-  // Sync screens and cart to localStorage
-  useEffect(() => {
-    localStorage.setItem("smartweb_dooh_screens", JSON.stringify(screens));
-  }, [screens]);
+  updateHero: (updatedHero) => set((state) => {
+    const nextContent = {
+      ...state.content,
+      hero: { ...state.content.hero, ...updatedHero },
+    };
+    localStorage.setItem("smartweb_cms_content", JSON.stringify(nextContent));
+    return { content: nextContent };
+  }),
 
-  useEffect(() => {
-    localStorage.setItem("smartweb_dooh_cart", JSON.stringify(cart));
-  }, [cart]);
+  updateBenefit: (id, updated) => set((state) => {
+    const nextContent = {
+      ...state.content,
+      benefits: state.content.benefits.map((b) => (b.id === id ? { ...b, ...updated } : b)),
+    };
+    localStorage.setItem("smartweb_cms_content", JSON.stringify(nextContent));
+    return { content: nextContent };
+  }),
 
-  const toggleCart = (id: string) => {
-    setCart((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
-    );
-  };
+  addBenefit: (newBenefit) => set((state) => {
+    const nextContent = {
+      ...state.content,
+      benefits: [...state.content.benefits, newBenefit],
+    };
+    localStorage.setItem("smartweb_cms_content", JSON.stringify(nextContent));
+    return { content: nextContent };
+  }),
 
-  const clearCart = () => {
-    setCart([]);
-  };
+  deleteBenefit: (id) => set((state) => {
+    const nextContent = {
+      ...state.content,
+      benefits: state.content.benefits.filter((b) => b.id !== id),
+    };
+    localStorage.setItem("smartweb_cms_content", JSON.stringify(nextContent));
+    return { content: nextContent };
+  }),
 
-  const updateScreenStatus = (id: string, status: "Activo" | "Pausado" | "Disponible" | "No disponible") => {
-    setScreens((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, status } : s))
-    );
-  };
+  updateFaq: (index, updated) => set((state) => {
+    const nextContent = {
+      ...state.content,
+      faq: state.content.faq.map((f, idx) => (idx === index ? { ...f, ...updated } : f)),
+    };
+    localStorage.setItem("smartweb_cms_content", JSON.stringify(nextContent));
+    return { content: nextContent };
+  }),
 
-  const updateScreen = (id: string, updated: Partial<DoohScreen>) => {
-    setScreens((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, ...updated } : s))
-    );
-  };
+  addFaq: (newFaq) => set((state) => {
+    const nextContent = {
+      ...state.content,
+      faq: [...state.content.faq, newFaq],
+    };
+    localStorage.setItem("smartweb_cms_content", JSON.stringify(nextContent));
+    return { content: nextContent };
+  }),
 
-  // Fetch leads from server
-  const fetchLeads = async () => {
-    try {
-      const res = await fetch("/api/leads");
-      const resJson = await res.json();
-      if (resJson.success) {
-        setLeads(resJson.data);
-      }
-    } catch (e) {
-      console.error("Error fetching leads from server", e);
-    }
-  };
+  deleteFaq: (index) => set((state) => {
+    const nextContent = {
+      ...state.content,
+      faq: state.content.faq.filter((_, idx) => idx !== index),
+    };
+    localStorage.setItem("smartweb_cms_content", JSON.stringify(nextContent));
+    return { content: nextContent };
+  }),
 
-  useEffect(() => {
-    fetchLeads();
-  }, []);
+  updateSeo: (updatedSeo) => set((state) => {
+    const nextContent = {
+      ...state.content,
+      seo: { ...state.content.seo, ...updatedSeo },
+    };
+    localStorage.setItem("smartweb_cms_content", JSON.stringify(nextContent));
+    return { content: nextContent };
+  }),
 
-  // Save content to localStorage on change
-  useEffect(() => {
-    localStorage.setItem("smartweb_cms_content", JSON.stringify(content));
-  }, [content]);
+  resetToDefault: () => set(() => {
+    localStorage.setItem("smartweb_cms_content", JSON.stringify(DEFAULT_LANDING_CONTENT));
+    return {
+      content: DEFAULT_LANDING_CONTENT,
+      seoReport: null,
+    };
+  }),
 
-  const updateHero = (updatedHero: Partial<LandingContent["hero"]>) => {
-    setContent((prev) => ({
-      ...prev,
-      hero: { ...prev.hero, ...updatedHero },
-    }));
-  };
-
-  const updateBenefit = (id: string, updated: Partial<LandingContent["benefits"][0]>) => {
-    setContent((prev) => ({
-      ...prev,
-      benefits: prev.benefits.map((b) => (b.id === id ? { ...b, ...updated } : b)),
-    }));
-  };
-
-  const addBenefit = (newBenefit: LandingContent["benefits"][0]) => {
-    setContent((prev) => ({
-      ...prev,
-      benefits: [...prev.benefits, newBenefit],
-    }));
-  };
-
-  const deleteBenefit = (id: string) => {
-    setContent((prev) => ({
-      ...prev,
-      benefits: prev.benefits.filter((b) => b.id !== id),
-    }));
-  };
-
-  const updateFaq = (index: number, updated: Partial<LandingContent["faq"][0]>) => {
-    setContent((prev) => ({
-      ...prev,
-      faq: prev.faq.map((f, idx) => (idx === index ? { ...f, ...updated } : f)),
-    }));
-  };
-
-  const addFaq = (newFaq: LandingContent["faq"][0]) => {
-    setContent((prev) => ({
-      ...prev,
-      faq: [...prev.faq, newFaq],
-    }));
-  };
-
-  const deleteFaq = (index: number) => {
-    setContent((prev) => ({
-      ...prev,
-      faq: prev.faq.filter((_, idx) => idx !== index),
-    }));
-  };
-
-  const updateSeo = (updatedSeo: Partial<LandingContent["seo"]>) => {
-    setContent((prev) => ({
-      ...prev,
-      seo: { ...prev.seo, ...updatedSeo },
-    }));
-  };
-
-  const resetToDefault = () => {
-    setContent(DEFAULT_LANDING_CONTENT);
-    setSeoReport(null);
-  };
-
-  const addLead = async (leadData: Omit<Lead, "id" | "date">): Promise<Lead | null> => {
+  addLead: async (leadData) => {
     try {
       const response = await fetch("/api/leads", {
         method: "POST",
@@ -618,31 +566,78 @@ export const CmsProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       });
       const result = await response.json();
       if (result.success) {
-        setLeads((prev) => [result.data, ...prev]);
+        set((state) => ({ leads: [result.data, ...state.leads] }));
         return result.data;
       }
     } catch (err) {
       console.error("Error creating lead on server", err);
-      // Fallback
-      const fallbackLead: Lead = {
+      const fallbackLead = {
         ...leadData,
-        id: String(leads.length + 1),
+        id: String(get().leads.length + 1),
         date: new Date().toISOString(),
       };
-      setLeads((prev) => [fallbackLead, ...prev]);
+      set((state) => ({ leads: [fallbackLead, ...state.leads] }));
       return fallbackLead;
     }
     return null;
-  };
+  },
 
-  const saveOnboarding = (answers: OnboardingAnswers) => {
-    setOnboardingAnswers(answers);
+  saveOnboarding: (answers) => {
     localStorage.setItem("smartweb_onboarding", JSON.stringify(answers));
-  };
+    set({ onboardingAnswers: answers });
+  },
 
-  // AI Content Generator: Triggers backend Gemini API call
-  const generateAIContent = async (answers: OnboardingAnswers) => {
-    setLoadingAI(true);
+  setActiveView: (view) => set({ activeView: view }),
+
+  setCurrentDashboardTab: (tab) => set({ currentDashboardTab: tab }),
+
+  setScreens: (valueOrFn) => set((state) => {
+    const nextScreens = typeof valueOrFn === "function" ? valueOrFn(state.screens) : valueOrFn;
+    localStorage.setItem("smartweb_dooh_screens", JSON.stringify(nextScreens));
+    return { screens: nextScreens };
+  }),
+
+  toggleCart: (id) => set((state) => {
+    const nextCart = state.cart.includes(id)
+      ? state.cart.filter((item) => item !== id)
+      : [...state.cart, id];
+    localStorage.setItem("smartweb_dooh_cart", JSON.stringify(nextCart));
+    return { cart: nextCart };
+  }),
+
+  clearCart: () => set(() => {
+    localStorage.setItem("smartweb_dooh_cart", JSON.stringify([]));
+    return { cart: [] };
+  }),
+
+  setWeeks: (weeks) => set({ weeks }),
+
+  updateScreenStatus: (id, status) => set((state) => {
+    const nextScreens = state.screens.map((s) => (s.id === id ? { ...s, status } : s));
+    localStorage.setItem("smartweb_dooh_screens", JSON.stringify(nextScreens));
+    return { screens: nextScreens };
+  }),
+
+  updateScreen: (id, updated) => set((state) => {
+    const nextScreens = state.screens.map((s) => (s.id === id ? { ...s, ...updated } : s));
+    localStorage.setItem("smartweb_dooh_screens", JSON.stringify(nextScreens));
+    return { screens: nextScreens };
+  }),
+
+  fetchLeads: async () => {
+    try {
+      const res = await fetch("/api/leads");
+      const resJson = await res.json();
+      if (resJson.success) {
+        set({ leads: resJson.data });
+      }
+    } catch (e) {
+      console.error("Error fetching leads from server", e);
+    }
+  },
+
+  generateAIContent: async (answers) => {
+    set({ loadingAI: true });
     try {
       const res = await fetch("/api/ai/generate", {
         method: "POST",
@@ -652,8 +647,8 @@ export const CmsProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const result = await res.json();
       if (result.success && result.data) {
         const generated = result.data;
-        setContent((prev) => ({
-          ...prev,
+        const nextContent = {
+          ...get().content,
           hero: {
             badge: generated.hero.badge.toUpperCase(),
             title: generated.hero.title,
@@ -668,44 +663,44 @@ export const CmsProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             icon: b.icon || "Sparkles",
           })),
           faq: generated.faq,
-        }));
+        };
+        localStorage.setItem("smartweb_cms_content", JSON.stringify(nextContent));
+        set({ content: nextContent });
       }
     } catch (e) {
       console.error("Error generating AI content", e);
     } finally {
-      setLoadingAI(false);
+      set({ loadingAI: false });
     }
-  };
+  },
 
-  // AI SEO Auditor: Triggers backend analysis
-  const runSeoAudit = async () => {
-    setLoadingAI(true);
+  runSeoAudit: async () => {
+    set({ loadingAI: true });
     try {
       const res = await fetch("/api/ai/seo-audit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          seoKeywords: content.seo.keywords,
-          heroTitle: content.hero.title,
-          heroSubtitle: content.hero.subtitle,
-          benefitsText: content.benefits.map((b) => `${b.title}: ${b.description}`).join("; "),
-          faqText: content.faq.map((f) => `${f.question}: ${f.answer}`).join("; "),
+          seoKeywords: get().content.seo.keywords,
+          heroTitle: get().content.hero.title,
+          heroSubtitle: get().content.hero.subtitle,
+          benefitsText: get().content.benefits.map((b) => `${b.title}: ${b.description}`).join("; "),
+          faqText: get().content.faq.map((f) => `${f.question}: ${f.answer}`).join("; "),
         }),
       });
       const result = await res.json();
       if (result.success && result.data) {
-        setSeoReport(result.data);
+        set({ seoReport: result.data });
       }
     } catch (e) {
       console.error("Error running SEO Audit", e);
     } finally {
-      setLoadingAI(false);
+      set({ loadingAI: false });
     }
-  };
+  },
 
-  // AI Growth Advisor: Triggers growth recommendations
-  const runGrowthRecs = async (visitors: number, convRate: number) => {
-    setLoadingAI(true);
+  runGrowthRecs: async (visitors, convRate) => {
+    set({ loadingAI: true });
     try {
       const res = await fetch("/api/ai/recommendations", {
         method: "POST",
@@ -713,70 +708,76 @@ export const CmsProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         body: JSON.stringify({
           visitorCount: visitors,
           conversionRate: convRate,
-          activeLeadsCount: leads.length,
+          activeLeadsCount: get().leads.length,
         }),
       });
       const result = await res.json();
       if (result.success && result.data?.recommendations) {
-        setGrowthRecs(result.data.recommendations);
+        set({ growthRecs: result.data.recommendations });
       }
     } catch (e) {
       console.error("Error running Growth Recs", e);
     } finally {
-      setLoadingAI(false);
+      set({ loadingAI: false });
     }
-  };
+  },
+}));
 
-  // Dynamically update SEO head tags
-  useEffect(() => {
-    if (activeView === "landing") {
-      const item = findSitemapItem(sitemap, activeSlug);
-      const baseTitle = "Grupo Comunicarte | Publicidad Exterior y DOOH";
-      const title = item ? `Grupo Comunicarte | ${item.name}` : baseTitle;
-      const description = item ? item.description : "Líderes en publicidad exterior (OOH) y pantallas LED de gran formato en Argentina.";
-      const keywords = item ? item.keyword : "publicidad exterior, via publica, pantallas led, mendoza, buenos aires";
-
-      // Update document title
-      document.title = title;
-
-      // Update Meta Description
-      let metaDesc = document.querySelector('meta[name="description"]');
-      if (!metaDesc) {
-        metaDesc = document.createElement('meta');
-        metaDesc.setAttribute('name', 'description');
-        document.head.appendChild(metaDesc);
-      }
-      metaDesc.setAttribute('content', description);
-
-      // Update Meta Keywords
-      let metaKey = document.querySelector('meta[name="keywords"]');
-      if (!metaKey) {
-        metaKey = document.createElement('meta');
-        metaKey.setAttribute('name', 'keywords');
-        document.head.appendChild(metaKey);
-      }
-      metaKey.setAttribute('content', keywords);
-    } else {
-      // Dashboard SEO Title
-      const tabLabel = currentDashboardTab.charAt(0).toUpperCase() + currentDashboardTab.slice(1);
-      document.title = `Consola B2B | Grupo Comunicarte | ${tabLabel}`;
+function findSitemapItem(items: any[], slug: string): any | null {
+  for (const item of items) {
+    if (item.slug === slug) return item;
+    if (item.children && item.children.length > 0) {
+      const found = findSitemapItem(item.children, slug);
+      if (found) return found;
     }
-  }, [activeView, activeSlug, currentDashboardTab]);
+  }
+  return null;
+}
 
-  // Sync state to URL hash
-  useEffect(() => {
-    let newHash = "";
-    if (activeView === "dashboard") {
-      newHash = `#/dashboard/${currentDashboardTab}`;
-    } else {
-      newHash = `#${activeSlug}`;
-    }
-    if (window.location.hash !== newHash) {
-      window.history.replaceState(null, "", newHash);
-    }
-  }, [activeView, activeSlug, currentDashboardTab]);
+function updateSeoTagsAndHash(activeView: string, activeSlug: string, currentDashboardTab: string) {
+  if (activeView === "landing") {
+    const item = findSitemapItem(sitemap, activeSlug);
+    const baseTitle = "Grupo Comunicarte | Publicidad Exterior y DOOH";
+    const title = item ? `Grupo Comunicarte | ${item.name}` : baseTitle;
+    const description = item ? item.description : "Líderes en publicidad exterior (OOH) y pantallas LED de gran formato en Argentina.";
+    const keywords = item ? item.keyword : "publicidad exterior, via publica, pantallas led, mendoza, buenos aires";
 
-  // Listen to Hash change for deep linking and back-button support
+    document.title = title;
+
+    let metaDesc = document.querySelector('meta[name="description"]');
+    if (!metaDesc) {
+      metaDesc = document.createElement('meta');
+      metaDesc.setAttribute('name', 'description');
+      document.head.appendChild(metaDesc);
+    }
+    metaDesc.setAttribute('content', description);
+
+    let metaKey = document.querySelector('meta[name="keywords"]');
+    if (!metaKey) {
+      metaKey = document.createElement('meta');
+      metaKey.setAttribute('name', 'keywords');
+      document.head.appendChild(metaKey);
+    }
+    metaKey.setAttribute('content', keywords);
+  } else {
+    const tabLabel = currentDashboardTab.charAt(0).toUpperCase() + currentDashboardTab.slice(1);
+    document.title = `Consola B2B | Grupo Comunicarte | ${tabLabel}`;
+  }
+
+  let newHash = "";
+  if (activeView === "dashboard") {
+    newHash = `#/dashboard/${currentDashboardTab}`;
+  } else {
+    newHash = `#${activeSlug}`;
+  }
+  if (window.location.hash !== newHash) {
+    window.history.replaceState(null, "", newHash);
+  }
+}
+
+export const CmsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { setActiveView, setActiveSlug, setCurrentDashboardTab, activeView, activeSlug, currentDashboardTab, content } = useCmsStore();
+
   useEffect(() => {
     const handleHashChange = () => {
       const hash = window.location.hash;
@@ -795,63 +796,23 @@ export const CmsProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
     };
 
-    // Run on mount to load initial URL route!
     handleHashChange();
-
     window.addEventListener("hashchange", handleHashChange);
     return () => window.removeEventListener("hashchange", handleHashChange);
-  }, []);
+  }, [setActiveView, setActiveSlug, setCurrentDashboardTab]);
 
-  return (
-    <CmsContext.Provider
-      value={{
-        content,
-        leads,
-        onboardingAnswers,
-        activeView,
-        currentDashboardTab,
-        activeSlug,
-        setActiveSlug,
-        updateHero,
-        updateBenefit,
-        addBenefit,
-        deleteBenefit,
-        updateFaq,
-        addFaq,
-        deleteFaq,
-        updateSeo,
-        resetToDefault,
-        addLead,
-        saveOnboarding,
-        setActiveView,
-        setCurrentDashboardTab,
-        screens,
-        setScreens,
-        cart,
-        toggleCart,
-        clearCart,
-        weeks,
-        setWeeks,
-        updateScreenStatus,
-        updateScreen,
-        loadingAI,
-        generateAIContent,
-        seoReport,
-        runSeoAudit,
-        growthRecs,
-        runGrowthRecs,
-        fetchLeads,
-      }}
-    >
-      {children}
-    </CmsContext.Provider>
-  );
+  useEffect(() => {
+    updateSeoTagsAndHash(activeView, activeSlug, currentDashboardTab);
+  }, [activeView, activeSlug, currentDashboardTab, content.seo]);
+
+  const fetchLeads = useCmsStore((state) => state.fetchLeads);
+  useEffect(() => {
+    fetchLeads();
+  }, [fetchLeads]);
+
+  return <>{children}</>;
 };
 
 export const useCms = () => {
-  const context = useContext(CmsContext);
-  if (!context) {
-    throw new Error("useCms must be used within a CmsProvider");
-  }
-  return context;
+  return useCmsStore();
 };

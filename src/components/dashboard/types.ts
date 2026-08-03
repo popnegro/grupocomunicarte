@@ -63,6 +63,13 @@ export interface Campaña {
   estado: "Activa" | "Planificada" | "Finalizada";
 }
 
+export interface Interaction {
+  id: string;
+  tipo: "Llamada" | "Reunión" | "Email" | "Propuesta" | "Nota";
+  detalle: string;
+  fecha: string;
+}
+
 export interface Cliente {
   id: string;
   nombre: string;
@@ -72,6 +79,9 @@ export interface Cliente {
   categoria: "Directo" | "Agencia" | "Corporativo";
   campañasActivas: number;
   totalInversión: number;
+  estado?: "contactado" | "negociando" | "cerrado";
+  notas?: string;
+  historialInteracciones?: Interaction[];
 }
 
 export interface ChangeLog {

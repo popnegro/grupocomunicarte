@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import * as LucideIcons from "lucide-react";
 import { DoohScreen } from "../../types";
+import { optimizeImageUrl } from "@/src/lib/imageUtils";
 
 interface SpecsOverlayProps {
   screen: DoohScreen;
@@ -100,9 +101,10 @@ export const SpecsOverlay: React.FC<SpecsOverlayProps> = ({
           {/* Main Photo */}
           <div className="absolute inset-0 w-full h-full">
             <img
-              src={photos[activePhotoIdx]}
+              src={optimizeImageUrl(photos[activePhotoIdx])}
               alt={`${screen.nombre} vista de calle`}
               referrerPolicy="no-referrer"
+              loading="lazy"
               className="w-full h-full object-cover opacity-90 transition-all duration-300"
             />
             {/* Soft Shadow overlay for typography legibility */}

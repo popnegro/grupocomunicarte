@@ -1,8 +1,13 @@
-import express, { Request, Response } from "express";
+import express, { Request, Response, NextFunction } from "express";
 import path from "path";
 import dotenv from "dotenv";
 import { GoogleGenAI, Type } from "@google/genai";
-import pg from "pg";
+import { db } from "./src/db/index.ts";
+import { users, leads, screens, clientes, mediakits, changelogs } from "./src/db/schema.ts";
+import { eq, desc } from "drizzle-orm";
+import { requireAuth, AuthRequest } from "./src/middleware/auth.ts";
+import { getOrCreateUser } from "./src/db/users.ts";
+import { SEED_SCREENS, INITIAL_CLIENTES, INITIAL_MEDIAKITS, INITIAL_LOGS } from "./src/db/seedData.ts";
 
 dotenv.config();
 
@@ -11,7 +16,7 @@ const PORT = 3000;
 
 app.use(express.json());
 
-// Initialize Gemini SDK with telemetry headers
+// Initialize Gemini SDK
 const geminiApiKey = process.env.GEMINI_API_KEY;
 let ai: GoogleGenAI | null = null;
 
@@ -25,93 +30,59 @@ if (geminiApiKey) {
     },
   });
 } else {
-  console.warn("Warning: GEMINI_API_KEY is not defined. AI features will fallback to client-side mocks.");
+  console.warn("Warning: GEMINI_API_KEY is not defined. AI features will fallback to default responses.");
 }
 
-// In-memory Database for CMS Leads and analytics state
-interface Lead {
-  id: string;
-  name: string;
-  email: string;
-  company: string;
-  source: string;
-  status: "new" | "contacted" | "qualified" | "closed";
-  date: string;
-  value?: number;
-}
-
-const leads: Lead[] = [
-  { id: "1", name: "Sofía Rodríguez", email: "sofia@acme.com", company: "Acme Corp", source: "Landing Form", status: "new", date: "2026-07-25T14:32:00Z", value: 1200 },
-  { id: "2", name: "Mateo Silva", email: "mateo@silva.io", company: "Silva Consulting", source: "Onboarding Quiz", status: "qualified", date: "2026-07-24T09:15:00Z", value: 3500 },
-  { id: "3", name: "Lucía Fernández", email: "lfernandez@techflow.net", company: "TechFlow Ltd", source: "Landing Form", status: "contacted", date: "2026-07-23T18:45:00Z", value: 800 },
-  { id: "4", name: "Diego Torres", email: "diego@growthlabs.co", company: "GrowthLabs", source: "Onboarding Quiz", status: "closed", date: "2026-07-21T11:20:00Z", value: 5000 },
-];
-
-// Database client configuration using 'pg'
-const dbUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL;
-let pool: pg.Pool | null = null;
-
-if (dbUrl) {
-  // Use SSL for hosted cloud databases (like Vercel Postgres, Supabase, Neon) unless running on localhost
-  const useSsl = !dbUrl.includes("localhost") && !dbUrl.includes("127.0.0.1");
-  pool = new pg.Pool({
-    connectionString: dbUrl,
-    ssl: useSsl ? { rejectUnauthorized: false } : false,
-  });
-  console.log("[SmartWeb Database] Initializing PostgreSQL connection pool...");
-} else {
-  console.log("[SmartWeb Database] No database connection URL found. Operating with temporary in-memory storage.");
-}
-
-// Automatically bootstrap database schema on startup if connected to PostgreSQL
+// Automatically bootstrap database schema and seed data on startup
 async function initDb() {
-  if (!pool) return;
   try {
-    const client = await pool.connect();
-    try {
-      // Create leads table if it doesn't exist
-      await client.query(`
-        CREATE TABLE IF NOT EXISTS leads (
-          id SERIAL PRIMARY KEY,
-          name VARCHAR(255) NOT NULL,
-          email VARCHAR(255) NOT NULL,
-          company VARCHAR(255),
-          source VARCHAR(255),
-          status VARCHAR(50) DEFAULT 'new',
-          date VARCHAR(255),
-          value NUMERIC DEFAULT 0
-        )
-      `);
-      console.log("[SmartWeb Database] PostgreSQL 'leads' table verified.");
-
-      // If the table is empty, seed it with the default template records
-      const countRes = await client.query("SELECT COUNT(*) FROM leads");
-      const rowCount = parseInt(countRes.rows[0].count, 10);
-      if (rowCount === 0) {
-        console.log("[SmartWeb Database] Seeding initial template leads...");
-        const defaultLeads = [
-          { name: "Sofía Rodríguez", email: "sofia@acme.com", company: "Acme Corp", source: "Landing Form", status: "new", date: "2026-07-25T14:32:00Z", value: 1200 },
-          { name: "Mateo Silva", email: "mateo@silva.io", company: "Silva Consulting", source: "Onboarding Quiz", status: "qualified", date: "2026-07-24T09:15:00Z", value: 3500 },
-          { name: "Lucía Fernández", email: "lfernandez@techflow.net", company: "TechFlow Ltd", source: "Landing Form", status: "contacted", date: "2026-07-23T18:45:00Z", value: 800 },
-          { name: "Diego Torres", email: "diego@growthlabs.co", company: "GrowthLabs", source: "Onboarding Quiz", status: "closed", date: "2026-07-21T11:20:00Z", value: 5000 },
-        ];
-        for (const item of defaultLeads) {
-          await client.query(
-            "INSERT INTO leads (name, email, company, source, status, date, value) VALUES ($1, $2, $3, $4, $5, $6, $7)",
-            [item.name, item.email, item.company, item.source, item.status, item.date, item.value]
-          );
-        }
-        console.log("[SmartWeb Database] Seeding completed successfully.");
-      }
-    } finally {
-      client.release();
+    // 1. Seed Leads
+    const existingLeads = await db.select().from(leads).limit(1);
+    if (existingLeads.length === 0) {
+      console.log("[Bootstrap] Seeding default leads...");
+      const defaultLeads = [
+        { name: "Sofía Rodríguez", email: "sofia@acme.com", company: "Acme Corp", source: "Landing Form", status: "new", date: "2026-07-25T14:32:00Z", value: 1200 },
+        { name: "Mateo Silva", email: "mateo@silva.io", company: "Silva Consulting", source: "Onboarding Quiz", status: "qualified", date: "2026-07-24T09:15:00Z", value: 3500 },
+        { name: "Lucía Fernández", email: "lfernandez@techflow.net", company: "TechFlow Ltd", source: "Landing Form", status: "contacted", date: "2026-07-23T18:45:00Z", value: 800 },
+        { name: "Diego Torres", email: "diego@growthlabs.co", company: "Diego Torres S.A.", source: "Onboarding Quiz", status: "closed", date: "2026-07-21T11:20:00Z", value: 5000 },
+      ];
+      await db.insert(leads).values(defaultLeads);
     }
+
+    // 2. Seed Screens
+    const existingScreens = await db.select().from(screens).limit(1);
+    if (existingScreens.length === 0) {
+      console.log("[Bootstrap] Seeding default screens...");
+      await db.insert(screens).values(SEED_SCREENS);
+    }
+
+    // 3. Seed Clients
+    const existingClients = await db.select().from(clientes).limit(1);
+    if (existingClients.length === 0) {
+      console.log("[Bootstrap] Seeding default clients...");
+      await db.insert(clientes).values(INITIAL_CLIENTES);
+    }
+
+    // 4. Seed Mediakits
+    const existingMediakits = await db.select().from(mediakits).limit(1);
+    if (existingMediakits.length === 0) {
+      console.log("[Bootstrap] Seeding default mediakits...");
+      await db.insert(mediakits).values(INITIAL_MEDIAKITS);
+    }
+
+    // 5. Seed Changelogs
+    const existingChangelogs = await db.select().from(changelogs).limit(1);
+    if (existingChangelogs.length === 0) {
+      console.log("[Bootstrap] Seeding default changelogs...");
+      await db.insert(changelogs).values(INITIAL_LOGS);
+    }
+
+    console.log("[Bootstrap] PostgreSQL seeding check and initialization complete.");
   } catch (error) {
-    console.error("[SmartWeb Database] Error during database initialization:", error);
+    console.error("[Bootstrap] Error during database seeding:", error);
   }
 }
 
-// Trigger async database migration/seeding check
 initDb();
 
 // Helper to secure AI calling
@@ -130,7 +101,7 @@ async function callGemini(prompt: string, responseSchema?: any) {
   }
 
   const response = await ai.models.generateContent({
-    model: "gemini-3.6-flash",
+    model: "gemini-2.5-flash",
     contents: prompt,
     config,
   });
@@ -138,34 +109,117 @@ async function callGemini(prompt: string, responseSchema?: any) {
   return response.text;
 }
 
-// --- REST API ENDPOINTS ---
+// --- API ENDPOINTS ---
 
-// Get all leads
-app.get("/api/leads", async (req: Request, res: Response) => {
-  if (pool) {
-    try {
-      const result = await pool.query("SELECT * FROM leads ORDER BY id DESC");
-      const dbLeads = result.rows.map((row: any) => ({
-        id: String(row.id),
-        name: row.name,
-        email: row.email,
-        company: row.company || "",
-        source: row.source || "",
-        status: row.status || "new",
-        date: row.date || new Date().toISOString(),
-        value: row.value ? Number(row.value) : 0
-      }));
-      res.json({ success: true, data: dbLeads });
-    } catch (error: any) {
-      console.error("[SmartWeb Database] Error fetching leads:", error);
-      res.status(500).json({ success: false, error: error.message });
-    }
-  } else {
-    res.json({ success: true, data: leads });
+// Auth Synchronization Route (Registers/syncs Firebase user in PostgreSQL)
+app.post("/api/auth/sync", requireAuth, async (req: AuthRequest, res: Response) => {
+  try {
+    const uid = req.user.uid;
+    const email = req.user.email || "";
+    const dbUser = await getOrCreateUser(uid, email);
+    res.json({ success: true, user: dbUser });
+  } catch (error: any) {
+    console.error("Auth sync error:", error);
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
-// Create a lead (from Form or Quiz)
+// GET Leads
+app.get("/api/leads", async (req: Request, res: Response) => {
+  try {
+    const dbLeads = await db.select().from(leads).orderBy(desc(leads.id));
+    const formatted = dbLeads.map(row => ({
+      id: String(row.id),
+      name: row.name,
+      email: row.email,
+      company: row.company || "",
+      source: row.source || "",
+      status: row.status || "new",
+      date: row.date || new Date().toISOString(),
+      value: row.value || 0
+    }));
+    res.json({ success: true, data: formatted });
+  } catch (error: any) {
+    console.error("Error fetching leads:", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Email helper for new Lead notification via Resend
+async function sendLeadNotificationEmail(lead: any) {
+  const apiKey = process.env.RESEND_API_KEY;
+  const toEmail = process.env.SALES_NOTIFY_EMAIL || "comercial@pantallasledmendoza.com";
+
+  const emailHtml = `
+    <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e7e5e4; border-radius: 12px; background-color: #faf9f5; text-align: left;">
+      <h2 style="color: #06434a; border-bottom: 2px solid #06434a; padding-bottom: 10px; margin-top: 0;">🎉 ¡Nuevo Lead Recibido!</h2>
+      <p style="font-size: 14px; color: #444; line-height: 1.5;">Se ha registrado un nuevo contacto interesado a través de los canales digitales de la plataforma comercial:</p>
+      
+      <table style="width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 14px;">
+        <tr style="background-color: #f5f4f0;">
+          <td style="padding: 10px; font-weight: bold; width: 150px; border-bottom: 1px solid #e7e5e4; color: #1c1917;">Anunciante / Nombre</td>
+          <td style="padding: 10px; border-bottom: 1px solid #e7e5e4; color: #444;">${lead.name}</td>
+        </tr>
+        <tr>
+          <td style="padding: 10px; font-weight: bold; border-bottom: 1px solid #e7e5e4; color: #1c1917;">Email</td>
+          <td style="padding: 10px; border-bottom: 1px solid #e7e5e4; color: #444;"><a href="mailto:${lead.email}" style="color: #06434a; text-decoration: underline;">${lead.email}</a></td>
+        </tr>
+        <tr style="background-color: #f5f4f0;">
+          <td style="padding: 10px; font-weight: bold; border-bottom: 1px solid #e7e5e4; color: #1c1917;">Empresa</td>
+          <td style="padding: 10px; border-bottom: 1px solid #e7e5e4; color: #444;">${lead.company || "No especificada"}</td>
+        </tr>
+        <tr>
+          <td style="padding: 10px; font-weight: bold; border-bottom: 1px solid #e7e5e4; color: #1c1917;">Origen del Lead</td>
+          <td style="padding: 10px; border-bottom: 1px solid #e7e5e4; color: #444;"><span style="background-color: #06434a; color: white; padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;">${lead.source}</span></td>
+        </tr>
+        <tr style="background-color: #f5f4f0;">
+          <td style="padding: 10px; font-weight: bold; border-bottom: 1px solid #e7e5e4; color: #1c1917;">Presupuesto Estimado</td>
+          <td style="padding: 10px; border-bottom: 1px solid #e7e5e4; color: #444; font-weight: bold; color: #06434a;">$${lead.value ? lead.value.toLocaleString() : "0"} ARS</td>
+        </tr>
+      </table>
+      
+      <div style="margin-top: 25px; padding-top: 15px; border-top: 1px solid #e7e5e4; font-size: 11px; color: #888; text-align: center;">
+        Este es un mensaje automático del Sistema de Gestión Comercial de Pantallas LED Mendoza.
+      </div>
+    </div>
+  `;
+
+  if (!apiKey) {
+    console.log("==========================================");
+    console.log("SIMULACIÓN DE NOTIFICACIÓN POR EMAIL (FALTA RESEND_API_KEY)");
+    console.log(`Para: ${toEmail}`);
+    console.log(`Asunto: 🎯 Nuevo Lead: ${lead.name} (${lead.company})`);
+    console.log("Cuerpo del Email:");
+    console.log(emailHtml.replace(/<[^>]*>/g, '').trim().substring(0, 300) + "...");
+    console.log("==========================================");
+    return { simulated: true, success: true };
+  }
+
+  try {
+    const response = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        from: "Plataforma DOOH <onboarding@resend.dev>",
+        to: toEmail,
+        subject: `🎯 Nuevo Lead: ${lead.name} - ${lead.company}`,
+        html: emailHtml
+      })
+    });
+
+    const data = await response.json();
+    console.log("Resend API response status:", response.status, data);
+    return { success: response.ok, data };
+  } catch (error) {
+    console.error("Failed to send lead email via Resend:", error);
+    return { success: false, error };
+  }
+}
+
+// CREATE Lead
 app.post("/api/leads", async (req: Request, res: Response) => {
   const { name, email, company, source, status, value } = req.body;
   if (!name || !email) {
@@ -173,55 +227,439 @@ app.post("/api/leads", async (req: Request, res: Response) => {
     return;
   }
 
-  const companyVal = company || "Freelancer / Indiv";
-  const sourceVal = source || "Formulario Web";
-  const statusVal = status || "new";
-  const dateVal = new Date().toISOString();
-  const numValue = Number(value) || 0;
+  try {
+    const companyVal = company || "Freelancer / Indiv";
+    const sourceVal = source || "Formulario Web";
+    const statusVal = status || "new";
+    const dateVal = new Date().toISOString();
+    const numValue = Number(value) || 0;
 
-  if (pool) {
-    try {
-      const result = await pool.query(
-        "INSERT INTO leads (name, email, company, source, status, date, value) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *",
-        [name, email, companyVal, sourceVal, statusVal, dateVal, numValue]
-      );
-      const row = result.rows[0];
-      const newLead = {
-        id: String(row.id),
-        name: row.name,
-        email: row.email,
-        company: row.company || "",
-        source: row.source || "",
-        status: row.status || "new",
-        date: row.date || dateVal,
-        value: row.value ? Number(row.value) : 0
-      };
-      res.json({ success: true, data: newLead });
-    } catch (error: any) {
-      console.error("[SmartWeb Database] Error creating lead:", error);
-      res.status(500).json({ success: false, error: error.message });
-    }
-  } else {
-    const newLead: Lead = {
-      id: String(leads.length + 1),
+    const inserted = await db.insert(leads).values({
       name,
       email,
       company: companyVal,
       source: sourceVal,
-      status: statusVal as any,
+      status: statusVal,
       date: dateVal,
-      value: numValue,
+      value: numValue
+    }).returning();
+
+    const row = inserted[0];
+    const leadData = {
+      id: String(row.id),
+      name: row.name,
+      email: row.email,
+      company: row.company || "",
+      source: row.source || "",
+      status: row.status || "new",
+      date: row.date || dateVal,
+      value: row.value || 0
     };
 
-    leads.unshift(newLead);
-    res.json({ success: true, data: newLead });
+    // Send email notification in background asynchronously
+    sendLeadNotificationEmail(leadData).catch(err => {
+      console.error("Background lead email error:", err);
+    });
+
+    res.json({
+      success: true,
+      data: leadData
+    });
+  } catch (error: any) {
+    console.error("Error creating lead:", error);
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
-// AI Route: Generate Landing Page content based on industry & tone
+// --- SECURED DASHBOARD CRUD ENDPOINTS ---
+
+// GET Screens (Inventory)
+app.get("/api/screens", requireAuth, async (req: Request, res: Response) => {
+  try {
+    const dbScreens = await db.select().from(screens);
+    const formatted = dbScreens.map(s => ({
+      ...s,
+      ruta: s.ruta ? JSON.parse(s.ruta) : undefined
+    }));
+    res.json({ success: true, data: formatted });
+  } catch (error: any) {
+    console.error("Error fetching screens:", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// CREATE Screen
+app.post("/api/screens", requireAuth, async (req: Request, res: Response) => {
+  try {
+    const screenData = req.body;
+    if (!screenData.id || !screenData.nombre || !screenData.zona) {
+      return res.status(400).json({ success: false, error: "Missing required screen fields" });
+    }
+
+    const valueToInsert = {
+      ...screenData,
+      ruta: screenData.ruta ? JSON.stringify(screenData.ruta) : null
+    };
+
+    const result = await db.insert(screens).values(valueToInsert).returning();
+    const formatted = {
+      ...result[0],
+      ruta: result[0].ruta ? JSON.parse(result[0].ruta) : undefined
+    };
+
+    res.json({ success: true, data: formatted });
+  } catch (error: any) {
+    console.error("Error creating screen:", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// UPDATE Screen
+app.put("/api/screens/:id", requireAuth, async (req: Request, res: Response) => {
+  const { id } = req.params;
+  try {
+    const updateData = req.body;
+    const valueToUpdate: any = { ...updateData };
+    if (updateData.ruta !== undefined) {
+      valueToUpdate.ruta = updateData.ruta ? JSON.stringify(updateData.ruta) : null;
+    }
+
+    const result = await db.update(screens)
+      .set(valueToUpdate)
+      .where(eq(screens.id, id))
+      .returning();
+
+    if (result.length === 0) {
+      return res.status(404).json({ success: false, error: "Screen not found" });
+    }
+
+    const formatted = {
+      ...result[0],
+      ruta: result[0].ruta ? JSON.parse(result[0].ruta) : undefined
+    };
+
+    res.json({ success: true, data: formatted });
+  } catch (error: any) {
+    console.error("Error updating screen:", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// DELETE Screen
+app.delete("/api/screens/:id", requireAuth, async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const userRole = req.headers["x-user-role"];
+  if (userRole !== "admin") {
+    return res.status(403).json({ success: false, error: "Permiso denegado. Solo el rol Administrador (admin) tiene autorización para dar de baja o eliminar soportes de forma permanente." });
+  }
+  try {
+    const result = await db.delete(screens).where(eq(screens.id, id)).returning();
+    if (result.length === 0) {
+      return res.status(404).json({ success: false, error: "Screen not found" });
+    }
+    res.json({ success: true, data: { id } });
+  } catch (error: any) {
+    console.error("Error deleting screen:", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// GET Clients
+app.get("/api/clients", requireAuth, async (req: Request, res: Response) => {
+  try {
+    const dbClients = await db.select().from(clientes);
+    const formatted = dbClients.map(c => {
+      let interactions = [];
+      try {
+        if (c.historialInteracciones) {
+          interactions = JSON.parse(c.historialInteracciones);
+        }
+      } catch (e) {
+        console.error("Error parsing client interactions:", e);
+      }
+      return {
+        id: c.id,
+        nombre: c.nombre,
+        empresa: c.empresa,
+        email: c.email,
+        telefono: c.telefono,
+        categoria: c.categoria as "Directo" | "Agencia" | "Corporativo",
+        campañasActivas: c.campanasActivas,
+        totalInversión: c.totalInversion,
+        estado: (c.estado || "contactado") as "contactado" | "negociando" | "cerrado",
+        notas: c.notas || "",
+        historialInteracciones: interactions
+      };
+    });
+    res.json({ success: true, data: formatted });
+  } catch (error: any) {
+    console.error("Error fetching clients:", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// CREATE Client
+app.post("/api/clients", requireAuth, async (req: Request, res: Response) => {
+  try {
+    const clientData = req.body;
+    if (!clientData.id || !clientData.nombre || !clientData.empresa) {
+      return res.status(400).json({ success: false, error: "Missing required client fields" });
+    }
+
+    const valueToInsert = {
+      id: clientData.id,
+      nombre: clientData.nombre,
+      empresa: clientData.empresa,
+      email: clientData.email,
+      telefono: clientData.telefono,
+      categoria: clientData.categoria,
+      campanasActivas: clientData.campañasActivas !== undefined ? clientData.campañasActivas : 0,
+      totalInversion: clientData.totalInversión !== undefined ? clientData.totalInversión : 0,
+      estado: clientData.estado || "contactado",
+      notas: clientData.notas || "",
+      historialInteracciones: clientData.historialInteracciones ? JSON.stringify(clientData.historialInteracciones) : JSON.stringify([])
+    };
+
+    const result = await db.insert(clientes).values(valueToInsert).returning();
+    const c = result[0];
+    let interactions = [];
+    try {
+      if (c.historialInteracciones) {
+        interactions = JSON.parse(c.historialInteracciones);
+      }
+    } catch (e) {}
+
+    const formatted = {
+      id: c.id,
+      nombre: c.nombre,
+      empresa: c.empresa,
+      email: c.email,
+      telefono: c.telefono,
+      categoria: c.categoria,
+      campañasActivas: c.campanasActivas,
+      totalInversión: c.totalInversion,
+      estado: c.estado as "contactado" | "negociando" | "cerrado",
+      notas: c.notas || "",
+      historialInteracciones: interactions
+    };
+    res.json({ success: true, data: formatted });
+  } catch (error: any) {
+    console.error("Error creating client:", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// UPDATE Client
+app.put("/api/clients/:id", requireAuth, async (req: Request, res: Response) => {
+  const { id } = req.params;
+  try {
+    const updateData = req.body;
+    const valueToUpdate: any = {};
+    if (updateData.nombre !== undefined) valueToUpdate.nombre = updateData.nombre;
+    if (updateData.empresa !== undefined) valueToUpdate.empresa = updateData.empresa;
+    if (updateData.email !== undefined) valueToUpdate.email = updateData.email;
+    if (updateData.telefono !== undefined) valueToUpdate.telefono = updateData.telefono;
+    if (updateData.categoria !== undefined) valueToUpdate.categoria = updateData.categoria;
+    if (updateData.campañasActivas !== undefined) valueToUpdate.campanasActivas = updateData.campañasActivas;
+    if (updateData.totalInversión !== undefined) valueToUpdate.totalInversion = updateData.totalInversión;
+    if (updateData.estado !== undefined) valueToUpdate.estado = updateData.estado;
+    if (updateData.notas !== undefined) valueToUpdate.notas = updateData.notas;
+    if (updateData.historialInteracciones !== undefined) {
+      valueToUpdate.historialInteracciones = JSON.stringify(updateData.historialInteracciones);
+    }
+
+    const result = await db.update(clientes)
+      .set(valueToUpdate)
+      .where(eq(clientes.id, id))
+      .returning();
+
+    if (result.length === 0) {
+      return res.status(404).json({ success: false, error: "Client not found" });
+    }
+
+    const c = result[0];
+    let interactions = [];
+    try {
+      if (c.historialInteracciones) {
+        interactions = JSON.parse(c.historialInteracciones);
+      }
+    } catch (e) {}
+
+    const formatted = {
+      id: c.id,
+      nombre: c.nombre,
+      empresa: c.empresa,
+      email: c.email,
+      telefono: c.telefono,
+      categoria: c.categoria,
+      campañasActivas: c.campanasActivas,
+      totalInversión: c.totalInversion,
+      estado: c.estado as "contactado" | "negociando" | "cerrado",
+      notas: c.notas || "",
+      historialInteracciones: interactions
+    };
+    res.json({ success: true, data: formatted });
+  } catch (error: any) {
+    console.error("Error updating client:", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// DELETE Client
+app.delete("/api/clients/:id", requireAuth, async (req: Request, res: Response) => {
+  const { id } = req.params;
+  try {
+    const result = await db.delete(clientes).where(eq(clientes.id, id)).returning();
+    if (result.length === 0) {
+      return res.status(404).json({ success: false, error: "Client not found" });
+    }
+    res.json({ success: true, data: { id } });
+  } catch (error: any) {
+    console.error("Error deleting client:", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// GET Mediakits
+app.get("/api/mediakits", requireAuth, async (req: Request, res: Response) => {
+  try {
+    const dbMediakits = await db.select().from(mediakits);
+    const formatted = dbMediakits.map(m => ({
+      ...m,
+      screenIds: m.screenIds ? JSON.parse(m.screenIds) : [],
+      comentarios: m.comentarios ? JSON.parse(m.comentarios) : [],
+      historial: m.historial ? JSON.parse(m.historial) : [],
+      soportesEdicionInline: m.soportesEdicionInline ? JSON.parse(m.soportesEdicionInline) : []
+    }));
+    res.json({ success: true, data: formatted });
+  } catch (error: any) {
+    console.error("Error fetching mediakits:", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// CREATE Mediakit
+app.post("/api/mediakits", requireAuth, async (req: Request, res: Response) => {
+  try {
+    const mkData = req.body;
+    if (!mkData.id || !mkData.nombre || !mkData.clienteId) {
+      return res.status(400).json({ success: false, error: "Missing required mediakit fields" });
+    }
+
+    const valueToInsert = {
+      ...mkData,
+      screenIds: mkData.screenIds ? JSON.stringify(mkData.screenIds) : JSON.stringify([]),
+      comentarios: mkData.comentarios ? JSON.stringify(mkData.comentarios) : JSON.stringify([]),
+      historial: mkData.historial ? JSON.stringify(mkData.historial) : JSON.stringify([]),
+      soportesEdicionInline: mkData.soportesEdicionInline ? JSON.stringify(mkData.soportesEdicionInline) : JSON.stringify([])
+    };
+
+    const result = await db.insert(mediakits).values(valueToInsert).returning();
+    const formatted = {
+      ...result[0],
+      screenIds: result[0].screenIds ? JSON.parse(result[0].screenIds) : [],
+      comentarios: result[0].comentarios ? JSON.parse(result[0].comentarios) : [],
+      historial: result[0].historial ? JSON.parse(result[0].historial) : [],
+      soportesEdicionInline: result[0].soportesEdicionInline ? JSON.parse(result[0].soportesEdicionInline) : []
+    };
+
+    res.json({ success: true, data: formatted });
+  } catch (error: any) {
+    console.error("Error creating mediakit:", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// UPDATE Mediakit
+app.put("/api/mediakits/:id", requireAuth, async (req: Request, res: Response) => {
+  const { id } = req.params;
+  try {
+    const updateData = req.body;
+    const valueToUpdate: any = { ...updateData };
+    if (updateData.screenIds !== undefined) {
+      valueToUpdate.screenIds = updateData.screenIds ? JSON.stringify(updateData.screenIds) : JSON.stringify([]);
+    }
+    if (updateData.comentarios !== undefined) {
+      valueToUpdate.comentarios = updateData.comentarios ? JSON.stringify(updateData.comentarios) : JSON.stringify([]);
+    }
+    if (updateData.historial !== undefined) {
+      valueToUpdate.historial = updateData.historial ? JSON.stringify(updateData.historial) : JSON.stringify([]);
+    }
+    if (updateData.soportesEdicionInline !== undefined) {
+      valueToUpdate.soportesEdicionInline = updateData.soportesEdicionInline ? JSON.stringify(updateData.soportesEdicionInline) : JSON.stringify([]);
+    }
+
+    const result = await db.update(mediakits)
+      .set(valueToUpdate)
+      .where(eq(mediakits.id, id))
+      .returning();
+
+    if (result.length === 0) {
+      return res.status(404).json({ success: false, error: "MediaKit not found" });
+    }
+
+    const formatted = {
+      ...result[0],
+      screenIds: result[0].screenIds ? JSON.parse(result[0].screenIds) : [],
+      comentarios: result[0].comentarios ? JSON.parse(result[0].comentarios) : [],
+      historial: result[0].historial ? JSON.parse(result[0].historial) : [],
+      soportesEdicionInline: result[0].soportesEdicionInline ? JSON.parse(result[0].soportesEdicionInline) : []
+    };
+
+    res.json({ success: true, data: formatted });
+  } catch (error: any) {
+    console.error("Error updating mediakit:", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// DELETE Mediakit
+app.delete("/api/mediakits/:id", requireAuth, async (req: Request, res: Response) => {
+  const { id } = req.params;
+  try {
+    const result = await db.delete(mediakits).where(eq(mediakits.id, id)).returning();
+    if (result.length === 0) {
+      return res.status(404).json({ success: false, error: "MediaKit not found" });
+    }
+    res.json({ success: true, data: { id } });
+  } catch (error: any) {
+    console.error("Error deleting mediakit:", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// GET Changelogs
+app.get("/api/changelogs", requireAuth, async (req: Request, res: Response) => {
+  try {
+    const dbLogs = await db.select().from(changelogs);
+    res.json({ success: true, data: dbLogs });
+  } catch (error: any) {
+    console.error("Error fetching changelogs:", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// CREATE Changelog
+app.post("/api/changelogs", requireAuth, async (req: Request, res: Response) => {
+  try {
+    const logData = req.body;
+    if (!logData.id || !logData.user || !logData.action) {
+      return res.status(400).json({ success: false, error: "Missing required changelog fields" });
+    }
+
+    const result = await db.insert(changelogs).values(logData).returning();
+    res.json({ success: true, data: result[0] });
+  } catch (error: any) {
+    console.error("Error creating changelog:", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// --- EXISTING GEMINI AI ROUTES ---
+
+// AI Route: Generate Landing Page content
 app.post("/api/ai/generate", async (req: Request, res: Response) => {
   const { businessName, industry, targetAudience, tone } = req.body;
-  
   if (!businessName || !industry) {
     res.status(400).json({ success: false, error: "Business name and industry are required." });
     return;
@@ -294,7 +732,7 @@ app.post("/api/ai/generate", async (req: Request, res: Response) => {
   }
 });
 
-// AI Route: Audit Landing Page SEO and content quality
+// AI Route: Audit Landing Page SEO
 app.post("/api/ai/seo-audit", async (req: Request, res: Response) => {
   const { seoKeywords, heroTitle, heroSubtitle, benefitsText, faqText } = req.body;
 
@@ -352,7 +790,7 @@ app.post("/api/ai/seo-audit", async (req: Request, res: Response) => {
   }
 });
 
-// AI Route: Analyze leads data and suggest personalized growth recommendations
+// AI Route: Analyze leads data and suggest personal growth recommendations
 app.post("/api/ai/recommendations", async (req: Request, res: Response) => {
   const { visitorCount, conversionRate, activeLeadsCount } = req.body;
 
@@ -400,7 +838,7 @@ app.post("/api/ai/recommendations", async (req: Request, res: Response) => {
   }
 });
 
-// AI Route: Plan Campaign dynamically based on budget, objective, and zone preference
+// AI Route: Plan Campaign
 app.post("/api/ai/plan-campaign", async (req: Request, res: Response) => {
   const { budget, objective, zonePreference } = req.body;
 
@@ -427,8 +865,7 @@ app.post("/api/ai/plan-campaign", async (req: Request, res: Response) => {
     - sc-10: Terminal de Ómnibus (Centro), Peatonal, Precio Semanal: $118,000, Impactos Semanales: 18,400
     - sc-11: LeadMóvil Mendoza Express (Metropolitana), Móvil, Precio Semanal: $160,000, Impactos Semanales: 38,000
 
-    Select a set of screen IDs (from the list above) that fit within the weekly budget (can plan for 1 or more weeks, budget is total).
-    Provide an explanation of the media mix strategy, the estimated reach, predicted CPM, and simulated ROI metrics. All copy must be in Spanish.
+    Select a set of screen IDs that fit within the weekly budget. All copy must be in Spanish.
   `;
 
   const schema = {
@@ -437,18 +874,17 @@ app.post("/api/ai/plan-campaign", async (req: Request, res: Response) => {
       selectedScreenIds: {
         type: Type.ARRAY,
         items: { type: Type.STRING },
-        description: "List of recommended screen IDs (e.g., ['sc-01', 'sc-04']) that fit the budget constraints"
       },
-      durationWeeks: { type: Type.INTEGER, description: "Number of weeks proposed for the campaign" },
-      totalCost: { type: Type.INTEGER, description: "Sum of screen prices for the duration" },
-      totalEstimatedImpacts: { type: Type.INTEGER, description: "Total estimated impressions across the campaign" },
-      mediaMixExplanation: { type: Type.STRING, description: "A detailed 2-3 sentence strategic explanation in Spanish" },
+      durationWeeks: { type: Type.INTEGER },
+      totalCost: { type: Type.INTEGER },
+      totalEstimatedImpacts: { type: Type.INTEGER },
+      mediaMixExplanation: { type: Type.STRING },
       roiMetrics: {
         type: Type.OBJECT,
         properties: {
-          brandRecallIncreasePercent: { type: Type.INTEGER, description: "Percentage, e.g. 15" },
-          predictedCpm: { type: Type.INTEGER, description: "Cost per thousand impressions" },
-          estimatedReach: { type: Type.INTEGER, description: "Estimated unique people reached" }
+          brandRecallIncreasePercent: { type: Type.INTEGER },
+          predictedCpm: { type: Type.INTEGER },
+          estimatedReach: { type: Type.INTEGER }
         },
         required: ["brandRecallIncreasePercent", "predictedCpm", "estimatedReach"]
       }
@@ -465,16 +901,14 @@ app.post("/api/ai/plan-campaign", async (req: Request, res: Response) => {
     }
   } catch (error: any) {
     console.error("Gemini Campaign Planner Error:", error);
-    // Graceful fallback plan
-    const fallbackScreens = ["sc-01", "sc-03", "sc-05"];
     res.json({
       success: true,
       data: {
-        selectedScreenIds: fallbackScreens,
+        selectedScreenIds: ["sc-01", "sc-03", "sc-05"],
         durationWeeks: 2,
         totalCost: 241000,
         totalEstimatedImpacts: 68800,
-        mediaMixExplanation: "Estrategia peatonal combinada (Centro, Las Heras y Guaymallén) para maximizar la frecuencia de visualización y el recuerdo de marca local con el presupuesto seleccionado.",
+        mediaMixExplanation: "Estrategia peatonal combinada (Centro, Las Heras y Guaymallén) para maximizar la frecuencia de visualización.",
         roiMetrics: {
           brandRecallIncreasePercent: 12,
           predictedCpm: 3500,
@@ -488,7 +922,6 @@ app.post("/api/ai/plan-campaign", async (req: Request, res: Response) => {
 // AI Route: Data Hub Natural Language Query
 app.post("/api/ai/data-hub-query", async (req: Request, res: Response) => {
   const { userQuery, activeLeadsCount } = req.body;
-
   if (!userQuery) {
     res.status(400).json({ success: false, error: "Query is required." });
     return;
@@ -509,13 +942,13 @@ app.post("/api/ai/data-hub-query", async (req: Request, res: Response) => {
     - Most economical screen: sc-03 Las Heras y Mitre ($68,000 ARS/week)
     - Current Active Leads captured in CRM: ${activeLeadsCount || 4}
 
-    Provide an analytical, helpful, and highly professional answer in Spanish. Keep it concise (1-2 paragraphs), citation-ready, and focus on factual data-driven insights. Do not include markdown codeblocks or unformatted JSON.
+    Provide an analytical, helpful, and highly professional answer in Spanish. Keep it concise (1-2 paragraphs).
   `;
 
   try {
     if (ai) {
       const response = await ai.models.generateContent({
-        model: "gemini-3.6-flash",
+        model: "gemini-2.5-flash",
         contents: prompt,
       });
       res.json({ success: true, answer: response.text });

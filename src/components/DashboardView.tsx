@@ -1,37 +1,47 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { Routes, Route, useNavigate, useLocation, Navigate } from "react-router-dom";
+import { useAuth } from "./AuthContext";
 import { useCms } from "./CmsContext";
 import { DoohScreen } from "../types";
+import { useToast } from "./ui/Toast";
 
-// Import Shared modular Types & Mock Databases
-import { Role, MediaKit, Cliente, ChangeLog } from "./dashboard/types";
+// Shared types and local helpers
+import { Role, MediaKit, Cliente, ChangeLog, Cotizacion, Reserva, Campaña } from "./dashboard/types";
 import { 
-  INITIAL_CLIENTES, 
-  INITIAL_MEDIAKITS, 
-  INITIAL_LOGS, 
+  INITIAL_COTIZACIONES, 
+  INITIAL_RESERVAS, 
+  INITIAL_CAMPAÑAS, 
 } from "./dashboard/mockData";
 
-// Import Modular panels
+// Modular sub-views
 import { DashboardHeader } from "./dashboard/DashboardHeader";
+import { DashboardHome } from "./dashboard/DashboardHome";
 import { InventoryModule } from "./dashboard/InventoryModule";
 import { MediaKitModule } from "./dashboard/MediaKitModule";
+import { ClientsModule } from "./dashboard/ClientsModule";
+import { SettingsModule } from "./dashboard/SettingsModule";
+import { AiPlannerModule } from "./dashboard/AiPlannerModule";
 
 // Lucide Icons
 import {
+  Home as HomeIcon,
   Tv,
+  Users,
   FileText,
+  Settings,
   ChevronLeft,
   ChevronRight,
-  Globe
+  Globe,
+  Loader,
+  Sparkles
 } from "lucide-react";
 
 export const DashboardView: React.FC = () => {
-  const {
-    screens,
-    setScreens,
-    currentDashboardTab: activeTab,
-    setCurrentDashboardTab: setActiveTab,
-    setActiveView,
-  } = useCms();
+  const { token } = useAuth();
+  const { setActiveView } = useCms();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { toast } = useToast();
 
   // Active User Profile (RBAC state)
   const [userRole, setUserRole] = useState<Role>("comercial_dir");
@@ -39,92 +49,363 @@ export const DashboardView: React.FC = () => {
   // Sidebar navigation state
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
-  // Core commercial databases states
-  const [mediaKits, setMediaKits] = useState<MediaKit[]>(INITIAL_MEDIAKITS);
-  const [clientes, setClientes] = useState<Cliente[]>(INITIAL_CLIENTES);
-  const [logs, setLogs] = useState<ChangeLog[]>(INITIAL_LOGS);
+  // States fetched dynamically from PostgreSQL
+  const [screens, setScreens] = useState<DoohScreen[]>([]);
+  const [mediaKits, setMediaKits] = useState<MediaKit[]>([]);
+  const [clientes, setClientes] = useState<Cliente[]>([]);
+  const [logs, setLogs] = useState<ChangeLog[]>([]);
 
-  // State audit-log generator helper
-  const addLog = (action: string) => {
-    const newLog: ChangeLog = {
-      id: `lg-gen-${Date.now()}`,
-      user: userRole === "admin" ? "Administrador" : userRole === "comercial_dir" ? "Director Comercial" : "Comercial Ejec.",
-      action,
-      date: "Justo ahora"
-    };
-    setLogs((prev) => [newLog, ...prev]);
-  };
+  // States initialized from mock templates for analytical simulation
+  const [cotizaciones, setCotizaciones] = useState<Cotizacion[]>(INITIAL_COTIZACIONES);
+  const [reservas, setReservas] = useState<Reserva[]>(INITIAL_RESERVAS);
+  const [campanas, setCampanas] = useState<Campaña[]>(INITIAL_CAMPAÑAS);
 
-  // State helper: Add screen to catalogue (Inventory CRUD)
-  const handleAddScreen = (screen: DoohScreen) => {
-    setScreens((prev) => [...prev, screen]);
-    addLog(`Agregó un nuevo soporte al catálogo comercial: ${screen.nombre}`);
-  };
+  // General loading flag
+  const [loading, setLoading] = useState(true);
 
-  // State helper: Update screen in catalogue
-  const handleUpdateScreen = (id: string, data: Partial<DoohScreen>) => {
-    setScreens((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, ...data } : s))
-    );
-    const screen = screens.find((s) => s.id === id);
-    if (data.status === "Pausado") {
-      addLog(`Archivó temporalmente el soporte comercial: ${screen?.nombre || id}`);
-    } else if (data.status === "Disponible") {
-      addLog(`Restauró y activó el soporte comercial: ${screen?.nombre || id}`);
-    } else {
-      addLog(`Editó especificaciones en soporte comercial: ${screen?.nombre || id}`);
+  // Load state from PostgreSQL APIs
+  const fetchDashboardData = async () => {
+    if (!token) return;
+    setLoading(true);
+    try {
+      const headers = {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
+      };
+
+      const [screensRes, clientsRes, mkRes, logsRes] = await Promise.all([
+        fetch("/api/screens", { headers }),
+        fetch("/api/clients", { headers }),
+        fetch("/api/mediakits", { headers }),
+        fetch("/api/changelogs", { headers }),
+      ]);
+
+      const [screensData, clientsData, mkData, logsData] = await Promise.all([
+        screensRes.json(),
+        clientsRes.json(),
+        mkRes.json(),
+        logsRes.json(),
+      ]);
+
+      if (screensData.success) setScreens(screensData.data);
+      if (clientsData.success) setClientes(clientsData.data);
+      if (mkData.success) setMediaKits(mkData.data);
+      if (logsData.success) setLogs(logsData.data);
+    } catch (error) {
+      console.error("Error loading dashboard data:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  // State helper: Delete screen (Hard delete)
-  const handleDeleteScreen = (id: string) => {
-    const screen = screens.find((s) => s.id === id);
-    setScreens((prev) => prev.filter((s) => s.id !== id));
-    addLog(`Eliminó de manera permanente el soporte comercial: ${screen?.nombre || id}`);
+  useEffect(() => {
+    fetchDashboardData();
+  }, [token]);
+
+  // DB-Connected Changelog Logger
+  const addLog = async (action: string) => {
+    if (!token) return;
+    const userLabel = userRole === "admin" ? "Administrador" : userRole === "comercial_dir" ? "Director Comercial" : "Comercial Ejec.";
+    const newLog = {
+      id: `lg-gen-${Date.now()}`,
+      user: userLabel,
+      action,
+      date: "Justo ahora",
+    };
+
+    try {
+      const res = await fetch("/api/changelogs", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify(newLog),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setLogs((prev) => [data.data, ...prev]);
+      }
+    } catch (err) {
+      console.error("Error logging changelog:", err);
+      // Fallback
+      setLogs((prev) => [newLog, ...prev]);
+    }
   };
 
-  // State helper: Add MediaKit
-  const handleAddMediaKit = (mk: MediaKit) => {
-    setMediaKits((prev) => [mk, ...prev]);
-    addLog(`Creó la propuesta MediaKit: ${mk.nombre}`);
+  // --- CRUD HANDLERS CONNECTED TO POSTGRESQL ---
+
+  // Inventory Screen Add
+  const handleAddScreen = async (screen: DoohScreen) => {
+    if (!token) return;
+    try {
+      const res = await fetch("/api/screens", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+          "X-User-Role": userRole
+        },
+        body: JSON.stringify(screen),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setScreens((prev) => [...prev, data.data]);
+        addLog(`Agregó un nuevo soporte al catálogo comercial: ${screen.nombre}`);
+        toast.success(`Soporte "${screen.nombre}" agregado correctamente.`);
+      } else {
+        toast.error(data.error || "No se pudo agregar el soporte comercial.");
+      }
+    } catch (err) {
+      console.error("Error adding screen:", err);
+      toast.error("Error de red al intentar agregar el soporte.");
+    }
   };
 
-  // State helper: Update MediaKit
-  const handleUpdateMediaKit = (id: string, data: Partial<MediaKit>) => {
-    setMediaKits((prev) =>
-      prev.map((m) => (m.id === id ? { ...m, ...data } : m))
-    );
+  // Inventory Screen Update
+  const handleUpdateScreen = async (id: string, updatedFields: Partial<DoohScreen>) => {
+    if (!token) return;
+    try {
+      const res = await fetch(`/api/screens/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+          "X-User-Role": userRole
+        },
+        body: JSON.stringify(updatedFields),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setScreens((prev) => prev.map((s) => (s.id === id ? data.data : s)));
+        const screenName = screens.find((s) => s.id === id)?.nombre || id;
+        if (updatedFields.status === "Pausado") {
+          addLog(`Archivó temporalmente el soporte comercial: ${screenName}`);
+          toast.info(`Soporte "${screenName}" pausado (archivado).`);
+        } else if (updatedFields.status === "Disponible") {
+          addLog(`Restauró y activó el soporte comercial: ${screenName}`);
+          toast.success(`Soporte "${screenName}" activado y disponible.`);
+        } else {
+          addLog(`Editó especificaciones en soporte comercial: ${screenName}`);
+          toast.success(`Soporte "${screenName}" actualizado correctamente.`);
+        }
+      } else {
+        toast.error(data.error || "No se pudo actualizar el soporte comercial.");
+      }
+    } catch (err) {
+      console.error("Error updating screen:", err);
+      toast.error("Error de red al intentar actualizar el soporte.");
+    }
   };
 
-  // State helper: Generate Quote from MediaKit (Workflow Transition 1)
-  const handleGenerateQuoteFromMediaKit = (mkId: string) => {
+  // Inventory Screen Delete
+  const handleDeleteScreen = async (id: string) => {
+    if (!token) return;
+    try {
+      const res = await fetch(`/api/screens/${id}`, {
+        method: "DELETE",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "X-User-Role": userRole
+        },
+      });
+      const data = await res.json();
+      if (data.success) {
+        const screenName = screens.find((s) => s.id === id)?.nombre || id;
+        setScreens((prev) => prev.filter((s) => s.id !== id));
+        addLog(`Eliminó de manera permanente el soporte comercial: ${screenName}`);
+        toast.success(`Soporte "${screenName}" eliminado definitivamente.`);
+      } else {
+        toast.error(`Error de permisos: ${data.error || "No tienes privilegios para realizar esta acción."}`);
+      }
+    } catch (err: any) {
+      console.error("Error deleting screen:", err);
+      toast.error("Error de conexión al intentar eliminar el soporte.");
+    }
+  };
+
+  // Clients CRM Add
+  const handleAddCliente = async (cliente: Cliente) => {
+    if (!token) return;
+    try {
+      const res = await fetch("/api/clients", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify(cliente),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setClientes((prev) => [...prev, data.data]);
+        addLog(`Registró un nuevo cliente en el CRM: ${cliente.empresa}`);
+        toast.success(`Cliente "${cliente.empresa}" registrado con éxito.`);
+      } else {
+        toast.error(data.error || "No se pudo registrar el cliente.");
+      }
+    } catch (err) {
+      console.error("Error adding client:", err);
+      toast.error("Error de conexión al intentar registrar el cliente.");
+    }
+  };
+
+  // Clients CRM Update
+  const handleUpdateCliente = async (id: string, updatedFields: Partial<Cliente>) => {
+    if (!token) return;
+    try {
+      const res = await fetch(`/api/clients/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify(updatedFields),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setClientes((prev) => prev.map((c) => (c.id === id ? data.data : c)));
+        addLog(`Actualizó el perfil/estado del cliente CRM: ${data.data.empresa}`);
+        toast.success(`Cliente "${data.data.empresa}" actualizado.`);
+      } else {
+        toast.error(data.error || "No se pudo actualizar el cliente.");
+      }
+    } catch (err) {
+      console.error("Error updating client:", err);
+      toast.error("Error de conexión al intentar actualizar el cliente.");
+    }
+  };
+
+  // MediaKit Creator
+  const handleAddMediaKit = async (mk: MediaKit) => {
+    if (!token) return;
+    try {
+      const res = await fetch("/api/mediakits", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify(mk),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setMediaKits((prev) => [data.data, ...prev]);
+        addLog(`Creó la propuesta MediaKit: ${mk.nombre}`);
+        toast.success(`Propuesta MediaKit "${mk.nombre}" guardada con éxito.`);
+      } else {
+        toast.error(data.error || "No se pudo guardar la propuesta.");
+      }
+    } catch (err) {
+      console.error("Error adding mediakit:", err);
+      toast.error("Error de conexión al guardar el MediaKit.");
+    }
+  };
+
+  // MediaKit Updater
+  const handleUpdateMediaKit = async (id: string, updatedFields: Partial<MediaKit>) => {
+    if (!token) return;
+    try {
+      const res = await fetch(`/api/mediakits/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify(updatedFields),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setMediaKits((prev) => prev.map((m) => (m.id === id ? data.data : m)));
+        toast.success("MediaKit actualizado.");
+      } else {
+        toast.error(data.error || "No se pudo actualizar la propuesta.");
+      }
+    } catch (err) {
+      console.error("Error updating mediakit:", err);
+      toast.error("Error de conexión al actualizar el MediaKit.");
+    }
+  };
+
+  // MediaKit Deleter
+  const handleDeleteMediaKit = async (id: string) => {
+    if (!token) return;
+    try {
+      const res = await fetch(`/api/mediakits/${id}`, {
+        method: "DELETE",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+        },
+      });
+      const data = await res.json();
+      if (data.success) {
+        setMediaKits((prev) => prev.filter((m) => m.id !== id));
+        addLog(`Eliminó propuesta MediaKit id: ${id}`);
+        toast.success("Propuesta eliminada correctamente.");
+      } else {
+        toast.error(data.error || "No se pudo eliminar la propuesta.");
+      }
+    } catch (err) {
+      console.error("Error deleting mediakit:", err);
+      toast.error("Error de conexión al eliminar el MediaKit.");
+    }
+  };
+
+  // Workflow Transition: Generate Quote from MediaKit
+  const handleGenerateQuoteFromMediaKit = async (mkId: string) => {
     const mk = mediaKits.find((m) => m.id === mkId);
     if (!mk) return;
 
-    // Calculate sum of pricing
     const baseCost = mk.soportesEdicionInline.reduce((sum, item) => {
       const scr = screens.find((s) => s.id === item.id);
       return sum + (scr?.precio || 0) * item.duracionSem;
     }, 0);
 
     const qtId = `qt-gen-${Date.now()}`;
-    
-    // Update MediaKit state to reflecting "Cotizando"
-    handleUpdateMediaKit(mkId, { estado: "Cotizando" });
+    await handleUpdateMediaKit(mkId, { estado: "Cotizando" });
     addLog(`Generó Cotización #${qtId} (Total: $${baseCost.toLocaleString()}) a partir de propuesta MediaKit: ${mk.nombre}`);
   };
 
-  // Navigation mapping list
+  // Interactive UI workflows: Approval bookings
+  const handleApproveReserva = (id: string) => {
+    setReservas((prev) =>
+      prev.map((r) => (r.id === id ? { ...r, estado: "Confirmada" } : r))
+    );
+    addLog(`Aprobó y reservó de forma permanente la reserva comercial #${id}`);
+  };
+
+  // Interactive UI workflows: Approval quotations
+  const handleApproveCotizacion = (id: string) => {
+    setCotizaciones((prev) =>
+      prev.map((q) => (q.id === id ? { ...q, estado: "Aceptada" } : q))
+    );
+    addLog(`Aprobó propuesta de tarifa comercial en Cotización #${id}`);
+  };
+
+  // Sidebar navigation setup
   const navItems = [
-    { id: "inventario", label: "Inventario Comercial", icon: Tv, desc: "Edición y administración del catálogo de soportes físicos y pantallas LED" },
-    { id: "mediakit", label: "Editor de MediaKits", icon: FileText, desc: "Diseño Notion-style y generación de propuestas comerciales inteligentes con IA" }
+    { id: "home", label: "Consola Principal", icon: HomeIcon, path: "/dashboard", desc: "Métricas generales y centro de control comercial" },
+    { id: "inventario", label: "Inventario Comercial", icon: Tv, path: "/dashboard/inventory", desc: "Edición y administración del catálogo de soportes físicos y pantallas LED" },
+    { id: "clientes", label: "Clientes CRM", icon: Users, path: "/dashboard/clients", desc: "Registro de contactos de ventas, agencias y corporativos" },
+    { id: "mediakit", label: "Editor de MediaKits", icon: FileText, path: "/dashboard/mediakits", desc: "Diseño Notion-style y generación de propuestas comerciales inteligentes con IA" },
+    { id: "ai-planner", label: "Planificador IA", icon: Sparkles, path: "/dashboard/ai-planner", desc: "Optimización inteligente de campañas y ROI mediante Inteligencia Artificial" },
+    { id: "settings", label: "Configuración", icon: Settings, path: "/dashboard/settings", desc: "Control de usuario y preferencias del sistema" },
   ];
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#FAF9F5] flex flex-col items-center justify-center font-sans">
+        <Loader className="h-8 w-8 animate-spin text-[#06434a]" />
+        <p className="mt-3 text-xs font-bold text-stone-500 uppercase tracking-widest">Sincronizando con PostgreSQL...</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="flex h-screen w-screen overflow-hidden bg-[#FAF9F5] text-stone-800">
+    <div className="flex h-screen w-screen overflow-hidden bg-[#FAF9F5] text-stone-800 font-sans">
       
       {/* 1. Sidebar Panel */}
-      <aside className={`border-r border-stone-200/80 bg-white flex flex-col justify-between transition-all duration-300 relative shrink-0 z-50 shadow-2xs ${
+      <aside className={`border-r border-stone-200 bg-white flex flex-col justify-between transition-all duration-300 relative shrink-0 z-50 shadow-2xs ${
         sidebarCollapsed ? "w-16" : "w-64"
       }`}>
         <div className="flex flex-col h-full overflow-y-auto">
@@ -145,13 +426,13 @@ export const DashboardView: React.FC = () => {
           {/* Links navigation group */}
           <nav className="p-4 flex-1 space-y-1">
             {navItems.map((item) => {
-              const active = activeTab === item.id;
+              const active = location.pathname === item.path || (item.path === "/dashboard" && location.pathname === "/dashboard/");
               const Icon = item.icon;
 
               return (
                 <button
                   key={item.id}
-                  onClick={() => setActiveTab(item.id)}
+                  onClick={() => navigate(item.path)}
                   className={`w-full p-2.5 rounded-xl flex items-center gap-3 cursor-pointer text-left transition-all ${
                     active 
                       ? "bg-[#06434a] text-white font-bold shadow-sm" 
@@ -172,7 +453,10 @@ export const DashboardView: React.FC = () => {
           {/* Return to Public Website section */}
           <div className="p-4 border-t border-stone-100">
             <button
-              onClick={() => setActiveView("landing")}
+              onClick={() => {
+                setActiveView("landing");
+                navigate("/");
+              }}
               className="w-full p-2.5 rounded-xl flex items-center gap-3 cursor-pointer text-left transition-all text-emerald-800 hover:bg-emerald-50/50 hover:text-emerald-950 font-bold"
             >
               <Globe className="h-4.5 w-4.5 shrink-0 text-emerald-600" />
@@ -197,9 +481,8 @@ export const DashboardView: React.FC = () => {
 
       {/* 2. Main Content Area */}
       <main className="flex-1 flex flex-col overflow-hidden">
-        {/* Dynamic header title & description map */}
         {(() => {
-          const matched = navItems.find((n) => n.id === activeTab);
+          const matched = navItems.find((n) => n.path === location.pathname) || navItems[0];
           const headerTitle = matched?.label || "Consola de Gestión";
           const headerDesc = matched?.desc || "Consola general de administración comercial DOOH.";
 
@@ -215,28 +498,98 @@ export const DashboardView: React.FC = () => {
 
         {/* Sub-view router container */}
         <div className="flex-1 overflow-y-auto relative bg-[#FAF9F5]">
-          {activeTab === "inventario" && (
-            <InventoryModule
-              screens={screens}
-              userRole={userRole}
-              onUpdateScreen={handleUpdateScreen}
-              onAddScreen={handleAddScreen}
-              onDeleteScreen={handleDeleteScreen}
+          <Routes>
+            <Route
+              path="/"
+              element={
+                <DashboardHome
+                  mediaKits={mediaKits}
+                  cotizaciones={cotizaciones}
+                  reservas={reservas}
+                  campañas={campanas}
+                  clientes={clientes}
+                  userRole={userRole}
+                  onNavigateToTab={(tabId) => {
+                    const matchedTab = navItems.find(item => item.id === tabId);
+                    if (matchedTab) navigate(matchedTab.path);
+                  }}
+                  onApproveReserva={handleApproveReserva}
+                  onApproveCotizacion={handleApproveCotizacion}
+                  setCampañas={setCampanas}
+                  setClientes={setClientes}
+                  setCotizaciones={setCotizaciones}
+                  setReservas={setReservas}
+                  addLog={addLog}
+                />
+              }
             />
-          )}
 
-          {activeTab === "mediakit" && (
-            <MediaKitModule
-              mediaKits={mediaKits}
-              clientes={clientes}
-              screens={screens}
-              userRole={userRole}
-              onUpdateMediaKit={handleUpdateMediaKit}
-              onAddMediaKit={handleAddMediaKit}
-              onDeleteMediaKit={(id) => setMediaKits((prev) => prev.filter((m) => m.id !== id))}
-              onGenerateQuoteFromMediaKit={handleGenerateQuoteFromMediaKit}
+            <Route
+              path="/inventory"
+              element={
+                <InventoryModule
+                  screens={screens}
+                  userRole={userRole}
+                  onUpdateScreen={handleUpdateScreen}
+                  onAddScreen={handleAddScreen}
+                  onDeleteScreen={handleDeleteScreen}
+                />
+              }
             />
-          )}
+
+            <Route
+              path="/clients"
+              element={
+                <ClientsModule
+                  clientes={clientes}
+                  userRole={userRole}
+                  onAddCliente={handleAddCliente}
+                  onUpdateCliente={handleUpdateCliente}
+                />
+              }
+            />
+
+            <Route
+              path="/mediakits"
+              element={
+                <MediaKitModule
+                  mediaKits={mediaKits}
+                  clientes={clientes}
+                  screens={screens}
+                  userRole={userRole}
+                  onUpdateMediaKit={handleUpdateMediaKit}
+                  onAddMediaKit={handleAddMediaKit}
+                  onDeleteMediaKit={handleDeleteMediaKit}
+                  onGenerateQuoteFromMediaKit={handleGenerateQuoteFromMediaKit}
+                />
+              }
+            />
+
+            <Route
+              path="/settings"
+              element={
+                <SettingsModule
+                  userRole={userRole}
+                  setUserRole={setUserRole}
+                />
+              }
+            />
+
+            <Route
+              path="/ai-planner"
+              element={
+                <AiPlannerModule
+                  screens={screens}
+                  token={token}
+                  onAddMediaKit={handleAddMediaKit}
+                  userRole={userRole}
+                />
+              }
+            />
+
+            {/* Fallback inside dashboard routing */}
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          </Routes>
         </div>
       </main>
 

@@ -9,7 +9,6 @@ import { Footer } from "./Footer";
 import { SubpageLayout } from "./SubpageLayout";
 import { InteractiveMap } from "./InteractiveMap";
 import { ZeroBaseRedesign } from "./landing/ZeroBaseRedesign";
-import { PmvAuditDrawer } from "./landing/PmvAuditDrawer";
 
 export const LandingView: React.FC = () => {
   const {
@@ -29,10 +28,8 @@ export const LandingView: React.FC = () => {
   const [selectedCity, setSelectedCity] = useState<"Mendoza" | "Buenos Aires">("Mendoza");
   const [catalogTab, setCatalogTab] = useState<"tarjetas" | "mapa" | "mediakit">("tarjetas");
   
-  // Zero-Base Redesign & Audit states
-  const [isZeroBase, setIsZeroBase] = useState(true);
-  const [showAuditPanel, setShowAuditPanel] = useState(false);
-  const [auditTab, setAuditTab] = useState<"summary" | "scores" | "roadmap">("summary");
+  // Locked on ZeroBase premium theme for production
+  const isZeroBase = true;
 
   // General B2B Contact form states
   const [contactForm, setContactForm] = useState({
@@ -45,7 +42,6 @@ export const LandingView: React.FC = () => {
   });
   const [isSubmittingContact, setIsSubmittingContact] = useState(false);
   const [contactSubmitted, setContactSubmitted] = useState(false);
-  const [openFaq, setOpenFaq] = useState<string | null>(null);
 
   // Smooth scroll helper
   const handleScrollTo = (id: string) => {
@@ -56,9 +52,12 @@ export const LandingView: React.FC = () => {
   };
 
   // Section click mapping from Navigation links
-  const handleSectionClick = (section: "inicio" | "espacios" | "soluciones" | "nosotros" | "contacto") => {
+  const handleSectionClick = (section: "inicio" | "soportes" | "espacios" | "soluciones" | "nosotros" | "contacto") => {
     if (section === "inicio") {
       handleScrollTo("hero-section");
+    } else if (section === "soportes") {
+      setActiveSlug("/soportes");
+      window.scrollTo({ top: 0, behavior: "smooth" });
     } else if (section === "espacios") {
       setCatalogTab("tarjetas");
       handleScrollTo("espacios");
@@ -146,7 +145,10 @@ export const LandingView: React.FC = () => {
         }}
         onSetActiveView={setActiveView}
         onSectionClick={(section) => {
-          if (activeSlug !== "/") {
+          if (section === "soportes") {
+            setActiveSlug("/soportes");
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          } else if (activeSlug !== "/") {
             setActiveSlug("/");
             setTimeout(() => handleSectionClick(section), 100);
           } else {
@@ -156,41 +158,7 @@ export const LandingView: React.FC = () => {
         cartCount={cart.length}
       />
 
-      {/* Zero-Base Demo Mode Toggle Banner */}
-      <div className="bg-stone-900 text-white border-b border-stone-800 relative z-30">
-        <div className="max-w-7xl mx-auto px-6 py-3 flex flex-col md:flex-row items-center justify-between gap-3 text-xs">
-          <div className="flex items-center gap-2">
-            <span className="flex h-2.5 w-2.5 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="font-semibold tracking-wide text-left">
-              {isZeroBase 
-                ? "✨ REDISEÑO ZERO-BASE ACTIVO: Interfaz purgada de sobreingeniería para un PMV de alta conversión." 
-                : "⚙️ DEMO COMPLETA: Interfaz con simuladores y módulos avanzados. ¿Deseas ver el Rediseño Zero-Base?"
-              }
-            </span>
-          </div>
-          <div className="flex items-center gap-3 shrink-0">
-            <button
-              onClick={() => setIsZeroBase(!isZeroBase)}
-              className={`px-4 py-1.5 rounded-full font-extrabold uppercase text-[10px] tracking-wider transition-all cursor-pointer ${
-                isZeroBase 
-                  ? "bg-amber-500 text-stone-950 hover:bg-amber-400" 
-                  : "bg-white/10 hover:bg-white/20 text-white border border-white/20"
-              }`}
-            >
-              {isZeroBase ? "Volver a Demo Completa" : "Activar Rediseño Zero-Base"}
-            </button>
-            <button
-              onClick={() => {
-                setShowAuditPanel(true);
-              }}
-              className="px-4 py-1.5 bg-[#06434a] hover:bg-[#0b5e67] text-white rounded-full font-extrabold uppercase text-[10px] tracking-wider transition-all cursor-pointer flex items-center gap-1.5"
-            >
-              <LucideIcons.Shield className="h-3.5 w-3.5 text-amber-500" />
-              <span>Ver Auditoría PMV</span>
-            </button>
-          </div>
-        </div>
-      </div>
+
 
       {activeSlug === "/" ? (
         <>
@@ -395,80 +363,6 @@ export const LandingView: React.FC = () => {
                 </div>
               </div>
 
-            </div>
-          </section>
-
-          {/* NEW: FAQ Section (Notion/Linear Accordion) */}
-          <section id="faq-section" className="bg-[#FAF9F5] border-t border-stone-200/80 py-24 font-sans">
-            <div className="max-w-4xl mx-auto px-6 space-y-12">
-              {/* Section Header */}
-              <div className="text-center space-y-4">
-                <span className="text-[10px] bg-stone-200/60 border border-stone-300 text-stone-600 font-bold tracking-widest uppercase px-3.5 py-1.5 rounded-full select-none">
-                  RESOLUCIÓN DE DUDAS B2B
-                </span>
-                <h2 className="text-3xl md:text-4xl tracking-tight text-stone-900 font-display font-black">
-                  Preguntas Frecuentes
-                </h2>
-                <p className="text-stone-500 text-xs md:text-sm leading-relaxed max-w-lg mx-auto font-medium">
-                  Todo lo que necesitás saber sobre la programación, reserva y auditoría de tu pauta publicitaria en vía pública.
-                </p>
-              </div>
-
-              {/* Accordion Drawers */}
-              <div className="space-y-4">
-                {[
-                  {
-                    id: "faq-1",
-                    q: "¿Qué es la publicidad DOOH y cómo funciona en la plataforma?",
-                    a: "El DOOH (Digital Out Of Home) es la digitalización de la publicidad en vía pública. Nuestra plataforma permite explorar nuestra red en tiempo real, filtrar soportes por plaza y volumen de impactos diarios, y armar propuestas (MediaKits) listas para cotizar con nuestro equipo de asesores."
-                  },
-                  {
-                    id: "faq-2",
-                    q: "¿Cómo funciona el creador de propuestas (MediaKit)?",
-                    a: "Navegás por nuestro catálogo, agregás las pantallas o soportes móviles de tu interés al MediaKit, definís la cantidad de semanas que querés pautar y enviás tu solicitud de planificación. Generamos una cotización corporativa formal consolidada basada en tu selección."
-                  },
-                  {
-                    id: "faq-3",
-                    q: "¿Cuál es la frecuencia del loop y la duración de cada spot?",
-                    a: "Por defecto, los spots en nuestras pantallas LED UHD exteriores tienen una duración de 15 segundos y rotan continuamente en loops optimizados de alta recordación de marca."
-                  },
-                  {
-                    id: "faq-4",
-                    q: "¿Cómo se auditan y certifican las métricas de audiencia?",
-                    a: "Utilizamos sensores de flujo vehicular/peatonal inteligentes y datos georreferenciados para auditar el flujo real urbano y certificar los impactos diarios estimados en cada zona, asegurando total transparencia en tu pauta."
-                  }
-                ].map((item) => {
-                  const isOpen = openFaq === item.id;
-                  return (
-                    <div
-                      key={item.id}
-                      className="border border-stone-200 bg-white rounded-xl overflow-hidden transition-all duration-300"
-                    >
-                      <button
-                        onClick={() => setOpenFaq(isOpen ? null : item.id)}
-                        className="w-full px-6 py-5 flex items-center justify-between text-left font-display font-bold text-sm text-stone-900 hover:text-[#06434a] transition-colors focus:outline-none cursor-pointer"
-                      >
-                        <span>{item.q}</span>
-                        {isOpen ? (
-                          <LucideIcons.Minus className="h-4 w-4 text-[#06434a] shrink-0" />
-                        ) : (
-                          <LucideIcons.Plus className="h-4 w-4 text-stone-400 shrink-0" />
-                        )}
-                      </button>
-
-                      <div
-                        className={`transition-all duration-300 ease-in-out overflow-hidden ${
-                          isOpen ? "max-h-[200px] border-t border-stone-100" : "max-h-0"
-                        }`}
-                      >
-                        <div className="px-6 py-5 text-xs text-stone-600 leading-relaxed font-medium bg-stone-50/50">
-                          {item.a}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
             </div>
           </section>
 
@@ -678,21 +572,7 @@ export const LandingView: React.FC = () => {
         }}
       />
 
-      {/* Floating Audit Toggle Button */}
-      <div className="fixed bottom-6 right-6 z-40">
-        <button
-          onClick={() => {
-            setShowAuditPanel(true);
-          }}
-          className="bg-stone-900 hover:bg-stone-800 text-white border border-stone-700/80 p-3.5 rounded-full shadow-2xl flex items-center gap-2 hover:scale-105 active:scale-95 transition-all cursor-pointer font-sans relative"
-        >
-          <LucideIcons.Shield className="h-5 w-5 text-amber-500 animate-pulse" />
-          <span className="text-xs font-black uppercase tracking-wider hidden md:inline-block pr-1">Auditoría PMV & CRO</span>
-        </button>
-      </div>
 
-      {/* Slide-over PMV Audit drawer */}
-      <PmvAuditDrawer isOpen={showAuditPanel} onClose={() => setShowAuditPanel(false)} />
     </div>
   );
 };

@@ -2,6 +2,7 @@ import React from "react";
 import { motion } from "motion/react";
 import { cn } from "@/src/lib/utils";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
+import { optimizeImageUrl } from "@/src/lib/imageUtils";
 
 export interface BaseCardProps extends Omit<
   React.HTMLAttributes<HTMLDivElement>,
@@ -112,9 +113,10 @@ export const BaseCard: React.FC<BaseCardProps> = ({
           )}
         >
           <motion.img
-            src={imageSrc}
+            src={optimizeImageUrl(imageSrc)}
             alt={imageAlt}
             referrerPolicy="no-referrer"
+            loading="lazy"
             className="w-full h-full object-cover"
             whileHover={hoverable ? { scale: 1.04 } : {}}
             transition={{ duration: 0.4, ease: [0.25, 0.8, 0.25, 1] }}

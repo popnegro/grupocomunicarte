@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { Cliente, Role } from "./types";
+import { Cliente, Role, Interaction } from "./types";
 import { 
   Users, 
   Search, 
@@ -11,7 +11,16 @@ import {
   CheckCircle,
   X,
   Target,
-  AlertCircle
+  AlertCircle,
+  MessageSquare,
+  Calendar,
+  ChevronRight,
+  Clipboard,
+  Activity,
+  Clock,
+  Save,
+  MessageCircle,
+  ArrowLeft
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 
@@ -19,18 +28,32 @@ interface ClientsModuleProps {
   clientes: Cliente[];
   userRole: Role;
   onAddCliente: (cliente: Cliente) => void;
+  onUpdateCliente: (id: string, updatedFields: Partial<Cliente>) => void;
 }
 
 export const ClientsModule: React.FC<ClientsModuleProps> = ({
   clientes,
   userRole,
   onAddCliente,
+  onUpdateCliente,
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
   const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+  
+  // Selected client for detail view (Master-Detail)
+  const [selectedClientId, setSelectedClientId] = useState<string | null>(null);
 
-  // Form state
+  // New interaction form state
+  const [interactionType, setInteractionType] = useState<"Llamada" | "Reunión" | "Email" | "Propuesta" | "Nota">("Llamada");
+  const [interactionDetail, setInteractionDetail] = useState("");
+
+  // Edit notes state
+  const [editingNotes, setEditingNotes] = useState("");
+  const [notesSaved, setNotesSaved] = useState(false);
+
+  // Form state for creating new client
   const [newClient, setNewClient] = useState({
     nombre: "",
     empresa: "",
@@ -46,13 +69,41 @@ export const ClientsModule: React.FC<ClientsModuleProps> = ({
     );
   }, [clientes, searchQuery]);
 
-  // Performance KPI memoization for CRM Stats
+  // Selected client object
+  const selectedClient = useMemo(() => {
+    const found = clientes.find((c) => c.id === selectedClientId);
+    if (found) {
+      // Synchronize note editor state when client selection changes
+      return found;
+    }
+    return null;
+  }, [clientes, selectedClientId]);
+
+  // Synchronize notes when client changes
+  React.useEffect(() => {
+    if (selectedClient) {
+      setEditingNotes(selectedClient.notas || "");
+    } else {
+      setEditingNotes("");
+    }
+    setNotesSaved(false);
+  }, [selectedClientId, selectedClient]);
+
+  // Performance KPI stats for CRM
   const metrics = useMemo(() => {
     const total = clientes.length;
-    const activeCamps = clientes.reduce((acc, c) => acc + (c.campañasActivas || 0), 0);
+    const contactados = clientes.filter(c => c.estado === "contactado" || !c.estado).length;
+    const negociando = clientes.filter(c => c.estado === "negociando").length;
+    const cerrados = clientes.filter(c => c.estado === "cerrado").length;
     const totalInv = clientes.reduce((acc, c) => acc + (c.totalInversión || 0), 0);
-    return { total, activeCamps, totalInv };
+    return { total, contactados, negociando, cerrados, totalInv };
   }, [clientes]);
+
+  const triggerToast = (msg: string) => {
+    setToastMessage(msg);
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 3000);
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -66,7 +117,10 @@ export const ClientsModule: React.FC<ClientsModuleProps> = ({
       telefono: newClient.telefono || "+54 261 000-0000",
       categoria: newClient.categoria,
       campañasActivas: 0,
-      totalInversión: 0
+      totalInversión: 0,
+      estado: "contactado",
+      notas: "",
+      historialInteracciones: []
     };
 
     onAddCliente(cliente);
@@ -79,8 +133,49 @@ export const ClientsModule: React.FC<ClientsModuleProps> = ({
       telefono: "",
       categoria: "Directo"
     });
-    setShowToast(true);
-    setTimeout(() => setShowToast(false), 3000);
+    triggerToast("¡Cliente registrado en el CRM con éxito!");
+  };
+
+  const handleStatusChange = (status: "contactado" | "negociando" | "cerrado") => {
+    if (!selectedClientId) return;
+    onUpdateCliente(selectedClientId, { estado: status });
+    triggerToast(`Estado cambiado a ${status.toUpperCase()}`);
+  };
+
+  const handleSaveNotes = () => {
+    if (!selectedClientId) return;
+    onUpdateCliente(selectedClientId, { notas: editingNotes });
+    setNotesSaved(true);
+    triggerToast("Notas actualizadas correctamente");
+    setTimeout(() => setNotesSaved(false), 2000);
+  };
+
+  const handleAddInteraction = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedClient || !interactionDetail.trim()) return;
+
+    const newInteraction: Interaction = {
+      id: `int-${Date.now()}`,
+      tipo: interactionType,
+      detalle: interactionDetail,
+      fecha: new Date().toLocaleDateString("es-AR", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit"
+      }) + " hs"
+    };
+
+    const currentInteractions = selectedClient.historialInteracciones || [];
+    const updatedInteractions = [newInteraction, ...currentInteractions];
+
+    onUpdateCliente(selectedClient.id, {
+      historialInteracciones: updatedInteractions
+    });
+
+    setInteractionDetail("");
+    triggerToast("¡Interacción registrada!");
   };
 
   return (
@@ -96,7 +191,7 @@ export const ClientsModule: React.FC<ClientsModuleProps> = ({
             className="fixed bottom-6 right-6 z-50 bg-stone-900 text-stone-100 text-xs font-sans font-bold py-3 px-5 rounded-lg shadow-lg border border-stone-800 flex items-center gap-2"
           >
             <CheckCircle className="h-4 w-4 text-emerald-400 shrink-0" />
-            <span>¡Cliente registrado en el CRM con éxito!</span>
+            <span>{toastMessage}</span>
           </motion.div>
         )}
       </AnimatePresence>
@@ -105,10 +200,10 @@ export const ClientsModule: React.FC<ClientsModuleProps> = ({
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-stone-200 pb-5">
         <div>
           <span className="text-[10px] bg-stone-100 border border-stone-200 text-stone-600 font-bold tracking-widest uppercase px-3 py-1 rounded-full">
-            Directorio Comercial
+            CRM Comercial
           </span>
           <h2 className="text-xl font-bold text-stone-950 font-display mt-2">
-            Gestión de Clientes & Contactos
+            Seguimiento de Leads & Cuentas
           </h2>
         </div>
 
@@ -118,114 +213,330 @@ export const ClientsModule: React.FC<ClientsModuleProps> = ({
             className="bg-[#06434a] hover:bg-[#0b5e67] text-white text-[10px] font-extrabold uppercase px-4 py-2 rounded-full flex items-center gap-1 cursor-pointer shadow-sm transition-colors"
           >
             <Plus className="h-4 w-4" />
-            <span>Registrar Cliente</span>
+            <span>Nuevo Lead / Cliente</span>
           </button>
         )}
       </div>
 
-      {/* CRM Highlight KPIs */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-stone-50 border border-stone-200/80 p-4 rounded-lg flex flex-col justify-between text-left">
-          <span className="text-[8px] font-extrabold text-stone-400 uppercase tracking-wider font-mono">Clientes Totales</span>
-          <span className="text-xl font-black text-stone-900 font-mono mt-1">{metrics.total} cuentas</span>
+      {/* CRM KPIs */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+        <div className="bg-white border border-stone-200 p-4 rounded-lg flex flex-col justify-between text-left shadow-2xs">
+          <span className="text-[8px] font-extrabold text-stone-400 uppercase tracking-wider font-mono">Total Leads</span>
+          <span className="text-lg font-black text-stone-900 font-mono mt-1">{metrics.total}</span>
         </div>
-        <div className="bg-stone-50 border border-stone-200/80 p-4 rounded-lg flex flex-col justify-between text-left">
-          <span className="text-[8px] font-extrabold text-stone-400 uppercase tracking-wider font-mono">Campañas Activas</span>
-          <span className="text-xl font-black text-emerald-600 font-mono mt-1">{metrics.activeCamps} activas</span>
+        <div className="bg-white border border-stone-200 p-4 rounded-lg flex flex-col justify-between text-left shadow-2xs">
+          <span className="text-[8px] font-extrabold text-stone-400 uppercase tracking-wider font-mono">Contactados</span>
+          <span className="text-lg font-black text-amber-600 font-mono mt-1">{metrics.contactados}</span>
         </div>
-        <div className="bg-stone-50 border border-stone-200/80 p-4 rounded-lg flex flex-col justify-between text-left">
-          <span className="text-[8px] font-extrabold text-stone-400 uppercase tracking-wider font-mono">Inversión Acumulada</span>
-          <span className="text-xl font-black text-[#06434a] font-mono mt-1">${metrics.totalInv.toLocaleString()}</span>
+        <div className="bg-white border border-stone-200 p-4 rounded-lg flex flex-col justify-between text-left shadow-2xs">
+          <span className="text-[8px] font-extrabold text-stone-400 uppercase tracking-wider font-mono">En Negociación</span>
+          <span className="text-lg font-black text-blue-600 font-mono mt-1">{metrics.negociando}</span>
         </div>
-      </div>
-
-      {/* Search and Filters */}
-      <div className="bg-white border border-stone-200 rounded-lg p-4 shadow-2xs flex items-center gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-stone-400" />
-          <input
-            type="text"
-            placeholder="Buscar por anunciante, empresa..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 text-xs border border-stone-200/80 rounded-md focus:outline-none focus:border-[#06434a] bg-stone-50/20"
-          />
+        <div className="bg-white border border-stone-200 p-4 rounded-lg flex flex-col justify-between text-left shadow-2xs">
+          <span className="text-[8px] font-extrabold text-stone-400 uppercase tracking-wider font-mono">Cerrados</span>
+          <span className="text-lg font-black text-emerald-600 font-mono mt-1">{metrics.cerrados}</span>
+        </div>
+        <div className="bg-white border border-stone-200 p-4 rounded-lg flex flex-col justify-between text-left shadow-2xs col-span-2 md:col-span-1">
+          <span className="text-[8px] font-extrabold text-stone-400 uppercase tracking-wider font-mono">Inversión CRM</span>
+          <span className="text-lg font-black text-[#06434a] font-mono mt-1">${metrics.totalInv.toLocaleString()}</span>
         </div>
       </div>
 
-      {/* Grid List with Empty Search Results State */}
-      {filteredClientes.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredClientes.map((c) => (
-            <div key={c.id} className="bg-white border border-stone-200 rounded-lg p-5 hover:border-stone-350 transition-all shadow-2xs space-y-4 flex flex-col justify-between">
-              <div className="space-y-3">
-                <div className="flex items-start justify-between gap-2">
-                  <span className={`text-[8px] font-extrabold px-2 py-0.5 rounded uppercase border ${
-                    c.categoria === "Corporativo"
-                      ? "bg-purple-50 text-purple-700 border-purple-150"
-                      : c.categoria === "Agencia"
-                      ? "bg-blue-50 text-blue-700 border-blue-150"
-                      : "bg-stone-50 text-stone-700 border-stone-150"
-                  }`}>
-                    {c.categoria}
-                  </span>
+      {/* Main CRM Layout: Master-Detail Split Screen */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        
+        {/* Left Side: Client List (Master) */}
+        <div className={`space-y-4 lg:col-span-5 ${selectedClientId ? "hidden lg:block" : "block"}`}>
+          <div className="bg-white border border-stone-200 rounded-lg p-3 shadow-2xs flex items-center gap-3">
+            <Search className="h-4 w-4 text-stone-400" />
+            <input
+              type="text"
+              placeholder="Buscar por anunciante, empresa..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full text-xs focus:outline-none bg-transparent"
+            />
+          </div>
 
-                  <span className="text-[9px] text-stone-400 font-mono font-bold">ID: {c.id}</span>
-                </div>
+          <div className="space-y-3 overflow-y-auto max-h-[600px] pr-1">
+            {filteredClientes.length > 0 ? (
+              filteredClientes.map((c) => {
+                const isActive = c.id === selectedClientId;
+                return (
+                  <div
+                    key={c.id}
+                    onClick={() => setSelectedClientId(c.id)}
+                    className={`border rounded-lg p-4 cursor-pointer transition-all ${
+                      isActive
+                        ? "bg-[#06434a]/5 border-[#06434a] ring-1 ring-[#06434a]"
+                        : "bg-white border-stone-200 hover:border-stone-300"
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <span className={`text-[8px] font-extrabold px-1.5 py-0.5 rounded uppercase border ${
+                        c.categoria === "Corporativo"
+                          ? "bg-purple-50 text-purple-700 border-purple-150"
+                          : c.categoria === "Agencia"
+                          ? "bg-blue-50 text-blue-700 border-blue-150"
+                          : "bg-stone-50 text-stone-700 border-stone-150"
+                      }`}>
+                        {c.categoria}
+                      </span>
+                      
+                      <span className={`text-[8px] font-extrabold px-1.5 py-0.5 rounded uppercase border ${
+                        c.estado === "cerrado"
+                          ? "bg-emerald-50 text-emerald-700 border-emerald-150"
+                          : c.estado === "negociando"
+                          ? "bg-blue-50 text-blue-700 border-blue-150"
+                          : "bg-amber-50 text-amber-700 border-amber-150"
+                      }`}>
+                        {c.estado || "contactado"}
+                      </span>
+                    </div>
 
-                <div>
-                  <h4 className="text-xs font-black text-stone-900 leading-snug font-display">
-                    {c.empresa}
-                  </h4>
-                  <p className="text-[10px] text-stone-500 font-semibold mt-0.5">
-                    Contacto: {c.nombre}
+                    <div className="mt-3">
+                      <h4 className="text-xs font-black text-stone-900 font-display">
+                        {c.empresa}
+                      </h4>
+                      <p className="text-[10px] text-stone-500 font-semibold mt-0.5">
+                        Contacto: {c.nombre}
+                      </p>
+                    </div>
+
+                    <div className="mt-3 pt-2 border-t border-stone-100 flex items-center justify-between text-[9px] font-mono text-stone-400 font-bold">
+                      <span>{c.campañasActivas} camp. activas</span>
+                      <span className="text-[#06434a]">${c.totalInversión.toLocaleString()}</span>
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="py-12 text-center border border-dashed border-stone-200 rounded-lg space-y-2 bg-stone-50/20">
+                <AlertCircle className="h-8 w-8 text-stone-300 mx-auto" />
+                <h3 className="text-xs font-bold text-stone-800">Sin coincidencias</h3>
+                <p className="text-[10px] text-stone-500 max-w-[200px] mx-auto">
+                  Prueba modificando tu criterio de búsqueda.
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Right Side: Client Detail Panel (Detail) */}
+        <div className={`lg:col-span-7 ${selectedClientId ? "block" : "hidden lg:block"}`}>
+          {selectedClient ? (
+            <div className="bg-white border border-stone-200 rounded-lg p-6 md:p-8 shadow-2xs space-y-6">
+              
+              {/* Mobile Back Button */}
+              <button
+                onClick={() => setSelectedClientId(null)}
+                className="lg:hidden mb-4 p-2 rounded-full hover:bg-stone-100 text-stone-600 flex items-center gap-1.5 text-xs font-bold cursor-pointer"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                <span>Volver al Directorio</span>
+              </button>
+
+              {/* Detail Header */}
+              <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 pb-4 border-b border-stone-150">
+                <div className="space-y-1.5">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[9px] font-bold font-mono text-stone-400 uppercase">
+                      ID: {selectedClient.id}
+                    </span>
+                    <span className={`text-[8px] font-extrabold px-1.5 py-0.5 rounded uppercase border ${
+                      selectedClient.categoria === "Corporativo"
+                        ? "bg-purple-50 text-purple-700 border-purple-150"
+                        : selectedClient.categoria === "Agencia"
+                        ? "bg-blue-50 text-blue-700 border-blue-150"
+                        : "bg-stone-50 text-stone-700 border-stone-150"
+                    }`}>
+                      {selectedClient.categoria}
+                    </span>
+                  </div>
+                  <h3 className="text-lg font-black text-stone-950 font-display">
+                    {selectedClient.empresa}
+                  </h3>
+                  <p className="text-xs text-stone-500 font-semibold">
+                    Responsable de cuenta: <strong className="text-stone-700">{selectedClient.nombre}</strong>
                   </p>
                 </div>
 
-                {/* coordinates */}
-                <div className="space-y-1.5 pt-2 border-t border-stone-100 text-[10px] text-stone-500 font-semibold">
-                  <div className="flex items-center gap-1.5">
-                    <Mail className="h-3.5 w-3.5 text-[#06434a]/75" />
-                    <span>{c.email}</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <Phone className="h-3.5 w-3.5 text-[#06434a]/75" />
-                    <span>{c.telefono}</span>
+                {/* Lead Status Select Button Group */}
+                <div className="space-y-1.5">
+                  <span className="block text-[8px] font-extrabold text-stone-400 uppercase tracking-widest text-left md:text-right">
+                    Estado del Lead
+                  </span>
+                  <div className="flex gap-1 bg-stone-100 p-1 rounded-lg">
+                    {(["contactado", "negociando", "cerrado"] as const).map((st) => {
+                      const active = selectedClient.estado === st || (!selectedClient.estado && st === "contactado");
+                      return (
+                        <button
+                          key={st}
+                          onClick={() => handleStatusChange(st)}
+                          className={`px-3 py-1 rounded text-[9px] font-bold uppercase cursor-pointer transition-all ${
+                            active
+                              ? st === "cerrado"
+                                ? "bg-emerald-600 text-white shadow-3xs"
+                                : st === "negociando"
+                                ? "bg-blue-600 text-white shadow-3xs"
+                                : "bg-amber-600 text-white shadow-3xs"
+                              : "text-stone-500 hover:text-stone-800"
+                          }`}
+                        >
+                          {st === "cerrado" ? "Cerrado" : st === "negociando" ? "Negociando" : "Contactado"}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               </div>
 
-              {/* billing performance */}
-              <div className="border-t border-stone-100 pt-3 flex items-center justify-between text-[11px] font-bold text-stone-800">
-                <div className="text-left">
-                  <span className="block text-[8px] text-stone-400 uppercase font-mono font-extrabold">Campañas</span>
-                  <span className="font-mono text-stone-900 mt-0.5 block">{c.campañasActivas} activas</span>
+              {/* Client Contact Coordinates Info */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-semibold text-stone-600 bg-stone-50 p-4 rounded-lg">
+                <div className="flex items-center gap-2.5">
+                  <Mail className="h-4 w-4 text-[#06434a]/75" />
+                  <div>
+                    <span className="block text-[8px] font-bold text-stone-400 uppercase">Email</span>
+                    <a href={`mailto:${selectedClient.email}`} className="text-stone-800 hover:underline">
+                      {selectedClient.email}
+                    </a>
+                  </div>
                 </div>
 
-                <div className="text-right">
-                  <span className="block text-[8px] text-stone-400 uppercase font-mono font-extrabold">Inversión acumulada</span>
-                  <span className="font-mono text-[#06434a] mt-0.5 block">${c.totalInversión.toLocaleString()}</span>
+                <div className="flex items-center gap-2.5">
+                  <Phone className="h-4 w-4 text-[#06434a]/75" />
+                  <div>
+                    <span className="block text-[8px] font-bold text-stone-400 uppercase">Teléfono Móvil</span>
+                    <a href={`tel:${selectedClient.telefono}`} className="text-stone-800 hover:underline">
+                      {selectedClient.telefono}
+                    </a>
+                  </div>
+                </div>
+              </div>
+
+              {/* Notes Area (Lead Notes) */}
+              <div className="space-y-2 text-left">
+                <div className="flex items-center justify-between">
+                  <span className="block text-[8px] font-extrabold text-stone-400 uppercase tracking-widest">
+                    Notas Generales / Seguimiento Interno
+                  </span>
+                  <button
+                    onClick={handleSaveNotes}
+                    className="text-[9px] font-extrabold uppercase text-[#06434a] hover:text-[#0b5e67] flex items-center gap-1 cursor-pointer transition-colors"
+                  >
+                    <Save className="h-3.5 w-3.5" />
+                    <span>{notesSaved ? "¡Guardado!" : "Guardar Notas"}</span>
+                  </button>
+                </div>
+                <textarea
+                  value={editingNotes}
+                  onChange={(e) => setEditingNotes(e.target.value)}
+                  placeholder="Escribe notas sobre las necesidades del cliente, requerimientos específicos, historial de presupuestos..."
+                  className="w-full h-24 p-3 border border-stone-200 rounded-md text-xs focus:outline-none focus:border-[#06434a] bg-stone-50/20 resize-none"
+                />
+              </div>
+
+              {/* Interacciones CRM (Interaction timeline) */}
+              <div className="space-y-5 border-t border-stone-150 pt-5 text-left">
+                <span className="block text-[8px] font-extrabold text-stone-400 uppercase tracking-widest">
+                  Historial de Interacciones & Bitácora
+                </span>
+
+                {/* Form to log interaction */}
+                <form onSubmit={handleAddInteraction} className="bg-stone-50 p-4 rounded-lg space-y-3 border border-stone-200">
+                  <div className="flex flex-col md:flex-row gap-3">
+                    <div className="md:w-1/3">
+                      <label className="block text-[8px] font-extrabold text-stone-400 uppercase tracking-wider mb-1">
+                        Tipo de Contacto
+                      </label>
+                      <select
+                        value={interactionType}
+                        onChange={(e) => setInteractionType(e.target.value as any)}
+                        className="w-full p-2 border border-stone-200 rounded text-xs bg-white cursor-pointer focus:outline-none"
+                      >
+                        <option value="Llamada">📞 Llamada</option>
+                        <option value="Reunión">🤝 Reunión Presencial</option>
+                        <option value="Email">📧 Email / Correo</option>
+                        <option value="Propuesta">📄 Envío Propuesta</option>
+                        <option value="Nota">📝 Nota Interna</option>
+                      </select>
+                    </div>
+
+                    <div className="flex-1">
+                      <label className="block text-[8px] font-extrabold text-stone-400 uppercase tracking-wider mb-1">
+                        Detalle / Minuta de la Interacción
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="Ej: Se coordinó llamada para revisar el MediaKit el próximo martes."
+                        value={interactionDetail}
+                        onChange={(e) => setInteractionDetail(e.target.value)}
+                        className="w-full p-2 border border-stone-200 rounded text-xs bg-white focus:outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end">
+                    <button
+                      type="submit"
+                      className="bg-[#06434a] hover:bg-[#0b5e67] text-white text-[9px] font-extrabold uppercase px-3 py-1.5 rounded-md cursor-pointer flex items-center gap-1 transition-colors"
+                    >
+                      <span>Registrar Interacción</span>
+                    </button>
+                  </div>
+                </form>
+
+                {/* Timeline display */}
+                <div className="space-y-3 relative before:absolute before:inset-y-0 before:left-3.5 before:w-0.5 before:bg-stone-150 pl-1">
+                  {selectedClient.historialInteracciones && selectedClient.historialInteracciones.length > 0 ? (
+                    selectedClient.historialInteracciones.map((it) => {
+                      const iconMap = {
+                        Llamada: "📞",
+                        Reunión: "🤝",
+                        Email: "📧",
+                        Propuesta: "📄",
+                        Nota: "📝"
+                      };
+
+                      return (
+                        <div key={it.id} className="relative pl-8 text-xs flex gap-3 flex-col sm:flex-row items-start justify-between">
+                          <div className="absolute left-1.5 top-1 h-4.5 w-4.5 rounded-full border border-stone-200 bg-white flex items-center justify-center text-[10px] shadow-3xs">
+                            {iconMap[it.tipo] || "📝"}
+                          </div>
+
+                          <div className="flex-1">
+                            <span className="font-extrabold text-stone-900 block">
+                              {it.tipo} - {it.detalle}
+                            </span>
+                            <span className="text-[9px] text-stone-400 font-mono font-bold mt-0.5 block">
+                              Registrado el {it.fecha}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <div className="text-center py-6 text-stone-400 text-[10px] font-medium pl-8">
+                      No hay interacciones registradas para este cliente. Utiliza el formulario superior para documentar llamadas o correos.
+                    </div>
+                  )}
                 </div>
               </div>
 
             </div>
-          ))}
+          ) : (
+            <div className="bg-stone-50 border border-stone-200 border-dashed rounded-lg p-16 text-center space-y-3 h-full flex flex-col items-center justify-center">
+              <Users className="h-10 w-10 text-stone-300" />
+              <h3 className="text-xs font-bold text-stone-850">Detalle de Lead</h3>
+              <p className="text-[10px] text-stone-500 max-w-xs mx-auto">
+                Selecciona un lead o anunciante del directorio de la izquierda para ver su estado actual, editar notas y registrar interacciones comerciales.
+              </p>
+            </div>
+          )}
         </div>
-      ) : (
-        <div className="py-16 text-center border border-dashed border-stone-200 rounded-lg space-y-3 bg-stone-50/20">
-          <AlertCircle className="h-10 w-10 text-stone-300 mx-auto" />
-          <h3 className="text-xs font-bold text-stone-850">Sin coincidencias comerciales</h3>
-          <p className="text-[10px] text-stone-500 max-w-xs mx-auto">
-            Ningún anunciante o contacto directo coincide con tu criterio de búsqueda "{searchQuery}".
-          </p>
-          <button
-            onClick={() => setSearchQuery("")}
-            className="px-3 py-1.5 border border-stone-200 hover:border-stone-300 bg-white text-stone-600 rounded-md text-[10px] font-extrabold uppercase tracking-wide cursor-pointer shadow-3xs"
-          >
-            Restaurar Filtro
-          </button>
-        </div>
-      )}
+
+      </div>
 
       {/* Add Client Modal */}
       <AnimatePresence>

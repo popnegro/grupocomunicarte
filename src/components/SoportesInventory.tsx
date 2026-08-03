@@ -8,6 +8,8 @@ import { Button } from "./ui/button";
 
 interface SoportesInventoryProps {
   initialCity?: string;
+  initialTipo?: string;
+  initialCategoria?: string;
   onNavigateToCityMap?: (city: "Mendoza" | "Buenos Aires") => void;
 }
 
@@ -18,6 +20,8 @@ const CATEGORIAS = ["Todas", "Pantallas LED", "Tradicionales", "LED Móvil"] as 
 
 export const SoportesInventory: React.FC<SoportesInventoryProps> = ({
   initialCity,
+  initialTipo,
+  initialCategoria,
   onNavigateToCityMap,
 }) => {
   const { screens } = useCms();
@@ -25,8 +29,8 @@ export const SoportesInventory: React.FC<SoportesInventoryProps> = ({
   // Local filtering states
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCity, setSelectedCity] = useState<string>(initialCity || "Todas");
-  const [selectedTipo, setSelectedTipo] = useState<string>("Todos");
-  const [selectedCategoria, setSelectedCategoria] = useState<string>("Todas");
+  const [selectedTipo, setSelectedTipo] = useState<string>(initialTipo || "Todos");
+  const [selectedCategoria, setSelectedCategoria] = useState<string>(initialCategoria || "Todas");
   const [sortBy, setSortBy] = useState<"impactos" | "precio" | "nombre">("impactos");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 

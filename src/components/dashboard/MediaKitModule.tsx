@@ -89,7 +89,7 @@ export const MediaKitModule: React.FC<MediaKitModuleProps> = ({
           return {
             ...scr,
             nota: item.notas || scr.nota,
-          };
+          } as DoohScreen;
         }
         return null;
       })

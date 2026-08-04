@@ -287,7 +287,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
             : String(screen.impactos);
 
         const popupHtml = `
-          <div class="p-2 font-sans text-slate-800 max-w-[200px]">
+          <div class="p-2 font-sans text-slate-800 max-w-50">
             <span class="text-[10px] font-bold tracking-wider text-slate-400 uppercase block mb-0.5">${screen.tipo}</span>
             <h4 class="text-xs font-black text-slate-950 mb-1 leading-tight">${screen.nombre}</h4>
             <p class="text-[11px] text-slate-500 mb-2">${screen.zona}</p>
@@ -350,12 +350,12 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
 
           if (mapRef.current.getZoom() >= 17) {
             let listHtml = `
-              <div class="p-2.5 font-sans text-slate-800 max-w-[240px] space-y-2">
+              <div class="p-2.5 font-sans text-slate-800 max-w-60 space-y-2">
                 <div class="border-b border-slate-100 pb-1.5">
                   <span class="text-[9px] font-extrabold text-slate-400 uppercase tracking-wide block">Grupo de Pantallas (${cluster.screens.length})</span>
                   <h4 class="text-xs font-black text-slate-900">${cluster.screens[0].zona}</h4>
                 </div>
-                <div class="max-h-[160px] overflow-y-auto space-y-1.5 pr-1" style="scrollbar-width: thin;">
+                <div class="max-h-40 overflow-y-auto space-y-1.5 pr-1" style="scrollbar-width: thin;">
             `;
 
             cluster.screens.forEach((screen) => {
@@ -367,7 +367,9 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
                     <span class="text-[8px] font-bold text-slate-400 uppercase block">${screen.tipo} • Tarifa bajo cotización</span>
                   </div>
                   <button 
+                    type="button"
                     data-screen-id="${screen.id}" 
+                    aria-label="${isInCart ? `Quitar ${screen.nombre} del MediaKit` : `Agregar ${screen.nombre} al MediaKit`}"
                     class="popup-cart-btn px-2.5 py-1 bg-slate-950 hover:bg-slate-800 text-white font-bold text-[8px] uppercase rounded-md shrink-0 cursor-pointer"
                   >
                     ${isInCart ? "Quitar" : "Agregar"}
@@ -422,11 +424,16 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
   }, [selectedScreenId, screens]);
 
   return (
-    <div className="relative w-full h-full rounded-xl overflow-hidden border border-slate-200 shadow-sm bg-slate-50">
-      <div ref={mapContainerRef} className="w-full h-full min-h-[350px]" style={{ zIndex: 1 }} />
+    <div
+      className="relative w-full h-full min-h-80 sm:min-h-90 rounded-xl overflow-hidden border border-slate-200 shadow-sm bg-slate-50"
+      role="region"
+      aria-label="Mapa interactivo de soportes publicitarios"
+      tabIndex={0}
+    >
+      <div ref={mapContainerRef} className="w-full h-full min-h-80 sm:min-h-90" style={{ zIndex: 1 }} />
       
       {/* Mini Legend Overlay */}
-      <div className="absolute bottom-3 left-3 z-10 bg-white/90 backdrop-blur-md border border-slate-100 rounded-lg p-2 shadow-sm text-[10px] flex flex-col gap-1 text-slate-600">
+      <div className="absolute bottom-2 left-2 sm:bottom-3 sm:left-3 z-10 bg-white/90 backdrop-blur-md border border-slate-100 rounded-lg p-2 shadow-sm text-[10px] flex flex-col gap-1 text-slate-600 max-w-[calc(100%-1rem)]">
         <span className="font-bold text-slate-800 uppercase tracking-wider mb-1 block">Referencias</span>
         <div className="flex items-center gap-1.5">
           <span className="h-2 w-2 rounded-full bg-sky-500" />

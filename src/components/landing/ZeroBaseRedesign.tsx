@@ -5,6 +5,7 @@ import { InteractiveMap } from "../InteractiveMap";
 import { DoohScreen } from "../../types";
 import { SpecsOverlay } from "./SpecsOverlay";
 import { Badge, Button, Input } from "../../design-system";
+import { CatalogCard } from "../ui/catalog-card";
 
 interface ZeroBaseRedesignProps {
   screens: DoohScreen[];
@@ -82,14 +83,14 @@ export const ZeroBaseRedesign: React.FC<ZeroBaseRedesignProps> = ({
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-      className="max-w-7xl mx-auto px-6 py-12 md:py-16 space-y-12"
+      className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-16 space-y-8 sm:space-y-12"
     >
       {/* Minimalist Typographic Header */}
       <div className="max-w-3xl space-y-4 text-left">
         <Badge variant="primary" className="px-3 py-1 text-[10px]">
           REDISEÑO ZERO-BASE / PMV ACTIVO
         </Badge>
-        <h1 className="text-4xl md:text-6xl font-serif text-stone-900 tracking-tight font-black leading-none font-display">
+        <h1 className="text-4xl md:text-6xl text-stone-900 tracking-tight font-black leading-none font-display">
           Publicidad Exterior Premium, <span className="text-[#06434a] italic">Simplificada.</span>
         </h1>
         <p className="text-stone-500 text-sm md:text-base leading-relaxed font-medium max-w-2xl">
@@ -131,7 +132,7 @@ export const ZeroBaseRedesign: React.FC<ZeroBaseRedesignProps> = ({
             </div>
 
             {/* Integrated Map Container */}
-            <div className="h-[420px] rounded-xl overflow-hidden relative border border-stone-100">
+            <div className="h-80 sm:h-105 lg:h-125 rounded-xl overflow-hidden relative border border-stone-100">
               <InteractiveMap 
                 screens={screens.filter(s => s.ciudad === selectedCity)} 
                 selectedScreenId={null} 
@@ -203,24 +204,25 @@ export const ZeroBaseRedesign: React.FC<ZeroBaseRedesignProps> = ({
                   {filteredScreens.map((sc) => {
                     const isInCart = cart.includes(sc.id);
                     return (
-                      <div 
+                      <CatalogCard
                         key={sc.id}
+                        variant="compact"
                         onClick={() => setSelectedScreenForSpecs(sc)}
-                        className={`p-3.5 border rounded-xl flex items-center justify-between cursor-pointer transition-all duration-200 group/card ${
+                        className={`flex items-center justify-between gap-3 p-3.5 cursor-pointer transition-all duration-200 group/card min-w-0 ${
                           isInCart 
-                            ? "border-[#06434a]/60 bg-[#06434a]/5 shadow-2xs hover:border-[#06434a]" 
-                            : "border-stone-200 hover:border-stone-350 bg-white hover:shadow-2xs"
+                            ? "border-[#06434a]/60 bg-[#06434a]/5 shadow-md hover:border-[#06434a]" 
+                            : ""
                         }`}
                       >
-                        <div className="space-y-1.5 text-left pr-2 flex-1">
+                        <div className="space-y-1.5 text-left pr-2 flex-1 min-w-0">
                           <div className="flex items-center gap-1.5">
-                            <span className="font-extrabold text-stone-900 text-[11.5px] block group-hover/card:text-[#06434a] transition-colors">
+                            <span className="font-extrabold text-stone-900 text-[11.5px] block group-hover/card:text-[#06434a] transition-colors wrap-break-word">
                               {sc.nombre}
                             </span>
                           </div>
                           
                           <div className="flex items-center justify-between">
-                            <span className="text-[9px] font-mono font-bold text-stone-400 uppercase tracking-wider">
+                            <span className="text-[9px] font-mono font-bold text-stone-400 uppercase tracking-wider break-all">
                               {sc.zona} · {sc.impactos.toLocaleString()} imp/día
                             </span>
                             
@@ -247,7 +249,7 @@ export const ZeroBaseRedesign: React.FC<ZeroBaseRedesignProps> = ({
                         >
                           {isInCart ? <LucideIcons.Check className="h-3.5 w-3.5" /> : <LucideIcons.Plus className="h-3.5 w-3.5" />}
                         </button>
-                      </div>
+                      </CatalogCard>
                     );
                   })}
                 </div>
@@ -258,7 +260,7 @@ export const ZeroBaseRedesign: React.FC<ZeroBaseRedesignProps> = ({
 
         {/* Right Side: Streamlined MediaKit Checkout Card */}
         <div className="lg:col-span-4 space-y-6">
-          <div className="bg-white border border-stone-200 rounded-2xl shadow-xs p-6 space-y-6 text-left relative">
+          <div className="bg-white border border-stone-200 rounded-2xl shadow-xs p-4 sm:p-6 space-y-6 text-left relative">
             <div className="border-b border-stone-100 pb-3 flex items-center justify-between">
               <div className="space-y-0.5">
                 <h3 className="text-xs font-bold text-stone-900 uppercase tracking-widest flex items-center gap-1.5">
@@ -278,12 +280,12 @@ export const ZeroBaseRedesign: React.FC<ZeroBaseRedesignProps> = ({
                 <LucideIcons.SlidersHorizontal className="h-8 w-8 text-stone-300 mx-auto animate-pulse" />
                 <div className="space-y-1">
                   <p className="text-xs font-bold text-stone-700">Tu circuito está vacío</p>
-                  <p className="text-[10px] text-stone-400 max-w-[200px] mx-auto leading-relaxed">Selecciona soportes en el mapa o en la lista para armar tu cotización.</p>
+                  <p className="text-[10px] text-stone-400 max-w-50 mx-auto leading-relaxed">Selecciona soportes en el mapa o en la lista para armar tu cotización.</p>
                 </div>
               </div>
             ) : (
               <div className="space-y-4">
-                <div className="space-y-2 max-h-[180px] overflow-y-auto scrollbar-none pr-1">
+                <div className="space-y-2 max-h-45 overflow-y-auto scrollbar-none pr-1">
                   {cart.map((id) => {
                     const sc = screens.find(s => s.id === id);
                     if (!sc) return null;

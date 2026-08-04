@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { ShoppingBag, Check, X, Calendar, ArrowRight, Sparkles, Receipt, Percent, Tag, User, Mail, Building, ShieldCheck, Download, AlertCircle } from "lucide-react";
 import { Button } from "./ui/button";
+import { CatalogCard, CatalogCardContent, CatalogCardAction } from "./ui/catalog-card";
 import { useCms } from "./CmsContext";
 
 export const B2BMarketplaceView: React.FC = () => {
@@ -89,7 +90,7 @@ export const B2BMarketplaceView: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Upper Title Panel */}
-      <div className="p-6 bg-slate-900 text-white rounded-2xl shadow-md flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="p-4 sm:p-6 bg-slate-900 text-white rounded-2xl shadow-md flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="space-y-1">
           <span className="px-2.5 py-0.5 bg-amber-500 text-slate-950 text-[10px] font-black rounded-full uppercase tracking-wider">
             Portal Agencia & B2B
@@ -178,7 +179,7 @@ export const B2BMarketplaceView: React.FC = () => {
             {/* Left Column: Screen browser catalogs */}
             <div className="lg:col-span-8 space-y-5">
               {/* Filter controls */}
-              <div className="bg-white border border-slate-200 p-4.5 rounded-2xl shadow-xs flex flex-col md:flex-row gap-4 items-start md:items-center justify-between text-xs font-bold text-slate-400 uppercase tracking-wider">
+              <div className="bg-white border border-slate-200 p-3 sm:p-4.5 rounded-2xl shadow-xs flex flex-col md:flex-row gap-4 items-start md:items-center justify-between text-xs font-bold text-slate-400 uppercase tracking-wider">
                 <div className="flex flex-col md:flex-row gap-4 w-full md:w-auto">
                   {/* Zone Filter dropdown */}
                   <div className="space-y-1">
@@ -219,10 +220,11 @@ export const B2BMarketplaceView: React.FC = () => {
                 {filteredScreens.map((screen) => {
                   const isSelected = cart.includes(screen.id);
                   return (
-                    <div
+                    <CatalogCard
                       key={screen.id}
-                      className={`bg-white border rounded-2xl shadow-xs overflow-hidden flex flex-col transition-all group ${
-                        isSelected ? "border-slate-900" : "border-slate-200 hover:border-slate-300"
+                      variant="compact"
+                      className={`flex h-full flex-col overflow-hidden transition-all duration-300 group ${
+                        isSelected ? "border-[#06434a]/35 shadow-md" : ""
                       }`}
                     >
                       {/* Card visual mock background */}
@@ -246,7 +248,7 @@ export const B2BMarketplaceView: React.FC = () => {
                       </div>
 
                       {/* Card Content info */}
-                      <div className="p-4 flex-grow flex flex-col justify-between space-y-4 text-xs">
+                      <CatalogCardContent className="grow flex flex-col justify-between space-y-4 text-xs">
                         <p className="text-[11px] text-slate-500 leading-normal line-clamp-2 min-h-8">
                           {screen.nota || "Espectacular dispositivo digital con rotación de marca garantizada y sensor fotográfico de impactos automatizado."}
                         </p>
@@ -266,12 +268,11 @@ export const B2BMarketplaceView: React.FC = () => {
                           </div>
                         </div>
 
-                        <Button
+                        <CatalogCardAction
                           onClick={() => toggleCart(screen.id)}
-                          className={`w-full py-2 h-auto text-[11px] font-black uppercase tracking-wider rounded-xl transition-all cursor-pointer ${
-                            isSelected
-                              ? "bg-slate-950 hover:bg-slate-900 text-white"
-                              : "bg-slate-50 hover:bg-slate-100 text-slate-800 border border-slate-200"
+                          variant={isSelected ? "default" : "outline"}
+                          className={`w-full justify-center py-2 h-auto text-[11px] font-black uppercase tracking-wider ${
+                            isSelected ? "" : "bg-slate-50 hover:bg-slate-100"
                           }`}
                         >
                           {isSelected ? (
@@ -282,9 +283,9 @@ export const B2BMarketplaceView: React.FC = () => {
                           ) : (
                             "Agregar a mi Cotización"
                           )}
-                        </Button>
-                      </div>
-                    </div>
+                        </CatalogCardAction>
+                      </CatalogCardContent>
+                    </CatalogCard>
                   );
                 })}
               </div>
@@ -292,7 +293,7 @@ export const B2BMarketplaceView: React.FC = () => {
 
             {/* Right Column: Checkout Proposal Form */}
             <div className="lg:col-span-4 space-y-6">
-              <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-5">
+              <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 sm:p-5 space-y-5">
                 <div className="border-b border-slate-100 pb-3 flex items-center justify-between">
                   <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider">
                     Cotización Estimada ({cart.length})

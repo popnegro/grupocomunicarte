@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from "react";
-import { motion, AnimatePresence } from "motion/react";
+import { motion, AnimatePresence, useReducedMotion } from "motion/react";
 import { useCms } from "../CmsContext";
 import { DoohScreen } from "../../types";
 import { ScreenCard } from "../ScreenCard";
@@ -31,7 +31,8 @@ import {
   Tv,
   Image,
   Truck,
-  Filter
+  Filter,
+  Loader2
 } from "lucide-react";
 import { Input } from "@/src/components/ui/input";
 import { Button } from "@/src/components/ui/button";
@@ -82,6 +83,8 @@ export const InventoryCatalog: React.FC<InventoryCatalogProps> = ({
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isResultsLoading, setIsResultsLoading] = useState(false);
+  const shouldReduceMotion = useReducedMotion();
 
   // Filter screens by active city
   const cityScreens = useMemo(() => {
@@ -169,7 +172,7 @@ export const InventoryCatalog: React.FC<InventoryCatalogProps> = ({
       const matchesSearch = searchTerms.every((term) => 
         s.nombre.toLowerCase().includes(term) ||
         s.zona.toLowerCase().includes(term) ||
-        s.categoria.toLowerCase().includes(term) ||
+        (s.categoria && s.categoria.toLowerCase().includes(term)) ||
         (s.nota && s.nota.toLowerCase().includes(term))
       );
 
@@ -188,10 +191,18 @@ export const InventoryCatalog: React.FC<InventoryCatalogProps> = ({
     }
   }, [selectedCity, cityScreens, selectedZone]);
 
+  useEffect(() => {
+    setIsResultsLoading(true);
+    const timer = window.setTimeout(() => setIsResultsLoading(false), 220);
+    return () => window.clearTimeout(timer);
+  }, [searchQuery, selectedCategory, selectedZone, selectedCity, activeTab]);
+
   // MediaKit screens
   const cartScreens = useMemo(() => {
     return screens.filter((s) => cart.includes(s.id));
   }, [screens, cart]);
+
+  const loadingCards = useMemo(() => Array.from({ length: 6 }, (_, index) => index), []);
 
   // Handle comparison toggle
   const handleCompareToggle = (id: string) => {
@@ -262,9 +273,9 @@ Mensaje del cliente: ${checkoutForm.message || "Sin mensaje adicional."}
   };
 
   return (
-    <section id="espacios" className="py-20 max-w-7xl mx-auto px-6 space-y-10 font-sans">
+    <section id="espacios" className="py-12 sm:py-16 lg:py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8 sm:space-y-10 font-sans">
       {/* SECTION HEADER */}
-      <div className="text-center max-w-3xl mx-auto space-y-4">
+      <div className="text-center max-w-3xl mx-auto space-y-3 sm:space-y-4">
         <div className="flex items-center justify-center">
           <span className="text-[10px] bg-[#06434a]/8 border border-[#06434a]/15 text-[#06434a] font-black tracking-widest uppercase px-4 py-1.5 rounded-full select-none">
             Plaza Activa: {selectedCity}
@@ -273,19 +284,56 @@ Mensaje del cliente: ${checkoutForm.message || "Sin mensaje adicional."}
         <h2 className="text-3xl md:text-4xl tracking-tight text-stone-900 font-display font-black">
           Catálogo de Inventario DOOH
         </h2>
-        <p className="text-stone-500 text-sm max-w-xl mx-auto leading-relaxed">
-          Explorá los soportes de comunicación exterior de {selectedCity}. Alterná vistas de forma fluida, 
-          compará sus fichas técnicas, y armá tu MediaKit personalizado.
+        <p className="text-stone-500 text-sm max-w-2xl mx-auto leading-relaxed">
+          Explorá los soportes de comunicación exterior de {selectedCity} con una experiencia más clara, rápida y orientada a cotización. 
+          Compará ubicaciones, revisá su cobertura y pedí una propuesta con un solo clic.
         </p>
+        <div className="flex flex-wrap items-center justify-center gap-3">
+          <button
+            type="button"
+            onClick={() => setActiveTab("mediakit")}
+            className="inline-flex items-center justify-center gap-2 rounded-full bg-amber-500 px-5 py-2.5 text-sm font-black uppercase tracking-[0.2em] text-stone-950 shadow-sm transition-all hover:bg-amber-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#06434a] focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+          >
+            <span>Solicitar cotización sin compromiso</span>
+            <ChevronRight className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("tarjetas")}
+            className="inline-flex items-center justify-center gap-2 rounded-full border border-stone-200 bg-white px-4 py-2.5 text-sm font-bold text-stone-700 transition-all hover:border-[#06434a]/20 hover:text-[#06434a] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#06434a] focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+          >
+            <span>Explorar soportes</span>
+          </button>
+        </div>
+        <div className="flex flex-wrap items-center justify-center gap-2 text-[11px] text-stone-600">
+          <span className="rounded-full border border-stone-200 bg-stone-50 px-3 py-1">Respuesta en menos de 24 hs</span>
+          <span className="rounded-full border border-stone-200 bg-stone-50 px-3 py-1">Sin compromiso</span>
+          <span className="rounded-full border border-stone-200 bg-stone-50 px-3 py-1">Tarifa bajo cotización</span>
+        </div>
+        <div className="flex flex-wrap items-center justify-center gap-3">
+          <div className="rounded-2xl border border-emerald-100 bg-emerald-50/80 px-3.5 py-2 text-left">
+            <p className="text-[10px] font-black uppercase tracking-[0.24em] text-emerald-700">Social proof</p>
+            <p className="text-sm font-bold text-stone-900">+120 campañas activas</p>
+          </div>
+          <div className="rounded-2xl border border-stone-200 bg-white px-3.5 py-2 text-left shadow-xs">
+            <p className="text-[10px] font-black uppercase tracking-[0.24em] text-stone-500">Cobertura</p>
+            <p className="text-sm font-bold text-stone-900">Cobertura premium en zonas clave</p>
+          </div>
+        </div>
       </div>
 
       {/* VIEW SELECTOR BAR */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-stone-200 pb-4">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 sm:gap-4 border-b border-stone-200 pb-4">
         {/* Switch tabs */}
-        <div className="flex bg-stone-100 p-1 rounded-full border border-stone-200 shadow-inner w-full sm:w-auto">
+        <div className="flex bg-stone-100 p-1 rounded-full border border-stone-200 shadow-inner w-full sm:w-auto" role="tablist" aria-label="Seleccionar vista del catálogo">
           <button
+            id="catalog-tab-tarjetas"
+            type="button"
+            role="tab"
+            aria-selected={activeTab === "tarjetas"}
+            aria-controls="catalog-panel-tarjetas"
             onClick={() => setActiveTab("tarjetas")}
-            className={`flex items-center justify-center gap-2 px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all cursor-pointer w-1/3 sm:w-auto ${
+            className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 sm:px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#06434a] focus-visible:ring-offset-2 focus-visible:ring-offset-white ${
               activeTab === "tarjetas"
                 ? "bg-white text-stone-950 shadow-sm font-black"
                 : "text-stone-500 hover:text-stone-900"
@@ -295,8 +343,13 @@ Mensaje del cliente: ${checkoutForm.message || "Sin mensaje adicional."}
             <span>Tarjetas</span>
           </button>
           <button
+            id="catalog-tab-mapa"
+            type="button"
+            role="tab"
+            aria-selected={activeTab === "mapa"}
+            aria-controls="catalog-panel-mapa"
             onClick={() => setActiveTab("mapa")}
-            className={`flex items-center justify-center gap-2 px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all cursor-pointer w-1/3 sm:w-auto ${
+            className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 sm:px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#06434a] focus-visible:ring-offset-2 focus-visible:ring-offset-white ${
               activeTab === "mapa"
                 ? "bg-white text-stone-950 shadow-sm font-black"
                 : "text-stone-500 hover:text-stone-900"
@@ -306,15 +359,20 @@ Mensaje del cliente: ${checkoutForm.message || "Sin mensaje adicional."}
             <span>Mapa</span>
           </button>
           <button
+            id="catalog-tab-mediakit"
+            type="button"
+            role="tab"
+            aria-selected={activeTab === "mediakit"}
+            aria-controls="catalog-panel-mediakit"
             onClick={() => setActiveTab("mediakit")}
-            className={`flex items-center justify-center gap-2 px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all cursor-pointer w-1/3 sm:w-auto relative ${
+            className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 sm:px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider transition-all cursor-pointer relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#06434a] focus-visible:ring-offset-2 focus-visible:ring-offset-white ${
               activeTab === "mediakit"
                 ? "bg-white text-stone-950 shadow-sm font-black"
                 : "text-stone-500 hover:text-stone-900"
             }`}
           >
             <FileDown className="h-4 w-4" />
-            <span>MediaKit</span>
+            <span>Cotización</span>
             {cart.length > 0 && (
               <span className="absolute -top-1 -right-1 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-amber-500 text-[9px] font-bold text-white shadow-xs animate-bounce">
                 {cart.length}
@@ -324,7 +382,7 @@ Mensaje del cliente: ${checkoutForm.message || "Sin mensaje adicional."}
         </div>
 
         {/* Action highlights */}
-        <div className="text-stone-500 text-xs font-bold flex items-center gap-1.5 bg-stone-50 border border-stone-200/50 px-3 py-1.5 rounded-lg select-none">
+        <div className="text-stone-500 text-xs font-bold flex items-center gap-1.5 bg-stone-50 border border-stone-200/50 px-3 py-1.5 rounded-lg select-none self-start sm:self-auto" aria-live="polite">
           <Sparkles className="h-3.5 w-3.5 text-amber-500 animate-pulse" />
           <span>Mostrando {filteredScreens.length} de {cityScreens.length} soportes premium</span>
         </div>
@@ -332,20 +390,31 @@ Mensaje del cliente: ${checkoutForm.message || "Sin mensaje adicional."}
 
       {/* FILTER PANEL - (Only displayed if tab is Tarjetas or Mapa) */}
       {activeTab !== "mediakit" && (
-        <div className="sticky top-[80px] z-30 bg-[#FAF9F5]/95 backdrop-blur-md border border-stone-200/80 rounded-xl p-4 md:p-5 space-y-4 shadow-sm hover:shadow-md transition-all duration-300">
+        <div className="sticky top-20 z-30 bg-[#FAF9F5]/95 backdrop-blur-md border border-stone-200/80 rounded-xl p-3 sm:p-4 md:p-5 space-y-4 shadow-sm hover:shadow-md transition-all duration-300">
+          <div className="flex flex-wrap items-start justify-between gap-3 border-b border-stone-200/60 pb-3">
+            <div className="space-y-1">
+              <p className="text-[10px] font-black uppercase tracking-[0.28em] text-stone-500">Explorador rápido</p>
+              <p className="text-sm text-stone-600">Encontrá el soporte ideal con filtros claros, un resumen de resultados en tiempo real y una ruta de cotización más directa.</p>
+            </div>
+            <div className="rounded-full border border-[#06434a]/10 bg-[#06434a]/5 px-3 py-1 text-[10px] font-black text-[#06434a]" aria-live="polite">
+              {filteredScreens.length} resultados
+            </div>
+          </div>
           <style dangerouslySetInnerHTML={{__html: `
             .scrollbar-none::-webkit-scrollbar { display: none; }
             .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
           `}} />
           
           {/* TIER 1: Main Search & Compact Plaza Switcher */}
-          <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-center">
+          <div className="flex flex-col xl:flex-row gap-4 items-stretch xl:items-center">
             
             {/* Buscador Inteligente Principal */}
             <div className="relative flex-1">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-400 z-10" />
               <Input
+                id="catalog-search"
                 type="text"
+                aria-label={`Buscar soportes en ${selectedCity}`}
                 placeholder={`Buscar avenida, calle, zona o formato en ${selectedCity}...`}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
@@ -354,8 +423,9 @@ Mensaje del cliente: ${checkoutForm.message || "Sin mensaje adicional."}
               {searchQuery && (
                 <button
                   type="button"
+                  aria-label="Limpiar búsqueda"
                   onClick={() => setSearchQuery("")}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-700 p-1 cursor-pointer"
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-700 p-1 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#06434a] focus-visible:ring-offset-2 focus-visible:ring-offset-white"
                 >
                   <X className="h-3.5 w-3.5" />
                 </button>
@@ -371,11 +441,13 @@ Mensaje del cliente: ${checkoutForm.message || "Sin mensaje adicional."}
                   <button
                     key={city}
                     type="button"
+                    aria-pressed={isSelected}
+                    aria-label={`Filtrar por ${city}`}
                     onClick={() => {
                       if (onCityChange) onCityChange(city);
                       setSelectedZone("Todas"); // Reset zone when switching plaza
                     }}
-                    className={`relative px-4 h-9 rounded-lg text-xs font-bold transition-all duration-150 cursor-pointer flex items-center gap-1.5 ${
+                    className={`relative px-3 sm:px-4 h-9 rounded-lg text-xs font-bold transition-all duration-150 cursor-pointer flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#06434a] focus-visible:ring-offset-2 focus-visible:ring-offset-white ${
                       isSelected
                         ? "bg-[#06434a] text-white shadow-xs font-black"
                         : "text-stone-500 hover:text-stone-850 hover:bg-white/50"
@@ -395,7 +467,7 @@ Mensaje del cliente: ${checkoutForm.message || "Sin mensaje adicional."}
                     {isSelected && (
                       <motion.div
                         layoutId="activePlazaRedesign"
-                        className="absolute inset-0 bg-[#06434a] rounded-lg -z-0"
+                        className="absolute inset-0 bg-[#06434a] rounded-lg z-0"
                         transition={{ type: "spring", stiffness: 380, damping: 30 }}
                       />
                     )}
@@ -407,7 +479,7 @@ Mensaje del cliente: ${checkoutForm.message || "Sin mensaje adicional."}
           </div>
 
           {/* TIER 2: Format Selection & Scrollable Zones */}
-          <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 pt-1 border-t border-stone-200/40">
+          <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 sm:gap-4 pt-1 border-t border-stone-200/40">
             
             {/* Format filters */}
             <div className="flex flex-wrap items-center gap-1.5 shrink-0">
@@ -424,8 +496,10 @@ Mensaje del cliente: ${checkoutForm.message || "Sin mensaje adicional."}
                   <button
                     key={cat.name}
                     type="button"
+                    aria-pressed={isActive}
+                    aria-label={`Filtrar por formato ${cat.label}`}
                     onClick={() => setSelectedCategory(cat.name)}
-                    className={`flex items-center gap-1.5 px-3 h-8.5 rounded-lg text-[11px] font-bold transition-all duration-150 cursor-pointer border ${
+                    className={`flex items-center gap-1.5 px-3 h-8.5 rounded-lg text-[11px] font-bold transition-all duration-150 cursor-pointer border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#06434a] focus-visible:ring-offset-2 focus-visible:ring-offset-white ${
                       isActive
                         ? "bg-[#06434a] text-white border-[#06434a] shadow-xs"
                         : "bg-white hover:bg-stone-50 border-stone-200 text-stone-600 hover:text-stone-900"
@@ -444,17 +518,19 @@ Mensaje del cliente: ${checkoutForm.message || "Sin mensaje adicional."}
             </div>
 
             {/* Scrollable Zones selection */}
-            <div className="flex-1 lg:max-w-md xl:max-w-xl flex items-center gap-2 overflow-hidden bg-stone-50/60 border border-stone-200/40 rounded-xl px-3 py-1">
+            <div className="w-full lg:flex-1 lg:max-w-md xl:max-w-xl flex items-center gap-2 overflow-hidden bg-stone-50/60 border border-stone-200/40 rounded-xl px-3 py-1">
               <MapPin className="h-3.5 w-3.5 text-[#06434a] shrink-0" />
-              <div className="flex overflow-x-auto scrollbar-none gap-1.5 flex-1 py-1 pr-1">
+              <div className="flex overflow-x-auto scrollbar-none gap-1.5 flex-1 py-1 pr-1 flex-wrap sm:flex-nowrap">
                 {zonesWithCounts.map((zone) => {
                   const isCurrent = selectedZone === zone.name;
                   return (
                     <button
                       key={zone.name}
                       type="button"
+                      aria-pressed={isCurrent}
+                      aria-label={`Filtrar por zona ${zone.name === "Todas" ? "todas las zonas" : zone.name}`}
                       onClick={() => setSelectedZone(zone.name)}
-                      className={`px-2.5 py-1 rounded-lg text-[10px] font-extrabold transition-all duration-150 cursor-pointer border shrink-0 flex items-center gap-1 ${
+                      className={`px-2.5 py-1 rounded-lg text-[10px] font-extrabold transition-all duration-150 cursor-pointer border shrink-0 flex items-center gap-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#06434a] focus-visible:ring-offset-2 focus-visible:ring-offset-white ${
                         isCurrent
                           ? "bg-[#06434a]/10 text-[#06434a] border-[#06434a] font-black"
                           : "bg-white hover:bg-stone-100 border-stone-200 text-stone-600 hover:text-[#06434a]"
@@ -487,8 +563,9 @@ Mensaje del cliente: ${checkoutForm.message || "Sin mensaje adicional."}
                     <span>Búsqueda: "{searchQuery}"</span>
                     <button
                       type="button"
+                      aria-label="Quitar filtro de búsqueda"
                       onClick={() => setSearchQuery("")}
-                      className="hover:text-red-600 cursor-pointer inline-flex items-center p-0.5 ml-1"
+                      className="hover:text-red-600 cursor-pointer inline-flex items-center p-0.5 ml-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#06434a] focus-visible:ring-offset-2 focus-visible:ring-offset-white"
                     >
                       <X className="h-3 w-3" />
                     </button>
@@ -500,8 +577,9 @@ Mensaje del cliente: ${checkoutForm.message || "Sin mensaje adicional."}
                     <span>Formato: {selectedCategory}</span>
                     <button
                       type="button"
+                      aria-label="Quitar filtro de formato"
                       onClick={() => setSelectedCategory("Todos")}
-                      className="hover:text-red-600 cursor-pointer inline-flex items-center p-0.5 ml-1"
+                      className="hover:text-red-600 cursor-pointer inline-flex items-center p-0.5 ml-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#06434a] focus-visible:ring-offset-2 focus-visible:ring-offset-white"
                     >
                       <X className="h-3 w-3" />
                     </button>
@@ -513,8 +591,9 @@ Mensaje del cliente: ${checkoutForm.message || "Sin mensaje adicional."}
                     <span>Zona: {selectedZone}</span>
                     <button
                       type="button"
+                      aria-label="Quitar filtro de zona"
                       onClick={() => setSelectedZone("Todas")}
-                      className="hover:text-red-600 cursor-pointer inline-flex items-center p-0.5 ml-1"
+                      className="hover:text-red-600 cursor-pointer inline-flex items-center p-0.5 ml-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#06434a] focus-visible:ring-offset-2 focus-visible:ring-offset-white"
                     >
                       <X className="h-3 w-3" />
                     </button>
@@ -540,30 +619,64 @@ Mensaje del cliente: ${checkoutForm.message || "Sin mensaje adicional."}
       )}
 
       {/* DYNAMIC TAB CONTENT VIEWPORT */}
-      <div className="min-h-[400px]">
+      <div className="min-h-0">
         {/* VIEW 1: GRID VIEW OF CARDS */}
         {activeTab === "tarjetas" && (
           <div className="space-y-6">
             {filteredScreens.length > 0 ? (
-              <motion.div 
-                layout="position"
-                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-              >
-                <AnimatePresence mode="popLayout">
-                  {filteredScreens.map((screen) => (
-                    <ScreenCard
-                      key={screen.id}
-                      screen={screen}
-                      isComparing={compareIds.includes(screen.id)}
-                      onCompareToggle={() => handleCompareToggle(screen.id)}
-                      onFocusOnMap={() => {
-                        setActiveTab("mapa");
-                        setSelectedScreenId(screen.id);
-                      }}
-                    />
-                  ))}
-                </AnimatePresence>
-              </motion.div>
+              <>
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-stone-200/70 bg-stone-50/70 px-3 sm:px-4 py-3">
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-[0.24em] text-stone-500">Resultados destacados</p>
+                    <p className="text-sm font-semibold text-stone-700">Tocá una tarjeta para abrir su ficha técnica y avanzar en la cotización con mayor claridad.</p>
+                  </div>
+                  <span className="rounded-full border border-stone-200 bg-white px-2.5 py-1 text-[11px] font-semibold text-stone-600">
+                    {filteredScreens.length} soportes visibles
+                  </span>
+                </div>
+                {isResultsLoading ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6" role="status" aria-live="polite">
+                    {loadingCards.map((index) => (
+                      <div key={index} className="overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm">
+                        <div className="h-40 animate-pulse bg-stone-200" />
+                        <div className="space-y-3 p-5">
+                          <div className="h-4 w-3/4 animate-pulse rounded-full bg-stone-200" />
+                          <div className="h-3 w-1/2 animate-pulse rounded-full bg-stone-200" />
+                          <div className="grid grid-cols-2 gap-2">
+                            <div className="h-12 animate-pulse rounded-xl bg-stone-100" />
+                            <div className="h-12 animate-pulse rounded-xl bg-stone-100" />
+                          </div>
+                          <div className="flex items-center justify-between gap-3 pt-2">
+                            <div className="h-10 w-24 animate-pulse rounded-full bg-stone-100" />
+                            <div className="h-10 w-24 animate-pulse rounded-full bg-stone-100" />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <motion.div 
+                    layout="position"
+                    transition={{ type: shouldReduceMotion ? "tween" : "spring", duration: shouldReduceMotion ? 0.18 : 0.28, ease: "easeOut" }}
+                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5 lg:gap-6"
+                  >
+                  <AnimatePresence mode="popLayout">
+                    {filteredScreens.map((screen) => (
+                      <ScreenCard
+                        key={screen.id}
+                        screen={screen}
+                        isComparing={compareIds.includes(screen.id)}
+                        onCompareToggle={() => handleCompareToggle(screen.id)}
+                        onFocusOnMap={() => {
+                          setActiveTab("mapa");
+                          setSelectedScreenId(screen.id);
+                        }}
+                      />
+                    ))}
+                  </AnimatePresence>
+                  </motion.div>
+                )}
+              </>
             ) : (
               <div className="text-center py-20 border border-dashed border-stone-200 rounded-2xl bg-white max-w-md mx-auto p-6 space-y-4">
                 <div className="h-14 w-14 rounded-full bg-stone-50 border border-stone-200 flex items-center justify-center mx-auto">
@@ -576,12 +689,13 @@ Mensaje del cliente: ${checkoutForm.message || "Sin mensaje adicional."}
                   </p>
                 </div>
                 <button
+                  type="button"
                   onClick={() => {
                     setSearchQuery("");
                     setSelectedCategory("Todos");
                     setSelectedZone("Todas");
                   }}
-                  className="px-4 py-2 bg-stone-900 hover:bg-stone-850 text-white font-bold text-xs uppercase tracking-wider rounded-full transition-colors cursor-pointer"
+                  className="px-4 py-2 bg-stone-900 hover:bg-stone-850 text-white font-bold text-xs uppercase tracking-wider rounded-full transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#06434a] focus-visible:ring-offset-2 focus-visible:ring-offset-white"
                 >
                   Restablecer Filtros
                 </button>
@@ -594,11 +708,23 @@ Mensaje del cliente: ${checkoutForm.message || "Sin mensaje adicional."}
         {activeTab === "mapa" && (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
             {/* Split map sidebar */}
-            <div className="lg:col-span-4 max-h-[500px] overflow-y-auto border border-stone-200 rounded-xl bg-white p-4 space-y-3" style={{ scrollbarWidth: "thin" }}>
-              <h3 className="text-xs font-bold text-stone-900 uppercase tracking-wider border-b border-stone-100 pb-2">
-                Listado en Mapa ({filteredScreens.length})
-              </h3>
+            <div className="lg:col-span-4 max-h-[min(70vh,32rem)] sm:max-h-128 overflow-y-auto border border-stone-200 rounded-xl bg-white p-3 sm:p-4 space-y-3" style={{ scrollbarWidth: "thin" }}>
+              <div className="flex items-center justify-between gap-2 border-b border-stone-100 pb-2">
+                <h3 className="text-xs font-bold text-stone-900 uppercase tracking-wider">
+                  Listado en Mapa ({filteredScreens.length})
+                </h3>
+                <span className="rounded-full border border-stone-200 bg-stone-50 px-2.5 py-1 text-[10px] font-semibold text-stone-600">
+                  {filteredScreens.length > 0 ? "Vista activa" : "Sin resultados"}
+                </span>
+              </div>
               
+              {isResultsLoading ? (
+                <div className="space-y-2" role="status" aria-live="polite">
+                  {loadingCards.slice(0, 4).map((index) => (
+                    <div key={index} className="h-16 animate-pulse rounded-lg border border-stone-200 bg-stone-50" />
+                  ))}
+                </div>
+              ) : (
               <motion.div layout="position" className="space-y-2">
                 <AnimatePresence mode="popLayout">
                   {filteredScreens.map((s) => {
@@ -613,7 +739,17 @@ Mensaje del cliente: ${checkoutForm.message || "Sin mensaje adicional."}
                         exit={{ opacity: 0, x: 10 }}
                         transition={{ type: "spring", stiffness: 350, damping: 30 }}
                         onClick={() => setSelectedScreenId(s.id)}
-                        className={`p-3 rounded-lg border text-xs cursor-pointer transition-all ${
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" || e.key === " ") {
+                            e.preventDefault();
+                            setSelectedScreenId(s.id);
+                          }
+                        }}
+                        role="button"
+                        tabIndex={0}
+                        aria-pressed={isSelected}
+                        aria-label={`Seleccionar ${s.nombre} en el mapa`}
+                        className={`p-3 rounded-lg border text-xs cursor-pointer transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#06434a] focus-visible:ring-offset-2 focus-visible:ring-offset-white ${
                           isSelected 
                             ? "bg-[#06434a]/5 border-[#06434a]" 
                             : "border-stone-150 hover:bg-stone-50"
@@ -631,10 +767,11 @@ Mensaje del cliente: ${checkoutForm.message || "Sin mensaje adicional."}
                   })}
                 </AnimatePresence>
               </motion.div>
+              )}
             </div>
 
             {/* Main Interactive Leaflet Map */}
-            <div className="lg:col-span-8 h-[500px] rounded-xl overflow-hidden shadow-xs relative border border-stone-200">
+            <div className="lg:col-span-8 h-105 sm:h-125 lg:h-140 rounded-3xl overflow-hidden shadow-sm relative border border-stone-200">
               <InteractiveMap
                 screens={filteredScreens}
                 selectedScreenId={selectedScreenId}
@@ -651,14 +788,16 @@ Mensaje del cliente: ${checkoutForm.message || "Sin mensaje adicional."}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
                 
                 {/* Selected Screens Planner desk */}
-                <div className="lg:col-span-7 space-y-6">
+                <div className="lg:col-span-7 space-y-4 sm:space-y-6">
                   <div className="flex items-center justify-between border-b border-stone-200 pb-3">
                     <h3 className="text-base font-bold text-stone-900 font-display">
                       Soportes Seleccionados ({cartScreens.length})
                     </h3>
                     <button
+                      type="button"
+                      aria-label="Limpiar todos los soportes del MediaKit"
                       onClick={clearCart}
-                      className="text-stone-400 hover:text-red-600 text-xs font-bold uppercase tracking-wider flex items-center gap-1 cursor-pointer"
+                      className="text-stone-400 hover:text-red-600 text-xs font-bold uppercase tracking-wider flex items-center gap-1 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#06434a] focus-visible:ring-offset-2 focus-visible:ring-offset-white"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                       <span>Limpiar Todo</span>
@@ -673,7 +812,7 @@ Mensaje del cliente: ${checkoutForm.message || "Sin mensaje adicional."}
                           key={s.id}
                           className="bg-white border border-stone-200 rounded-2xl p-5 space-y-4 shadow-xs hover:border-stone-300 transition-colors"
                         >
-                          <div className="flex items-start justify-between gap-4">
+                          <div className="flex items-start justify-between gap-3 sm:gap-4">
                             <div>
                               <span className="text-[9px] bg-stone-100 text-stone-500 font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
                                 {s.categoria}
@@ -688,15 +827,17 @@ Mensaje del cliente: ${checkoutForm.message || "Sin mensaje adicional."}
                             </div>
 
                             <button
+                              type="button"
+                              aria-label={`Quitar ${s.nombre} del MediaKit`}
                               onClick={() => toggleCart(s.id)}
-                              className="text-stone-400 hover:text-stone-600 p-1 rounded-full hover:bg-stone-100"
+                              className="text-stone-400 hover:text-stone-600 p-1 rounded-full hover:bg-stone-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#06434a] focus-visible:ring-offset-2 focus-visible:ring-offset-white"
                             >
                               <X className="h-4 w-4" />
                             </button>
                           </div>
 
                           {/* Configuration controls for duration, priority and observations */}
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t border-stone-100">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 pt-3 border-t border-stone-100">
                             {/* Weeks Slider / Input */}
                             <div className="space-y-1.5">
                               <label className="text-[10px] text-stone-400 font-bold uppercase tracking-wider flex items-center gap-1 select-none">
@@ -704,6 +845,7 @@ Mensaje del cliente: ${checkoutForm.message || "Sin mensaje adicional."}
                                 Duración de Pauta (Semanas)
                               </label>
                               <select
+                                id={`weeks-${s.id}`}
                                 value={config.weeks}
                                 onChange={(e) => handleConfigChange(s.id, "weeks", Number(e.target.value))}
                                 className="w-full px-3 py-2 text-xs border border-stone-200 rounded-lg bg-white focus:outline-none focus:border-[#06434a] font-bold cursor-pointer"
@@ -723,6 +865,7 @@ Mensaje del cliente: ${checkoutForm.message || "Sin mensaje adicional."}
                                 Prioridad Estratégica
                               </label>
                               <select
+                                id={`priority-${s.id}`}
                                 value={config.priority}
                                 onChange={(e) => handleConfigChange(s.id, "priority", e.target.value)}
                                 className="w-full px-3 py-2 text-xs border border-stone-200 rounded-lg bg-white focus:outline-none focus:border-[#06434a] font-bold cursor-pointer"
@@ -740,6 +883,7 @@ Mensaje del cliente: ${checkoutForm.message || "Sin mensaje adicional."}
                               Observaciones o Fechas de Pautado
                             </label>
                             <input
+                              id={`notes-${s.id}`}
                               type="text"
                               value={config.notes}
                               placeholder="Ej: Lanzamiento 15 de Octubre, pautar spot institucional de 15 segundos..."
@@ -754,7 +898,7 @@ Mensaje del cliente: ${checkoutForm.message || "Sin mensaje adicional."}
                 </div>
 
                 {/* Lead Generation & Request Form Card */}
-                <div className="lg:col-span-5 bg-white border border-stone-200 rounded-3xl p-6 md:p-8 space-y-6 shadow-xs">
+                <div className="lg:col-span-5 bg-white border border-stone-200 rounded-3xl p-4 sm:p-6 md:p-8 space-y-6 shadow-xs">
                   <div className="space-y-1">
                     <span className="text-[9px] bg-[#06434a]/10 text-[#06434a] font-extrabold px-3 py-1 rounded-full uppercase tracking-wider">
                       Cotización B2B sin compromiso
@@ -797,10 +941,11 @@ Mensaje del cliente: ${checkoutForm.message || "Sin mensaje adicional."}
                     <form onSubmit={handleCheckoutSubmit} className="space-y-4">
                       {/* Name */}
                       <div className="space-y-1">
-                        <label className="text-[10px] text-stone-400 font-extrabold uppercase tracking-wider">
+                        <label htmlFor="checkout-name" className="text-[10px] text-stone-400 font-extrabold uppercase tracking-wider">
                           Nombre del Solicitante *
                         </label>
                         <Input
+                          id="checkout-name"
                           type="text"
                           required
                           placeholder="Tu nombre completo"
@@ -812,10 +957,11 @@ Mensaje del cliente: ${checkoutForm.message || "Sin mensaje adicional."}
 
                       {/* Email */}
                       <div className="space-y-1">
-                        <label className="text-[10px] text-stone-400 font-extrabold uppercase tracking-wider">
+                        <label htmlFor="checkout-email" className="text-[10px] text-stone-400 font-extrabold uppercase tracking-wider">
                           Email Corporativo *
                         </label>
                         <Input
+                          id="checkout-email"
                           type="email"
                           required
                           placeholder="nombre@empresa.com"
@@ -827,10 +973,11 @@ Mensaje del cliente: ${checkoutForm.message || "Sin mensaje adicional."}
 
                       {/* Phone */}
                       <div className="space-y-1">
-                        <label className="text-[10px] text-stone-400 font-extrabold uppercase tracking-wider">
+                        <label htmlFor="checkout-phone" className="text-[10px] text-stone-400 font-extrabold uppercase tracking-wider">
                           Teléfono de Contacto
                         </label>
                         <Input
+                          id="checkout-phone"
                           type="tel"
                           placeholder="Ej: +54 9 261 1234567"
                           value={checkoutForm.phone}
@@ -841,10 +988,11 @@ Mensaje del cliente: ${checkoutForm.message || "Sin mensaje adicional."}
 
                       {/* Company */}
                       <div className="space-y-1">
-                        <label className="text-[10px] text-stone-400 font-extrabold uppercase tracking-wider">
+                        <label htmlFor="checkout-company" className="text-[10px] text-stone-400 font-extrabold uppercase tracking-wider">
                           Nombre de la Empresa / Marca
                         </label>
                         <Input
+                          id="checkout-company"
                           type="text"
                           placeholder="Ej: Bodega S.A."
                           value={checkoutForm.company}
@@ -855,10 +1003,11 @@ Mensaje del cliente: ${checkoutForm.message || "Sin mensaje adicional."}
 
                       {/* Message */}
                       <div className="space-y-1">
-                        <label className="text-[10px] text-stone-400 font-extrabold uppercase tracking-wider">
+                        <label htmlFor="checkout-message" className="text-[10px] text-stone-400 font-extrabold uppercase tracking-wider">
                           Instrucciones comerciales o dudas
                         </label>
                         <textarea
+                          id="checkout-message"
                           rows={3}
                           placeholder="Contanos más sobre tus objetivos de marca..."
                           value={checkoutForm.message}
@@ -872,7 +1021,7 @@ Mensaje del cliente: ${checkoutForm.message || "Sin mensaje adicional."}
                         <button
                           type="submit"
                           disabled={isSubmitting}
-                          className="w-full bg-[#06434a] hover:bg-[#0b5e67] disabled:bg-stone-300 text-white font-extrabold text-xs uppercase tracking-wider py-4 rounded-full transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
+                          className="w-full bg-[#06434a] hover:bg-[#0b5e67] disabled:bg-stone-300 text-white font-extrabold text-xs uppercase tracking-wider py-4 rounded-full transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#06434a] focus-visible:ring-offset-2 focus-visible:ring-offset-white"
                         >
                           {isSubmitting ? (
                             <span>Enviando...</span>
@@ -891,7 +1040,7 @@ Mensaje del cliente: ${checkoutForm.message || "Sin mensaje adicional."}
               </div>
             ) : (
               <div className="space-y-12">
-                <div className="text-center py-12 bg-stone-50/50 border border-dashed border-stone-200 rounded-[24px] max-w-lg mx-auto p-8 space-y-5 shadow-xs">
+                <div className="text-center py-12 bg-stone-50/50 border border-dashed border-stone-200 rounded-3xl max-w-lg mx-auto p-8 space-y-5 shadow-xs">
                   <div className="h-14 w-14 bg-stone-100 rounded-full flex items-center justify-center mx-auto text-stone-400 shadow-inner">
                     <FileDown className="h-6 w-6" />
                   </div>
@@ -956,8 +1105,10 @@ Mensaje del cliente: ${checkoutForm.message || "Sin mensaje adicional."}
                               </div>
 
                               <button
+                                type="button"
+                                aria-label={`Agregar ${s.nombre} al MediaKit`}
                                 onClick={() => toggleCart(s.id)}
-                                className="mt-4 w-full py-2 bg-stone-950 hover:bg-[#06434a] text-white rounded-xl text-[9px] font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 cursor-pointer transition-all"
+                                className="mt-4 w-full py-2 bg-stone-950 hover:bg-[#06434a] text-white rounded-xl text-[9px] font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 cursor-pointer transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#06434a] focus-visible:ring-offset-2 focus-visible:ring-offset-white"
                               >
                                 <Plus className="h-3 w-3" />
                                 <span>Añadir al MediaKit</span>
@@ -1006,8 +1157,10 @@ Mensaje del cliente: ${checkoutForm.message || "Sin mensaje adicional."}
                     {s.nombre.substring(0, 3).toUpperCase()}
                   </div>
                   <button
+                    type="button"
+                    aria-label={`Quitar ${s.nombre} del comparador`}
                     onClick={() => handleCompareToggle(s.id)}
-                    className="absolute -top-1.5 -right-1.5 h-4 w-4 rounded-full bg-stone-200 hover:bg-stone-300 border border-white text-stone-700 flex items-center justify-center text-[8px]"
+                    className="absolute -top-1.5 -right-1.5 h-4 w-4 rounded-full bg-stone-200 hover:bg-stone-300 border border-white text-stone-700 flex items-center justify-center text-[8px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#06434a] focus-visible:ring-offset-2 focus-visible:ring-offset-white"
                   >
                     ×
                   </button>
@@ -1017,16 +1170,19 @@ Mensaje del cliente: ${checkoutForm.message || "Sin mensaje adicional."}
 
             <div className="flex items-center gap-2">
               <button
+                type="button"
+                aria-label="Limpiar selección de comparación"
                 onClick={() => setCompareIds([])}
-                className="px-3 py-2 text-[10px] font-bold text-stone-500 hover:text-stone-900 bg-stone-50 rounded-xl uppercase tracking-wider"
+                className="px-3 py-2 text-[10px] font-bold text-stone-500 hover:text-stone-900 bg-stone-50 rounded-xl uppercase tracking-wider focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#06434a] focus-visible:ring-offset-2 focus-visible:ring-offset-white"
               >
                 Limpiar
               </button>
 
               <button
+                type="button"
                 disabled={compareIds.length < 2}
                 onClick={() => setIsCompareModalOpen(true)}
-                className="px-5 py-2 text-[10px] font-black bg-stone-950 hover:bg-[#06434a] disabled:bg-stone-200 text-white disabled:text-stone-400 rounded-xl uppercase tracking-wider shadow-sm transition-all flex items-center gap-1 cursor-pointer"
+                className="px-5 py-2 text-[10px] font-black bg-amber-500 hover:bg-amber-600 disabled:bg-stone-200 text-stone-950 disabled:text-stone-400 rounded-xl uppercase tracking-wider shadow-sm transition-all flex items-center gap-1 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#06434a] focus-visible:ring-offset-2 focus-visible:ring-offset-white"
               >
                 <span>Comparar</span>
                 <ChevronRight className="h-3 w-3" />
@@ -1038,7 +1194,7 @@ Mensaje del cliente: ${checkoutForm.message || "Sin mensaje adicional."}
 
       {/* DETAILED SIDE-BY-SIDE COMPARATIVE MODAL */}
       <Dialog open={isCompareModalOpen} onOpenChange={setIsCompareModalOpen}>
-        <DialogContent className="max-w-5xl p-0 overflow-hidden bg-white border border-stone-200 shadow-2xl rounded-[24px] max-h-[92vh] flex flex-col">
+        <DialogContent className="max-w-5xl p-0 overflow-hidden bg-white border border-stone-200 shadow-2xl rounded-3xl max-h-[92vh] flex flex-col">
           <DialogTitle className="sr-only">Comparación Técnica de Soportes</DialogTitle>
           <DialogDescription className="sr-only">Tabla comparativa de dimensiones, resolución, brillo y audiencia de los soportes seleccionados</DialogDescription>
 
@@ -1058,8 +1214,10 @@ Mensaje del cliente: ${checkoutForm.message || "Sin mensaje adicional."}
               </div>
             </div>
             <button
+              type="button"
+              aria-label="Cerrar comparación técnica"
               onClick={() => setIsCompareModalOpen(false)}
-              className="text-stone-400 hover:text-stone-600 p-1.5 hover:bg-stone-100 rounded-full"
+              className="text-stone-400 hover:text-stone-600 p-1.5 hover:bg-stone-100 rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#06434a] focus-visible:ring-offset-2 focus-visible:ring-offset-white"
             >
               <X className="h-5 w-5" />
             </button>
@@ -1067,7 +1225,7 @@ Mensaje del cliente: ${checkoutForm.message || "Sin mensaje adicional."}
 
           {/* Comparative Table Viewport */}
           <div className="p-6 md:p-8 overflow-x-auto overflow-y-auto max-h-[60vh]">
-            <div className="min-w-[600px] grid grid-cols-4 gap-6 text-xs">
+            <div className="min-w-150 grid grid-cols-4 gap-6 text-xs">
               
               {/* Row: Technical labels */}
               <div className="space-y-6 pt-10 text-stone-400 font-bold uppercase tracking-wider text-[10px]">

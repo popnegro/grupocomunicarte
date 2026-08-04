@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from "motion/react";
 import { ShoppingBag, Check, X, Calendar, ArrowRight, Sparkles, Receipt, Percent, Tag, User, Mail, Building, ShieldCheck, Download, AlertCircle } from "lucide-react";
 import { Button } from "./ui/button";
 import { useCms } from "./CmsContext";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/src/components/ui/card";
 
 export const B2BMarketplaceView: React.FC = () => {
   const { screens, cart, toggleCart, clearCart, addLead } = useCms();
@@ -127,7 +126,7 @@ export const B2BMarketplaceView: React.FC = () => {
             </div>
 
             {/* Receipt Summary card */}
-            <Card className="bg-slate-50 border border-slate-150 p-4 text-xs space-y-2.5 text-left max-w-md mx-auto">
+            <div className="bg-slate-50 border border-slate-150 rounded-xl p-4 text-xs space-y-2.5 text-left max-w-md mx-auto">
               <div className="flex justify-between border-b border-slate-200 pb-2 font-bold text-slate-900 uppercase text-[10px] tracking-wider">
                 <span>Resumen de Cotización</span>
                 <span>Mendoza OOH</span>
@@ -148,11 +147,11 @@ export const B2BMarketplaceView: React.FC = () => {
                 <span>Impactos Totales Estimados</span>
                 <span className="font-semibold text-slate-800 font-mono">{totalImpacts.toLocaleString("es-AR")}</span>
               </div>
-              <div className="flex justify-between border-t border-dashed border-slate-200 pt-2 text-sm font-black text-slate-950 font-mono">
+              <div className="flex justify-between border-t border-dashed border-slate-200 pt-2 text-sm font-black text-slate-950">
                 <span>Total Estimado Neto</span>
-                <span>${finalTotal.toLocaleString("es-AR")} ARS</span>
+                <span className="text-[#06434a] font-extrabold">Bajo cotización</span>
               </div>
-            </Card>
+            </div>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 max-w-md mx-auto pt-2">
               <Button
@@ -176,7 +175,7 @@ export const B2BMarketplaceView: React.FC = () => {
           </motion.div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6" key="marketplace">
-            {/* Left Column: Screen browser catalogs */} {/* This is a container for cards */}
+            {/* Left Column: Screen browser catalogs */}
             <div className="lg:col-span-8 space-y-5">
               {/* Filter controls */}
               <div className="bg-white border border-slate-200 p-4.5 rounded-2xl shadow-xs flex flex-col md:flex-row gap-4 items-start md:items-center justify-between text-xs font-bold text-slate-400 uppercase tracking-wider">
@@ -261,8 +260,8 @@ export const B2BMarketplaceView: React.FC = () => {
                           </div>
                           <div className="space-y-0.5 text-right">
                             <span className="text-[9px] text-slate-400 uppercase font-bold">Inversión/Semana</span>
-                            <span className="font-bold font-mono text-slate-950 text-[13px]">
-                              ${screen.precio.toLocaleString("es-AR")}
+                            <span className="font-bold text-slate-950 text-[13px]">
+                              Bajo cotización
                             </span>
                           </div>
                         </div>
@@ -278,7 +277,7 @@ export const B2BMarketplaceView: React.FC = () => {
                           {isSelected ? (
                             <span className="flex items-center justify-center gap-1.5">
                               <Check className="h-3.5 w-3.5 text-emerald-400" />
-                              Quitar de la Cotización
+                              Quitar del Presupuesto
                             </span>
                           ) : (
                             "Agregar a mi Cotización"
@@ -293,7 +292,7 @@ export const B2BMarketplaceView: React.FC = () => {
 
             {/* Right Column: Checkout Proposal Form */}
             <div className="lg:col-span-4 space-y-6">
-              <Card className="p-5 space-y-5">
+              <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-5 space-y-5">
                 <div className="border-b border-slate-100 pb-3 flex items-center justify-between">
                   <h3 className="text-xs font-black text-slate-900 uppercase tracking-wider">
                     Cotización Estimada ({cart.length})
@@ -324,7 +323,7 @@ export const B2BMarketplaceView: React.FC = () => {
                             <span className="text-[10px] text-slate-400 font-semibold block uppercase">{sc.zona}</span>
                           </div>
                           <div className="text-right shrink-0">
-                            <span className="font-mono font-bold text-slate-900">${sc.precio.toLocaleString("es-AR")}</span>
+                            <span className="font-bold text-[#06434a]">Bajo cotización</span>
                             <button
                               onClick={() => toggleCart(sc.id)}
                               className="text-[10px] text-rose-500 block hover:underline ml-auto"
@@ -362,31 +361,21 @@ export const B2BMarketplaceView: React.FC = () => {
                     <div className="border-t border-slate-100 pt-4 space-y-2 text-xs">
                       <div className="flex justify-between text-slate-500 font-medium">
                         <span>Suma de Tarifas Semanales</span>
-                        <span className="font-semibold text-slate-800 font-mono">${subtotalPerWeek.toLocaleString("es-AR")}</span>
+                        <span className="font-semibold text-[#06434a]">Bajo cotización</span>
                       </div>
                       <div className="flex justify-between text-slate-500 font-medium">
                         <span>Costo Bruto por {weeks} Semanas</span>
-                        <span className="font-semibold text-slate-800 font-mono">${rawTotal.toLocaleString("es-AR")}</span>
+                        <span className="font-semibold text-[#06434a]">Bajo cotización</span>
                       </div>
-
-                      {discountPercent > 0 && (
-                        <div className="flex justify-between text-emerald-600 font-semibold items-center">
-                          <span className="flex items-center gap-1">
-                            <Percent className="h-3.5 w-3.5 text-emerald-500" />
-                            Descuento Especial B2B ({discountPercent}%)
-                          </span>
-                          <span className="font-mono">-${discountAmount.toLocaleString("es-AR")}</span>
-                        </div>
-                      )}
-
+                      
                       <div className="flex justify-between text-slate-500 font-medium">
                         <span>Audiencia Semanal Acumulada</span>
                         <span className="font-semibold text-slate-800 font-mono">{(totalImpacts / weeks).toLocaleString("es-AR")} imp.</span>
                       </div>
 
-                      <div className="flex justify-between border-t border-slate-200 pt-3 text-sm font-black text-slate-950 font-mono">
+                      <div className="flex justify-between border-t border-slate-200 pt-3 text-sm font-black text-slate-950">
                         <span>Total Solicitado</span>
-                        <span>${finalTotal.toLocaleString("es-AR")} ARS</span>
+                        <span className="text-[#06434a] font-extrabold">Bajo cotización</span>
                       </div>
                     </div>
 
@@ -470,7 +459,7 @@ export const B2BMarketplaceView: React.FC = () => {
                     </form>
                   </div>
                 )}
-              </Card>
+              </div>
             </div>
           </div>
         )}

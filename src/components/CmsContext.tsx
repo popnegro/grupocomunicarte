@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { create } from "zustand";
 import { LandingContent, Lead, OnboardingAnswers, SeoAuditReport, GrowthRecommendation, DoohScreen } from "../types";
 import { sitemap } from "../lib/sitemap";
@@ -734,7 +735,7 @@ function findSitemapItem(items: any[], slug: string): any | null {
   return null;
 }
 
-function updateSeoTagsAndHash(activeView: string, activeSlug: string, currentDashboardTab: string) {
+function updateSeoTagsOnly(activeView: string, activeSlug: string, currentDashboardTab: string) {
   if (activeView === "landing") {
     const item = findSitemapItem(sitemap, activeSlug);
     const baseTitle = "Grupo Comunicarte | Publicidad Exterior y DOOH";
@@ -763,46 +764,66 @@ function updateSeoTagsAndHash(activeView: string, activeSlug: string, currentDas
     const tabLabel = currentDashboardTab.charAt(0).toUpperCase() + currentDashboardTab.slice(1);
     document.title = `Consola B2B | Grupo Comunicarte | ${tabLabel}`;
   }
-
-  let newHash = "";
-  if (activeView === "dashboard") {
-    newHash = `#/dashboard/${currentDashboardTab}`;
-  } else {
-    newHash = `#${activeSlug}`;
-  }
-  if (window.location.hash !== newHash) {
-    window.history.replaceState(null, "", newHash);
-  }
 }
 
 export const CmsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { setActiveView, setActiveSlug, setCurrentDashboardTab, activeView, activeSlug, currentDashboardTab, content } = useCmsStore();
+  const location = useLocation();
+  const navigate = useNavigate();
 
+  // 1. Sync from Browser URL to Zustand state on mount and URL changes
   useEffect(() => {
-    const handleHashChange = () => {
-      const hash = window.location.hash;
-      if (!hash || hash === "#" || hash === "#/") {
-        setActiveView("landing");
-        setActiveSlug("/");
-      } else if (hash.startsWith("#/dashboard")) {
-        setActiveView("dashboard");
-        const parts = hash.split("/");
-        const tab = parts[2] || "inventario";
-        setCurrentDashboardTab(tab);
-      } else {
-        setActiveView("landing");
-        const slug = hash.replace("#", "");
-        setActiveSlug(slug);
-      }
-    };
+    const path = location.pathname;
+    
+    // Auto-scroll instantly to top on page or view transition to mimic natural browser behavior
+    window.scrollTo({ top: 0, behavior: "instant" as any });
 
-    handleHashChange();
-    window.addEventListener("hashchange", handleHashChange);
-    return () => window.removeEventListener("hashchange", handleHashChange);
-  }, [setActiveView, setActiveSlug, setCurrentDashboardTab]);
+    if (path === "/login") {
+      setActiveView("landing");
+      setActiveSlug("/login");
+    } else if (path.startsWith("/dashboard")) {
+      setActiveView("dashboard");
+      const parts = path.split("/");
+      const suffix = parts[2] || "home";
+      
+      let tab = "home";
+      if (suffix === "inventory") tab = "inventario";
+      else if (suffix === "clients") tab = "clientes";
+      else if (suffix === "mediakits") tab = "mediakit";
+      else if (suffix === "ai-planner") tab = "ai-planner";
+      else if (suffix === "settings") tab = "settings";
+      
+      setCurrentDashboardTab(tab);
+    } else {
+      setActiveView("landing");
+      setActiveSlug(path);
+    }
+  }, [location.pathname, setActiveView, setActiveSlug, setCurrentDashboardTab]);
 
+  // 2. Sync from Zustand state changes back to Browser URL (e.g. clicking buttons)
   useEffect(() => {
-    updateSeoTagsAndHash(activeView, activeSlug, currentDashboardTab);
+    let targetPath = "/";
+    if (activeView === "dashboard") {
+      let suffix = "home";
+      if (currentDashboardTab === "inventario") suffix = "inventory";
+      else if (currentDashboardTab === "clientes") suffix = "clients";
+      else if (currentDashboardTab === "mediakit") suffix = "mediakits";
+      else if (currentDashboardTab === "ai-planner") suffix = "ai-planner";
+      else if (currentDashboardTab === "settings") suffix = "settings";
+
+      targetPath = suffix === "home" ? "/dashboard" : `/dashboard/${suffix}`;
+    } else {
+      targetPath = activeSlug;
+    }
+
+    if (location.pathname !== targetPath) {
+      navigate(targetPath);
+    }
+  }, [activeView, activeSlug, currentDashboardTab, location.pathname, navigate]);
+
+  // 3. Update SEO and Document Title
+  useEffect(() => {
+    updateSeoTagsOnly(activeView, activeSlug, currentDashboardTab);
   }, [activeView, activeSlug, currentDashboardTab, content.seo]);
 
   const fetchLeads = useCmsStore((state) => state.fetchLeads);

@@ -26,7 +26,7 @@ export class GoogleSlidesBackendService {
    */
   public static getAuthUrl(userId: number): string {
     const scopes = encodeURIComponent(
-      "https://www.googleapis.com/auth/presentations https://www.googleapis.com/auth/drive"
+      "https://www.googleapis.com/auth/presentations https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/spreadsheets"
     );
     const redirect = encodeURIComponent(this.redirectUri);
     return `https://accounts.google.com/o/oauth2/v2/auth?client_id=${this.clientId}&redirect_uri=${redirect}&response_type=code&scope=${scopes}&access_type=offline&prompt=consent&state=${userId}`;

@@ -20,6 +20,7 @@ import {
   AlertCircle
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
+import { AiReportSkeleton } from "../ui/reusable-skeletons";
 
 interface AiPlannerModuleProps {
   screens: DoohScreen[];
@@ -275,13 +276,22 @@ export const AiPlannerModule: React.FC<AiPlannerModuleProps> = ({
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
-                className="bg-white border border-stone-200 rounded-lg p-12 text-center flex flex-col items-center justify-center space-y-4 h-[350px]"
+                className="space-y-4"
               >
-                <Loader2 className="h-8 w-8 text-[#06434a] animate-spin" />
-                <div className="space-y-1">
-                  <h4 className="text-xs font-bold text-stone-800 uppercase tracking-widest animate-pulse">Procesando Consulta IA</h4>
-                  <p className="text-[10px] text-stone-500 font-medium">{loadingMessages[loadingStep]}</p>
+                <div className="bg-[#06434a]/5 border border-[#06434a]/15 p-4 rounded-xl flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="h-2 w-2 rounded-full bg-amber-500 animate-ping shrink-0" />
+                    <div className="text-left">
+                      <h4 className="text-xs font-black text-[#06434a] uppercase tracking-wide">Optimizador Inteligente Activo</h4>
+                      <p className="text-[10px] text-[#06434a]/75 font-bold">{loadingMessages[loadingStep]}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 text-[10px] font-extrabold text-[#06434a] bg-white border border-[#06434a]/10 px-3 py-1.5 rounded-lg shadow-3xs">
+                    <Loader2 className="h-3.5 w-3.5 animate-spin text-[#06434a]" />
+                    <span>Calculando...</span>
+                  </div>
                 </div>
+                <AiReportSkeleton />
               </motion.div>
             )}
 

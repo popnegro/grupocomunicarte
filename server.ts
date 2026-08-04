@@ -819,6 +819,165 @@ app.post("/api/changelogs", requireAuth, async (req: Request, res: Response) => 
   }
 });
 
+// POST Export Changelogs to Google Sheets
+app.post("/api/changelogs/export-sheets", requireAuth, async (req: AuthRequest, res: Response) => {
+  const authHeaderToken = req.headers["x-google-access-token"] as string;
+  try {
+    const dbUser = await getOrCreateUser(req.user.uid, req.user.email || "");
+
+    // Resolve Access Token
+    let accessToken = "";
+    if (GoogleSlidesBackendService.isConfigured()) {
+      try {
+        accessToken = await GoogleSlidesBackendService.getAccessToken(dbUser.id);
+      } catch (err: any) {
+        console.warn("Could not get stored Google Access Token, trying client-provided fallback:", err.message);
+      }
+    }
+
+    if (!accessToken && authHeaderToken) {
+      accessToken = authHeaderToken;
+    }
+
+    if (!accessToken) {
+      return res.status(401).json({
+        success: false,
+        error: "Se requiere autenticación con Google.",
+        needsAuth: true,
+      });
+    }
+
+    // Fetch all logs
+    const dbLogs = await db.select().from(changelogs);
+    const sortedLogs = [...dbLogs].sort((a, b) => b.id.localeCompare(a.id));
+
+    const sheetTitle = `Auditoría - Grupo Comunicarte (${new Date().toLocaleDateString("es-AR")})`;
+
+    // Create a new Spreadsheet
+    const createSheetRes = await fetch("https://sheets.googleapis.com/v4/spreadsheets", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        properties: {
+          title: sheetTitle
+        }
+      }),
+    });
+
+    if (!createSheetRes.ok) {
+      const errorText = await createSheetRes.text();
+      throw new Error(`Failed to create Google Sheet: ${createSheetRes.statusText} - ${errorText}`);
+    }
+
+    const sheetInfo = await createSheetRes.json();
+    const spreadsheetId = sheetInfo.spreadsheetId;
+    const spreadsheetUrl = sheetInfo.spreadsheetUrl;
+
+    // Build values payload
+    const rows = [
+      ["ID Registro", "Usuario / Rol", "Acción Ejecutada", "Fecha de Operación"],
+      ...sortedLogs.map(log => [log.id, log.user, log.action, log.date])
+    ];
+
+    // Append / Write values into Sheet1!A1
+    const appendRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/Sheet1!A1:append?valueInputOption=USER_ENTERED`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        values: rows
+      })
+    });
+
+    if (!appendRes.ok) {
+      const errorText = await appendRes.text();
+      throw new Error(`Failed to write values to Google Sheet: ${appendRes.statusText} - ${errorText}`);
+    }
+
+    // Share sheet read-only
+    try {
+      await GoogleSlidesBackendService.sharePresentation(accessToken, spreadsheetId, dbUser.email);
+    } catch (shareErr) {
+      console.warn("Could not share Google Sheet, proceeding:", shareErr);
+    }
+
+    // Log the sheet export action itself!
+    try {
+      const logId = `log-${Math.floor(100000 + Math.random() * 900000)}`;
+      await db.insert(changelogs).values({
+        id: logId,
+        user: dbUser.email,
+        action: `Exportó el historial de auditoría (${dbLogs.length} registros) a Google Sheets`,
+        date: new Date().toISOString(),
+      });
+    } catch (logErr) {
+      console.error("Failed to append changelog for sheet export:", logErr);
+    }
+
+    res.json({
+      success: true,
+      spreadsheetId,
+      spreadsheetUrl,
+    });
+  } catch (error: any) {
+    console.error("Export to Google Sheets error:", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// POST AI Analyse Changelogs
+app.post("/api/ai/audit-analyse", requireAuth, async (req: Request, res: Response) => {
+  try {
+    const dbLogs = await db.select().from(changelogs);
+    const sortedLogs = [...dbLogs].sort((a, b) => b.id.localeCompare(a.id)).slice(0, 100);
+    const logsSummaryString = sortedLogs.map(log => `[ID: ${log.id}] [Fecha: ${log.date}] [Usuario: ${log.user}] Acción: ${log.action}`).join("\n");
+
+    const prompt = `
+      Actúa como un Auditor de Seguridad de Sistemas y Director de Operaciones Senior. Analiza el siguiente historial de operaciones (changelogs) del sistema DOOH "Grupo Comunicarte" y genera una auditoría ejecutiva.
+      Identifica patrones de uso, posibles anomalías (por ejemplo, accesos con roles simulados excesivos, eliminación recurrente de soportes, o volumen inusual de cambios), evalúa el nivel de riesgo y proporciona recomendaciones de cumplimiento normativo y seguridad digital.
+
+      Historial de Operaciones:
+      ${logsSummaryString}
+
+      Genera tu respuesta en español adaptándote estrictamente al esquema JSON solicitado.
+    `;
+
+    const schema = {
+      type: Type.OBJECT,
+      properties: {
+        summary: { type: Type.STRING, description: "Resumen ejecutivo formal de las operaciones detectadas y estado del sistema." },
+        anomalies: { 
+          type: Type.ARRAY, 
+          description: "Lista de comportamientos inusuales, alertas de auditoría o advertencias de seguridad identificadas.",
+          items: { type: Type.STRING }
+        },
+        recommendations: { 
+          type: Type.ARRAY, 
+          description: "Recomendaciones estratégicas de seguridad, gestión de permisos (RBAC) o de procedimientos comerciales.",
+          items: { type: Type.STRING }
+        },
+        riskLevel: { type: Type.STRING, description: "Nivel de riesgo operativo y de seguridad general. Debe ser exactamente 'Bajo', 'Medio' o 'Alto'." }
+      },
+      required: ["summary", "anomalies", "recommendations", "riskLevel"]
+    };
+
+    const text = await callGemini(prompt, schema);
+    if (text) {
+      res.json({ success: true, data: JSON.parse(text) });
+    } else {
+      throw new Error("Empty response from Gemini");
+    }
+  } catch (error: any) {
+    console.error("Gemini Audit Analysis Error:", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // --- EXISTING GEMINI AI ROUTES ---
 
 // AI Route: Generate Landing Page content

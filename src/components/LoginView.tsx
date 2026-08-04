@@ -1,8 +1,14 @@
 import React, { useState } from "react";
 import { useAuth } from "./AuthContext";
 import { LogIn, Globe, Shield, ArrowRight } from "lucide-react";
+import { usePageMetadata } from "../hooks/usePageMetadata";
 
 export const LoginView: React.FC = () => {
+  usePageMetadata({
+    title: "Iniciar Sesión | Panel de Gestión",
+    description: "Inicie sesión de forma segura para acceder al panel administrativo de Grupo Comunicarte. Administre campañas, clientes e inventario comercial."
+  });
+
   const { loginWithGoogle } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const [isUnauthorizedDomain, setIsUnauthorizedDomain] = useState(false);
@@ -22,8 +28,14 @@ export const LoginView: React.FC = () => {
       if (errCode === "auth/unauthorized-domain" || errMsg.includes("auth/unauthorized-domain")) {
         setIsUnauthorizedDomain(true);
         setError("Error: Dominio no autorizado en Firebase.");
+      } else if (errCode === "auth/popup-closed-by-user") {
+        setError("La ventana de autenticación de Google fue cerrada antes de completar el inicio de sesión.");
+      } else if (errCode === "auth/network-request-failed") {
+        setError("Error de red. Por favor, revisa tu conexión a Internet e inténtalo de nuevo.");
+      } else if (errCode === "auth/user-token-expired") {
+        setError("Tu credencial o sesión ha expirado. Por favor, vuelve a iniciar sesión.");
       } else {
-        setError("No se pudo iniciar sesión. Por favor, intenta de nuevo.");
+        setError("No se pudo iniciar sesión con Google. Por favor, intenta de nuevo.");
       }
     } finally {
       setLoading(false);

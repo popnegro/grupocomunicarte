@@ -859,7 +859,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
           )}
 
           {/* SOPORTES INVENTORY PAGE AND CHILDREN */}
-          {slug.startsWith("/soportes") && (() => {
+          {slug.startsWith("/soporte") && (() => {
             const FORMATOS_DATA = [
               {
                 id: "peatonal",
@@ -953,10 +953,10 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
               }
             ];
 
-            const isMainPage = slug === "/soportes";
-            const isPeatonalSub = slug === "/soportes/led-peatonal";
-            const isVehicularSub = slug === "/soportes/monolito-vehicular";
-            const isMixtoSub = slug === "/soportes/pantalla-mixta";
+            const isMainPage = slug === "/soporte";
+            const isPeatonalSub = slug === "/soporte/led-peatonal";
+            const isVehicularSub = slug === "/soporte/monolito-vehicular";
+            const isMixtoSub = slug === "/soporte/pantalla-mixta";
 
             return (
               <div className="space-y-10">
@@ -1307,7 +1307,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
           })()}
 
           {/* DEFAULT / OTHERS STATS */}
-          {!slug.startsWith("/contacto") && !slug.startsWith("/mediakit") && !slug.startsWith("/nosotros") && !slug.startsWith("/servicios") && !slug.startsWith("/blog") && !slug.startsWith("/soportes") && !isMendoza && !isBA && (
+          {!slug.startsWith("/contacto") && !slug.startsWith("/mediakit") && !slug.startsWith("/nosotros") && !slug.startsWith("/servicios") && !slug.startsWith("/blog") && !slug.startsWith("/soporte") && !isMendoza && !isBA && (
             <div className="bg-white border border-slate-200 rounded-2xl p-6 space-y-4 shadow-xs">
               <h3 className="font-extrabold text-slate-900 text-sm">Contenido de la Sección</h3>
               <p className="text-slate-500 text-xs leading-relaxed">

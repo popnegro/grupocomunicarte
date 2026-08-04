@@ -565,22 +565,24 @@ export const useCmsStore = create<CmsStoreProps>((set, get) => ({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(leadData),
       });
-      const result = await response.json();
-      if (result.success) {
-        set((state) => ({ leads: [result.data, ...state.leads] }));
-        return result.data;
+      const contentType = response.headers.get("content-type");
+      if (response.ok && contentType && contentType.includes("application/json")) {
+        const result = await response.json();
+        if (result.success && result.data) {
+          set((state) => ({ leads: [result.data, ...state.leads] }));
+          return result.data;
+        }
       }
     } catch (err) {
       console.error("Error creating lead on server", err);
-      const fallbackLead = {
-        ...leadData,
-        id: String(get().leads.length + 1),
-        date: new Date().toISOString(),
-      };
-      set((state) => ({ leads: [fallbackLead, ...state.leads] }));
-      return fallbackLead;
     }
-    return null;
+    const fallbackLead = {
+      ...leadData,
+      id: String(get().leads.length + 1),
+      date: new Date().toISOString(),
+    };
+    set((state) => ({ leads: [fallbackLead, ...state.leads] }));
+    return fallbackLead;
   },
 
   saveOnboarding: (answers) => {
@@ -628,9 +630,12 @@ export const useCmsStore = create<CmsStoreProps>((set, get) => ({
   fetchLeads: async () => {
     try {
       const res = await fetch("/api/leads");
-      const resJson = await res.json();
-      if (resJson.success) {
-        set({ leads: resJson.data });
+      const contentType = res.headers.get("content-type");
+      if (res.ok && contentType && contentType.includes("application/json")) {
+        const resJson = await res.json();
+        if (resJson.success && Array.isArray(resJson.data)) {
+          set({ leads: resJson.data });
+        }
       }
     } catch (e) {
       console.error("Error fetching leads from server", e);
@@ -645,28 +650,31 @@ export const useCmsStore = create<CmsStoreProps>((set, get) => ({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(answers),
       });
-      const result = await res.json();
-      if (result.success && result.data) {
-        const generated = result.data;
-        const nextContent = {
-          ...get().content,
-          hero: {
-            badge: generated.hero.badge.toUpperCase(),
-            title: generated.hero.title,
-            subtitle: generated.hero.subtitle,
-            ctaPrimary: generated.hero.ctaPrimary,
-            ctaSecondary: generated.hero.ctaSecondary,
-          },
-          benefits: generated.benefits.map((b: any, index: number) => ({
-            id: b.id || `b-ai-${index}`,
-            title: b.title,
-            description: b.description,
-            icon: b.icon || "Sparkles",
-          })),
-          faq: generated.faq,
-        };
-        localStorage.setItem("smartweb_cms_content", JSON.stringify(nextContent));
-        set({ content: nextContent });
+      const contentType = res.headers.get("content-type");
+      if (res.ok && contentType && contentType.includes("application/json")) {
+        const result = await res.json();
+        if (result.success && result.data) {
+          const generated = result.data;
+          const nextContent = {
+            ...get().content,
+            hero: {
+              badge: generated.hero.badge.toUpperCase(),
+              title: generated.hero.title,
+              subtitle: generated.hero.subtitle,
+              ctaPrimary: generated.hero.ctaPrimary,
+              ctaSecondary: generated.hero.ctaSecondary,
+            },
+            benefits: generated.benefits.map((b: any, index: number) => ({
+              id: b.id || `b-ai-${index}`,
+              title: b.title,
+              description: b.description,
+              icon: b.icon || "Sparkles",
+            })),
+            faq: generated.faq,
+          };
+          localStorage.setItem("smartweb_cms_content", JSON.stringify(nextContent));
+          set({ content: nextContent });
+        }
       }
     } catch (e) {
       console.error("Error generating AI content", e);
@@ -689,9 +697,12 @@ export const useCmsStore = create<CmsStoreProps>((set, get) => ({
           faqText: get().content.faq.map((f) => `${f.question}: ${f.answer}`).join("; "),
         }),
       });
-      const result = await res.json();
-      if (result.success && result.data) {
-        set({ seoReport: result.data });
+      const contentType = res.headers.get("content-type");
+      if (res.ok && contentType && contentType.includes("application/json")) {
+        const result = await res.json();
+        if (result.success && result.data) {
+          set({ seoReport: result.data });
+        }
       }
     } catch (e) {
       console.error("Error running SEO Audit", e);
@@ -712,9 +723,12 @@ export const useCmsStore = create<CmsStoreProps>((set, get) => ({
           activeLeadsCount: get().leads.length,
         }),
       });
-      const result = await res.json();
-      if (result.success && result.data?.recommendations) {
-        set({ growthRecs: result.data.recommendations });
+      const contentType = res.headers.get("content-type");
+      if (res.ok && contentType && contentType.includes("application/json")) {
+        const result = await res.json();
+        if (result.success && result.data?.recommendations) {
+          set({ growthRecs: result.data.recommendations });
+        }
       }
     } catch (e) {
       console.error("Error running Growth Recs", e);

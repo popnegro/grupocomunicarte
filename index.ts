@@ -1,6 +1,5 @@
-import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { db } from "../../src/db/index";
-import { leads } from "../../src/db/schema";
+import { db } from "./src/db/index";
+import { leads } from "./src/db/schema";
 import { desc } from "drizzle-orm";
 
 async function sendLeadNotificationEmail(lead: any) {
@@ -46,7 +45,7 @@ async function sendLeadNotificationEmail(lead: any) {
   }
 }
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export default async function handler(req: any, res: any) {
   if (req.method === "GET") {
     try {
       const dbLeads = await db.select().from(leads).orderBy(desc(leads.id));
@@ -99,7 +98,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         value: row.value || 0,
       };
 
-      // No esperar a que el email se envíe para responder
       sendLeadNotificationEmail(leadData);
 
       return res.status(200).json({ success: true, data: leadData });

@@ -5,6 +5,7 @@ import { CmsProvider } from "./components/CmsContext";
 import { LandingView } from "./components/LandingView";
 import { DashboardView } from "./components/DashboardView";
 import { LoginView } from "./components/LoginView";
+import MediaKitBuilderView from "./components/MediaKitBuilderView.tsx"; // Import the new view
 import { ToastProvider } from "./components/ui/Toast";
 
 // High-Contrast Loading spinner matching design system
@@ -59,6 +60,16 @@ export default function App() {
 
               {/* Login Route */}
               <Route path="/login" element={<LoginRoute />} />
+
+              {/* Protected Media Kit Builder */}
+              <Route
+                path="/mediakit-builder/:id"
+                element={
+                  <ProtectedRoute>
+                    <MediaKitBuilderView />
+                  </ProtectedRoute>
+                }
+              />
 
               {/* Protected Dashboard Suite */}
               <Route

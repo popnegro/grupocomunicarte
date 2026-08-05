@@ -8,6 +8,7 @@ import {
   CategoriesController, MediaController, UsersController, DashboardController,
   SearchController, TenantsController
 } from "../../controllers/index.ts";
+import { P7_MediaKitsController } from "../../controllers/p7_MediaKitsController.ts";
 import { SwaggerController } from "../../controllers/swaggerController.ts";
 
 const router = Router();
@@ -16,6 +17,9 @@ const router = Router();
 // OpenAPI Swagger documentation JSON & Interactive Console HTML
 router.get("/swagger.json", SwaggerController.getJson);
 router.get("/docs", SwaggerController.getHtml);
+
+// Public route for shared mediakits
+router.get("/p7/shared/mediakit/:token", P7_MediaKitsController.getShared);
 
 
 // --- SECURE ENDPOINTS (Requires Firebase JWT Authentication & Rate Limiting) ---
@@ -50,12 +54,30 @@ router.put("/campaigns/:id", requirePermission("edit_campaigns"), CampaignsContr
 router.delete("/campaigns/:id", requirePermission("edit_campaigns"), CampaignsController.delete);
 
 
-// --- MEDIAKITS & COTIZACIONES ---
+// --- MEDIAKITS & COTIZACIONES (LEGACY) ---
 router.get("/mediakits", cacheMiddleware(10000), MediaKitsController.getAll);
 router.get("/mediakits/:id", cacheMiddleware(10000), MediaKitsController.getById);
 router.post("/mediakits", requirePermission("edit_campaigns"), MediaKitsController.create);
 router.put("/mediakits/:id", requirePermission("edit_campaigns"), MediaKitsController.update);
 router.delete("/mediakits/:id", requirePermission("edit_campaigns"), MediaKitsController.delete);
+
+
+// --- PASO 7: MEDIAKIT BUILDER ---
+const mediakitBuilderPermission = "edit_campaigns"; // Reuse existing permission for now
+router.get("/p7/mediakits", requirePermission(mediakitBuilderPermission), P7_MediaKitsController.getAll);
+router.get("/p7/mediakits/:id", requirePermission(mediakitBuilderPermission), P7_MediaKitsController.getById);
+router.post("/p7/mediakits", requirePermission(mediakitBuilderPermission), P7_MediaKitsController.create);
+router.put("/p7/mediakits/:id", requirePermission(mediakitBuilderPermission), P7_MediaKitsController.update);
+router.delete("/p7/mediakits/:id", requirePermission(mediakitBuilderPermission), P7_MediaKitsController.delete);
+router.post("/p7/mediakits/:id/restore", requirePermission(mediakitBuilderPermission), P7_MediaKitsController.restore);
+router.post("/p7/mediakits/:id/duplicate", requirePermission(mediakitBuilderPermission), P7_MediaKitsController.duplicate);
+router.post("/p7/mediakits/:id/version", requirePermission(mediakitBuilderPermission), P7_MediaKitsController.createVersion);
+router.post("/p7/mediakits/:id/share", requirePermission(mediakitBuilderPermission), P7_MediaKitsController.share);
+
+// Export endpoints
+router.post("/p7/mediakits/:id/export/pdf", requirePermission(mediakitBuilderPermission), P7_MediaKitsController.exportPdf);
+router.post("/p7/mediakits/:id/export/slides", requirePermission(mediakitBuilderPermission), P7_MediaKitsController.exportSlides);
+router.post("/p7/mediakits/:id/export/pptx", requirePermission(mediakitBuilderPermission), P7_MediaKitsController.exportPptx);
 
 
 // --- MEDIA ASSETS ---

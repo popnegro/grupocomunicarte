@@ -4,7 +4,6 @@ import { useAuth } from "./AuthContext";
 import { useCms } from "./CmsContext";
 import { DoohScreen } from "../types";
 import { useToast } from "./ui/Toast";
-import { usePageMetadata } from "../hooks/usePageMetadata";
 
 // Shared types and local helpers
 import { Role, MediaKit, Cliente, ChangeLog, Cotizacion, Reserva, Campaña } from "./dashboard/types";
@@ -16,31 +15,14 @@ import {
 
 // Modular sub-views
 import { DashboardHeader } from "./dashboard/DashboardHeader";
-import { DashboardSkeleton } from "./dashboard/DashboardSkeleton";
-
-const DashboardHome = React.lazy(() =>
-  import("./dashboard/DashboardHome").then((m) => ({ default: m.DashboardHome }))
-);
-const InventoryModule = React.lazy(() =>
-  import("./dashboard/InventoryModule").then((m) => ({ default: m.InventoryModule }))
-);
-const MediaKitModule = React.lazy(() =>
-  import("./dashboard/MediaKitModule").then((m) => ({ default: m.MediaKitModule }))
-);
-const ClientsModule = React.lazy(() =>
-  import("./dashboard/ClientsModule").then((m) => ({ default: m.ClientsModule }))
-);
-const SettingsModule = React.lazy(() =>
-  import("./dashboard/SettingsModule").then((m) => ({ default: m.SettingsModule }))
-);
-const AiPlannerModule = React.lazy(() =>
-  import("./dashboard/AiPlannerModule").then((m) => ({ default: m.AiPlannerModule }))
-);
-const AuditModule = React.lazy(() =>
-  import("./dashboard/AuditModule").then((m) => ({ default: m.AuditModule }))
-);
-
-import { DashboardAppShellSkeleton } from "./ui/reusable-skeletons";
+import { DashboardHome } from "./dashboard/DashboardHome";
+import { InventoryModule } from "./dashboard/InventoryModule";
+import { MediaKitModule } from "./dashboard/MediaKitModule";
+import { ClientsModule } from "./dashboard/ClientsModule";
+import { SettingsModule } from "./dashboard/SettingsModule";
+import { AiPlannerModule } from "./dashboard/AiPlannerModule";
+import { SlidesSyncModule } from "./dashboard/SlidesSyncModule";
+import { AdministrationModule } from "./dashboard/AdministrationModule";
 
 // Lucide Icons
 import {
@@ -54,38 +36,22 @@ import {
   Globe,
   Loader,
   Sparkles,
-  X,
-  Menu,
+  Database,
   Shield
 } from "lucide-react";
 
 export const DashboardView: React.FC = () => {
   const { token } = useAuth();
-  const { setActiveView, content } = useCms();
+  const { setActiveView } = useCms();
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
-
-  const matchedLabel = 
-    location.pathname === "/dashboard/inventory" ? "Inventario Comercial" :
-    location.pathname === "/dashboard/clients" ? "Clientes CRM" :
-    location.pathname === "/dashboard/mediakits" ? "Editor de MediaKits" :
-    location.pathname === "/dashboard/settings" ? "Configuración" :
-    location.pathname === "/dashboard/audit" ? "Registro de Auditoría" :
-    location.pathname === "/dashboard/ai-planner" ? "Planificador IA" :
-    "Consola Principal";
-
-  usePageMetadata({
-    title: `${matchedLabel} | Panel`,
-    description: `Consola de administración interna de Grupo Comunicarte para la gestión de ${matchedLabel}, optimización comercial y logística de soportes DOOH.`
-  });
 
   // Active User Profile (RBAC state)
   const [userRole, setUserRole] = useState<Role>("comercial_dir");
 
   // Sidebar navigation state
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   // States fetched dynamically from PostgreSQL
   const [screens, setScreens] = useState<DoohScreen[]>([]);
@@ -427,56 +393,39 @@ export const DashboardView: React.FC = () => {
     { id: "clientes", label: "Clientes CRM", icon: Users, path: "/dashboard/clients", desc: "Registro de contactos de ventas, agencias y corporativos" },
     { id: "mediakit", label: "Editor de MediaKits", icon: FileText, path: "/dashboard/mediakits", desc: "Diseño Notion-style y generación de propuestas comerciales inteligentes con IA" },
     { id: "ai-planner", label: "Planificador IA", icon: Sparkles, path: "/dashboard/ai-planner", desc: "Optimización inteligente de campañas y ROI mediante Inteligencia Artificial" },
-    { id: "auditoria", label: "Registro de Auditoría", icon: Shield, path: "/dashboard/audit", desc: "Historial completo de operaciones y auditoría inteligente con Google Sheets e IA" },
+    { id: "slides-sync", label: "Importador Slides", icon: Database, path: "/dashboard/sync", desc: "Sincronización automatizada desde diapositivas de Google Slides" },
+    { id: "admin", label: "Consola Admin", icon: Shield, path: "/dashboard/admin", desc: "Gobernanza de seguridad, usuarios, roles, logs, storage y SEO técnico" },
     { id: "settings", label: "Configuración", icon: Settings, path: "/dashboard/settings", desc: "Control de usuario y preferencias del sistema" },
   ];
 
   if (loading) {
-    return <DashboardAppShellSkeleton />;
+    return (
+      <div className="min-h-screen bg-[#FAF9F5] flex flex-col items-center justify-center font-sans">
+        <Loader className="h-8 w-8 animate-spin text-[#06434a]" />
+        <p className="mt-3 text-xs font-bold text-stone-500 uppercase tracking-widest">Sincronizando con PostgreSQL...</p>
+      </div>
+    );
   }
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-[#FAF9F5] text-stone-800 font-sans">
       
-      {/* Mobile Sidebar Overlay Backdrop */}
-      {mobileSidebarOpen && (
-        <div 
-          onClick={() => setMobileSidebarOpen(false)} 
-          className="fixed inset-0 bg-stone-900/40 backdrop-blur-xs z-50 lg:hidden"
-        />
-      )}
-
       {/* 1. Sidebar Panel */}
-      <aside className={`border-r border-stone-200 bg-white flex flex-col justify-between transition-all duration-300 fixed inset-y-0 left-0 z-50 shadow-lg lg:static lg:shadow-none ${
-        sidebarCollapsed ? "w-16 lg:w-16" : "w-64 lg:w-64"
-      } ${
-        mobileSidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+      <aside className={`border-r border-stone-200 bg-white flex flex-col justify-between transition-all duration-300 relative shrink-0 z-50 shadow-2xs ${
+        sidebarCollapsed ? "w-16" : "w-64"
       }`}>
         <div className="flex flex-col h-full overflow-y-auto">
           
           {/* Logo Brand Header */}
-          <div className="p-5 border-b border-stone-100 flex items-center justify-between text-[#06434a] select-none font-display text-left">
-            <div className="flex items-center gap-3">
-              <div className="h-7 w-7 rounded-lg bg-[#06434a] flex items-center justify-center text-white shrink-0 shadow-sm font-black text-sm">
-                C
-              </div>
-              {(!sidebarCollapsed || mobileSidebarOpen) && (
-                <div className="min-w-0">
-                  <span className="block text-xs font-black tracking-tight leading-none text-stone-900 uppercase">Grupo Comunicarte</span>
-                  <span className="block text-[8px] font-bold text-stone-400 mt-1 leading-none uppercase tracking-widest">SaaS DOOH Platform</span>
-                </div>
-              )}
+          <div className="p-5 border-b border-stone-100 flex items-center gap-3 text-[#06434a] select-none font-display text-left">
+            <div className="h-7 w-7 rounded-lg bg-[#06434a] flex items-center justify-center text-white shrink-0 shadow-sm font-black text-sm">
+              C
             </div>
-
-            {/* Mobile close button */}
-            {mobileSidebarOpen && (
-              <button
-                onClick={() => setMobileSidebarOpen(false)}
-                className="lg:hidden p-1.5 hover:bg-stone-100 rounded-lg text-stone-500 hover:text-stone-800 cursor-pointer min-h-[32px] min-w-[32px] flex items-center justify-center transition-colors"
-                aria-label="Cerrar menú"
-              >
-                <X className="h-4.5 w-4.5" />
-              </button>
+            {!sidebarCollapsed && (
+              <div className="min-w-0">
+                <span className="block text-xs font-black tracking-tight leading-none text-stone-900 uppercase">Grupo Comunicarte</span>
+                <span className="block text-[8px] font-bold text-stone-400 mt-1 leading-none uppercase tracking-widest">SaaS DOOH Platform</span>
+              </div>
             )}
           </div>
 
@@ -489,10 +438,7 @@ export const DashboardView: React.FC = () => {
               return (
                 <button
                   key={item.id}
-                  onClick={() => {
-                    navigate(item.path);
-                    setMobileSidebarOpen(false); // Close mobile drawer on navigation!
-                  }}
+                  onClick={() => navigate(item.path)}
                   className={`w-full p-2.5 rounded-xl flex items-center gap-3 cursor-pointer text-left transition-all ${
                     active 
                       ? "bg-[#06434a] text-white font-bold shadow-sm" 
@@ -500,7 +446,7 @@ export const DashboardView: React.FC = () => {
                   }`}
                 >
                   <Icon className={`h-4.5 w-4.5 shrink-0 ${active ? "text-amber-300 animate-pulse" : ""}`} />
-                  {(!sidebarCollapsed || mobileSidebarOpen) && (
+                  {!sidebarCollapsed && (
                     <div className="min-w-0 text-left">
                       <span className="block text-xs leading-none">{item.label}</span>
                     </div>
@@ -516,12 +462,11 @@ export const DashboardView: React.FC = () => {
               onClick={() => {
                 setActiveView("landing");
                 navigate("/");
-                setMobileSidebarOpen(false);
               }}
               className="w-full p-2.5 rounded-xl flex items-center gap-3 cursor-pointer text-left transition-all text-emerald-800 hover:bg-emerald-50/50 hover:text-emerald-950 font-bold"
             >
               <Globe className="h-4.5 w-4.5 shrink-0 text-emerald-600" />
-              {(!sidebarCollapsed || mobileSidebarOpen) && (
+              {!sidebarCollapsed && (
                 <span className="text-xs leading-none">Ver Sitio Público</span>
               )}
             </button>
@@ -530,7 +475,7 @@ export const DashboardView: React.FC = () => {
         </div>
 
         {/* Collapser Toggle Footer */}
-        <div className="p-4 border-t border-stone-100 hidden lg:flex items-center justify-between">
+        <div className="p-4 border-t border-stone-100 flex items-center justify-between">
           <button
             onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
             className="p-1.5 hover:bg-stone-50 rounded-lg text-stone-400 hover:text-stone-700 cursor-pointer transition-colors mx-auto lg:mx-0"
@@ -541,7 +486,7 @@ export const DashboardView: React.FC = () => {
       </aside>
 
       {/* 2. Main Content Area */}
-      <main className="flex-1 flex flex-col overflow-hidden w-full">
+      <main className="flex-1 flex flex-col overflow-hidden">
         {(() => {
           const matched = navItems.find((n) => n.path === location.pathname) || navItems[0];
           const headerTitle = matched?.label || "Consola de Gestión";
@@ -553,119 +498,127 @@ export const DashboardView: React.FC = () => {
               setUserRole={setUserRole}
               title={headerTitle}
               description={headerDesc}
-              onToggleMobileSidebar={() => setMobileSidebarOpen(!mobileSidebarOpen)}
             />
           );
         })()}
 
         {/* Sub-view router container */}
         <div className="flex-1 overflow-y-auto relative bg-[#FAF9F5]">
-          <React.Suspense fallback={<DashboardSkeleton />}>
-            <Routes>
-              <Route
-                path="/"
-                element={
-                  <DashboardHome
-                    mediaKits={mediaKits}
-                    cotizaciones={cotizaciones}
-                    reservas={reservas}
-                    campañas={campanas}
-                    clientes={clientes}
-                    userRole={userRole}
-                    onNavigateToTab={(tabId) => {
-                      const matchedTab = navItems.find(item => item.id === tabId);
-                      if (matchedTab) navigate(matchedTab.path);
-                    }}
-                    onApproveReserva={handleApproveReserva}
-                    onApproveCotizacion={handleApproveCotizacion}
-                    setCampañas={setCampanas}
-                    setClientes={setClientes}
-                    setCotizaciones={setCotizaciones}
-                    setReservas={setReservas}
-                    addLog={addLog}
-                  />
-                }
-              />
+          <Routes>
+            <Route
+              path="/"
+              element={
+                <DashboardHome
+                  mediaKits={mediaKits}
+                  cotizaciones={cotizaciones}
+                  reservas={reservas}
+                  campañas={campanas}
+                  clientes={clientes}
+                  userRole={userRole}
+                  onNavigateToTab={(tabId) => {
+                    const matchedTab = navItems.find(item => item.id === tabId);
+                    if (matchedTab) navigate(matchedTab.path);
+                  }}
+                  onApproveReserva={handleApproveReserva}
+                  onApproveCotizacion={handleApproveCotizacion}
+                  setCampañas={setCampanas}
+                  setClientes={setClientes}
+                  setCotizaciones={setCotizaciones}
+                  setReservas={setReservas}
+                  addLog={addLog}
+                />
+              }
+            />
 
-              <Route
-                path="/inventory"
-                element={
-                  <InventoryModule
-                    screens={screens}
-                    userRole={userRole}
-                    onUpdateScreen={handleUpdateScreen}
-                    onAddScreen={handleAddScreen}
-                    onDeleteScreen={handleDeleteScreen}
-                  />
-                }
-              />
+            <Route
+              path="/inventory"
+              element={
+                <InventoryModule
+                  screens={screens}
+                  userRole={userRole}
+                  onUpdateScreen={handleUpdateScreen}
+                  onAddScreen={handleAddScreen}
+                  onDeleteScreen={handleDeleteScreen}
+                />
+              }
+            />
 
-              <Route
-                path="/clients"
-                element={
-                  <ClientsModule
-                    clientes={clientes}
-                    userRole={userRole}
-                    onAddCliente={handleAddCliente}
-                    onUpdateCliente={handleUpdateCliente}
-                  />
-                }
-              />
+            <Route
+              path="/clients"
+              element={
+                <ClientsModule
+                  clientes={clientes}
+                  userRole={userRole}
+                  onAddCliente={handleAddCliente}
+                  onUpdateCliente={handleUpdateCliente}
+                />
+              }
+            />
 
-              <Route
-                path="/mediakits"
-                element={
-                  <MediaKitModule
-                    mediaKits={mediaKits}
-                    clientes={clientes}
-                    screens={screens}
-                    userRole={userRole}
-                    onUpdateMediaKit={handleUpdateMediaKit}
-                    onAddMediaKit={handleAddMediaKit}
-                    onDeleteMediaKit={handleDeleteMediaKit}
-                    onGenerateQuoteFromMediaKit={handleGenerateQuoteFromMediaKit}
-                  />
-                }
-              />
+            <Route
+              path="/mediakits"
+              element={
+                <MediaKitModule
+                  mediaKits={mediaKits}
+                  clientes={clientes}
+                  screens={screens}
+                  userRole={userRole}
+                  onUpdateMediaKit={handleUpdateMediaKit}
+                  onAddMediaKit={handleAddMediaKit}
+                  onDeleteMediaKit={handleDeleteMediaKit}
+                  onGenerateQuoteFromMediaKit={handleGenerateQuoteFromMediaKit}
+                />
+              }
+            />
 
-              <Route
-                path="/settings"
-                element={
-                  <SettingsModule
-                    userRole={userRole}
-                    setUserRole={setUserRole}
-                  />
-                }
-              />
+            <Route
+              path="/settings"
+              element={
+                <SettingsModule
+                  userRole={userRole}
+                  setUserRole={setUserRole}
+                />
+              }
+            />
 
-              <Route
-                path="/audit"
-                element={
-                  <AuditModule
-                    logs={logs}
-                    userRole={userRole}
-                    addLog={addLog}
-                    onRefreshLogs={fetchDashboardData}
-                  />
-                }
-              />
+            <Route
+              path="/ai-planner"
+              element={
+                <AiPlannerModule
+                  screens={screens}
+                  token={token}
+                  onAddMediaKit={handleAddMediaKit}
+                  userRole={userRole}
+                />
+              }
+            />
 
-              <Route
-                path="/ai-planner"
-                element={
-                  <AiPlannerModule
-                    screens={screens}
-                    token={token}
-                    onAddMediaKit={handleAddMediaKit}
-                    userRole={userRole}
-                  />
-                }
-              />
+            <Route
+              path="/sync"
+              element={
+                <SlidesSyncModule
+                  token={token}
+                  onRefreshInventory={fetchDashboardData}
+                />
+              }
+            />
 
-              {/* Fallback inside dashboard routing */}
-              <Route path="*" element={<Navigate to="/dashboard" replace />} />
-            </Routes>
-          </React.Suspense>
+            <Route
+              path="/admin"
+              element={
+                <AdministrationModule
+                  logs={logs}
+                  userRole={userRole}
+                  screens={screens}
+                  onUpdateScreen={handleUpdateScreen}
+                  addLog={addLog}
+                />
+              }
+            />
+
+            {/* Fallback inside dashboard routing */}
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          </Routes>
         </div>
       </main>
 

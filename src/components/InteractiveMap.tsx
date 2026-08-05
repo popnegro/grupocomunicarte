@@ -21,12 +21,12 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
   const activePolylinesRef = useRef<L.Layer[]>([]);
   const initialBoundsFitRef = useRef(false);
   const prevScreenIdsRef = useRef<string>("");
-  const focusTimerRef = useRef<NodeJS.Timeout | null>(null);
   const [currentZoom, setCurrentZoom] = useState(13);
   const { cart, toggleCart } = useCms();
 
   // Create custom SVG markers
   const createCustomIcon = (tipo: string, isInCart: boolean) => {
+    // Colors matched to type
     const color =
       tipo === "Peatonal"
         ? "#0284c7" // Sky blue
@@ -55,21 +55,23 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
     });
   };
 
-  // Create cluster marker
+  // Create premium cluster marker with a glowing halo and dominant type indicator
   const createClusterIcon = (count: number, dominantTipo: string) => {
     const color =
       dominantTipo === "Peatonal"
-        ? "#0284c7"
+        ? "#0284c7" // Sky
         : dominantTipo === "Vehicular"
-        ? "#0d9488"
+        ? "#0d9488" // Teal
         : (dominantTipo === "LeadMóvil" || dominantTipo === "Móvil")
-        ? "#f59e0b"
-        : "#7c3aed";
+        ? "#f59e0b" // Amber/Orange
+        : "#7c3aed"; // Purple
 
     return L.divIcon({
       html: `
         <div class="relative flex items-center justify-center rounded-full bg-slate-950 border-2 border-white shadow-lg text-white font-black text-xs cursor-pointer transition-transform hover:scale-110 duration-200" style="width: 38px; height: 38px;">
+          <!-- Glowing outer ring -->
           <span class="absolute inset-0 rounded-full animate-pulse opacity-25 bg-slate-950" style="transform: scale(1.25); z-index: -1;"></span>
+          <!-- Dynamic Type indicator mini dot -->
           <span class="absolute -top-0.5 -right-0.5 h-3 w-3 rounded-full border border-white" style="background-color: ${color};"></span>
           <span>${count}</span>
         </div>
@@ -82,6 +84,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
 
   // Perform client-side cluster mapping based on zoom scale
   const getClusters = (activeScreens: DoohScreen[], zoom: number) => {
+    // Zoom-scaled distance threshold in degrees
     const threshold = 0.006 * Math.pow(2, 13 - zoom);
     const clusters: {
       id: string;
@@ -118,23 +121,18 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
     return clusters;
   };
 
-  // Initialize Map safely
+  // Initialize Map
   useEffect(() => {
-    if (!mapContainerRef.current) return;
+    if (!mapContainerRef.current || mapRef.current) return;
 
-    // Clean any prior Leaflet ID left by double mount (e.g. React StrictMode)
-    if ((mapContainerRef.current as any)._leaflet_id) {
-      delete (mapContainerRef.current as any)._leaflet_id;
-    }
-
-    if (mapRef.current) return;
-
+    // Center on Mendoza coordinates of SEED_SCREENS (roughly -32.889, -68.845)
     const map = L.map(mapContainerRef.current, {
       center: [-32.89, -68.84],
       zoom: 13,
       zoomControl: true,
     });
 
+    // Premium neutral light tile layer (CartoDB Positron) to match our B2B SaaS aesthetic
     L.tileLayer(
       "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
       {
@@ -147,13 +145,13 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
 
     mapRef.current = map;
 
-    const handleZoomEnd = () => {
-      if (mapRef.current && mapRef.current.getPane("mapPane")) {
-        setCurrentZoom(mapRef.current.getZoom());
-      }
-    };
+    // Set current zoom in react state to trigger cluster updates
+    map.on("zoomend", () => {
+      setCurrentZoom(map.getZoom());
+    });
 
-    const handlePopupOpen = (e: L.PopupEvent) => {
+    // Handle popup open events to register click events for custom buttons inside popup
+    map.on("popupopen", (e) => {
       const popupNode = e.popup.getElement();
       if (!popupNode) return;
 
@@ -163,41 +161,16 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
         btn.addEventListener("click", () => {
           if (screenId) {
             toggleCart(screenId);
-            if (mapRef.current) {
-              mapRef.current.closePopup();
-            }
+            map.closePopup();
           }
         });
       });
-    };
-
-    map.on("zoomend", handleZoomEnd);
-    map.on("popupopen", handlePopupOpen);
-
-    // ResizeObserver to handle container size changes cleanly without Leaflet pane errors
-    const resizeObserver = new ResizeObserver(() => {
-      if (mapRef.current && mapRef.current.getPane("mapPane")) {
-        mapRef.current.invalidateSize({ animate: false });
-      }
     });
 
-    resizeObserver.observe(mapContainerRef.current);
-
     return () => {
-      resizeObserver.disconnect();
-      if (focusTimerRef.current) {
-        clearTimeout(focusTimerRef.current);
-        focusTimerRef.current = null;
-      }
       if (mapRef.current) {
-        mapRef.current.off("zoomend", handleZoomEnd);
-        mapRef.current.off("popupopen", handlePopupOpen);
-        mapRef.current.off();
         mapRef.current.remove();
         mapRef.current = null;
-      }
-      if (mapContainerRef.current) {
-        delete (mapContainerRef.current as any)._leaflet_id;
       }
     };
   }, []);
@@ -205,22 +178,13 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
   // Update Markers when screens, cart, or currentZoom change
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !map.getPane("mapPane")) return;
+    if (!map) return;
 
-    // Clear existing markers and polylines safely
-    activeMarkersRef.current.forEach((layer) => {
-      if (map.hasLayer(layer)) {
-        layer.remove();
-      }
-    });
+    // Clear existing markers and polylines
+    activeMarkersRef.current.forEach((layer) => layer.remove());
     activeMarkersRef.current = [];
     markersRef.current = {};
-
-    activePolylinesRef.current.forEach((layer) => {
-      if (map.hasLayer(layer)) {
-        layer.remove();
-      }
-    });
+    activePolylinesRef.current.forEach((layer) => layer.remove());
     activePolylinesRef.current = [];
 
     // Filter to active screens only
@@ -238,6 +202,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
         }).addTo(map);
         activePolylinesRef.current.push(polyline);
 
+        // Draw individual stops
         screen.ruta.forEach((stop, index) => {
           const isFirstOrLast = index === 0 || index === screen.ruta!.length - 1;
           const stopMarker = L.circleMarker([stop.lat, stop.lng], {
@@ -262,6 +227,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
     // Compute screen clusters for the current zoom level
     const clusters = getClusters(activeScreens, currentZoom);
 
+    // Track if filters have changed to pan the map
     const screenIdsStr = activeScreens.map((s) => s.id).sort().join(",");
     const filtersChanged = screenIdsStr !== prevScreenIdsRef.current;
 
@@ -274,7 +240,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
       prevScreenIdsRef.current = screenIdsStr;
     }
 
-    // Add markers / clusters
+    // Add new markers / clusters
     clusters.forEach((cluster) => {
       if (cluster.screens.length === 1) {
         const screen = cluster.screens[0];
@@ -287,7 +253,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
             : String(screen.impactos);
 
         const popupHtml = `
-          <div class="p-2 font-sans text-slate-800 max-w-50">
+          <div class="p-2 font-sans text-slate-800 max-w-[200px]">
             <span class="text-[10px] font-bold tracking-wider text-slate-400 uppercase block mb-0.5">${screen.tipo}</span>
             <h4 class="text-xs font-black text-slate-950 mb-1 leading-tight">${screen.nombre}</h4>
             <p class="text-[11px] text-slate-500 mb-2">${screen.zona}</p>
@@ -319,6 +285,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
             minWidth: 160,
           });
 
+        // Handle marker selection / focus callback
         marker.on("click", () => {
           if (onSelectScreen) {
             onSelectScreen(screen.id);
@@ -328,6 +295,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
         markersRef.current[screen.id] = marker;
         activeMarkersRef.current.push(marker);
       } else {
+        // Find dominant type inside this cluster to style the dot accent
         const typeCounts = cluster.screens.reduce((acc, curr) => {
           acc[curr.tipo] = (acc[curr.tipo] || 0) + 1;
           return acc;
@@ -345,17 +313,17 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
         const icon = createClusterIcon(cluster.screens.length, dominantTipo);
         const clusterMarker = L.marker(cluster.center, { icon }).addTo(map);
 
+        // Click interaction: Fit bounds or list identical overlapping screens
         clusterMarker.on("click", () => {
-          if (!mapRef.current || !mapRef.current.getPane("mapPane")) return;
-
-          if (mapRef.current.getZoom() >= 17) {
+          if (map.getZoom() >= 17) {
+            // Render beautiful catalog list in a popup at high zoom
             let listHtml = `
-              <div class="p-2.5 font-sans text-slate-800 max-w-60 space-y-2">
+              <div class="p-2.5 font-sans text-slate-800 max-w-[240px] space-y-2">
                 <div class="border-b border-slate-100 pb-1.5">
                   <span class="text-[9px] font-extrabold text-slate-400 uppercase tracking-wide block">Grupo de Pantallas (${cluster.screens.length})</span>
                   <h4 class="text-xs font-black text-slate-900">${cluster.screens[0].zona}</h4>
                 </div>
-                <div class="max-h-40 overflow-y-auto space-y-1.5 pr-1" style="scrollbar-width: thin;">
+                <div class="max-h-[160px] overflow-y-auto space-y-1.5 pr-1" style="scrollbar-width: thin;">
             `;
 
             cluster.screens.forEach((screen) => {
@@ -367,9 +335,7 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
                     <span class="text-[8px] font-bold text-slate-400 uppercase block">${screen.tipo} • Tarifa bajo cotización</span>
                   </div>
                   <button 
-                    type="button"
                     data-screen-id="${screen.id}" 
-                    aria-label="${isInCart ? `Quitar ${screen.nombre} del MediaKit` : `Agregar ${screen.nombre} al MediaKit`}"
                     class="popup-cart-btn px-2.5 py-1 bg-slate-950 hover:bg-slate-800 text-white font-bold text-[8px] uppercase rounded-md shrink-0 cursor-pointer"
                   >
                     ${isInCart ? "Quitar" : "Agregar"}
@@ -386,11 +352,11 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
             L.popup({ minWidth: 200 })
               .setLatLng(cluster.center)
               .setContent(listHtml)
-              .openOn(mapRef.current);
+              .openOn(map);
           } else {
             const latLngs = cluster.screens.map((s) => L.latLng(s.lat, s.lng));
             const bounds = L.latLngBounds(latLngs);
-            mapRef.current.fitBounds(bounds.pad(0.25));
+            map.fitBounds(bounds.pad(0.25));
           }
         });
 
@@ -402,38 +368,29 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
   // Focus on selected screen
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !map.getPane("mapPane") || !selectedScreenId) return;
+    if (!map || !selectedScreenId) return;
 
     const targetScreen = screens.find((s) => s.id === selectedScreenId);
     if (targetScreen) {
+      // Zoom map in so clusters break up and reveal individual marker
       map.setView([targetScreen.lat, targetScreen.lng], 16, { animate: true, duration: 1 });
       
-      if (focusTimerRef.current) {
-        clearTimeout(focusTimerRef.current);
-      }
-
-      focusTimerRef.current = setTimeout(() => {
-        if (mapRef.current && mapRef.current.getPane("mapPane")) {
-          const marker = markersRef.current[selectedScreenId];
-          if (marker && mapRef.current.hasLayer(marker)) {
-            marker.openPopup();
-          }
+      // Open the target marker popup after the zoom transition
+      setTimeout(() => {
+        const marker = markersRef.current[selectedScreenId];
+        if (marker) {
+          marker.openPopup();
         }
       }, 400);
     }
-  }, [selectedScreenId, screens]);
+  }, [selectedScreenId]);
 
   return (
-    <div
-      className="relative w-full h-full min-h-80 sm:min-h-90 rounded-xl overflow-hidden border border-slate-200 shadow-sm bg-slate-50"
-      role="region"
-      aria-label="Mapa interactivo de soportes publicitarios"
-      tabIndex={0}
-    >
-      <div ref={mapContainerRef} className="w-full h-full min-h-80 sm:min-h-90" style={{ zIndex: 1 }} />
+    <div className="relative w-full h-full rounded-xl overflow-hidden border border-slate-200 shadow-sm bg-slate-50">
+      <div ref={mapContainerRef} className="w-full h-full min-h-[350px]" style={{ zIndex: 1 }} />
       
       {/* Mini Legend Overlay */}
-      <div className="absolute bottom-2 left-2 sm:bottom-3 sm:left-3 z-10 bg-white/90 backdrop-blur-md border border-slate-100 rounded-lg p-2 shadow-sm text-[10px] flex flex-col gap-1 text-slate-600 max-w-[calc(100%-1rem)]">
+      <div className="absolute bottom-3 left-3 z-10 bg-white/90 backdrop-blur-md border border-slate-100 rounded-lg p-2 shadow-sm text-[10px] flex flex-col gap-1 text-slate-600">
         <span className="font-bold text-slate-800 uppercase tracking-wider mb-1 block">Referencias</span>
         <div className="flex items-center gap-1.5">
           <span className="h-2 w-2 rounded-full bg-sky-500" />

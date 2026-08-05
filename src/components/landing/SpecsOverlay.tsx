@@ -54,6 +54,7 @@ export const SpecsOverlay: React.FC<SpecsOverlayProps> = ({
 }) => {
   const [activePhotoIdx, setActivePhotoIdx] = useState(0);
   const [hoveredBar, setHoveredBar] = useState<number | null>(null);
+  const [isPlayingVideo, setIsPlayingVideo] = useState(false);
 
   // Close on Escape key press
   useEffect(() => {
@@ -97,44 +98,111 @@ export const SpecsOverlay: React.FC<SpecsOverlayProps> = ({
         </button>
 
         {/* Column 1: Image Gallery (Span 5) */}
-        <div className="md:col-span-5 bg-stone-950 flex flex-col justify-between relative h-64 md:h-auto min-h-[250px]">
-          {/* Main Photo */}
-          <div className="absolute inset-0 w-full h-full">
-            <img
-              src={optimizeImageUrl(photos[activePhotoIdx])}
-              alt={`${screen.nombre} vista de calle`}
-              referrerPolicy="no-referrer"
-              loading="lazy"
-              className="w-full h-full object-cover opacity-90 transition-all duration-300"
-            />
-            {/* Soft Shadow overlay for typography legibility */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30 pointer-events-none" />
-          </div>
+        <div className="md:col-span-5 bg-stone-950 flex flex-col justify-between relative h-64 md:h-auto min-h-[300px]">
+          
+          {isPlayingVideo ? (
+            <div className="absolute inset-0 bg-stone-900 flex flex-col justify-between p-6 overflow-hidden">
+              {/* Simulation grid scanlines */}
+              <div className="absolute inset-0 bg-[radial-gradient(#111_1px,transparent_1px)] [background-size:4px_4px] opacity-25 pointer-events-none" />
+              
+              {/* Moving abstract canvas simulating dynamic high-impact DOOH spot */}
+              <div className="absolute inset-0 bg-gradient-to-tr from-[#06434a] via-[#111] to-[#125e67] opacity-60 mix-blend-color-dodge animate-pulse duration-1000" />
+
+              {/* Screen frame mock */}
+              <div className="relative z-10 flex items-center justify-between">
+                <span className="text-[8px] bg-red-600 text-white font-extrabold px-2 py-0.5 rounded-xs uppercase tracking-widest flex items-center gap-1 animate-pulse">
+                  <span className="h-1.5 w-1.5 rounded-full bg-white" />
+                  Spot Simulado
+                </span>
+                <button 
+                  onClick={() => setIsPlayingVideo(false)}
+                  className="text-white/80 hover:text-white bg-black/40 hover:bg-black/60 p-1.5 rounded-full text-[9px] font-bold flex items-center gap-1 transition-all cursor-pointer"
+                >
+                  <LucideIcons.Image className="h-3 w-3" />
+                  <span>Ver Foto</span>
+                </button>
+              </div>
+
+              <div className="relative z-10 my-auto text-center space-y-4">
+                {/* Dynamic advertising text with elegant motion keyframes */}
+                <motion.div
+                  animate={{ scale: [1, 1.04, 1], opacity: [0.9, 1, 0.9] }}
+                  transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
+                  className="space-y-2"
+                >
+                  <span className="text-stone-300 text-[10px] tracking-widest font-mono font-bold block uppercase">TU MARCA EN PANTALLA</span>
+                  <h2 className="text-2xl font-black text-amber-400 uppercase tracking-tight leading-none drop-shadow-md">
+                    ALTO IMPACTO <br/>
+                    <span className="text-white text-xl font-serif italic font-medium">VISUAL 24/7</span>
+                  </h2>
+                </motion.div>
+                
+                {/* Simulating spot rotation metrics */}
+                <div className="inline-block bg-black/55 px-3 py-1 rounded-md border border-white/10">
+                  <p className="text-[8.5px] font-mono text-stone-300 font-bold">
+                    Pauta: Spot de 15s cada 3 minutos
+                  </p>
+                </div>
+              </div>
+
+              <div className="relative z-10 flex items-center justify-between pt-4 border-t border-white/10 text-stone-400 text-[8px] font-mono">
+                <span>REPRODUCCIÓN DIGITAL</span>
+                <span className="animate-pulse text-emerald-400 font-bold">● ONLINE</span>
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* Main Photo */}
+              <div className="absolute inset-0 w-full h-full">
+                <img
+                  src={optimizeImageUrl(photos[activePhotoIdx])}
+                  alt={`${screen.nombre} vista de calle`}
+                  referrerPolicy="no-referrer"
+                  loading="lazy"
+                  className="w-full h-full object-cover opacity-90 transition-all duration-300"
+                />
+                {/* Soft Shadow overlay for typography legibility */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30 pointer-events-none" />
+              </div>
+
+              {/* Play Simulation Button Overlay */}
+              <button
+                type="button"
+                onClick={() => setIsPlayingVideo(true)}
+                className="absolute bottom-4 left-4 z-10 px-3 py-1.5 bg-[#06434a]/95 hover:bg-[#06434a] text-white text-[9px] font-black uppercase rounded-full flex items-center gap-1.5 shadow-md cursor-pointer transition-transform hover:scale-105"
+              >
+                <LucideIcons.Play className="h-3 w-3 text-amber-400 fill-amber-400" />
+                Simular Video LED
+              </button>
+            </>
+          )}
 
           {/* Top category label */}
           <div className="relative p-4 flex justify-between items-center z-10">
             <span className="text-[9px] bg-amber-500 text-stone-950 font-black px-2.5 py-1 rounded-full uppercase tracking-wider">
               {screen.categoria}
             </span>
-            <span className="text-[10px] text-white/95 font-bold flex items-center gap-1">
+            <span className="text-[10px] text-white/95 font-bold flex items-center gap-1 bg-black/30 px-2 py-0.5 rounded-md">
               <LucideIcons.MapPin className="h-3 w-3 text-amber-500" />
               {screen.ciudad}
             </span>
           </div>
 
           {/* Bottom title inside the photo area */}
-          <div className="relative p-6 text-left z-10 space-y-1 mt-auto">
-            <h3 className="text-lg font-serif font-black text-white leading-tight">
-              {screen.nombre}
-            </h3>
-            <p className="text-white/85 text-[11px] font-semibold flex items-center gap-1.5">
-              <LucideIcons.Navigation className="h-3.5 w-3.5 text-amber-400 rotate-45" />
-              <span>Zona: {screen.zona}</span>
-            </p>
-          </div>
+          {!isPlayingVideo && (
+            <div className="relative p-6 text-left z-10 space-y-1 mt-auto">
+              <h3 className="text-lg font-serif font-black text-white leading-tight">
+                {screen.nombre}
+              </h3>
+              <p className="text-white/85 text-[11px] font-semibold flex items-center gap-1.5">
+                <LucideIcons.Navigation className="h-3.5 w-3.5 text-amber-400 rotate-45" />
+                <span>Zona: {screen.zona}</span>
+              </p>
+            </div>
+          )}
 
           {/* Thumbnail dots selector */}
-          {photos.length > 1 && (
+          {!isPlayingVideo && photos.length > 1 && (
             <div className="absolute bottom-4 right-4 z-10 flex gap-1.5">
               {photos.map((_, idx) => (
                 <button

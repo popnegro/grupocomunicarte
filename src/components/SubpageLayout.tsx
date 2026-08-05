@@ -859,7 +859,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
           )}
 
           {/* SOPORTES INVENTORY PAGE AND CHILDREN */}
-          {slug.startsWith("/soporte") && (() => {
+          {slug.startsWith("/soportes") && (() => {
             const FORMATOS_DATA = [
               {
                 id: "peatonal",
@@ -953,10 +953,10 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
               }
             ];
 
-            const isMainPage = slug === "/soporte";
-            const isPeatonalSub = slug === "/soporte/led-peatonal";
-            const isVehicularSub = slug === "/soporte/monolito-vehicular";
-            const isMixtoSub = slug === "/soporte/pantalla-mixta";
+            const isMainPage = slug === "/soportes";
+            const isPeatonalSub = slug === "/soportes/led-peatonal";
+            const isVehicularSub = slug === "/soportes/monolito-vehicular";
+            const isMixtoSub = slug === "/soportes/pantalla-mixta";
 
             return (
               <div className="space-y-10">
@@ -1307,7 +1307,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
           })()}
 
           {/* DEFAULT / OTHERS STATS */}
-          {!slug.startsWith("/contacto") && !slug.startsWith("/mediakit") && !slug.startsWith("/nosotros") && !slug.startsWith("/servicios") && !slug.startsWith("/blog") && !slug.startsWith("/soporte") && !isMendoza && !isBA && (
+          {!slug.startsWith("/contacto") && !slug.startsWith("/mediakit") && !slug.startsWith("/nosotros") && !slug.startsWith("/servicios") && !slug.startsWith("/blog") && !slug.startsWith("/soportes") && !isMendoza && !isBA && (
             <div className="bg-white border border-slate-200 rounded-2xl p-6 space-y-4 shadow-xs">
               <h3 className="font-extrabold text-slate-900 text-sm">Contenido de la Sección</h3>
               <p className="text-slate-500 text-xs leading-relaxed">
@@ -1385,7 +1385,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
                 <div className="bg-slate-50 border border-slate-150 rounded-xl p-3 space-y-2 text-xs font-bold">
                   <div className="flex justify-between text-slate-500">
                     <span>Subtotal Neto:</span>
-                    <span className="text-[#06434a] font-bold">Tarifa bajo cotización</span>
+                    <span className="text-slate-800">${cartSubtotal.toLocaleString("es-AR")} / sem</span>
                   </div>
                   <div className="flex justify-between text-slate-500">
                     <span>Impactos estimados:</span>
@@ -1393,7 +1393,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
                   </div>
                   <div className="flex justify-between text-sm font-black border-t border-slate-200/60 pt-2 text-slate-950">
                     <span>Inversión Estimada:</span>
-                    <span className="text-[#06434a] font-extrabold">Bajo cotización</span>
+                    <span className="text-slate-950">${cartTotalInvestment.toLocaleString("es-AR")}</span>
                   </div>
                 </div>
 

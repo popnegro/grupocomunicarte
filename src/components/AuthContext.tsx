@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { User, onIdTokenChanged, signOut, GoogleAuthProvider } from "firebase/auth";
+import { User, onAuthStateChanged, signOut, GoogleAuthProvider } from "firebase/auth";
 import { auth, googleAuthProvider, signInWithPopup } from "../lib/firebase.ts";
 
 interface AuthContextProps {
@@ -21,14 +21,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Listen for sign-in, sign-out, and auto background token refreshes
-    const unsubscribe = onIdTokenChanged(auth, async (currentUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setLoading(true);
       if (currentUser) {
         setUser(currentUser);
         try {
-          // Get token, auto-refreshing if expired
-          const idToken = await currentUser.getIdToken();
+          const idToken = await currentUser.getIdToken(true);
           setToken(idToken);
           
           // Sync with PostgreSQL
@@ -62,7 +60,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setGoogleAccessToken(credential.accessToken);
       }
       
-      // Explicitly force a fresh, non-expired ID Token before syncing
       const idToken = await result.user.getIdToken(true);
       setToken(idToken);
       setUser(result.user);

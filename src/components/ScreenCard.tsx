@@ -2,14 +2,9 @@ import React, { useState } from "react";
 import { DoohScreen } from "../types";
 import { useCms } from "./CmsContext";
 import { motion } from "motion/react";
-import {
-  CatalogCard,
-  CatalogCardContent,
-  CatalogCardFooter,
-  CatalogCardBadge,
-  CatalogCardAction,
-} from "@/src/components/ui/catalog-card";
+import { Card, CardContent, CardFooter } from "@/src/components/ui/card";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/src/components/ui/dialog";
+import { Badge } from "@/src/components/ui/badge";
 import {
   Plus,
   Check,
@@ -114,19 +109,9 @@ export const ScreenCard: React.FC<ScreenCardProps> = ({
         }}
         className="h-full"
       >
-        <CatalogCard
+        <Card
           onClick={() => setIsModalOpen(true)}
-          tabIndex={0}
-          role="button"
-          aria-haspopup="dialog"
-          aria-label={`Soporte publicitario ${screen.nombre}, ubicado en ${screen.zona}, ${screen.ciudad || "Mendoza"}. Estado: ${screen.status === "Activo" || screen.status === "Disponible" ? "Disponible" : "Reservado"}. Impactos semanales estimadas: ${formattedImpacts}. Presioná Enter para ver ficha técnica detallada.`}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" || e.key === " ") {
-              e.preventDefault();
-              setIsModalOpen(true);
-            }
-          }}
-          className={`group relative flex flex-col h-full overflow-hidden cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#06434a] focus-visible:ring-offset-2 focus-visible:ring-offset-white ${
+          className={`group relative flex flex-col h-full bg-white border rounded-[20px] overflow-hidden shadow-xs hover:shadow-md hover:-translate-y-1 transition-all duration-300 cursor-pointer ${
             isInCart
               ? "border-[#06434a] ring-1 ring-[#06434a]/10"
               : (screen.tipo === "LeadMóvil" || screen.tipo === "Móvil")
@@ -135,7 +120,7 @@ export const ScreenCard: React.FC<ScreenCardProps> = ({
           }`}
         >
           {/* Visual Header / Thumbnail */}
-          <div className="relative aspect-1.5/1 bg-stone-900 flex items-center justify-center text-white overflow-hidden shrink-0 rounded-t-[19px]">
+          <div className="relative aspect-[1.5/1] bg-stone-900 flex items-center justify-center text-white overflow-hidden shrink-0 rounded-t-[19px]">
             {screen.video ? (
               <video
                 src={screen.video}
@@ -146,7 +131,7 @@ export const ScreenCard: React.FC<ScreenCardProps> = ({
                 className="absolute inset-0 w-full h-full object-cover opacity-90 transition-transform duration-700 ease-out group-hover:scale-103"
               />
             ) : (
-              <div className="absolute inset-0 bg-linear-to-br from-stone-950 to-stone-800 flex items-center justify-center transition-transform duration-700 ease-out group-hover:scale-103">
+              <div className="absolute inset-0 bg-gradient-to-br from-stone-950 to-stone-800 flex items-center justify-center transition-transform duration-700 ease-out group-hover:scale-103">
                 <span className="text-3xl font-extrabold tracking-tight text-white/5 select-none uppercase">
                   {screen.nombre.substring(0, 3).toUpperCase()}
                 </span>
@@ -158,20 +143,20 @@ export const ScreenCard: React.FC<ScreenCardProps> = ({
             {/* Ficha Técnica Indicator */}
             <div className="absolute inset-0 bg-stone-950/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[1px]">
               <span className="px-4 py-2 bg-white text-stone-900 rounded-full text-xs font-bold shadow-lg flex items-center gap-1.5 transform scale-95 group-hover:scale-100 transition-all duration-200">
-                <Maximize2 className="h-3.5 w-3.5 text-[#06434a]" />
+                <Maximize2 className="h-3 w-3 text-[#06434a]" />
                 Ver Ficha Técnica
               </span>
             </div>
 
             {/* Type Badge */}
-            <div className="absolute top-3 left-3 z-10 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[9px] font-bold tracking-wider uppercase bg-white/95 text-stone-800 border border-stone-200 shadow-xs">
+            <div className="absolute top-3 left-3 z-10 flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-bold tracking-wider uppercase bg-white/95 text-stone-800 border border-stone-200 shadow-xs">
               <span className={`h-1.5 w-1.5 rounded-full ${typeStyles.dot}`} />
               {screen.tipo}
             </div>
 
             {/* Mobile Route Badge */}
             {(screen.tipo === "LeadMóvil" || screen.tipo === "Móvil") && (
-              <div className="absolute top-3 right-3 z-10 bg-amber-500 text-white text-[8px] font-extrabold tracking-widest uppercase px-2.5 py-1.5 rounded-full shadow-sm">
+              <div className="absolute top-3 right-3 z-10 bg-amber-500 text-white text-[8px] font-extrabold tracking-widest uppercase px-2.5 py-1 rounded-full shadow-sm">
                 Recorrido
               </div>
             )}
@@ -184,74 +169,69 @@ export const ScreenCard: React.FC<ScreenCardProps> = ({
                   onFocusOnMap();
                 }}
                 title="Ubicar en el mapa"
-                aria-label={`Ubicar ${screen.nombre} en el mapa`}
-                className="absolute bottom-3 right-3 z-10 h-11 w-11 rounded-full bg-white/95 hover:bg-white text-stone-700 hover:text-[#06434a] transition-all shadow-sm border border-stone-200 flex items-center justify-center cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#06434a] focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+                className="absolute bottom-3 right-3 z-10 p-2 rounded-full bg-white/90 hover:bg-white text-stone-700 hover:text-[#06434a] transition-colors shadow-sm border border-stone-200"
               >
-                <MapPin className="h-4 w-4" />
+                <MapPin className="h-3.5 w-3.5" />
               </button>
             )}
           </div>
 
           {/* Card Body */}
-          <CatalogCardContent className="p-5 pb-0 grow flex flex-col justify-between">
+          <CardContent className="p-5 pb-0 flex-grow flex flex-col justify-between">
             <div className="space-y-3.5">
               <div className="space-y-1">
                 <div className="flex items-start justify-between gap-2.5">
                   <h3 className="text-sm font-bold text-stone-900 leading-snug line-clamp-1 group-hover:text-[#06434a] transition-colors font-display">
                     {screen.nombre}
                   </h3>
-                  <CatalogCardBadge 
+                  <Badge 
                     className={`text-[8px] font-bold px-2 py-0.5 rounded-full shrink-0 uppercase tracking-wider ${
                       screen.status === "Activo" || screen.status === "Disponible"
                         ? "bg-emerald-50 text-emerald-700 border border-emerald-150 hover:bg-emerald-50"
-                        : "bg-stone-50 text-stone-650 border border-stone-200 hover:bg-stone-50"
+                        : "bg-stone-50 text-stone-500 border border-stone-200 hover:bg-stone-50"
                     }`}
                   >
                     {screen.status === "Activo" || screen.status === "Disponible" ? "Disponible" : "Reservado"}
-                  </CatalogCardBadge>
+                  </Badge>
                 </div>
 
-                <div className="flex items-center gap-1.5 text-stone-650 text-xs">
-                  <MapPin className="h-3.5 w-3.5 text-stone-500 shrink-0" />
+                <div className="flex items-center gap-1.5 text-stone-500 text-xs">
+                  <MapPin className="h-3.5 w-3.5 text-stone-400 shrink-0" />
                   <span className="truncate">{screen.zona}</span>
-                </div>
-                <div className="inline-flex w-fit items-center gap-1 rounded-full border border-stone-200 bg-stone-50/80 px-2.5 py-1 text-[9px] font-black uppercase tracking-[0.2em] text-stone-600">
-                  <Maximize2 className="h-3 w-3 text-[#06434a]" />
-                  Ver ficha
                 </div>
               </div>
 
               {/* Specs & Performance KPI Bento Box */}
               <div className="grid grid-cols-2 gap-2 bg-stone-50/80 p-2.5 rounded-xl border border-stone-100">
                 <div className="text-center">
-                  <span className="block text-[8px] font-black text-stone-600 uppercase tracking-widest">
+                  <span className="block text-[8px] font-extrabold text-stone-400 uppercase tracking-wider">
                     Audiencia / Día
                   </span>
-                  <span className="block text-xs font-bold text-stone-900 font-display mt-0.5">
+                  <span className="block text-xs font-bold text-stone-800 font-display">
                     {formattedImpacts} visitas
                   </span>
                 </div>
                 <div className="text-center border-l border-stone-200/50">
-                  <span className="block text-[8px] font-black text-stone-600 uppercase tracking-widest">
+                  <span className="block text-[8px] font-extrabold text-stone-400 uppercase tracking-wider">
                     Dimensión
                   </span>
-                  <span className="block text-xs font-bold text-stone-900 font-display mt-0.5">
+                  <span className="block text-xs font-bold text-stone-800 font-display">
                     {screen.dimensiones || typeStyles.size}
                   </span>
                 </div>
               </div>
 
               {screen.cobertura && (
-                <div className="text-[11px] text-stone-650 flex items-center gap-1.5 bg-stone-50/40 px-2.5 py-1.5 rounded-lg border border-stone-100">
-                  <Layers className="h-3 w-3 text-stone-500" />
-                  <span className="truncate font-medium">{screen.cobertura}</span>
+                <div className="text-[11px] text-stone-500 flex items-center gap-1 bg-stone-50/40 px-2 py-1.5 rounded-lg border border-stone-100">
+                  <Layers className="h-3 w-3 text-stone-400" />
+                  <span className="truncate">{screen.cobertura}</span>
                 </div>
               )}
             </div>
-          </CatalogCardContent>
+          </CardContent>
 
           {/* Cart & Compare Action Footer */}
-          <CatalogCardFooter 
+          <CardFooter 
             className="p-5 pt-3 border-t border-stone-100 flex items-center justify-between gap-3 mt-4"
             onClick={(e) => e.stopPropagation()} // Stop modal from opening when clicking controls
           >
@@ -263,15 +243,13 @@ export const ScreenCard: React.FC<ScreenCardProps> = ({
                   e.stopPropagation();
                   onCompareToggle();
                 }}
-                aria-pressed={isComparing}
-                aria-label={isComparing ? `Quitar ${screen.nombre} del comparador` : `Agregar ${screen.nombre} al comparador`}
-                className={`flex items-center gap-2 h-11 px-3.5 rounded-xl border text-[10px] font-extrabold uppercase tracking-wider transition-all cursor-pointer min-w-11 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#06434a] focus-visible:ring-offset-2 focus-visible:ring-offset-white ${
+                className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-[10px] font-extrabold uppercase tracking-wider transition-all cursor-pointer ${
                   isComparing
-                    ? "bg-[#06434a]/10 text-[#06434a] border-[#06434a]/20"
-                    : "bg-white text-stone-700 border-stone-200 hover:text-stone-900 hover:border-stone-300"
+                    ? "bg-stone-50 text-[#06434a] border-[#06434a]/30"
+                    : "bg-white text-stone-500 border-stone-200 hover:text-stone-800 hover:border-stone-300"
                 }`}
               >
-                <div className={`h-4 w-4 rounded-md flex items-center justify-center border transition-all ${
+                <div className={`h-3 w-3 rounded-md flex items-center justify-center border transition-all ${
                   isComparing 
                     ? "bg-[#06434a] border-[#06434a]" 
                     : "border-stone-300 bg-white"
@@ -281,45 +259,44 @@ export const ScreenCard: React.FC<ScreenCardProps> = ({
                 <span>Comparar</span>
               </button>
             ) : (
-              <div className="text-[9px] text-stone-600 font-black uppercase tracking-widest">
+              <div className="text-[9px] text-stone-400 font-bold uppercase">
                 COBERTURA PREMIUM
               </div>
             )}
 
             {/* MediaKit Action Button */}
-            <CatalogCardAction
+            <button
               onClick={() => toggleCart(screen.id)}
-              variant={isInCart ? "outline" : "default"}
-              aria-label={isInCart ? `Quitar ${screen.nombre} de la cotización` : `Agregar ${screen.nombre} a la cotización`}
-              className={`text-[10px] font-black uppercase tracking-wider focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#06434a] focus-visible:ring-offset-2 focus-visible:ring-offset-white ${
-                isInCart ? "bg-stone-100 text-stone-900 hover:bg-stone-200" : "bg-amber-500 text-stone-950 hover:bg-amber-600"
+              className={`flex items-center justify-center gap-1.5 px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-wide transition-all duration-200 cursor-pointer ${
+                isInCart
+                  ? "bg-stone-100 text-stone-800 hover:bg-stone-200 border border-stone-200"
+                  : "bg-stone-950 hover:bg-[#06434a] text-white shadow-xs"
               }`}
             >
               {isInCart ? (
                 <>
-                  <Check className="h-3.5 w-3.5 text-emerald-600 stroke-[3px]" />
-                  <span>En cotización</span>
+                  <Check className="h-3 w-3 text-emerald-600" />
+                  <span>En MediaKit</span>
                 </>
               ) : (
                 <>
-                  <Plus className="h-3.5 w-3.5" />
-                  <span>Cotizar</span>
+                  <Plus className="h-3 w-3" />
+                  <span>MediaKit</span>
                 </>
               )}
-            </CatalogCardAction>
-          </CatalogCardFooter>
-        </CatalogCard>
+            </button>
+          </CardFooter>
+        </Card>
       </motion.div>
-
 
       {/* DETAILED INTERACTIVE MODAL (PRICE-FREE EDITION) */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-w-4xl p-0 overflow-hidden bg-white border border-stone-200 shadow-2xl rounded-3xl flex flex-col lg:grid lg:grid-cols-12 max-h-[92vh] gap-0">
+        <DialogContent className="max-w-4xl p-0 overflow-hidden bg-white border border-stone-200 shadow-2xl rounded-[24px] flex flex-col lg:grid lg:grid-cols-12 max-h-[92vh] gap-0">
           <DialogTitle className="sr-only">{screen.nombre}</DialogTitle>
           <DialogDescription className="sr-only">Detalles técnicos e información de cobertura del soporte {screen.nombre}</DialogDescription>
 
           {/* Left Column: Visual Media Player & Stats Overview */}
-          <div className="lg:col-span-6 bg-stone-950 text-white flex flex-col justify-between relative overflow-hidden h-75 lg:h-auto min-h-75 lg:rounded-l-[23px]">
+          <div className="lg:col-span-6 bg-stone-950 text-white flex flex-col justify-between relative overflow-hidden h-[300px] lg:h-auto min-h-[300px] lg:rounded-l-[23px]">
             {screen.video ? (
               <video
                 src={screen.video}
@@ -330,14 +307,14 @@ export const ScreenCard: React.FC<ScreenCardProps> = ({
                 className="absolute inset-0 w-full h-full object-cover opacity-90"
               />
             ) : (
-              <div className="absolute inset-0 bg-linear-to-br from-stone-950 via-stone-900 to-stone-850 flex flex-col items-center justify-center">
+              <div className="absolute inset-0 bg-gradient-to-br from-stone-950 via-stone-900 to-stone-850 flex flex-col items-center justify-center">
                 <span className="text-4xl font-black tracking-widest text-white/5 select-none uppercase">
                   {screen.nombre.substring(0, 3)}
                 </span>
               </div>
             )}
 
-            <div className="absolute inset-0 bg-linear-to-t from-stone-950 via-stone-950/20 to-stone-950/50 pointer-events-none" />
+            <div className="absolute inset-0 bg-gradient-to-t from-stone-950 via-stone-950/20 to-stone-950/50 pointer-events-none" />
 
             {/* Screen Badge */}
             <div className="absolute top-5 left-5 z-10 flex items-center gap-2 bg-white text-stone-900 px-3.5 py-1.5 rounded-full text-[9px] font-bold tracking-wider uppercase border border-stone-200">
@@ -409,7 +386,7 @@ export const ScreenCard: React.FC<ScreenCardProps> = ({
                   <div className="relative border-l-2 border-dashed border-amber-300 pl-4 ml-2 space-y-3 pt-1">
                     {screen.ruta.map((stop, idx) => (
                       <div key={idx} className="relative text-xs">
-                        <span className="absolute -left-5.25 top-0.5 flex h-2 w-2 items-center justify-center rounded-full bg-amber-500" />
+                        <span className="absolute -left-[21px] top-0.5 flex h-2 w-2 items-center justify-center rounded-full bg-amber-500" />
                         <div>
                           <span className="font-semibold text-stone-800 block leading-none">{stop.nombre}</span>
                           <span className="text-[9px] text-stone-400">Punto de alta afluencia {idx === 0 ? "de salida" : idx === screen.ruta!.length - 1 ? "de retorno" : ""}</span>
@@ -467,7 +444,7 @@ export const ScreenCard: React.FC<ScreenCardProps> = ({
                     return (
                       <div
                         key={month}
-                        className={`border rounded-lg p-1.5 text-center flex flex-col justify-between gap-1 min-h-11 ${status.color}`}
+                        className={`border rounded-lg p-1.5 text-center flex flex-col justify-between gap-1 min-h-[44px] ${status.color}`}
                       >
                         <span className="text-[8px] font-bold uppercase tracking-wider opacity-85 block">
                           {month.substring(0, 3)}
@@ -485,8 +462,8 @@ export const ScreenCard: React.FC<ScreenCardProps> = ({
             {/* Modal Actions */}
             <div className="pt-5 border-t border-stone-150 mt-6 flex items-center justify-between gap-4">
               <div className="text-stone-500 text-[10px] uppercase font-bold leading-tight">
-                <span className="block font-black text-[#06434a]">Cotización rápida</span>
-                Sin compromiso y con disponibilidad real
+                <span className="block font-black text-[#06434a]">Comercialización Directa</span>
+                Sujeto a disponibilidad del ciclo
               </div>
 
               <div className="flex items-center gap-2">
@@ -496,7 +473,7 @@ export const ScreenCard: React.FC<ScreenCardProps> = ({
                       onFocusOnMap();
                       setIsModalOpen(false);
                     }}
-                    className="px-3.5 py-2 text-xs font-bold text-stone-700 bg-stone-50 hover:bg-stone-100 border border-stone-200 rounded-full transition-all cursor-pointer flex items-center gap-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#06434a] focus-visible:ring-offset-2 focus-visible:ring-offset-white"
+                    className="px-3.5 py-2 text-xs font-bold text-stone-700 bg-stone-50 hover:bg-stone-100 border border-stone-200 rounded-full transition-all cursor-pointer flex items-center gap-1"
                   >
                     <MapPin className="h-3.5 w-3.5 text-stone-400" />
                     <span>Ubicar</span>
@@ -505,8 +482,7 @@ export const ScreenCard: React.FC<ScreenCardProps> = ({
 
                 <button
                   onClick={() => toggleCart(screen.id)}
-                  aria-label={isInCart ? `Quitar ${screen.nombre} de la cotización` : `Agregar ${screen.nombre} a la cotización`}
-                  className={`px-5 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all duration-200 cursor-pointer flex items-center gap-1.5 shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#06434a] focus-visible:ring-offset-2 focus-visible:ring-offset-white ${
+                  className={`px-5 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all duration-200 cursor-pointer flex items-center gap-1.5 shadow-sm ${
                     isInCart
                       ? "bg-stone-100 text-stone-800 hover:bg-stone-200 border border-stone-200"
                       : "bg-stone-950 hover:bg-[#06434a] text-white"
@@ -515,12 +491,12 @@ export const ScreenCard: React.FC<ScreenCardProps> = ({
                   {isInCart ? (
                     <>
                       <Check className="h-4 w-4 text-emerald-600" />
-                      <span>En cotización</span>
+                      <span>Quitar</span>
                     </>
                   ) : (
                     <>
                       <Plus className="h-4 w-4" />
-                      <span>Solicitar</span>
+                      <span>MediaKit</span>
                     </>
                   )}
                 </button>

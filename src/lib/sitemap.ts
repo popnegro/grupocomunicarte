@@ -182,7 +182,7 @@ export const sitemap: SitemapItem[] = [
   },
   {
     name: "Soportes",
-    slug: "/soporte",
+    slug: "/soportes",
     keyword: "soportes publicitarios de via publica",
     intent: "Commercial",
     wordCount: 1600,
@@ -190,7 +190,7 @@ export const sitemap: SitemapItem[] = [
     children: [
       {
         name: "LED Peatonal UHD",
-        slug: "/soporte/led-peatonal",
+        slug: "/soportes/led-peatonal",
         keyword: "pantalla led peatonal",
         intent: "Commercial",
         wordCount: 1100,
@@ -198,7 +198,7 @@ export const sitemap: SitemapItem[] = [
       },
       {
         name: "Monolito Vehicular",
-        slug: "/soporte/monolito-vehicular",
+        slug: "/soportes/monolito-vehicular",
         keyword: "pantalla led vehicular",
         intent: "Commercial",
         wordCount: 1200,
@@ -206,7 +206,7 @@ export const sitemap: SitemapItem[] = [
       },
       {
         name: "Pantalla Mixta Dinámica",
-        slug: "/soporte/pantalla-mixta",
+        slug: "/soportes/pantalla-mixta",
         keyword: "pantalla led mixta",
         intent: "Commercial",
         wordCount: 1150,

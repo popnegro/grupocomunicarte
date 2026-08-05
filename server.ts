@@ -1,33 +1,27 @@
+import "dotenv/config";
 import express, { Request, Response, NextFunction } from "express";
 import path from "path";
-import dotenv from "dotenv";
 import { GoogleGenAI, Type } from "@google/genai";
 import { db } from "./src/db/index.ts";
-import { users, leads, screens, clientes, mediakits, changelogs } from "./src/db/schema.ts";
+import {
+  users, leads, screens, clientes, mediakits, changelogs, syncHistory, syncErrors,
+  tenants, roles, permissions, rolePermissions, userRoles, tags, screenTags, media,
+  metrics, campaigns, campaignScreens, cities, categories, locations
+} from "./src/db/schema.ts";
 import { eq, desc } from "drizzle-orm";
 import { requireAuth, AuthRequest } from "./src/middleware/auth.ts";
 import { getOrCreateUser } from "./src/db/users.ts";
 import { GoogleSlidesBackendService } from "./src/services/googleSlidesBackend.ts";
 import { SEED_SCREENS, INITIAL_CLIENTES, INITIAL_MEDIAKITS, INITIAL_LOGS } from "./src/db/seedData.ts";
-
-dotenv.config();
-
-import { validateConfig } from "./src/config/env.ts";
-validateConfig();
+import { requestLogger } from "./src/middleware/logger.ts";
+import { errorHandler } from "./src/middleware/errorHandler.ts";
+import { apiV1Router } from "./src/api/v1/router.ts";
 
 const app = express();
 const PORT = 3000;
 
 app.use(express.json());
-app.use(express.static(path.join(process.cwd(), "public")));
-
-app.get("/favicon.ico", (req: Request, res: Response) => {
-  res.sendFile(path.join(process.cwd(), "public", "favicon.ico"));
-});
-
-app.get("/favicon.svg", (req: Request, res: Response) => {
-  res.sendFile(path.join(process.cwd(), "public", "favicon.svg"));
-});
+app.use(requestLogger);
 
 // Initialize Gemini SDK
 const geminiApiKey = process.env.GEMINI_API_KEY;
@@ -49,7 +43,84 @@ if (geminiApiKey) {
 // Automatically bootstrap database schema and seed data on startup
 async function initDb() {
   try {
-    // 1. Seed Leads
+    console.log("[Bootstrap] Starting database seed check...");
+
+    // 1. Seed Tenants
+    const existingTenants = await db.select().from(tenants).limit(1);
+    if (existingTenants.length === 0) {
+      console.log("[Bootstrap] Seeding default tenants...");
+      await db.insert(tenants).values([
+        { id: "tenant-default", name: "LeadMóvil Mendoza OOH", slug: "mendoza-ooh", plan: "enterprise", status: "active" },
+        { id: "tenant-ba", name: "Buenos Aires OOH Premium", slug: "ba-ooh", plan: "premium", status: "active" },
+      ]);
+    }
+
+    // 2. Seed Roles
+    const existingRoles = await db.select().from(roles).limit(1);
+    if (existingRoles.length === 0) {
+      console.log("[Bootstrap] Seeding default roles...");
+      await db.insert(roles).values([
+        { id: "role-admin", name: "Administrador", slug: "admin", description: "Acceso total al sistema" },
+        { id: "role-comercial", name: "Ejecutivo Comercial", slug: "comercial", description: "Gestión de clientes y campañas" },
+        { id: "role-planner", name: "Planificador de Medios", slug: "planner", description: "Planificación e inventario" },
+      ]);
+    }
+
+    // 3. Seed Permissions
+    const existingPermissions = await db.select().from(permissions).limit(1);
+    if (existingPermissions.length === 0) {
+      console.log("[Bootstrap] Seeding default permissions...");
+      await db.insert(permissions).values([
+        { id: "perm-sync", name: "Sincronizar Google Slides", slug: "sync_slides", description: "Ejecutar ETL de Google Slides" },
+        { id: "perm-users", name: "Administrar Usuarios y Roles", slug: "manage_users", description: "Configuración de seguridad" },
+        { id: "perm-campaigns", name: "Crear y Editar Campañas", slug: "edit_campaigns", description: "Gestión comercial" },
+        { id: "perm-analytics", name: "Ver Métricas y Rendimiento", slug: "view_analytics", description: "Auditoría de impactos" },
+      ]);
+
+      console.log("[Bootstrap] Linking permissions to roles...");
+      await db.insert(rolePermissions).values([
+        { roleId: "role-admin", permissionId: "perm-sync" },
+        { roleId: "role-admin", permissionId: "perm-users" },
+        { roleId: "role-admin", permissionId: "perm-campaigns" },
+        { roleId: "role-admin", permissionId: "perm-analytics" },
+        { roleId: "role-comercial", permissionId: "perm-campaigns" },
+        { roleId: "role-comercial", permissionId: "perm-analytics" },
+      ]);
+    }
+
+    // 4. Seed Cities
+    const existingCities = await db.select().from(cities).limit(1);
+    if (existingCities.length === 0) {
+      console.log("[Bootstrap] Seeding default cities...");
+      await db.insert(cities).values([
+        { id: "city-mendoza", name: "Mendoza", slug: "mendoza" },
+        { id: "city-caba", name: "Buenos Aires", slug: "buenos-aires" },
+      ]);
+    }
+
+    // 5. Seed Categories
+    const existingCategories = await db.select().from(categories).limit(1);
+    if (existingCategories.length === 0) {
+      console.log("[Bootstrap] Seeding default categories...");
+      await db.insert(categories).values([
+        { id: "cat-led", name: "Pantallas LED", slug: "pantallas-led" },
+        { id: "cat-trad", name: "Tradicionales", slug: "tradicionales" },
+        { id: "cat-movil", name: "LED Móvil", slug: "led-movil" },
+      ]);
+    }
+
+    // 6. Seed Locations
+    const existingLocations = await db.select().from(locations).limit(1);
+    if (existingLocations.length === 0) {
+      console.log("[Bootstrap] Seeding default locations...");
+      await db.insert(locations).values([
+        { id: "loc-centro", cityId: "city-mendoza", name: "Km 0 Mendoza", address: "Sarmiento y 9 de Julio", lat: -32.8894, lng: -68.8458 },
+        { id: "loc-palmares", cityId: "city-mendoza", name: "Palmares Open Mall", address: "Ruta Panamericana 2650", lat: -32.9121, lng: -68.8306 },
+        { id: "loc-obelisco", cityId: "city-caba", name: "Obelisco de Buenos Aires", address: "Av. 9 de Julio y Corrientes", lat: -34.6037, lng: -58.3816 },
+      ]);
+    }
+
+    // 7. Seed Leads
     const existingLeads = await db.select().from(leads).limit(1);
     if (existingLeads.length === 0) {
       console.log("[Bootstrap] Seeding default leads...");
@@ -62,35 +133,111 @@ async function initDb() {
       await db.insert(leads).values(defaultLeads);
     }
 
-    // 2. Seed Screens
+    // 8. Seed Screens (with default tenantId)
     const existingScreens = await db.select().from(screens).limit(1);
     if (existingScreens.length === 0) {
       console.log("[Bootstrap] Seeding default screens...");
-      await db.insert(screens).values(SEED_SCREENS);
+      const screensData = SEED_SCREENS.map(s => ({
+        ...s,
+        tenantId: s.id.startsWith("ba-") ? "tenant-ba" : "tenant-default"
+      }));
+      await db.insert(screens).values(screensData);
     }
 
-    // 3. Seed Clients
+    // 9. Seed Clients (with default tenantId)
     const existingClients = await db.select().from(clientes).limit(1);
     if (existingClients.length === 0) {
       console.log("[Bootstrap] Seeding default clients...");
-      await db.insert(clientes).values(INITIAL_CLIENTES);
+      const clientsData = INITIAL_CLIENTES.map(c => ({
+        ...c,
+        tenantId: c.id === "cl-02" ? "tenant-ba" : "tenant-default"
+      }));
+      await db.insert(clientes).values(clientsData);
     }
 
-    // 4. Seed Mediakits
+    // 10. Seed Mediakits (with default tenantId)
     const existingMediakits = await db.select().from(mediakits).limit(1);
     if (existingMediakits.length === 0) {
       console.log("[Bootstrap] Seeding default mediakits...");
-      await db.insert(mediakits).values(INITIAL_MEDIAKITS);
+      const mediakitsData = INITIAL_MEDIAKITS.map(m => ({
+        ...m,
+        tenantId: m.id === "mk-202" ? "tenant-ba" : "tenant-default"
+      }));
+      await db.insert(mediakits).values(mediakitsData);
     }
 
-    // 5. Seed Changelogs
+    // 11. Seed Campaigns
+    const existingCampaigns = await db.select().from(campaigns).limit(1);
+    if (existingCampaigns.length === 0) {
+      console.log("[Bootstrap] Seeding default campaigns...");
+      await db.insert(campaigns).values([
+        { id: "camp-01", tenantId: "tenant-default", clienteId: "cl-01", mediaKitId: "mk-201", nombre: "Hilux Summer Mendoza 2026", presupuesto: 1500000, estado: "activa", fechaInicio: "2026-01-01", fechaFin: "2026-03-31" },
+        { id: "camp-02", tenantId: "tenant-ba", clienteId: "cl-02", mediaKitId: "mk-202", nombre: "Buenos Aires Corporativo", presupuesto: 4500000, estado: "planificacion", fechaInicio: "2026-04-01", fechaFin: "2026-06-30" },
+      ]);
+
+      console.log("[Bootstrap] Seeding campaign screens...");
+      await db.insert(campaignScreens).values([
+        { campaignId: "camp-01", screenId: "sc-01", precioAcordado: 95000, fechaInicioSoporte: "2026-01-01", fechaFinSoporte: "2026-03-31" },
+        { campaignId: "camp-01", screenId: "sc-02", precioAcordado: 145000, fechaInicioSoporte: "2026-01-01", fechaFinSoporte: "2026-03-31" },
+        { campaignId: "camp-01", screenId: "sc-11", precioAcordado: 160000, fechaInicioSoporte: "2026-01-01", fechaFinSoporte: "2026-03-31" },
+      ]);
+    }
+
+    // 12. Seed Tags
+    const existingTags = await db.select().from(tags).limit(1);
+    if (existingTags.length === 0) {
+      console.log("[Bootstrap] Seeding default tags...");
+      await db.insert(tags).values([
+        { id: "tag-premium", name: "Premium ABC1", slug: "premium-abc1" },
+        { id: "tag-high", name: "Alto Tránsito", slug: "alto-transito" },
+        { id: "tag-night", name: "Visibilidad Nocturna", slug: "visibilidad-nocturna" },
+      ]);
+
+      console.log("[Bootstrap] Seeding screen tags...");
+      await db.insert(screenTags).values([
+        { screenId: "sc-01", tagId: "tag-high" },
+        { screenId: "sc-02", tagId: "tag-premium" },
+        { screenId: "sc-11", tagId: "tag-premium" },
+        { screenId: "sc-11", tagId: "tag-high" },
+        { screenId: "ba-01", tagId: "tag-premium" },
+        { screenId: "ba-01", tagId: "tag-high" },
+        { screenId: "ba-01", tagId: "tag-night" },
+      ]);
+    }
+
+    // 13. Seed Media Assets
+    const existingMedia = await db.select().from(media).limit(1);
+    if (existingMedia.length === 0) {
+      console.log("[Bootstrap] Seeding default media...");
+      await db.insert(media).values([
+        { id: "m-01", screenId: "sc-01", type: "image", url: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800", title: "Vista Peatonal Diurna", sizeBytes: 154000, isHero: true },
+        { id: "m-02", screenId: "sc-11", type: "video", url: "https://www.w3schools.com/html/mov_bbb.mp4", title: "Video Recorrido LeadMóvil", sizeBytes: 8500000, isHero: true },
+        { id: "m-03", screenId: "ba-01", type: "drone", url: "https://www.w3schools.com/html/movie.mp4", title: "Toma de Drone Obelisco", sizeBytes: 12400000, isHero: true },
+      ]);
+    }
+
+    // 14. Seed Metrics
+    const existingMetrics = await db.select().from(metrics).limit(1);
+    if (existingMetrics.length === 0) {
+      console.log("[Bootstrap] Seeding default metrics...");
+      await db.insert(metrics).values([
+        { id: "met-01", screenId: "sc-01", metricType: "impressions", value: 14200 },
+        { id: "met-02", screenId: "sc-01", metricType: "occupancy_rate", value: 87.5 },
+        { id: "met-03", screenId: "sc-02", metricType: "impressions", value: 22500 },
+        { id: "met-04", screenId: "sc-02", metricType: "occupancy_rate", value: 92.0 },
+        { id: "met-05", screenId: "ba-01", metricType: "impressions", value: 75000 },
+        { id: "met-06", screenId: "ba-01", metricType: "occupancy_rate", value: 98.0 },
+      ]);
+    }
+
+    // 15. Seed Changelogs
     const existingChangelogs = await db.select().from(changelogs).limit(1);
     if (existingChangelogs.length === 0) {
       console.log("[Bootstrap] Seeding default changelogs...");
       await db.insert(changelogs).values(INITIAL_LOGS);
     }
 
-    console.log("[Bootstrap] PostgreSQL seeding check and initialization complete.");
+    console.log("[Bootstrap] PostgreSQL multi-tenant schema seeding and validation complete.");
   } catch (error) {
     console.error("[Bootstrap] Error during database seeding:", error);
   }
@@ -297,16 +444,126 @@ app.post("/api/mediakits/:id/export-slides", requireAuth, async (req: AuthReques
   }
 });
 
-const FALLBACK_LEADS = [
-  { id: "1", name: "Sofía Rodríguez", email: "sofia@acme.com", company: "Acme Corp", source: "Landing Form", status: "new", date: "2026-07-25T14:32:00Z", value: 1200 },
-  { id: "2", name: "Mateo Silva", email: "mateo@silva.io", company: "Silva Consulting", source: "Onboarding Quiz", status: "qualified", date: "2026-07-24T09:15:00Z", value: 3500 },
-  { id: "3", name: "Lucía Fernández", email: "lfernandez@techflow.net", company: "TechFlow Ltd", source: "Landing Form", status: "contacted", date: "2026-07-23T18:45:00Z", value: 800 },
-  { id: "4", name: "Diego Torres", email: "diego@growthlabs.co", company: "Diego Torres S.A.", source: "Onboarding Quiz", status: "closed", date: "2026-07-21T11:20:00Z", value: 5000 },
-];
+// GET Sync History
+app.get("/api/sync/history", requireAuth, async (req: AuthRequest, res: Response) => {
+  try {
+    const history = await db
+      .select()
+      .from(syncHistory)
+      .orderBy(desc(syncHistory.createdAt));
+    res.json({ success: true, data: history });
+  } catch (error: any) {
+    console.error("Error fetching sync history:", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// GET Sync Errors for a specific sync run
+app.get("/api/sync/errors/:syncId", requireAuth, async (req: AuthRequest, res: Response) => {
+  const { syncId } = req.params;
+  try {
+    const errors = await db
+      .select()
+      .from(syncErrors)
+      .where(eq(syncErrors.syncId, parseInt(syncId, 10)))
+      .orderBy(desc(syncErrors.id));
+    res.json({ success: true, data: errors });
+  } catch (error: any) {
+    console.error("Error fetching sync errors:", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// POST Initiate Sync
+app.post("/api/sync", requireAuth, async (req: AuthRequest, res: Response) => {
+  const { presentationId } = req.body;
+  if (!presentationId) {
+    return res.status(400).json({ success: false, error: "presentationId is required" });
+  }
+
+  try {
+    const dbUser = await getOrCreateUser(req.user.uid, req.user.email || "");
+    const result = await GoogleSlidesBackendService.syncFromSlides(
+      dbUser.id,
+      dbUser.email,
+      presentationId
+    );
+
+    // Also log in the changelogs
+    const logId = `lg-sync-${Date.now()}`;
+    await db.insert(changelogs).values({
+      id: logId,
+      user: dbUser.email,
+      action: `Sincronizó espacios publicitarios desde Google Slides (${result.importedCount} importados, ${result.updatedCount} actualizados, ${result.errorCount} errores)`,
+      date: new Date().toISOString(),
+    });
+
+    res.json({ success: true, data: result });
+  } catch (error: any) {
+    console.error("Error running slides synchronization:", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// POST Rollback Sync Run
+app.post("/api/sync/rollback", requireAuth, async (req: AuthRequest, res: Response) => {
+  const { syncId } = req.body;
+  if (!syncId) {
+    return res.status(400).json({ success: false, error: "Se requiere el ID de la sincronización para realizar rollback." });
+  }
+
+  try {
+    const dbUser = await getOrCreateUser(req.user.uid, req.user.email || "");
+    const result = await GoogleSlidesBackendService.rollbackSync(dbUser.id, parseInt(syncId, 10));
+    res.json({ success: true, data: result });
+  } catch (error: any) {
+    console.error("Error executing sync rollback:", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Simple memory cache for public screens (simulates ISR caching)
+let publicScreensCache: any[] | null = null;
+let publicScreensCacheTime = 0;
+const CACHE_TTL_MS = 30000; // 30 seconds local server cache
+
+app.get("/api/public/screens", async (req: Request, res: Response) => {
+  const now = Date.now();
+  
+  // Set ISR Headers
+  res.setHeader("Cache-Control", "public, max-age=15, s-maxage=60, stale-while-revalidate=120");
+  
+  if (publicScreensCache && (now - publicScreensCacheTime < CACHE_TTL_MS)) {
+    res.setHeader("X-Cache", "HIT");
+    return res.json({ success: true, data: publicScreensCache });
+  }
+  
+  try {
+    res.setHeader("X-Cache", "MISS");
+    const dbScreens = await db.select().from(screens);
+    const formatted = dbScreens.map(s => ({
+      ...s,
+      ruta: s.ruta ? JSON.parse(s.ruta) : undefined
+    }));
+    
+    // Update cache
+    publicScreensCache = formatted;
+    publicScreensCacheTime = now;
+    
+    res.json({ success: true, data: formatted });
+  } catch (error: any) {
+    console.error("Error fetching public screens:", error);
+    // Serve stale cache if available on error
+    if (publicScreensCache) {
+      res.setHeader("X-Cache", "STALE");
+      return res.json({ success: true, data: publicScreensCache });
+    }
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
 
 // GET Leads
 app.get("/api/leads", async (req: Request, res: Response) => {
-  res.setHeader("Content-Type", "application/json");
   try {
     const dbLeads = await db.select().from(leads).orderBy(desc(leads.id));
     const formatted = dbLeads.map(row => ({
@@ -319,10 +576,10 @@ app.get("/api/leads", async (req: Request, res: Response) => {
       date: row.date || new Date().toISOString(),
       value: row.value || 0
     }));
-    return res.json({ success: true, data: formatted });
+    res.json({ success: true, data: formatted });
   } catch (error: any) {
-    console.warn("DB error in /api/leads, serving fallback dataset:", error?.message || error);
-    return res.json({ success: true, data: FALLBACK_LEADS });
+    console.error("Error fetching leads:", error);
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
@@ -836,165 +1093,6 @@ app.post("/api/changelogs", requireAuth, async (req: Request, res: Response) => 
   }
 });
 
-// POST Export Changelogs to Google Sheets
-app.post("/api/changelogs/export-sheets", requireAuth, async (req: AuthRequest, res: Response) => {
-  const authHeaderToken = req.headers["x-google-access-token"] as string;
-  try {
-    const dbUser = await getOrCreateUser(req.user.uid, req.user.email || "");
-
-    // Resolve Access Token
-    let accessToken = "";
-    if (GoogleSlidesBackendService.isConfigured()) {
-      try {
-        accessToken = await GoogleSlidesBackendService.getAccessToken(dbUser.id);
-      } catch (err: any) {
-        console.warn("Could not get stored Google Access Token, trying client-provided fallback:", err.message);
-      }
-    }
-
-    if (!accessToken && authHeaderToken) {
-      accessToken = authHeaderToken;
-    }
-
-    if (!accessToken) {
-      return res.status(401).json({
-        success: false,
-        error: "Se requiere autenticación con Google.",
-        needsAuth: true,
-      });
-    }
-
-    // Fetch all logs
-    const dbLogs = await db.select().from(changelogs);
-    const sortedLogs = [...dbLogs].sort((a, b) => b.id.localeCompare(a.id));
-
-    const sheetTitle = `Auditoría - Grupo Comunicarte (${new Date().toLocaleDateString("es-AR")})`;
-
-    // Create a new Spreadsheet
-    const createSheetRes = await fetch("https://sheets.googleapis.com/v4/spreadsheets", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        properties: {
-          title: sheetTitle
-        }
-      }),
-    });
-
-    if (!createSheetRes.ok) {
-      const errorText = await createSheetRes.text();
-      throw new Error(`Failed to create Google Sheet: ${createSheetRes.statusText} - ${errorText}`);
-    }
-
-    const sheetInfo = await createSheetRes.json();
-    const spreadsheetId = sheetInfo.spreadsheetId;
-    const spreadsheetUrl = sheetInfo.spreadsheetUrl;
-
-    // Build values payload
-    const rows = [
-      ["ID Registro", "Usuario / Rol", "Acción Ejecutada", "Fecha de Operación"],
-      ...sortedLogs.map(log => [log.id, log.user, log.action, log.date])
-    ];
-
-    // Append / Write values into Sheet1!A1
-    const appendRes = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/Sheet1!A1:append?valueInputOption=USER_ENTERED`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        values: rows
-      })
-    });
-
-    if (!appendRes.ok) {
-      const errorText = await appendRes.text();
-      throw new Error(`Failed to write values to Google Sheet: ${appendRes.statusText} - ${errorText}`);
-    }
-
-    // Share sheet read-only
-    try {
-      await GoogleSlidesBackendService.sharePresentation(accessToken, spreadsheetId, dbUser.email);
-    } catch (shareErr) {
-      console.warn("Could not share Google Sheet, proceeding:", shareErr);
-    }
-
-    // Log the sheet export action itself!
-    try {
-      const logId = `log-${Math.floor(100000 + Math.random() * 900000)}`;
-      await db.insert(changelogs).values({
-        id: logId,
-        user: dbUser.email,
-        action: `Exportó el historial de auditoría (${dbLogs.length} registros) a Google Sheets`,
-        date: new Date().toISOString(),
-      });
-    } catch (logErr) {
-      console.error("Failed to append changelog for sheet export:", logErr);
-    }
-
-    res.json({
-      success: true,
-      spreadsheetId,
-      spreadsheetUrl,
-    });
-  } catch (error: any) {
-    console.error("Export to Google Sheets error:", error);
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
-// POST AI Analyse Changelogs
-app.post("/api/ai/audit-analyse", requireAuth, async (req: Request, res: Response) => {
-  try {
-    const dbLogs = await db.select().from(changelogs);
-    const sortedLogs = [...dbLogs].sort((a, b) => b.id.localeCompare(a.id)).slice(0, 100);
-    const logsSummaryString = sortedLogs.map(log => `[ID: ${log.id}] [Fecha: ${log.date}] [Usuario: ${log.user}] Acción: ${log.action}`).join("\n");
-
-    const prompt = `
-      Actúa como un Auditor de Seguridad de Sistemas y Director de Operaciones Senior. Analiza el siguiente historial de operaciones (changelogs) del sistema DOOH "Grupo Comunicarte" y genera una auditoría ejecutiva.
-      Identifica patrones de uso, posibles anomalías (por ejemplo, accesos con roles simulados excesivos, eliminación recurrente de soportes, o volumen inusual de cambios), evalúa el nivel de riesgo y proporciona recomendaciones de cumplimiento normativo y seguridad digital.
-
-      Historial de Operaciones:
-      ${logsSummaryString}
-
-      Genera tu respuesta en español adaptándote estrictamente al esquema JSON solicitado.
-    `;
-
-    const schema = {
-      type: Type.OBJECT,
-      properties: {
-        summary: { type: Type.STRING, description: "Resumen ejecutivo formal de las operaciones detectadas y estado del sistema." },
-        anomalies: { 
-          type: Type.ARRAY, 
-          description: "Lista de comportamientos inusuales, alertas de auditoría o advertencias de seguridad identificadas.",
-          items: { type: Type.STRING }
-        },
-        recommendations: { 
-          type: Type.ARRAY, 
-          description: "Recomendaciones estratégicas de seguridad, gestión de permisos (RBAC) o de procedimientos comerciales.",
-          items: { type: Type.STRING }
-        },
-        riskLevel: { type: Type.STRING, description: "Nivel de riesgo operativo y de seguridad general. Debe ser exactamente 'Bajo', 'Medio' o 'Alto'." }
-      },
-      required: ["summary", "anomalies", "recommendations", "riskLevel"]
-    };
-
-    const text = await callGemini(prompt, schema);
-    if (text) {
-      res.json({ success: true, data: JSON.parse(text) });
-    } else {
-      throw new Error("Empty response from Gemini");
-    }
-  } catch (error: any) {
-    console.error("Gemini Audit Analysis Error:", error);
-    res.status(500).json({ success: false, error: error.message });
-  }
-});
-
 // --- EXISTING GEMINI AI ROUTES ---
 
 // AI Route: Generate Landing Page content
@@ -1304,17 +1402,71 @@ app.post("/api/ai/data-hub-query", async (req: Request, res: Response) => {
   }
 });
 
-// Global Express Error Handling Middleware to ensure JSON is always returned and never HTML
-app.use((err: any, req: Request, res: Response, next: NextFunction) => {
-  console.error("[Express Global Error]", err);
-  if (!res.headersSent) {
-    res.setHeader("Content-Type", "application/json");
-    res.status(err.status || 500).json({
-      success: false,
-      error: err?.message || "Internal Server Error",
-    });
+// --- RELATIONAL SCHEMA CRUD & METRICS ENDPOINTS ---
+
+// GET Campaigns
+app.get("/api/campaigns", requireAuth, async (req: Request, res: Response) => {
+  try {
+    const dbCampaigns = await db.select().from(campaigns);
+    res.json({ success: true, data: dbCampaigns });
+  } catch (error: any) {
+    console.error("Error fetching campaigns:", error);
+    res.status(500).json({ success: false, error: error.message });
   }
 });
+
+// GET Tenants
+app.get("/api/tenants", requireAuth, async (req: Request, res: Response) => {
+  try {
+    const dbTenants = await db.select().from(tenants);
+    res.json({ success: true, data: dbTenants });
+  } catch (error: any) {
+    console.error("Error fetching tenants:", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// GET Roles & Permissions
+app.get("/api/roles", requireAuth, async (req: Request, res: Response) => {
+  try {
+    const dbRoles = await db.select().from(roles);
+    const dbPermissions = await db.select().from(permissions);
+    res.json({ success: true, data: { roles: dbRoles, permissions: dbPermissions } });
+  } catch (error: any) {
+    console.error("Error fetching roles and permissions:", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// GET Metrics for a specific Screen
+app.get("/api/screens/:screenId/metrics", requireAuth, async (req: Request, res: Response) => {
+  const { screenId } = req.params;
+  try {
+    const dbMetrics = await db.select().from(metrics).where(eq(metrics.screenId, screenId));
+    res.json({ success: true, data: dbMetrics });
+  } catch (error: any) {
+    console.error("Error fetching screen metrics:", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// GET Media assets for a specific Screen
+app.get("/api/screens/:screenId/media", requireAuth, async (req: Request, res: Response) => {
+  const { screenId } = req.params;
+  try {
+    const dbMedia = await db.select().from(media).where(eq(media.screenId, screenId));
+    res.json({ success: true, data: dbMedia });
+  } catch (error: any) {
+    console.error("Error fetching screen media:", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// --- MOUNT VERSIONED REST API & CENTRAL ERROR HANDLER ---
+app.use("/api/v1", apiV1Router);
+
+// Centralized Error Handling Middleware (must be registered after all routes/routers)
+app.use(errorHandler);
 
 // Serve frontend assets
 async function startServer() {

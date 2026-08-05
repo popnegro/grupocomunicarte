@@ -96,3 +96,33 @@ export interface DoohScreen {
   horarios?: string;
   ruta?: { lat: number; lng: number; nombre: string }[];
 }
+
+export interface City {
+  id: string;
+  name: string;
+  slug: string;
+  createdAt?: string;
+  updatedAt?: string;
+  deletedAt?: string | null;
+}
+
+export interface Category {
+  id: string;
+  name: string;
+  slug: string;
+  createdAt?: string;
+  updatedAt?: string;
+  deletedAt?: string | null;
+}
+
+export interface Location {
+  id: string;
+  cityId: string;
+  name: string;
+  address?: string | null;
+  lat: number;
+  lng: number;
+  createdAt?: string;
+  updatedAt?: string;
+  deletedAt?: string | null;
+}

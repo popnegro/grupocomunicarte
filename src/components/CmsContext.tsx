@@ -1,5 +1,4 @@
 import React, { useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
 import { create } from "zustand";
 import { LandingContent, Lead, OnboardingAnswers, SeoAuditReport, GrowthRecommendation, DoohScreen } from "../types";
 import { sitemap } from "../lib/sitemap";
@@ -438,6 +437,8 @@ interface CmsStoreProps {
   growthRecs: GrowthRecommendation[];
   runGrowthRecs: (visitors: number, convRate: number) => Promise<void>;
   fetchLeads: () => Promise<void>;
+  loadingScreens: boolean;
+  fetchPublicScreens: () => Promise<void>;
 }
 
 export const useCmsStore = create<CmsStoreProps>((set, get) => ({
@@ -475,6 +476,7 @@ export const useCmsStore = create<CmsStoreProps>((set, get) => ({
     return saved ? JSON.parse(saved) : [];
   })(),
   weeks: 4,
+  loadingScreens: false,
 
   setActiveSlug: (slug) => set({ activeSlug: slug }),
 
@@ -565,24 +567,22 @@ export const useCmsStore = create<CmsStoreProps>((set, get) => ({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(leadData),
       });
-      const contentType = response.headers.get("content-type");
-      if (response.ok && contentType && contentType.includes("application/json")) {
-        const result = await response.json();
-        if (result.success && result.data) {
-          set((state) => ({ leads: [result.data, ...state.leads] }));
-          return result.data;
-        }
+      const result = await response.json();
+      if (result.success) {
+        set((state) => ({ leads: [result.data, ...state.leads] }));
+        return result.data;
       }
     } catch (err) {
       console.error("Error creating lead on server", err);
+      const fallbackLead = {
+        ...leadData,
+        id: String(get().leads.length + 1),
+        date: new Date().toISOString(),
+      };
+      set((state) => ({ leads: [fallbackLead, ...state.leads] }));
+      return fallbackLead;
     }
-    const fallbackLead = {
-      ...leadData,
-      id: String(get().leads.length + 1),
-      date: new Date().toISOString(),
-    };
-    set((state) => ({ leads: [fallbackLead, ...state.leads] }));
-    return fallbackLead;
+    return null;
   },
 
   saveOnboarding: (answers) => {
@@ -630,15 +630,28 @@ export const useCmsStore = create<CmsStoreProps>((set, get) => ({
   fetchLeads: async () => {
     try {
       const res = await fetch("/api/leads");
-      const contentType = res.headers.get("content-type");
-      if (res.ok && contentType && contentType.includes("application/json")) {
-        const resJson = await res.json();
-        if (resJson.success && Array.isArray(resJson.data)) {
-          set({ leads: resJson.data });
-        }
+      const resJson = await res.json();
+      if (resJson.success) {
+        set({ leads: resJson.data });
       }
     } catch (e) {
       console.error("Error fetching leads from server", e);
+    }
+  },
+
+  fetchPublicScreens: async () => {
+    set({ loadingScreens: true });
+    try {
+      const res = await fetch("/api/public/screens");
+      const resJson = await res.json();
+      if (resJson.success && resJson.data && resJson.data.length > 0) {
+        set({ screens: resJson.data });
+        localStorage.setItem("smartweb_dooh_screens", JSON.stringify(resJson.data));
+      }
+    } catch (e) {
+      console.error("Error fetching public screens from server", e);
+    } finally {
+      set({ loadingScreens: false });
     }
   },
 
@@ -650,31 +663,28 @@ export const useCmsStore = create<CmsStoreProps>((set, get) => ({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(answers),
       });
-      const contentType = res.headers.get("content-type");
-      if (res.ok && contentType && contentType.includes("application/json")) {
-        const result = await res.json();
-        if (result.success && result.data) {
-          const generated = result.data;
-          const nextContent = {
-            ...get().content,
-            hero: {
-              badge: generated.hero.badge.toUpperCase(),
-              title: generated.hero.title,
-              subtitle: generated.hero.subtitle,
-              ctaPrimary: generated.hero.ctaPrimary,
-              ctaSecondary: generated.hero.ctaSecondary,
-            },
-            benefits: generated.benefits.map((b: any, index: number) => ({
-              id: b.id || `b-ai-${index}`,
-              title: b.title,
-              description: b.description,
-              icon: b.icon || "Sparkles",
-            })),
-            faq: generated.faq,
-          };
-          localStorage.setItem("smartweb_cms_content", JSON.stringify(nextContent));
-          set({ content: nextContent });
-        }
+      const result = await res.json();
+      if (result.success && result.data) {
+        const generated = result.data;
+        const nextContent = {
+          ...get().content,
+          hero: {
+            badge: generated.hero.badge.toUpperCase(),
+            title: generated.hero.title,
+            subtitle: generated.hero.subtitle,
+            ctaPrimary: generated.hero.ctaPrimary,
+            ctaSecondary: generated.hero.ctaSecondary,
+          },
+          benefits: generated.benefits.map((b: any, index: number) => ({
+            id: b.id || `b-ai-${index}`,
+            title: b.title,
+            description: b.description,
+            icon: b.icon || "Sparkles",
+          })),
+          faq: generated.faq,
+        };
+        localStorage.setItem("smartweb_cms_content", JSON.stringify(nextContent));
+        set({ content: nextContent });
       }
     } catch (e) {
       console.error("Error generating AI content", e);
@@ -697,12 +707,9 @@ export const useCmsStore = create<CmsStoreProps>((set, get) => ({
           faqText: get().content.faq.map((f) => `${f.question}: ${f.answer}`).join("; "),
         }),
       });
-      const contentType = res.headers.get("content-type");
-      if (res.ok && contentType && contentType.includes("application/json")) {
-        const result = await res.json();
-        if (result.success && result.data) {
-          set({ seoReport: result.data });
-        }
+      const result = await res.json();
+      if (result.success && result.data) {
+        set({ seoReport: result.data });
       }
     } catch (e) {
       console.error("Error running SEO Audit", e);
@@ -723,12 +730,9 @@ export const useCmsStore = create<CmsStoreProps>((set, get) => ({
           activeLeadsCount: get().leads.length,
         }),
       });
-      const contentType = res.headers.get("content-type");
-      if (res.ok && contentType && contentType.includes("application/json")) {
-        const result = await res.json();
-        if (result.success && result.data?.recommendations) {
-          set({ growthRecs: result.data.recommendations });
-        }
+      const result = await res.json();
+      if (result.success && result.data?.recommendations) {
+        set({ growthRecs: result.data.recommendations });
       }
     } catch (e) {
       console.error("Error running Growth Recs", e);
@@ -749,7 +753,7 @@ function findSitemapItem(items: any[], slug: string): any | null {
   return null;
 }
 
-function updateSeoTagsOnly(activeView: string, activeSlug: string, currentDashboardTab: string) {
+function updateSeoTagsAndHash(activeView: string, activeSlug: string, currentDashboardTab: string) {
   if (activeView === "landing") {
     const item = findSitemapItem(sitemap, activeSlug);
     const baseTitle = "Grupo Comunicarte | Publicidad Exterior y DOOH";
@@ -778,72 +782,55 @@ function updateSeoTagsOnly(activeView: string, activeSlug: string, currentDashbo
     const tabLabel = currentDashboardTab.charAt(0).toUpperCase() + currentDashboardTab.slice(1);
     document.title = `Consola B2B | Grupo Comunicarte | ${tabLabel}`;
   }
+
+  let newHash = "";
+  if (activeView === "dashboard") {
+    newHash = `#/dashboard/${currentDashboardTab}`;
+  } else {
+    newHash = `#${activeSlug}`;
+  }
+  if (window.location.hash !== newHash) {
+    window.history.replaceState(null, "", newHash);
+  }
 }
 
 export const CmsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { setActiveView, setActiveSlug, setCurrentDashboardTab, activeView, activeSlug, currentDashboardTab, content } = useCmsStore();
-  const location = useLocation();
-  const navigate = useNavigate();
 
-  // 1. Sync from Browser URL to Zustand state on mount and URL changes
   useEffect(() => {
-    const path = location.pathname;
-    
-    // Auto-scroll instantly to top on page or view transition to mimic natural browser behavior
-    window.scrollTo({ top: 0, behavior: "instant" as any });
+    const handleHashChange = () => {
+      const hash = window.location.hash;
+      if (!hash || hash === "#" || hash === "#/") {
+        setActiveView("landing");
+        setActiveSlug("/");
+      } else if (hash.startsWith("#/dashboard")) {
+        setActiveView("dashboard");
+        const parts = hash.split("/");
+        const tab = parts[2] || "inventario";
+        setCurrentDashboardTab(tab);
+      } else {
+        setActiveView("landing");
+        const slug = hash.replace("#", "");
+        setActiveSlug(slug);
+      }
+    };
 
-    if (path === "/login") {
-      setActiveView("landing");
-      setActiveSlug("/login");
-    } else if (path.startsWith("/dashboard")) {
-      setActiveView("dashboard");
-      const parts = path.split("/");
-      const suffix = parts[2] || "home";
-      
-      let tab = "home";
-      if (suffix === "inventory") tab = "inventario";
-      else if (suffix === "clients") tab = "clientes";
-      else if (suffix === "mediakits") tab = "mediakit";
-      else if (suffix === "ai-planner") tab = "ai-planner";
-      else if (suffix === "settings") tab = "settings";
-      
-      setCurrentDashboardTab(tab);
-    } else {
-      setActiveView("landing");
-      setActiveSlug(path);
-    }
-  }, [location.pathname, setActiveView, setActiveSlug, setCurrentDashboardTab]);
+    handleHashChange();
+    window.addEventListener("hashchange", handleHashChange);
+    return () => window.removeEventListener("hashchange", handleHashChange);
+  }, [setActiveView, setActiveSlug, setCurrentDashboardTab]);
 
-  // 2. Sync from Zustand state changes back to Browser URL (e.g. clicking buttons)
   useEffect(() => {
-    let targetPath = "/";
-    if (activeView === "dashboard") {
-      let suffix = "home";
-      if (currentDashboardTab === "inventario") suffix = "inventory";
-      else if (currentDashboardTab === "clientes") suffix = "clients";
-      else if (currentDashboardTab === "mediakit") suffix = "mediakits";
-      else if (currentDashboardTab === "ai-planner") suffix = "ai-planner";
-      else if (currentDashboardTab === "settings") suffix = "settings";
-
-      targetPath = suffix === "home" ? "/dashboard" : `/dashboard/${suffix}`;
-    } else {
-      targetPath = activeSlug;
-    }
-
-    if (location.pathname !== targetPath) {
-      navigate(targetPath);
-    }
-  }, [activeView, activeSlug, currentDashboardTab, location.pathname, navigate]);
-
-  // 3. Update SEO and Document Title
-  useEffect(() => {
-    updateSeoTagsOnly(activeView, activeSlug, currentDashboardTab);
+    updateSeoTagsAndHash(activeView, activeSlug, currentDashboardTab);
   }, [activeView, activeSlug, currentDashboardTab, content.seo]);
 
   const fetchLeads = useCmsStore((state) => state.fetchLeads);
+  const fetchPublicScreens = useCmsStore((state) => state.fetchPublicScreens);
+  
   useEffect(() => {
     fetchLeads();
-  }, [fetchLeads]);
+    fetchPublicScreens();
+  }, [fetchLeads, fetchPublicScreens]);
 
   return <>{children}</>;
 };

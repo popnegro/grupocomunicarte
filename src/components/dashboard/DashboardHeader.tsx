@@ -1,13 +1,12 @@
 import React from "react";
 import { Role } from "./types";
-import { Shield, Sparkles, User, Bell, ChevronDown, Menu } from "lucide-react";
+import { Shield, Sparkles, User, Bell, ChevronDown } from "lucide-react";
 
 interface DashboardHeaderProps {
   userRole: Role;
   setUserRole: (role: Role) => void;
   title: string;
   description: string;
-  onToggleMobileSidebar?: () => void;
 }
 
 export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
@@ -15,7 +14,6 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   setUserRole,
   title,
   description,
-  onToggleMobileSidebar,
 }) => {
   const getRoleBadge = (role: Role) => {
     switch (role) {
@@ -35,28 +33,17 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   const badge = getRoleBadge(userRole);
 
   return (
-    <header className="border-b border-stone-200/80 bg-white py-4 px-6 md:py-5 md:px-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 sticky top-0 z-40">
-      <div className="flex items-center gap-3">
-        {onToggleMobileSidebar && (
-          <button
-            onClick={onToggleMobileSidebar}
-            className="lg:hidden p-2 -ml-2 rounded-xl bg-stone-100 text-stone-800 hover:bg-stone-200 cursor-pointer min-h-[40px] min-w-[40px] flex items-center justify-center transition-colors"
-            aria-label="Toggle navigation"
-          >
-            <Menu className="h-5 w-5" />
-          </button>
-        )}
-        <div className="min-w-0">
-          <h1 className="text-xl font-bold tracking-tight text-stone-900 font-display flex items-center gap-2 flex-wrap">
-            {title}
-            <span className="text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-100 px-2 py-0.5 rounded-full font-extrabold uppercase font-mono tracking-wider">
-              v2.0 Active
-            </span>
-          </h1>
-          <p className="text-[11px] text-stone-500 max-w-xl font-medium mt-0.5 leading-relaxed truncate md:whitespace-normal">
-            {description}
-          </p>
-        </div>
+    <header className="border-b border-stone-200/80 bg-white py-5 px-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 sticky top-0 z-40">
+      <div>
+        <h1 className="text-xl font-bold tracking-tight text-stone-900 font-display flex items-center gap-2">
+          {title}
+          <span className="text-[10px] bg-emerald-50 text-emerald-700 border border-emerald-100 px-2 py-0.5 rounded-full font-extrabold uppercase font-mono tracking-wider">
+            v2.0 Active
+          </span>
+        </h1>
+        <p className="text-[11px] text-stone-500 max-w-xl font-medium mt-0.5 leading-relaxed">
+          {description}
+        </p>
       </div>
 
       <div className="flex items-center gap-4 shrink-0 w-full md:w-auto justify-end">

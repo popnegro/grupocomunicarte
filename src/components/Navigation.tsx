@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "motion/react";
 import * as LucideIcons from "lucide-react";
 import { Logo } from "./Logo";
@@ -8,7 +7,7 @@ interface NavigationProps {
   activeSlug: string;
   onNavigate: (slug: string) => void;
   onSetActiveView: (view: "landing" | "dashboard") => void;
-  onSectionClick?: (section: "inicio" | "soporte" | "espacios" | "soluciones" | "nosotros" | "contacto") => void;
+  onSectionClick?: (section: "inicio" | "soportes" | "espacios" | "soluciones" | "nosotros" | "contacto") => void;
   logoSrc?: string;
   logoAlt?: string;
   brandName?: string;
@@ -17,8 +16,6 @@ interface NavigationProps {
 }
 
 export const Navigation: React.FC<NavigationProps> = ({
-  activeSlug,
-  onNavigate,
   onSetActiveView,
   onSectionClick,
   logoSrc,
@@ -29,17 +26,16 @@ export const Navigation: React.FC<NavigationProps> = ({
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState<string>("inicio");
-  const navigate = useNavigate();
 
   const NAV_ITEMS = [
     { id: "inicio", name: "Inicio", icon: <LucideIcons.Home className="h-4 w-4" /> },
-    { id: "soporte", name: "Soportes", icon: <LucideIcons.Tv className="h-4 w-4" /> },
+    { id: "soportes", name: "Soportes", icon: <LucideIcons.Tv className="h-4 w-4" /> },
     { id: "espacios", name: "Espacios Publicitarios", icon: <LucideIcons.LayoutGrid className="h-4 w-4" /> },
     { id: "soluciones", name: "Soluciones", icon: <LucideIcons.Layers className="h-4 w-4" /> },
     { id: "nosotros", name: "Nosotros", icon: <LucideIcons.Info className="h-4 w-4" /> },
   ] as const;
 
-  const handleItemClick = (id: "inicio" | "soporte" | "espacios" | "soluciones" | "nosotros" | "contacto") => {
+  const handleItemClick = (id: "inicio" | "soportes" | "espacios" | "soluciones" | "nosotros" | "contacto") => {
     setActiveSection(id);
     setIsMobileMenuOpen(false);
     if (onSectionClick) {
@@ -77,9 +73,7 @@ export const Navigation: React.FC<NavigationProps> = ({
         {/* Desktop Navigation Menu */}
         <nav id="nav-desktop-menu" className="hidden lg:flex items-center gap-1 text-sm font-bold text-stone-600 relative font-sans">
           {NAV_ITEMS.map((item) => {
-            const active = item.id === "soporte"
-              ? (activeSlug === "/soporte" || activeSlug.startsWith("/soporte"))
-              : (activeSlug === "/" && activeSection === item.id);
+            const active = activeSection === item.id;
             return (
               <button
                 key={item.id}
@@ -101,7 +95,7 @@ export const Navigation: React.FC<NavigationProps> = ({
         <div className="flex items-center gap-3">
           <button
             onClick={() => {
-              navigate("/dashboard");
+              window.location.href = "/dashboard";
             }}
             className="hidden sm:flex items-center gap-1.5 text-xs font-bold text-stone-700 hover:text-stone-900 bg-white px-4 py-2.5 border border-stone-200 hover:bg-stone-50 active:scale-95 rounded-full transition-all cursor-pointer font-sans"
           >
@@ -147,9 +141,7 @@ export const Navigation: React.FC<NavigationProps> = ({
             <div className="px-6 py-5 space-y-4 font-sans">
               <div className="flex flex-col gap-1.5">
                 {NAV_ITEMS.map((item) => {
-                  const active = item.id === "soporte"
-                    ? (activeSlug === "/soporte" || activeSlug.startsWith("/soporte"))
-                    : (activeSlug === "/" && activeSection === item.id);
+                  const active = activeSection === item.id;
                   return (
                     <button
                       key={item.id}

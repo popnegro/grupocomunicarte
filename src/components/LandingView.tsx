@@ -9,7 +9,6 @@ import { Footer } from "./Footer";
 import { SubpageLayout } from "./SubpageLayout";
 import { InteractiveMap } from "./InteractiveMap";
 import { ZeroBaseRedesign } from "./landing/ZeroBaseRedesign";
-import { usePageMetadata } from "../hooks/usePageMetadata";
 
 export const LandingView: React.FC = () => {
   const {
@@ -24,18 +23,6 @@ export const LandingView: React.FC = () => {
     activeSlug,
     setActiveSlug,
   } = useCms();
-
-  // Dynamic Page metadata for B2B SEO and WCAG
-  const pageTitle = activeSlug === "/"
-    ? "Publicidad Exterior Premium y Pantallas LED"
-    : activeSlug.replace(/^\//, "").split(/[-/]/).map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
-
-  usePageMetadata({
-    title: pageTitle,
-    description: activeSlug === "/"
-      ? "Grupo Comunicarte es líder en cartelería de vía pública, pantallas LED digitales de gran formato y soluciones OOH/DOOH premium en Mendoza y Buenos Aires."
-      : `Catálogo premium de ${pageTitle}. Soportes inteligentes de vía pública con auditoría real y alto ROI.`
-  });
 
   // Selected city & catalog tab state (excision of San Juan)
   const [selectedCity, setSelectedCity] = useState<"Mendoza" | "Buenos Aires">("Mendoza");
@@ -65,9 +52,12 @@ export const LandingView: React.FC = () => {
   };
 
   // Section click mapping from Navigation links
-  const handleSectionClick = (section: "inicio" | "espacios" | "soluciones" | "nosotros" | "contacto") => {
+  const handleSectionClick = (section: "inicio" | "soportes" | "espacios" | "soluciones" | "nosotros" | "contacto") => {
     if (section === "inicio") {
       handleScrollTo("hero-section");
+    } else if (section === "soportes") {
+      setActiveSlug("/soportes");
+      window.scrollTo({ top: 0, behavior: "smooth" });
     } else if (section === "espacios") {
       setCatalogTab("tarjetas");
       handleScrollTo("espacios");
@@ -144,8 +134,49 @@ export const LandingView: React.FC = () => {
     }
   ];
 
+  // JSON-LD structured schema for local business & DOOH spaces catalog
+  const seoJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "AdvertisingService",
+    "name": "Grupo Comunicarte DOOH",
+    "description": "Red Premium de Pantallas LED de Gran Formato en Mendoza y Buenos Aires. Publicidad exterior digital simplificada y certificada.",
+    "url": typeof window !== "undefined" ? window.location.origin : "https://grupocomunicarte.com.ar",
+    "logo": "https://images.unsplash.com/photo-1541535650810-10d26f5c2ab3?auto=format&fit=crop&w=200&q=80",
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Mendoza",
+      "addressCountry": "AR"
+    },
+    "areaServed": [
+      {
+        "@type": "AdministrativeArea",
+        "name": "Mendoza"
+      },
+      {
+        "@type": "AdministrativeArea",
+        "name": "Buenos Aires"
+      }
+    ],
+    "provider": {
+      "@type": "LocalBusiness",
+      "name": "Grupo Comunicarte",
+      "telephone": "+54 261 455-8800"
+    },
+    "offers": {
+      "@type": "AggregateOffer",
+      "priceCurrency": "ARS",
+      "offerCount": screens.length,
+      "description": "Soportes publicitarios digitales UHD bajo cotización directa"
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#FAF9F5] text-stone-800 selection:bg-stone-200/50 font-sans antialiased overflow-x-hidden pb-12">
+      {/* Dynamic SEO JSON-LD injection */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(seoJsonLd) }}
+      />
       {/* 1. Navigation with unified action buttons */}
       <Navigation
         activeSlug={activeSlug}
@@ -155,14 +186,14 @@ export const LandingView: React.FC = () => {
         }}
         onSetActiveView={setActiveView}
         onSectionClick={(section) => {
-          if (section === "soporte") {
-            setActiveSlug("/soporte");
+          if (section === "soportes") {
+            setActiveSlug("/soportes");
             window.scrollTo({ top: 0, behavior: "smooth" });
           } else if (activeSlug !== "/") {
             setActiveSlug("/");
-            setTimeout(() => handleSectionClick(section as any), 100);
+            setTimeout(() => handleSectionClick(section), 100);
           } else {
-            handleSectionClick(section as any);
+            handleSectionClick(section);
           }
         }}
         cartCount={cart.length}

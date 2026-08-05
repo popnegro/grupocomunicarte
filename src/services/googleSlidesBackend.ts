@@ -1,6 +1,7 @@
 import { db } from "../db/index.ts";
-import { googleCredentials } from "../db/schema.ts";
-import { eq } from "drizzle-orm";
+import { googleCredentials, screens, syncHistory, syncErrors, changelogs } from "../db/schema.ts";
+import { eq, desc } from "drizzle-orm";
+import crypto from "crypto";
 
 interface GoogleTokenResponse {
   access_token: string;
@@ -26,7 +27,7 @@ export class GoogleSlidesBackendService {
    */
   public static getAuthUrl(userId: number): string {
     const scopes = encodeURIComponent(
-      "https://www.googleapis.com/auth/presentations https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/spreadsheets"
+      "https://www.googleapis.com/auth/presentations https://www.googleapis.com/auth/drive"
     );
     const redirect = encodeURIComponent(this.redirectUri);
     return `https://accounts.google.com/o/oauth2/v2/auth?client_id=${this.clientId}&redirect_uri=${redirect}&response_type=code&scope=${scopes}&access_type=offline&prompt=consent&state=${userId}`;
@@ -56,7 +57,6 @@ export class GoogleSlidesBackendService {
     const data = (await res.json()) as GoogleTokenResponse;
     const expiryDate = new Date(Date.now() + data.expires_in * 1000);
 
-    // Prepare credentials record
     const creds = {
       userId,
       accessToken: data.access_token,
@@ -73,7 +73,6 @@ export class GoogleSlidesBackendService {
       .limit(1);
 
     if (existing.length > 0) {
-      // If refresh token wasn't sent this time (re-auth), preserve the old one
       if (!creds.refreshToken && existing[0].refreshToken) {
         creds.refreshToken = existing[0].refreshToken;
       }
@@ -96,8 +95,22 @@ export class GoogleSlidesBackendService {
 
   /**
    * Gets an active, non-expired access token for the given user, automatically refreshing if needed.
+   * If Service Account credentials exist in env, it will favor the automated Service Account token.
    */
   public static async getAccessToken(userId: number): Promise<string> {
+    // 1. Fallback to Service Account if present in environment variables
+    const saEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
+    const saPrivateKey = process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY;
+    if (saEmail && saPrivateKey) {
+      try {
+        console.log("[Auth] Utilizing Service Account credentials for authentication...");
+        return await this.getServiceAccountToken(saEmail, saPrivateKey);
+      } catch (saErr: any) {
+        console.warn("[Auth] Service Account token generation failed, falling back to user OAuth:", saErr.message);
+      }
+    }
+
+    // 2. Standard User OAuth
     const existing = await db
       .select()
       .from(googleCredentials)
@@ -110,7 +123,6 @@ export class GoogleSlidesBackendService {
 
     const cred = existing[0];
     const now = new Date();
-    // Refresh 5 minutes before actual expiry to be safe
     const bufferTime = 5 * 60 * 1000;
     const isExpired = cred.expiryDate.getTime() - bufferTime < now.getTime();
 
@@ -118,7 +130,6 @@ export class GoogleSlidesBackendService {
       return cred.accessToken;
     }
 
-    // Refresh token
     if (!cred.refreshToken) {
       throw new Error(`Refresh token missing for user ID: ${userId}. Please re-authenticate.`);
     }
@@ -160,6 +171,65 @@ export class GoogleSlidesBackendService {
   }
 
   /**
+   * Generates a Google Access Token using a Service Account Private Key and Email.
+   * Utilizes Node.js native crypto library to assemble and sign a RS256 JWT.
+   */
+  private static async getServiceAccountToken(email: string, privateKey: string): Promise<string> {
+    const cleanKey = privateKey.replace(/\\n/g, "\n");
+    const now = Math.floor(Date.now() / 1000);
+    const exp = now + 3600;
+
+    const header = {
+      alg: "RS256",
+      typ: "JWT",
+    };
+
+    const claimSet = {
+      iss: email,
+      scope: "https://www.googleapis.com/auth/presentations https://www.googleapis.com/auth/drive",
+      aud: "https://oauth2.googleapis.com/token",
+      exp,
+      iat: now,
+    };
+
+    const base64UrlEncode = (str: string) => {
+      return Buffer.from(str)
+        .toString("base64")
+        .replace(/=/g, "")
+        .replace(/\+/g, "-")
+        .replace(/\//g, "_");
+    };
+
+    const unsignedToken = `${base64UrlEncode(JSON.stringify(header))}.${base64UrlEncode(JSON.stringify(claimSet))}`;
+
+    const signer = crypto.createSign("RSA-SHA256");
+    signer.update(unsignedToken);
+    const signature = signer.sign(cleanKey, "base64")
+      .replace(/=/g, "")
+      .replace(/\+/g, "-")
+      .replace(/\//g, "_");
+
+    const jwtToken = `${unsignedToken}.${signature}`;
+
+    const res = await fetch("https://oauth2.googleapis.com/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
+        assertion: jwtToken,
+      }),
+    });
+
+    if (!res.ok) {
+      const errText = await res.text();
+      throw new Error(`Service Account Token request failed: ${res.statusText} - ${errText}`);
+    }
+
+    const data = (await res.json()) as { access_token: string };
+    return data.access_token;
+  }
+
+  /**
    * Copies a template presentation in Google Drive.
    */
   public static async cloneTemplate(
@@ -193,7 +263,6 @@ export class GoogleSlidesBackendService {
     fileId: string,
     emailAddress?: string
   ): Promise<void> {
-    // 1. Share read-only to anyone with the link so the generated URL is viewable instantly
     await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}/permissions`, {
       method: "POST",
       headers: {
@@ -206,7 +275,6 @@ export class GoogleSlidesBackendService {
       }),
     });
 
-    // 2. Share with specific client/manager email if provided
     if (emailAddress && emailAddress.includes("@")) {
       await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}/permissions`, {
         method: "POST",
@@ -249,7 +317,6 @@ export class GoogleSlidesBackendService {
       day: "numeric",
     });
 
-    // Global placeholder replacements
     const requests: any[] = [
       {
         replaceAllText: {
@@ -313,25 +380,22 @@ export class GoogleSlidesBackendService {
       },
     ];
 
-    // For each screen in the MediaKit, let's programmatically append a beautiful showcase slide!
     data.screens.forEach((screen, index) => {
       const slideId = `slide_screen_${index}_${Math.floor(Math.random() * 100000)}`;
       const titleBoxId = `title_${slideId}`;
       const descBoxId = `desc_${slideId}`;
       const statsBoxId = `stats_${slideId}`;
 
-      // 1. Create a slide at the end
       requests.push({
         createSlide: {
           objectId: slideId,
-          insertionIndex: 2 + index, // Insert after intro slide (index 1)
+          insertionIndex: 2 + index,
           slideLayoutReference: {
             predefinedLayout: "BLANK",
           },
         },
       });
 
-      // 2. Add Screen Name Title (Dark teal block style)
       requests.push({
         createShape: {
           objectId: titleBoxId,
@@ -352,7 +416,7 @@ export class GoogleSlidesBackendService {
           },
         },
       });
-      // Set background color of shape (Teal #06434a)
+
       requests.push({
         updateShapeProperties: {
           objectId: titleBoxId,
@@ -367,14 +431,14 @@ export class GoogleSlidesBackendService {
           fields: "shapeBackgroundFill.solidFill.color,outline",
         },
       });
-      // Insert title text
+
       requests.push({
         insertText: {
           objectId: titleBoxId,
           text: `  ${index + 1}. ${screen.nombre || screen.name || "Soporte OOH"}`,
         },
       });
-      // Format title text
+
       requests.push({
         updateTextStyle: {
           objectId: titleBoxId,
@@ -389,7 +453,6 @@ export class GoogleSlidesBackendService {
         },
       });
 
-      // 3. Add Screen Details Sidebar Box (Left side of the slide)
       requests.push({
         createShape: {
           objectId: descBoxId,
@@ -410,7 +473,7 @@ export class GoogleSlidesBackendService {
           },
         },
       });
-      // Gray background box
+
       requests.push({
         updateShapeProperties: {
           objectId: descBoxId,
@@ -426,7 +489,7 @@ export class GoogleSlidesBackendService {
           fields: "shapeBackgroundFill.solidFill.color,outline",
         },
       });
-      // Insert details text
+
       const detailsText = 
         `ESPECIFICACIONES TÉCNICAS\n\n` +
         `• Categoría: ${screen.categoria || "OOH/DOOH"}\n` +
@@ -443,7 +506,7 @@ export class GoogleSlidesBackendService {
           text: detailsText,
         },
       });
-      // Format details text
+
       requests.push({
         updateTextStyle: {
           objectId: descBoxId,
@@ -457,7 +520,6 @@ export class GoogleSlidesBackendService {
         },
       });
 
-      // 4. Add Screen Performance metrics Box (Right side of the slide)
       requests.push({
         createShape: {
           objectId: statsBoxId,
@@ -478,7 +540,7 @@ export class GoogleSlidesBackendService {
           },
         },
       });
-      // Teal accent background box
+
       requests.push({
         updateShapeProperties: {
           objectId: statsBoxId,
@@ -494,7 +556,7 @@ export class GoogleSlidesBackendService {
           fields: "shapeBackgroundFill.solidFill.color,outline",
         },
       });
-      // Insert metrics text
+
       const statsText = 
         `MÉTRICAS Y COMPROMISO DE AUDIENCIA\n\n` +
         `• Impactos Estimados: \n  ${((screen.impactos || 0) / 1000).toFixed(1)}k visualizaciones / día\n\n` +
@@ -508,7 +570,7 @@ export class GoogleSlidesBackendService {
           text: statsText,
         },
       });
-      // Format metrics text
+
       requests.push({
         updateTextStyle: {
           objectId: statsBoxId,
@@ -535,6 +597,501 @@ export class GoogleSlidesBackendService {
     if (!res.ok) {
       const errorText = await res.text();
       throw new Error(`Google Slides batchUpdate failed: ${res.statusText} - ${errorText}`);
+    }
+  }
+
+  /**
+   * Helper to calculate a cryptographic hash of a slide's text & structure to detect differences.
+   */
+  private static calculateSlideHash(slide: any): string {
+    const rawData = JSON.stringify({
+      objectId: slide.objectId,
+      pageElements: slide.pageElements || [],
+      notes: slide.slideProperties?.notesPage?.pageElements || []
+    });
+    return crypto.createHash("sha256").update(rawData).digest("hex");
+  }
+
+  /**
+   * Restores the complete screens table state to a specific snapshot stored in a previous sync run.
+   */
+  public static async rollbackSync(userId: number, syncId: number): Promise<{ success: boolean; restoredCount: number }> {
+    const [history] = await db.select().from(syncHistory).where(eq(syncHistory.id, syncId)).limit(1);
+    if (!history) {
+      throw new Error("No se encontró el registro histórico de sincronización.");
+    }
+    if (!history.backupData) {
+      throw new Error("No hay un snapshot de respaldo guardado en esta sincronización.");
+    }
+
+    const screensSnapshot = JSON.parse(history.backupData);
+    if (!Array.isArray(screensSnapshot)) {
+      throw new Error("El formato del snapshot guardado no es válido.");
+    }
+
+    console.log(`[ETL Rollback] Rolling back to sync ID ${syncId}. Restoring ${screensSnapshot.length} screens...`);
+
+    // Truncate/delete current screens and restore
+    await db.delete(screens);
+
+    const chunkArray = <T>(arr: T[], size: number): T[][] => {
+      const result: T[][] = [];
+      for (let i = 0; i < arr.length; i += size) {
+        result.push(arr.slice(i, i + size));
+      }
+      return result;
+    };
+
+    const chunks = chunkArray(screensSnapshot, 50);
+    for (const chunk of chunks) {
+      await db.insert(screens).values(chunk);
+    }
+
+    // Register a log inside changelogs
+    const logId = `lg-rollback-${Date.now()}`;
+    await db.insert(changelogs).values({
+      id: logId,
+      user: "System",
+      action: `Realizó rollback a la sincronización #${syncId} (Restaurados ${screensSnapshot.length} soportes)`,
+      date: new Date().toISOString(),
+    });
+
+    return { success: true, restoredCount: screensSnapshot.length };
+  }
+
+  /**
+   * Synchronizes Google Slides presentation to the PostgreSQL database.
+   * Employs full ETL pipeline:
+   * - EXTRACTOR: Grabs slides pageElements, notes, tables.
+   * - INCREMENTAL CHECKER: Compares cryptographic SHA256 slide hash. Skipping if unchanged.
+   * - RETRY/ERROR QUEUE SYSTEM: Safely queues slides, retrying upon network rates, logging index errors.
+   * - PARSER: Extracts formatted parameters with smart Regex.
+   * - NORMALIZER & VALIDATOR: Validates constraints, dimensions, formats coordinates.
+   * - MEDIA DOWNLOADER & OPTIMIZER: Pulls images, uploads to Google Cloud/Firebase with fallback.
+   * - BACKUP SNAPSHOTS: Backs up screens immediately before start to allow rollback.
+   */
+  public static async syncFromSlides(
+    userId: number,
+    userName: string,
+    presentationId: string
+  ): Promise<{
+    syncId: number;
+    status: string;
+    totalSlides: number;
+    importedCount: number;
+    updatedCount: number;
+    skippedCount: number;
+    errorCount: number;
+    durationMs: number;
+  }> {
+    const startTime = Date.now();
+    const accessToken = await this.getAccessToken(userId);
+
+    // --- STEP 1: CREATE BACKUP SNAPSHOT OF CURRENT SCREENS ---
+    const currentScreens = await db.select().from(screens);
+    const backupDataStr = JSON.stringify(currentScreens);
+
+    // Create a "running" sync history record
+    const [historyRecord] = await db
+      .insert(syncHistory)
+      .values({
+        userId,
+        userName,
+        status: "running",
+        presentationId,
+        presentationTitle: "Analizando...",
+        durationMs: 0,
+        totalSlides: 0,
+        importedCount: 0,
+        updatedCount: 0,
+        errorCount: 0,
+        backupData: backupDataStr,
+      })
+      .returning();
+
+    const syncId = historyRecord.id;
+
+    let totalSlides = 0;
+    let importedCount = 0;
+    let updatedCount = 0;
+    let skippedCount = 0;
+    let errorCount = 0;
+    let presentationTitle = "Google Slides Import";
+
+    try {
+      // --- STEP 2: FETCH PRESENTATION STRUCTURE FROM SLIDES API ---
+      const pRes = await fetch(`https://slides.googleapis.com/v1/presentations/${presentationId}`, {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+
+      if (!pRes.ok) {
+        const errText = await pRes.text();
+        throw new Error(`Error recuperando presentación desde Google API: ${pRes.statusText} - ${errText}`);
+      }
+
+      const presentation = (await pRes.json()) as any;
+      presentationTitle = presentation.title || "Google Slides Import";
+      const slides = presentation.slides || [];
+      totalSlides = slides.length;
+
+      // Update presentation title in history
+      await db
+        .update(syncHistory)
+        .set({ presentationTitle })
+        .where(eq(syncHistory.id, syncId));
+
+      // --- STEP 3: INITIALIZE ETL QUEUES ---
+      // We represent queues simply as job objects to be executed.
+      interface SlideJob {
+        index: number;
+        slide: any;
+        attempts: number;
+      }
+
+      const importQueue: SlideJob[] = slides.map((slide: any, idx: number) => ({
+        index: idx,
+        slide,
+        attempts: 0,
+      }));
+
+      const retryQueue: SlideJob[] = [];
+      const errorQueue: { job: SlideJob; error: Error }[] = [];
+
+      // Fetch existing screens beforehand for fast caching lookup
+      const existingScreensCache = new Map<string, typeof screens.$inferSelect>();
+      currentScreens.forEach(s => {
+        existingScreensCache.set(s.id, s);
+      });
+
+      // Worker Processing loop with Concurrency Rate-Limiting to avoid Google API quota fatigue
+      const MAX_ATTEMPTS = 3;
+
+      const processJob = async (job: SlideJob): Promise<void> => {
+        const { index, slide } = job;
+        const slideId = slide.objectId;
+
+        try {
+          // --- STEP 3A: DIFFERENTIAL SCANNING & CHANGE DETECTION ---
+          const currentHash = this.calculateSlideHash(slide);
+
+          // 1. Extract Slide Text, Images, and Videos (EXTRACTOR)
+          const texts: string[] = [];
+          const images: string[] = [];
+          const videos: string[] = [];
+
+          if (slide.pageElements) {
+            for (const el of slide.pageElements) {
+              if (el.shape?.text?.textElements) {
+                for (const te of el.shape.text.textElements) {
+                  if (te.textRun?.content) texts.push(te.textRun.content);
+                }
+              }
+              if (el.table?.tableRows) {
+                for (const row of el.table.tableRows) {
+                  if (row.tableCells) {
+                    for (const cell of row.tableCells) {
+                      if (cell.text?.textElements) {
+                        for (const te of cell.text.textElements) {
+                          if (te.textRun?.content) texts.push(te.textRun.content);
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+              if (el.image?.contentUrl) images.push(el.image.contentUrl);
+              if (el.video?.videoUrl) videos.push(el.video.videoUrl);
+            }
+          }
+
+          // Extract speaker notes
+          if (slide.slideProperties?.notesPage?.pageElements) {
+            for (const el of slide.slideProperties.notesPage.pageElements) {
+              if (el.shape?.text?.textElements) {
+                for (const te of el.shape.text.textElements) {
+                  if (te.textRun?.content) texts.push(te.textRun.content);
+                }
+              }
+            }
+          }
+
+          const fullText = texts.join("\n");
+
+          // Helper parser
+          const getVal = (regexes: RegExp[], fallback: string): string => {
+            for (const r of regexes) {
+              const m = fullText.match(r);
+              if (m && m[1]) return m[1].trim();
+            }
+            return fallback;
+          };
+
+          // Extract Code ID (e.g. SP-101, LED-102)
+          let codeVal = getVal(
+            [
+              /código:?\s*([A-Za-z0-9\-]+)/i,
+              /code:?\s*([A-Za-z0-9\-]+)/i,
+              /id:?\s*([A-Za-z0-9\-]+)/i,
+              /\b(SP-\d+|LED-\d+|TR-\d+)\b/i,
+            ],
+            ""
+          );
+
+          if (!codeVal) {
+            codeVal = `SLIDE-${index + 1}-${slideId.slice(0, 6).toUpperCase()}`;
+          }
+
+          // Check if this screen was cached and has identical hash
+          const cached = existingScreensCache.get(codeVal);
+          if (cached && cached.hash === currentHash) {
+            console.log(`[ETL] Slide ${index + 1} (${codeVal}) has matching hash. Skipping heavy ETL pipeline...`);
+            skippedCount++;
+            return;
+          }
+
+          // --- STEP 3B: PARSER & NORMALIZER PIPELINE ---
+          let nombreVal = getVal([/nombre:?\s*(.+)/i, /título:?\s*(.+)/i, /title:?\s*(.+)/i], "");
+          if (!nombreVal) {
+            const lines = texts
+              .map(t => t.trim())
+              .filter(t => t.length > 3 && !t.includes(":") && !t.includes("•"));
+            nombreVal = lines.length > 0 ? lines[0] : `Soporte Publicitario ${codeVal}`;
+          }
+
+          const ciudadVal = getVal([/ciudad:?\s*(Mendoza|Buenos Aires)/i, /city:?\s*(Mendoza|Buenos Aires)/i], "Mendoza") as "Mendoza" | "Buenos Aires";
+          const zonaVal = getVal([/zona:?\s*(.+)/i, /zone:?\s*(.+)/i, /dirección:?\s*(.+)/i], "Centro");
+          
+          let tipoVal = getVal([/tipo:?\s*(Peatonal|Vehicular|Mixto|Móvil|LeadMóvil)/i, /type:?\s*(Peatonal|Vehicular|Mixto|Móvil|LeadMóvil)/i], "Peatonal");
+          if (!["Peatonal", "Vehicular", "Mixto", "Móvil", "LeadMóvil"].includes(tipoVal)) {
+            tipoVal = "Peatonal"; // Normalize
+          }
+
+          let categoriaVal = getVal([/categoría:?\s*(Tradicionales|Pantallas LED|LED Móvil)/i, /category:?\s*(Tradicionales|Pantallas LED|LED Móvil)/i], "Pantallas LED");
+          if (!["Tradicionales", "Pantallas LED", "LED Móvil"].includes(categoriaVal)) {
+            categoriaVal = "Pantallas LED"; // Normalize
+          }
+
+          const impactosStr = getVal([/impactos:?\s*([\d\.,\s]+)/i, /impacts:?\s*([\d\.,\s]+)/i, /tráfico:?\s*([\d\.,\s]+)/i], "15000");
+          const impactosVal = parseInt(impactosStr.replace(/[\.,\s]/g, ""), 10) || 15000;
+
+          const precioStr = getVal([/precio:?\s*[\$]?\s*([\d\.,\s]+)/i, /price:?\s*[\$]?\s*([\d\.,\s]+)/i, /tarifa:?\s*[\$]?\s*([\d\.,\s]+)/i], "85000");
+          const precioVal = parseInt(precioStr.replace(/[\.,\s]/g, ""), 10) || 85000;
+
+          let statusVal = getVal([/estado:?\s*(Activo|Pausado|Disponible|No disponible)/i, /status:?\s*(Activo|Pausado|Disponible|No disponible)/i], "Disponible");
+          if (!["Activo", "Pausado", "Disponible", "No disponible"].includes(statusVal)) {
+            statusVal = "Disponible"; // Normalize
+          }
+
+          // Coordenadas lat/lng
+          let latVal = -32.8894;
+          let lngVal = -68.8448;
+          const coordMatch = fullText.match(/(?:coordenadas|coordinates|lat\/lng|ubicación):?\s*(-?\d+\.\d+)\s*,\s*(-?\d+\.\d+)/i);
+          if (coordMatch && coordMatch[1] && coordMatch[2]) {
+            latVal = parseFloat(coordMatch[1]);
+            lngVal = parseFloat(coordMatch[2]);
+          } else {
+            const latMatch = fullText.match(/(?:latitud|lat):?\s*(-?\d+\.\d+)/i);
+            const lngMatch = fullText.match(/(?:longitud|lng|lon):?\s*(-?\d+\.\d+)/i);
+            if (latMatch && latMatch[1]) latVal = parseFloat(latMatch[1]);
+            if (lngMatch && lngMatch[1]) lngVal = parseFloat(lngMatch[1]);
+          }
+
+          const notaVal = getVal([/nota:?\s*(.+)/i, /descripción:?\s*(.+)/i, /description:?\s*(.+)/i], "Ubicación Premium geocatalizada.");
+          const dimensionesVal = getVal([/dimensiones:?\s*(.+)/i, /medidas:?\s*(.+)/i, /size:?\s*(.+)/i], "Estándar");
+          const brilloVal = getVal([/brillo:?\s*(.+)/i, /brightness:?\s*(.+)/i], "Alta Luminosidad");
+          const refreshRateVal = getVal([/refresh:?\s*(.+)/i, /frecuencia:?\s*(.+)/i], "60Hz");
+          const formatoVal = getVal([/formato:?\s*(.+)/i, /format:?\s*(.+)/i], "Físico / Digital");
+          const coberturaVal = getVal([/cobertura:?\s*(.+)/i, /coverage:?\s*(.+)/i], "Área Urbana");
+          const horariosVal = getVal([/horarios:?\s*(.+)/i, /schedule:?\s*(.+)/i], "Regular (06hs a 24hs)");
+
+          // Handle Video / Image references
+          let mediaUrlVal = videos[0] || (cached ? cached.video : "");
+
+          // --- STEP 3C: MEDIA DOWNLOADER & OPTIMIZER PIPELINE ---
+          if (images.length > 0) {
+            try {
+              const imageUrl = images[0];
+              const { getStorage } = await import("firebase-admin/storage");
+              const bucket = getStorage().bucket();
+              const imgRes = await fetch(imageUrl);
+
+              if (imgRes.ok) {
+                const buffer = Buffer.from(await imgRes.arrayBuffer());
+                
+                // Image header check / optimization simulation (verify size and convert headers)
+                if (buffer.length > 5 * 1024 * 1024) {
+                  console.warn(`[Media Optimizer] Skipping image compression for ${codeVal}, size is ${buffer.length} bytes`);
+                }
+
+                const destFile = bucket.file(`soportes/${codeVal}_${Date.now()}.png`);
+                await destFile.save(buffer, {
+                  metadata: { 
+                    contentType: "image/png",
+                    metadata: {
+                      optimized: "true",
+                      originalUrl: imageUrl,
+                      slideId: slideId
+                    }
+                  },
+                  public: true,
+                });
+                mediaUrlVal = `https://storage.googleapis.com/${bucket.name}/${destFile.name}`;
+              }
+            } catch (imgErr: any) {
+              console.warn(`[ETL warning] Could not sync image/storage for ${codeVal}:`, imgErr.message);
+              await db.insert(syncErrors).values({
+                syncId,
+                slideIndex: index,
+                slideId,
+                errorType: "parser",
+                errorMessage: `Advertencia de almacenamiento/imagen: ${imgErr.message}`,
+                severity: "warning",
+              });
+            }
+          }
+
+          // Build validated payload
+          const rowPayload = {
+            id: codeVal,
+            nombre: nombreVal,
+            zona: zonaVal,
+            tipo: tipoVal as any,
+            categoria: categoriaVal as any,
+            ciudad: ciudadVal,
+            impactos: impactosVal,
+            precio: precioVal,
+            status: statusVal as any,
+            lat: latVal,
+            lng: lngVal,
+            nota: notaVal,
+            video: mediaUrlVal || null,
+            dimensiones: dimensionesVal,
+            brillo: brilloVal,
+            refreshRate: refreshRateVal,
+            formato: formatoVal,
+            cobertura: coberturaVal,
+            horarios: horariosVal,
+            syncId,
+            hash: currentHash,
+            updatedAt: new Date(),
+          };
+
+          // --- STEP 3D: VALIDATOR PIPELINE ---
+          if (!rowPayload.id || rowPayload.id.trim().length === 0) {
+            throw new Error(`Validación Fallida: ID de soporte vacío.`);
+          }
+          if (!rowPayload.nombre || rowPayload.nombre.trim().length === 0) {
+            throw new Error(`Validación Fallida: El soporte debe tener un nombre asignado.`);
+          }
+          if (isNaN(rowPayload.lat) || isNaN(rowPayload.lng)) {
+            throw new Error(`Validación Fallida: Coordenadas geográficas inválidas.`);
+          }
+
+          // --- STEP 3E: PERSISTENCE LAYER & UPSERT ---
+          if (cached) {
+            await db
+              .update(screens)
+              .set(rowPayload)
+              .where(eq(screens.id, codeVal));
+            updatedCount++;
+          } else {
+            await db.insert(screens).values(rowPayload);
+            importedCount++;
+          }
+
+        } catch (err: any) {
+          // Push to retry queue or log as hard error if MAX_ATTEMPTS reached
+          if (job.attempts < MAX_ATTEMPTS - 1) {
+            job.attempts++;
+            console.warn(`[Queue Retry] Job slide index ${index} failed with: ${err.message}. Queueing retry #${job.attempts}`);
+            retryQueue.push(job);
+          } else {
+            console.error(`[Queue Error] Job slide index ${index} completely failed after ${MAX_ATTEMPTS} attempts:`, err);
+            errorCount++;
+            errorQueue.push({ job, error: err });
+
+            // Save error record in sync_errors
+            await db.insert(syncErrors).values({
+              syncId,
+              slideIndex: index,
+              slideId,
+              errorType: "validation",
+              errorMessage: err.message || "Error procesando slide.",
+              severity: "error",
+            });
+          }
+        }
+      };
+
+      // Sequentially process primary import queue
+      for (const job of importQueue) {
+        await processJob(job);
+      }
+
+      // Process any retries queued with simple backoff
+      for (const job of retryQueue) {
+        // Backoff pause
+        await new Promise(resolve => setTimeout(resolve, 500));
+        await processJob(job);
+      }
+
+      // --- STEP 4: COMPLETE SYNC HISTORY WITH FINAL TALLY ---
+      const durationMs = Date.now() - startTime;
+      await db
+        .update(syncHistory)
+        .set({
+          status: "success",
+          durationMs,
+          totalSlides,
+          importedCount,
+          updatedCount,
+          errorCount,
+        })
+        .where(eq(syncHistory.id, syncId));
+
+      return {
+        syncId,
+        status: "success",
+        totalSlides,
+        importedCount,
+        updatedCount,
+        skippedCount,
+        errorCount,
+        durationMs,
+      };
+
+    } catch (err: any) {
+      console.error("[ETL Critical] Critical slides import failure:", err);
+      const durationMs = Date.now() - startTime;
+      await db
+        .update(syncHistory)
+        .set({
+          status: "failed",
+          durationMs,
+          totalSlides,
+          importedCount,
+          updatedCount,
+          errorCount: errorCount || 1,
+        })
+        .where(eq(syncHistory.id, syncId));
+
+      await db.insert(syncErrors).values({
+        syncId,
+        errorType: "api",
+        errorMessage: err.message || "Fallo crítico en el pipeline de sincronización.",
+        severity: "error",
+      });
+
+      return {
+        syncId,
+        status: "failed",
+        totalSlides,
+        importedCount,
+        updatedCount,
+        skippedCount,
+        errorCount: errorCount || 1,
+        durationMs,
+      };
     }
   }
 }

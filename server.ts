@@ -1,6 +1,6 @@
-import "dotenv/config";
 import express, { Request, Response, NextFunction } from "express";
 import path from "path";
+import dotenv from "dotenv";
 import { GoogleGenAI, Type } from "@google/genai";
 import { db } from "./src/db/index.ts";
 import {
@@ -16,6 +16,8 @@ import { SEED_SCREENS, INITIAL_CLIENTES, INITIAL_MEDIAKITS, INITIAL_LOGS } from 
 import { requestLogger } from "./src/middleware/logger.ts";
 import { errorHandler } from "./src/middleware/errorHandler.ts";
 import { apiV1Router } from "./src/api/v1/router.ts";
+
+dotenv.config();
 
 const app = express();
 const PORT = 3000;

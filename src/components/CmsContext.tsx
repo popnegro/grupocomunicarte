@@ -3,6 +3,7 @@ import { create } from "zustand";
 import { useLocation } from "react-router-dom";
 import { LandingContent, Lead, OnboardingAnswers, SeoAuditReport, GrowthRecommendation, DoohScreen } from "../types";
 import { sitemap } from "../lib/sitemap";
+import { API_ROUTES } from "../lib/apiRoutes"; // New import
 import { safeFetchJson, apiClient } from "../lib/apiClient";
 
 const SEED_SCREENS: DoohScreen[] = [
@@ -606,7 +607,7 @@ export const useCmsStore = create<CmsStoreProps>((set, get) => ({
 
   addLead: async (leadData) => {
     try {
-      const res = await safeFetchJson<{ success: boolean; data?: any }>("/api/leads", {
+      const res = await safeFetchJson<{ success: boolean; data?: any }>(API_ROUTES.leads, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(leadData),
@@ -671,7 +672,7 @@ export const useCmsStore = create<CmsStoreProps>((set, get) => ({
 
   fetchLeads: async () => {
     try {
-      const res = await apiClient.get<{ success: boolean; data: any[] }>("/api/leads");
+      const res = await apiClient.get<{ success: boolean; data: any[] }>(API_ROUTES.leads);
       if (res.ok && res.data?.success && Array.isArray(res.data.data)) {
         set({ leads: res.data.data });
       } else if (!res.ok) {
@@ -689,7 +690,7 @@ export const useCmsStore = create<CmsStoreProps>((set, get) => ({
   fetchPublicScreens: async () => {
     set({ loadingScreens: true });
     try {
-      const res = await apiClient.get<{ success: boolean; data: any[] }>("/api/public/screens");
+      const res = await apiClient.get<{ success: boolean; data: any[] }>(API_ROUTES.publicScreens);
       if (res.ok && res.data?.success && Array.isArray(res.data.data) && res.data.data.length > 0) {
         set({ screens: res.data.data });
         localStorage.setItem("smartweb_dooh_screens", JSON.stringify(res.data.data));
@@ -710,7 +711,7 @@ export const useCmsStore = create<CmsStoreProps>((set, get) => ({
   generateAIContent: async (answers) => {
     set({ loadingAI: true });
     try {
-      const res = await safeFetchJson<{ success: boolean; data: any }>("/api/ai/generate", {
+      const res = await safeFetchJson<{ success: boolean; data: any }>(API_ROUTES.ai.generate, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(answers),
@@ -747,7 +748,7 @@ export const useCmsStore = create<CmsStoreProps>((set, get) => ({
   runSeoAudit: async () => {
     set({ loadingAI: true });
     try {
-      const res = await safeFetchJson<{ success: boolean; data: SeoAuditReport }>("/api/ai/seo-audit", {
+      const res = await safeFetchJson<{ success: boolean; data: SeoAuditReport }>(API_ROUTES.ai.seoAudit, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -771,7 +772,7 @@ export const useCmsStore = create<CmsStoreProps>((set, get) => ({
   runGrowthRecs: async (visitors, convRate) => {
     set({ loadingAI: true });
     try {
-      const res = await safeFetchJson<{ success: boolean; data: { recommendations: GrowthRecommendation[] } }>("/api/ai/recommendations", {
+      const res = await safeFetchJson<{ success: boolean; data: { recommendations: GrowthRecommendation[] } }>(API_ROUTES.ai.recommendations, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

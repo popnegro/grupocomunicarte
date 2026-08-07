@@ -6,6 +6,7 @@ import {
   FolderOpen
 } from "lucide-react";
 import { useToast } from "../ui/Toast";
+import { API_ROUTES } from "../../lib/apiRoutes";
 import { GooglePickerButton } from "./GooglePickerButton";
 import { safeFetchJson } from "../../lib/apiClient";
 
@@ -58,8 +59,8 @@ export const SlidesSyncModule: React.FC<SlidesSyncModuleProps> = ({ token, onRef
   // Check Google account connection status
   const checkGoogleConnection = async () => {
     if (!token) return;
-    try {
-      const res = await safeFetchJson<{ success: boolean; connected?: boolean }>("/api/auth/google/status", {
+    try { // Use API_ROUTES.auth.googleStatus
+      const res = await safeFetchJson<{ success: boolean; connected?: boolean }>(API_ROUTES.auth.googleStatus, {
         headers: { "Authorization": `Bearer ${token}` }
       });
       if (res.data?.success && res.data?.connected) {
@@ -76,8 +77,8 @@ export const SlidesSyncModule: React.FC<SlidesSyncModuleProps> = ({ token, onRef
   // Fetch Google OAuth auth url
   const fetchAuthUrl = async () => {
     if (!token) return;
-    try {
-      const res = await safeFetchJson<{ success: boolean; url?: string }>("/api/auth/google/url", {
+    try { // Use API_ROUTES.auth.googleUrl
+      const res = await safeFetchJson<{ success: boolean; url?: string }>(API_ROUTES.auth.googleUrl, {
         headers: { "Authorization": `Bearer ${token}` }
       });
       if (res.data?.success && res.data?.url) {
@@ -92,8 +93,8 @@ export const SlidesSyncModule: React.FC<SlidesSyncModuleProps> = ({ token, onRef
   const fetchSyncHistory = async () => {
     if (!token) return;
     setLoadingHistory(true);
-    try {
-      const res = await safeFetchJson<{ success: boolean; data: SyncRun[] }>("/api/sync/history", {
+    try { // Use API_ROUTES.syncHistory
+      const res = await safeFetchJson<{ success: boolean; data: SyncRun[] }>(API_ROUTES.syncHistory, {
         headers: {
           "Authorization": `Bearer ${token}`,
           "Content-Type": "application/json"
@@ -145,7 +146,7 @@ export const SlidesSyncModule: React.FC<SlidesSyncModuleProps> = ({ token, onRef
     toast.info("Conectando con Google Slides API y extrayendo metadatos...", "Sincronización Iniciada");
 
     try {
-      const res = await safeFetchJson<{ success: boolean; data?: any; error?: string }>("/api/sync", {
+      const res = await safeFetchJson<{ success: boolean; data?: any; error?: string }>(API_ROUTES.sync, {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${token}`,
@@ -191,7 +192,7 @@ export const SlidesSyncModule: React.FC<SlidesSyncModuleProps> = ({ token, onRef
     toast.info("Restaurando snapshot de base de datos...", "Rollback en Proceso");
 
     try {
-      const res = await safeFetchJson<{ success: boolean; data?: { restoredCount: number }; error?: string }>("/api/sync/rollback", {
+      const res = await safeFetchJson<{ success: boolean; data?: { restoredCount: number }; error?: string }>(API_ROUTES.syncRollback, {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${token}`,
@@ -229,7 +230,7 @@ export const SlidesSyncModule: React.FC<SlidesSyncModuleProps> = ({ token, onRef
     setSelectedRun(runId);
     setSelectedRunErrors([]);
     try {
-      const res = await safeFetchJson<{ success: boolean; data: SyncError[] }>(`/api/sync/errors/${runId}`, {
+      const res = await safeFetchJson<{ success: boolean; data: SyncError[] }>(API_ROUTES.syncErrors(runId), {
         headers: {
           "Authorization": `Bearer ${token}`
         }
@@ -277,10 +278,10 @@ export const SlidesSyncModule: React.FC<SlidesSyncModuleProps> = ({ token, onRef
                     attempts++;
                     if (attempts > 20) {
                       clearInterval(interval);
-                      return;
+                      return; // Stop trying after 20 attempts
                     }
                     try {
-                      const res = await safeFetchJson<{ success: boolean; connected?: boolean }>("/api/auth/google/status", {
+                      const res = await safeFetchJson<{ success: boolean; connected?: boolean }>(API_ROUTES.auth.googleStatus, {
                         headers: { Authorization: `Bearer ${token}` }
                       });
                       if (res.data?.success && res.data?.connected) {

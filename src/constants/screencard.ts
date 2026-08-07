@@ -1,0 +1,76 @@
+import {
+  Compass,
+  Users,
+  Car,
+  Layers,
+  ShoppingBag,
+  Coffee,
+  Coins,
+  Bus,
+  Utensils,
+  Timer,
+  Truck,
+  TrendingUp,
+  GraduationCap,
+} from "lucide-react";
+
+export const ICON_COMPONENTS: Record<string, React.ComponentType<any>> = {
+  Compass,
+  Users,
+  Car,
+  Layers,
+  ShoppingBag,
+  Coffee,
+  Coins,
+  Bus,
+  Utensils,
+  Timer,
+  Truck,
+  TrendingUp,
+  GraduationCap,
+};
+
+export const TYPE_STYLES: Record<string, { bg: string; dot: string; res: string; size: string; brightness: string }> = {
+  Peatonal: {
+    bg: "bg-sky-50 border-sky-100 text-sky-700",
+    dot: "bg-sky-500",
+    res: "P2.5 High-Definition LED",
+    size: "3.5m x 2.0m",
+    brightness: "5,500 nits (Auto-Dimming)",
+  },
+  Vehicular: {
+    bg: "bg-teal-50 border-teal-100 text-teal-700",
+    dot: "bg-teal-500",
+    res: "P4 Premium Outdoor Cabinets",
+    size: "8.0m x 3.0m",
+    brightness: "7,500 nits (Ultra High-Contrast)",
+  },
+  Mixto: {
+    bg: "bg-purple-50 border-purple-100 text-purple-700",
+    dot: "bg-purple-500",
+    res: "P3.0 Professional Outdoor",
+    size: "5.0m x 3.0m",
+    brightness: "6,500 nits (Smart Energy-Saving)",
+  },
+  LeadMóvil: {
+    bg: "bg-amber-50 border-amber-100 text-amber-700",
+    dot: "bg-amber-500",
+    res: "Formato Móvil (Linear Route)",
+    size: "4.0m x 2.0m Doble Cara",
+    brightness: "7,500 nits (Full Day Smart LED)",
+  },
+  Móvil: {
+    bg: "bg-amber-50 border-amber-100 text-amber-700",
+    dot: "bg-amber-500",
+    res: "Formato Móvil (Linear Route)",
+    size: "4.0m x 2.0m Doble Cara",
+    brightness: "7,500 nits (Full Day Smart LED)",
+  },
+  default: {
+    bg: "bg-stone-50 border-stone-100 text-stone-700",
+    dot: "bg-stone-500",
+    res: "P3 Professional LED",
+    size: "4m x 3m",
+    brightness: "5,500 nits",
+  },
+};

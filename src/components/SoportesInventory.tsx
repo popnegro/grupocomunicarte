@@ -1,9 +1,9 @@
 import React, { useState, useMemo } from "react";
 import { useCms } from "./CmsContext";
 import { DoohScreen } from "../types";
-import { Search, MapPin, Tv, Eye, SlidersHorizontal, Layers, Crop, Cpu } from "lucide-react";
+import { Search, MapPin, Tv, SlidersHorizontal } from "lucide-react";
 import { Input } from "./ui/input";
-import { Button } from "../design-system";
+import { Button } from "./ui/button";
 
 interface SoportesInventoryProps {
   initialCity?: string;
@@ -180,7 +180,7 @@ export const SoportesInventory: React.FC<SoportesInventoryProps> = ({
               type="text"
               placeholder="Buscar por esquina o zona..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchQuery(e.target.value)}
               className="pl-9 h-9 text-xs focus-visible:ring-[#06434a] border-stone-200"
             />
           </div>
@@ -191,11 +191,11 @@ export const SoportesInventory: React.FC<SoportesInventoryProps> = ({
               <Button
                 key={city}
                 type="button"
-                variant={selectedCity === city ? "primary" : "secondary"}
+                variant={selectedCity === city ? "default" : "secondary"}
                 size="sm"
                 onClick={() => setSelectedCity(city)}
                 className={`flex-1 h-9 text-[10px] font-bold tracking-wider ${
-                  selectedCity === city ? "bg-[#06434a] text-white" : "border-stone-200 text-stone-600 bg-white"
+                  selectedCity === city ? "bg-primary text-primary-foreground" : ""
                 }`}
               >
                 {city === "Todas" ? "Todas las Plazas" : city}

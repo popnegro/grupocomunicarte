@@ -2,18 +2,15 @@ import React, { useState, useMemo } from "react";
 import { DoohScreen } from "../../types";
 import { Role } from "./types";
 import { motion, AnimatePresence } from "motion/react";
-import { downloadMediaKitAsHtml } from "../../utils/mediaKitExport";
 import { 
   Plus, 
   Trash2, 
   Copy, 
   Eye, 
   Search, 
-  MapPin, 
   Video, 
   Layers, 
   Sparkles, 
-  Sliders, 
   ChevronRight, 
   Check, 
   DollarSign, 
@@ -23,12 +20,12 @@ import {
   Calendar, 
   X, 
   EyeOff, 
-  Settings2,
   Archive,
   RotateCcw
 } from "lucide-react";
+import { downloadMediaKitAsHtml } from "../../utils/mediaKitExport";
+import { MapPin } from "lucide-react";
 import { FileUpload } from "./FileUpload";
-import { InventorySkeleton } from "./InventorySkeleton";
 
 interface InventoryModuleProps {
   screens: DoohScreen[];
@@ -36,7 +33,6 @@ interface InventoryModuleProps {
   onUpdateScreen: (id: string, data: Partial<DoohScreen>) => void;
   onAddScreen: (screen: DoohScreen) => void;
   onDeleteScreen: (id: string) => void;
-  isLoading?: boolean;
 }
 
 export const InventoryModule: React.FC<InventoryModuleProps> = ({
@@ -45,7 +41,6 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
   onUpdateScreen,
   onAddScreen,
   onDeleteScreen,
-  isLoading = false,
 }) => {
   // Filters state
   const [selectedCityFilter, setSelectedCityFilter] = useState<string>("Todas");
@@ -292,125 +287,121 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
         </div>
 
         {/* Grid listing */}
-        {isLoading ? (
-          <InventorySkeleton count={6} />
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-            {filteredScreens.map((screen) => (
-              <div
-                key={screen.id}
-                onClick={() => setActiveScreenId(screen.id)}
-                className={`bg-white border text-left p-5 rounded-2xl cursor-pointer transition-all hover:shadow-md space-y-4 flex flex-col justify-between ${
-                  activeScreenId === screen.id 
-                    ? "border-[#06434a] ring-1 ring-[#06434a]/30 shadow-xs" 
-                    : "border-stone-200"
-                }`}
-              >
-                <div className="space-y-2.5">
-                  <div className="flex items-start justify-between gap-2">
-                    <span className={`text-[8px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
-                      screen.categoria === "Pantallas LED" 
-                        ? "bg-teal-50 text-teal-700 border border-teal-100" 
-                        : screen.categoria === "LED Móvil"
-                        ? "bg-amber-50 text-amber-700 border border-amber-100"
-                        : "bg-blue-50 text-blue-700 border border-blue-100"
-                    }`}>
-                      {screen.categoria}
-                    </span>
-                    
-                    <span className={`text-[9px] font-extrabold px-2 py-0.5 rounded-md uppercase tracking-wider ${
-                      screen.status === "Activo" || screen.status === "Disponible"
-                        ? "bg-emerald-100/80 text-emerald-950 border border-emerald-200"
-                        : "bg-amber-100/80 text-amber-950 border border-amber-200"
-                    }`}>
-                      {screen.status}
-                    </span>
-                  </div>
-
-                  <div>
-                    <h4 className="text-xs font-black text-stone-900 leading-snug font-display">
-                      {screen.nombre}
-                    </h4>
-                    <div className="flex items-center gap-1 text-[10px] text-stone-500 font-medium mt-1">
-                      <MapPin className="h-3 w-3 text-[#06434a]/70 shrink-0" />
-                      <span>{screen.ciudad} • {screen.zona}</span>
-                    </div>
-                  </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          {filteredScreens.map((screen) => (
+            <div
+              key={screen.id}
+              onClick={() => setActiveScreenId(screen.id)}
+              className={`bg-white border text-left p-5 rounded-2xl cursor-pointer transition-all hover:shadow-md space-y-4 flex flex-col justify-between ${
+                activeScreenId === screen.id 
+                  ? "border-[#06434a] ring-1 ring-[#06434a]/30 shadow-xs" 
+                  : "border-stone-200"
+              }`}
+            >
+              <div className="space-y-2.5">
+                <div className="flex items-start justify-between gap-2">
+                  <span className={`text-[8px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
+                    screen.categoria === "Pantallas LED" 
+                      ? "bg-teal-50 text-teal-700 border border-teal-100" 
+                      : screen.categoria === "LED Móvil"
+                      ? "bg-amber-50 text-amber-700 border border-amber-100"
+                      : "bg-blue-50 text-blue-700 border border-blue-100"
+                  }`}>
+                    {screen.categoria}
+                  </span>
+                  
+                  <span className={`text-[9px] font-extrabold px-2 py-0.5 rounded-md uppercase tracking-wider ${
+                    screen.status === "Activo" || screen.status === "Disponible"
+                      ? "bg-emerald-100/80 text-emerald-950 border border-emerald-200"
+                      : "bg-amber-100/80 text-amber-950 border border-amber-200"
+                  }`}>
+                    {screen.status}
+                  </span>
                 </div>
 
-                {/* pricing & impacts summary */}
-                <div className="border-t border-stone-100 pt-3 flex items-center justify-between text-[11px] font-bold text-stone-800">
-                  <div className="text-left">
-                    <span className="block text-[8px] text-stone-400 font-bold uppercase tracking-wider">Impactos</span>
-                    <span className="font-mono text-stone-900 mt-0.5 block">
-                      {(screen.impactos / 1000).toFixed(1)}k / día
-                    </span>
-                  </div>
-
-                  <div className="text-right">
-                    <span className="block text-[8px] text-stone-400 font-bold uppercase tracking-wider">Tarifa</span>
-                    <span className="font-mono text-[#06434a] mt-0.5 block">
-                      ${screen.precio.toLocaleString()}
-                    </span>
+                <div>
+                  <h4 className="text-xs font-black text-stone-900 leading-snug font-display">
+                    {screen.nombre}
+                  </h4>
+                  <div className="flex items-center gap-1 text-[10px] text-stone-500 font-medium mt-1">
+                    <MapPin className="h-3 w-3 text-primary/70 shrink-0" />
+                    <span>{screen.ciudad} • {screen.zona}</span>
                   </div>
                 </div>
+              </div>
 
-                {/* CRUD triggers */}
-                <div className="border-t border-stone-100 pt-3 flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
+              {/* pricing & impacts summary */}
+              <div className="border-t border-stone-100 pt-3 flex items-center justify-between text-[11px] font-bold text-stone-800">
+                <div className="text-left">
+                  <span className="block text-[8px] text-stone-400 font-bold uppercase tracking-wider">Impactos</span>
+                  <span className="font-mono text-stone-900 mt-0.5 block">
+                    {(screen.impactos / 1000).toFixed(1)}k / día
+                  </span>
+                </div>
+
+                <div className="text-right">
+                  <span className="block text-[8px] text-stone-400 font-bold uppercase tracking-wider">Tarifa</span>
+                  <span className="font-mono text-[#06434a] mt-0.5 block">
+                    ${screen.precio.toLocaleString()}
+                  </span>
+                </div>
+              </div>
+
+              {/* CRUD triggers */}
+              <div className="border-t border-stone-100 pt-3 flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
+                <button
+                  onClick={() => handleDuplicate(screen)}
+                  title="Duplicar Soporte"
+                  className="p-1.5 rounded-lg border border-stone-200 hover:bg-stone-50 text-stone-500 transition-colors cursor-pointer"
+                >
+                  <Copy className="h-3.5 w-3.5" />
+                </button>
+
+                {screen.status !== "Pausado" && screen.status !== "No disponible" ? (
                   <button
-                    onClick={() => handleDuplicate(screen)}
-                    title="Duplicar Soporte"
-                    className="p-1.5 rounded-lg border border-stone-200 hover:bg-stone-50 text-stone-500 transition-colors cursor-pointer"
+                    onClick={() => {
+                      onUpdateScreen(screen.id, { status: "Pausado" });
+                      setActiveScreenId(null);
+                    }}
+                    title="Archivar Soporte (Soft Delete)"
+                    className="p-1.5 rounded-lg border border-stone-200 hover:bg-amber-50 text-amber-600 transition-colors cursor-pointer"
                   >
-                    <Copy className="h-3.5 w-3.5" />
+                    <Archive className="h-3.5 w-3.5" />
                   </button>
+                ) : (
+                  <button
+                    onClick={() => onUpdateScreen(screen.id, { status: "Disponible" })}
+                    title="Restaurar Soporte"
+                    className="p-1.5 rounded-lg border border-stone-200 hover:bg-emerald-50 text-emerald-600 transition-colors cursor-pointer"
+                  >
+                    <RotateCcw className="h-3.5 w-3.5" />
+                  </button>
+                )}
 
-                  {screen.status !== "Pausado" && screen.status !== "No disponible" ? (
-                    <button
-                      onClick={() => {
-                        onUpdateScreen(screen.id, { status: "Pausado" });
-                        setActiveScreenId(null);
-                      }}
-                      title="Archivar Soporte (Soft Delete)"
-                      className="p-1.5 rounded-lg border border-stone-200 hover:bg-amber-50 text-amber-600 transition-colors cursor-pointer"
-                    >
-                      <Archive className="h-3.5 w-3.5" />
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => onUpdateScreen(screen.id, { status: "Disponible" })}
-                      title="Restaurar Soporte"
-                      className="p-1.5 rounded-lg border border-stone-200 hover:bg-emerald-50 text-emerald-600 transition-colors cursor-pointer"
-                    >
-                      <RotateCcw className="h-3.5 w-3.5" />
-                    </button>
-                  )}
-
-                  {userRole === "admin" && (
-                    <button
-                      onClick={() => {
-                        setScreenToDelete(screen.id);
-                      }}
-                      title="Eliminar del Sistema"
-                      className="p-1.5 rounded-lg border border-red-100 bg-red-50 hover:bg-red-100 text-red-600 transition-colors cursor-pointer"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
-                  )}
-                </div>
-
+                {userRole === "admin" && (
+                  <button
+                    onClick={() => {
+                      setScreenToDelete(screen.id);
+                    }}
+                    title="Eliminar del Sistema"
+                    className="p-1.5 rounded-lg border border-red-100 bg-red-50 hover:bg-red-100 text-red-600 transition-colors cursor-pointer"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                )}
               </div>
-            ))}
 
-            {filteredScreens.length === 0 && (
-              <div className="col-span-full py-16 text-center border border-dashed border-stone-200 rounded-3xl space-y-3">
-                <EyeOff className="h-10 w-10 text-stone-300 mx-auto" />
-                <p className="text-xs font-bold text-stone-800">No se encontraron soportes que coincidan con la búsqueda.</p>
-                <p className="text-[10px] text-stone-500">Prueba cambiando los criterios de filtro o buscando otro término.</p>
-              </div>
-            )}
-          </div>
-        )}
+            </div>
+          ))}
+
+          {filteredScreens.length === 0 && (
+            <div className="col-span-full py-16 text-center border border-dashed border-stone-200 rounded-3xl space-y-3">
+              <EyeOff className="h-10 w-10 text-stone-300 mx-auto" />
+              <p className="text-xs font-bold text-stone-800">No se encontraron soportes que coincidan con la búsqueda.</p>
+              <p className="text-[10px] text-stone-500">Prueba cambiando los criterios de filtro o buscando otro término.</p>
+            </div>
+          )}
+        </div>
 
       </div>
 
@@ -458,7 +449,7 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
                     onClick={() => setActiveTab(tab.id)}
                     className={`py-2 px-2.5 text-[10px] font-extrabold uppercase tracking-wider border-b-2 transition-all cursor-pointer ${
                       activeTab === tab.id
-                        ? "border-[#06434a] text-[#06434a] font-black"
+                        ? "border-primary text-primary font-black"
                         : "border-transparent text-stone-400 hover:text-stone-600"
                     }`}
                   >
@@ -590,10 +581,10 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
                             }
                           );
                         }}
-                        className="w-full py-2 bg-[#06434a]/10 hover:bg-[#06434a]/15 text-[#06434a] border border-[#06434a]/20 font-extrabold uppercase text-[9px] rounded-lg cursor-pointer flex items-center justify-center gap-1.5 transition-colors"
+                        className="w-full py-2 bg-primary/10 hover:bg-primary/15 text-primary border border-primary/20 font-extrabold uppercase text-[9px] rounded-lg cursor-pointer flex items-center justify-center gap-1.5 transition-colors"
                       >
                         <FileText className="h-3.5 w-3.5" />
-                        <span>Exportar Ficha / PDF-Listo</span>
+                        <span>Exportar Ficha / PDF</span>
                       </button>
                     </div>
                   </div>
@@ -603,7 +594,7 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
                 {activeTab === "ubicacion" && (
                   <div className="space-y-4 text-xs text-stone-600">
                     <div className="p-3 bg-stone-50 rounded-lg border border-stone-100 space-y-1 flex items-center gap-2">
-                      <MapPin className="h-4 w-4 text-[#06434a]" />
+                      <MapPin className="h-4 w-4 text-primary" />
                       <span className="text-[10px] font-semibold text-stone-600">Coordenadas del Soporte</span>
                     </div>
 
@@ -657,7 +648,7 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
                 {activeTab === "multimedia" && (
                   <div className="space-y-4 text-xs text-stone-600">
                     <div className="p-3 bg-stone-50 rounded-lg border border-stone-100 flex items-center gap-2">
-                      <Video className="h-4 w-4 text-[#06434a]" />
+                      <Video className="h-4 w-4 text-primary" />
                       <span className="text-[10px] font-semibold text-stone-600">Material fotográfico y técnico</span>
                     </div>
 
@@ -698,7 +689,7 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
                 {activeTab === "kpis" && (
                   <div className="space-y-4 text-xs text-stone-600">
                     <div className="p-3 bg-stone-50 rounded-lg border border-stone-100 flex items-center gap-2">
-                      <TrendingUp className="h-4 w-4 text-[#06434a]" />
+                      <TrendingUp className="h-4 w-4 text-primary" />
                       <span className="text-[10px] font-semibold text-stone-600">Rendimiento Histórico del Soporte</span>
                     </div>
 
@@ -726,9 +717,9 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
                       </div>
                     </div>
 
-                    <div className="p-3.5 bg-[#06434a]/5 border border-[#06434a]/10 rounded-lg text-stone-700 space-y-1">
-                      <span className="text-[8px] font-extrabold text-[#06434a] uppercase tracking-widest">Valor de Inventario</span>
-                      <p className="text-[10px] text-[#06434a] leading-relaxed">
+                    <div className="p-3.5 bg-primary/5 border border-primary/10 rounded-lg text-stone-700 space-y-1">
+                      <span className="text-[8px] font-extrabold text-primary uppercase tracking-widest">Valor de Inventario</span>
+                      <p className="text-[10px] text-primary leading-relaxed">
                         Este soporte se sitúa en el <strong className="font-bold">Top 20% de mayor rentabilidad</strong> de la compañía debido a su visibilidad de alto contraste.
                       </p>
                     </div>
@@ -739,13 +730,13 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
                 {activeTab === "historial" && (
                   <div className="space-y-4 text-xs text-stone-600">
                     <div className="p-3 bg-stone-50 rounded-lg border border-stone-100 flex items-center gap-2">
-                      <Clock className="h-4 w-4 text-[#06434a]" />
+                      <Clock className="h-4 w-4 text-primary" />
                       <span className="text-[10px] font-semibold text-stone-600">Trazabilidad de Cambios</span>
                     </div>
 
                     <div className="space-y-3 pl-1.5 border-l border-stone-100">
                       <div className="relative pl-4">
-                        <span className="absolute left-[-21px] top-1.5 h-2 w-2 rounded-full bg-[#06434a]" />
+                        <span className="absolute left-[-21px] top-1.5 h-2 w-2 rounded-full bg-primary" />
                         <span className="block text-[8px] font-bold text-stone-400 uppercase">Hoy, 10:45 hs • Director Comercial</span>
                         <p className="text-[10px] text-stone-700 font-semibold mt-0.5">Tarifa base actualizada de $145k a $155k</p>
                       </div>
@@ -805,7 +796,7 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
                     placeholder="Ej: San Martín y Garibaldi"
                     value={newScreenForm.nombre}
                     onChange={(e) => setNewScreenForm({ ...newScreenForm, nombre: e.target.value })}
-                    className="w-full px-3 py-2 border border-stone-200 rounded-lg bg-stone-50/50 focus:outline-none focus:border-[#06434a]"
+                    className="w-full px-3 py-2 border border-stone-200 rounded-lg bg-stone-50/50 focus:outline-none focus:border-primary"
                   />
                 </div>
 
@@ -830,7 +821,7 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
                       placeholder="Ej: Centro"
                       value={newScreenForm.zona}
                       onChange={(e) => setNewScreenForm({ ...newScreenForm, zona: e.target.value })}
-                      className="w-full px-3 py-2 border border-stone-200 rounded-lg bg-stone-50/50 focus:outline-none focus:border-[#06434a]"
+                      className="w-full px-3 py-2 border border-stone-200 rounded-lg bg-stone-50/50 focus:outline-none focus:border-primary"
                     />
                   </div>
                 </div>
@@ -871,7 +862,7 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
                       type="number"
                       value={newScreenForm.precio}
                       onChange={(e) => setNewScreenForm({ ...newScreenForm, precio: Number(e.target.value) })}
-                      className="w-full px-3 py-2 border border-stone-200 rounded-lg bg-stone-50/50 focus:outline-none focus:border-[#06434a] font-mono"
+                      className="w-full px-3 py-2 border border-stone-200 rounded-lg bg-stone-50/50 focus:outline-none focus:border-primary font-mono"
                     />
                   </div>
 
@@ -881,7 +872,7 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
                       type="number"
                       value={newScreenForm.impactos}
                       onChange={(e) => setNewScreenForm({ ...newScreenForm, impactos: Number(e.target.value) })}
-                      className="w-full px-3 py-2 border border-stone-200 rounded-lg bg-stone-50/50 focus:outline-none focus:border-[#06434a] font-mono"
+                      className="w-full px-3 py-2 border border-stone-200 rounded-lg bg-stone-50/50 focus:outline-none focus:border-primary font-mono"
                     />
                   </div>
                 </div>
@@ -894,7 +885,7 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
                       step="0.000001"
                       value={newScreenForm.lat}
                       onChange={(e) => setNewScreenForm({ ...newScreenForm, lat: Number(e.target.value) })}
-                      className="w-full px-3 py-2 border border-stone-200 rounded-lg bg-stone-50/50 focus:outline-none focus:border-[#06434a] font-mono"
+                      className="w-full px-3 py-2 border border-stone-200 rounded-lg bg-stone-50/50 focus:outline-none focus:border-primary font-mono"
                     />
                   </div>
 
@@ -905,7 +896,7 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
                       step="0.000001"
                       value={newScreenForm.lng}
                       onChange={(e) => setNewScreenForm({ ...newScreenForm, lng: Number(e.target.value) })}
-                      className="w-full px-3 py-2 border border-stone-200 rounded-lg bg-stone-50/50 focus:outline-none focus:border-[#06434a] font-mono"
+                      className="w-full px-3 py-2 border border-stone-200 rounded-lg bg-stone-50/50 focus:outline-none focus:border-primary font-mono"
                     />
                   </div>
                 </div>
@@ -917,7 +908,7 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
                     placeholder="Escriba notas de orientación o visibilidad..."
                     value={newScreenForm.nota}
                     onChange={(e) => setNewScreenForm({ ...newScreenForm, nota: e.target.value })}
-                    className="w-full px-3 py-2 border border-stone-200 rounded-lg bg-stone-50/50 focus:outline-none focus:border-[#06434a]"
+                    className="w-full px-3 py-2 border border-stone-200 rounded-lg bg-stone-50/50 focus:outline-none focus:border-primary"
                   />
                 </div>
 
@@ -931,7 +922,7 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
                   </button>
                   <button
                     type="submit"
-                    className="px-5 py-2 bg-[#06434a] hover:bg-[#0b5e67] text-white font-extrabold uppercase text-[10px] rounded-lg cursor-pointer shadow-sm"
+                    className="px-5 py-2 bg-primary hover:bg-primary/90 text-primary-foreground font-extrabold uppercase text-[10px] rounded-lg cursor-pointer shadow-sm"
                   >
                     Guardar en Catálogo
                   </button>

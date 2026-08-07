@@ -1,5 +1,5 @@
 import * as admin from 'firebase-admin';
-import { getApps, initializeApp } from 'firebase-admin/app';
+
 // Initialize Firebase Admin SDK only once
 if (!admin.apps.length) {
   const privateKey = process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY?.replace(/\\n/g, '\n');
@@ -11,7 +11,7 @@ if (!admin.apps.length) {
     // Depending on the application's robustness needs, you might want to throw an error here
     // throw new Error('Firebase Admin SDK environment variables are not properly configured.');
   } else {
-    initializeApp({ // Use modular initializeApp
+    admin.initializeApp({
       credential: admin.credential.cert({
         projectId: projectId,
         clientEmail: clientEmail,
@@ -21,4 +21,4 @@ if (!admin.apps.length) {
   }
 }
 
-export const adminAuth = admin.auth(); // Use modular admin.auth()
+export const adminAuth = admin.auth();

@@ -105,14 +105,14 @@ export const GmailModule: React.FC<GmailModuleProps> = ({ token }) => {
         if (res.data?.needsAuth || res.status === 401) {
           setConnected(false);
           fetchAuthUrl();
-        } else if (res.data?.isRateLimited) {
+        } else if (res.isRateLimited) { // Access directly from ApiResponse
           toast.error("Límite de peticiones alcanzado. Reintentando en unos segundos.");
-        } else if (res.data?.error) {
-          const errorMessage = typeof res.data.error === 'object' 
-            ? res.data.error.message 
-            : res.data.error;
+        } else if (res.error) { // Access directly from ApiResponse
+          const errorMessage = typeof res.error === 'object' 
+            ? res.error.message 
+            : res.error;
 
-          toast.error(errorMessage || "No se pudieron obtener los correos.");
+          toast.error(errorMessage || "No se pudieron obtener los correos.", "Error de Bandeja");
         }
       }
     } catch (err) {
@@ -135,8 +135,8 @@ export const GmailModule: React.FC<GmailModuleProps> = ({ token }) => {
       if (res.data?.success && res.data.data) {
         setSelectedMessage(res.data.data);
       } else {
-        const errorMessage = typeof res.data?.error === 'object' ? res.data.error.message : res.data?.error
-        toast.error(errorMessage || "No se pudo cargar el detalle del correo.");
+        const errorMessage = typeof res.error === 'object' ? res.error.message : res.error // Access directly from ApiResponse
+        toast.error(errorMessage || "No se pudo cargar el detalle del correo.", "Error de Lectura");
       }
     } catch (err) {
       toast.error("Error al cargar el contenido del correo.");
@@ -178,8 +178,8 @@ export const GmailModule: React.FC<GmailModuleProps> = ({ token }) => {
         // Reload messages after brief delay
         setTimeout(() => fetchMessages(searchQuery), 1000);
       } else {
-        const errorMessage = typeof res.data?.error === 'object' ? res.data.error.message : res.data?.error
-        toast.error(errorMessage || "Error al enviar el correo.");
+        const errorMessage = typeof res.error === 'object' ? res.error.message : res.error // Access directly from ApiResponse
+        toast.error(errorMessage || "Error al enviar el correo.", "Fallo de Envío");
       }
     } catch (err) {
       console.error("Error sending email:", err);

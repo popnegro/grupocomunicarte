@@ -4,11 +4,12 @@ interface ApiResponse<T> {
   ok: boolean;
   status: number;
   data?: T;
-  error?: {
+  error?: string | { // Allow error to be a string or an object
     code: string;
     message: string;
   };
   errorType?: "network" | "server" | "validation" | "unknown";
+  isRateLimited?: boolean; // Added for consistency with GmailModule
 }
 
 // Resolve API Base URL from environment variable

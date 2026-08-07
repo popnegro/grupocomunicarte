@@ -170,11 +170,11 @@ export const SlidesSyncModule: React.FC<SlidesSyncModuleProps> = ({ token, onRef
         onRefreshInventory(); // Refresh parent screen state
         fetchSyncHistory(); // Reload history logs
       } else {
-        const errorMessage = typeof res.data?.error === 'object' 
-          ? res.data.error.message 
-          : res.data?.error;
-
-        toast.error(errorMessage || "Ocurrió un error en el canal de sincronización.", "Fallo de Importación");
+        const errorMessage = typeof res.error === 'object' 
+          ? res.error.message 
+          : res.error;
+        // Ensure errorMessage is always a string for toast.error
+        toast.error(String(errorMessage) || "Ocurrió un error en el canal de sincronización.", "Fallo de Importación");
         fetchSyncHistory();
       }
     } catch (err: any) {
@@ -213,12 +213,12 @@ export const SlidesSyncModule: React.FC<SlidesSyncModuleProps> = ({ token, onRef
         onRefreshInventory(); // Refresh parent UI state
         fetchSyncHistory(); // Reload history logs
         setSelectedRun(null); // Close expanded details
-      } else {
-        const errorMessage = typeof res.data?.error === 'object' 
-          ? res.data.error.message 
-          : res.data?.error;
+      } else { // Access error directly from ApiResponse
+        const errorMessage = typeof res.error === 'object' 
+          ? res.error.message 
+          : res.error;
 
-        toast.error(errorMessage || "No se pudo realizar el rollback.", "Error de Rollback");
+        toast.error(String(errorMessage) || "No se pudo realizar el rollback.", "Error de Rollback");
       }
     } catch (err: any) {
       toast.error(err.message || "Fallo al conectar con el servidor para ejecutar rollback.", "Error de Conexión");

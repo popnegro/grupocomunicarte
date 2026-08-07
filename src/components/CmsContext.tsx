@@ -606,6 +606,24 @@ export const useCmsStore = create<CmsStoreProps>((set, get) => ({
   }),
 
   addLead: async (leadData) => {
+    let fsLead: Lead | null = null;
+    try {
+      const { doc, setDoc } = await import("firebase/firestore");
+      const { db } = await import("../lib/firebase");
+      const id = `lead-${Date.now()}`;
+      const newFsDoc: Lead = {
+        ...leadData,
+        id,
+        date: new Date().toISOString(),
+      };
+      await setDoc(doc(db, "leads", id), newFsDoc);
+      fsLead = newFsDoc;
+    } catch (fsErr) {
+      if (process.env.NODE_ENV !== "production") {
+        console.warn("Direct Firestore lead save failed, fallback to API:", fsErr);
+      }
+    }
+
     try {
       const res = await safeFetchJson<{ success: boolean; data?: any }>(API_ROUTES.leads, {
         method: "POST",
@@ -613,13 +631,15 @@ export const useCmsStore = create<CmsStoreProps>((set, get) => ({
         body: JSON.stringify(leadData),
       });
       if (res.data?.success && res.data.data) {
-        set((state) => ({ leads: [res.data!.data, ...state.leads] }));
-        return res.data.data;
+        const added = res.data.data;
+        set((state) => ({ leads: [added, ...state.leads] }));
+        return added;
       }
     } catch (err) {
       // Fallback
     }
-    const fallbackLead = {
+
+    const fallbackLead = fsLead || {
       ...leadData,
       id: String(get().leads.length + 1),
       date: new Date().toISOString(),
@@ -671,6 +691,37 @@ export const useCmsStore = create<CmsStoreProps>((set, get) => ({
   }),
 
   fetchLeads: async () => {
+    try {
+      const { collection, getDocs, query, limit } = await import("firebase/firestore");
+      const { db } = await import("../lib/firebase");
+      const leadsCol = collection(db, "leads");
+      // query the top 100 leads
+      const q = query(leadsCol, limit(100));
+      const snapshot = await getDocs(q);
+      const fsLeads: Lead[] = [];
+      snapshot.forEach((docSnap) => {
+        const data = docSnap.data();
+        fsLeads.push({
+          id: docSnap.id,
+          name: data.name || "",
+          email: data.email || "",
+          company: data.company || "",
+          source: data.source || "Formulario Web",
+          status: data.status || "new",
+          date: data.date || new Date().toISOString(),
+          value: Number(data.value) || 0,
+        });
+      });
+      if (fsLeads.length > 0) {
+        set({ leads: fsLeads });
+        return;
+      }
+    } catch (fsErr) {
+      if (process.env.NODE_ENV !== "production") {
+        console.warn("Firestore leads fetch failed, using PG API:", fsErr);
+      }
+    }
+
     try {
       const res = await apiClient.get<{ success: boolean; data: any[] }>(API_ROUTES.leads);
       if (res.ok && res.data?.success && Array.isArray(res.data.data)) {

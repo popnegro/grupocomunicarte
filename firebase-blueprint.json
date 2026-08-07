@@ -30,6 +30,25 @@
         "status": { "type": "string", "maxLength": 50 }
       },
       "required": ["nombre", "tipo"]
+    },
+    "Campaign": {
+      "title": "Campaign",
+      "description": "Advertising campaign configuration and schedule",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "tenantId": { "type": "string", "maxLength": 100 },
+        "clienteId": { "type": "string", "maxLength": 100 },
+        "mediaKitId": { "type": "string", "maxLength": 100 },
+        "nombre": { "type": "string", "maxLength": 200 },
+        "presupuesto": { "type": "number" },
+        "estado": { "type": "string", "maxLength": 50 },
+        "fechaInicio": { "type": "string", "maxLength": 50 },
+        "fechaFin": { "type": "string", "maxLength": 50 },
+        "createdAt": { "type": "string", "maxLength": 50 },
+        "updatedAt": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["nombre", "estado"]
     }
   },
   "firestore": {
@@ -40,6 +59,10 @@
     "/screens/{screenId}": {
       "schema": { "$ref": "#/entities/DoohScreen" },
       "description": "Collection of public DOOH screens"
+    },
+    "/campaigns/{campaignId}": {
+      "schema": { "$ref": "#/entities/Campaign" },
+      "description": "Collection of commercial advertising campaigns"
     },
     "/test/{docId}": {
       "schema": { "$ref": "#/entities/Lead" },

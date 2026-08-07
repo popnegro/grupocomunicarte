@@ -4,7 +4,8 @@ interface ApiResponse<T> {
   ok: boolean;
   status: number;
   data?: T;
-  error?: string | { // Allow error to be a string or an object
+  error?: string; // Change to simple string for wide-ranging type safety
+  errorDetail?: { // Keep rich structured details separate
     code: string;
     message: string;
   };
@@ -43,7 +44,8 @@ export async function safeFetchJson<T>(
       return {
         ok: false,
         status: response.status,
-        error: {
+        error: errorData.message || `Request failed with status ${response.status}`,
+        errorDetail: {
           code: errorData.code || `HTTP_ERROR_${response.status}`,
           message: errorData.message || `Request failed with status ${response.status}`,
         },
@@ -64,7 +66,8 @@ export async function safeFetchJson<T>(
     return {
       ok: false,
       status: 0, // No HTTP status for network errors
-      error: {
+      error: e.message || "Network request failed",
+      errorDetail: {
         code: "NETWORK_ERROR",
         message: e.message || "Network request failed",
       },
@@ -73,8 +76,18 @@ export async function safeFetchJson<T>(
   }
 }
 
-// Simple wrapper for GET requests
+// Simple wrapper for GET and POST requests
 export const apiClient = {
   get: <T>(path: string, options?: RequestInit) => safeFetchJson<T>(path, { ...options, method: "GET" }),
-  // Add other methods (post, put, delete) as needed
+  post: <T>(path: string, data?: any, options?: RequestInit) => {
+    return safeFetchJson<T>(path, {
+      ...options,
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(options?.headers || {}),
+      },
+      body: data ? JSON.stringify(data) : undefined,
+    });
+  },
 };

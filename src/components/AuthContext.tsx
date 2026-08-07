@@ -10,7 +10,8 @@ interface AuthContextProps {
   googleAccessToken: string | null;
   isAdmin: boolean;
   userRole: string;
-  loginWithGoogle: () => Promise<User>;
+  loginWithGoogle: () => Promise<void>;
+  loginAsDemo: () => Promise<void>;
   logout: () => Promise<void>;
   setGoogleAccessToken: (token: string | null) => void;
 }
@@ -117,9 +118,52 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await signInWithRedirect(auth, googleAuthProvider);
   };
 
+  const loginAsDemo = async () => {
+    setLoading(true);
+    try {
+      const demoUser = {
+        uid: "demo-user-123",
+        email: "grupo.comunicarte.dev@gmail.com",
+        displayName: "Usuario Demo",
+        emailVerified: true,
+        isAnonymous: false,
+        metadata: {},
+        providerData: [],
+        getIdToken: async () => "demo-token-abc-123",
+        getIdTokenResult: async () => ({ token: "demo-token-abc-123", claims: {} }),
+        reload: async () => {},
+        toJSON: () => ({}),
+      } as any as User;
+
+      setUser(demoUser);
+      setToken("demo-token-abc-123");
+      setGoogleAccessToken("demo-google-access-token");
+      
+      // Sync with auth placeholder
+      await safeFetchJson("/api/auth/sync", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer demo-token-abc-123",
+        },
+      });
+    } catch (err) {
+      console.error("Demo login error:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const logout = async () => {
     setLoading(true);
     try {
+      if (user?.uid === "demo-user-123") {
+        setUser(null);
+        setToken(null);
+        setGoogleAccessToken(null);
+        setLoading(false);
+        return;
+      }
       await signOut(auth);
       setUser(null);
       setToken(null);
@@ -133,7 +177,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, token, googleAccessToken, isAdmin, userRole, loginWithGoogle, logout, setGoogleAccessToken }}>
+    <AuthContext.Provider value={{ user, loading, token, googleAccessToken, isAdmin, userRole, loginWithGoogle, loginAsDemo, logout, setGoogleAccessToken }}>
       {children}
     </AuthContext.Provider>
   );

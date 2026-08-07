@@ -25,6 +25,9 @@ import { AiPlannerModule } from "./dashboard/AiPlannerModule";
 import { SlidesSyncModule } from "./dashboard/SlidesSyncModule";
 import { AdministrationModule } from "./dashboard/AdministrationModule";
 import { GmailModule } from "./dashboard/GmailModule";
+import { LeadsModule } from "./dashboard/LeadsModule";
+import { LocationsModule } from "./dashboard/LocationsModule";
+import { ReportsModule } from "./dashboard/ReportsModule";
 
 // Lucide Icons
 import {
@@ -40,7 +43,10 @@ import {
   Sparkles,
   Database,
   Shield,
-  Mail as MailIcon
+  Mail as MailIcon,
+  MapPin,
+  BarChart3,
+  Inbox
 } from "lucide-react";
 
 export interface NavItem {
@@ -51,18 +57,42 @@ export interface NavItem {
   desc: string;
 }
 
-// Static navigation items to avoid re-creation on every render
-export const NavItems: NavItem[] = [
-  { id: "home", label: "Consola Principal", icon: HomeIcon, path: "/dashboard", desc: "Métricas generales y centro de control comercial" },
-  { id: "inventario", label: "Inventario Comercial", icon: Tv, path: "/dashboard/inventory", desc: "Edición y administración del catálogo de soportes físicos y pantallas LED" },
-  { id: "clientes", label: "Clientes CRM", icon: Users, path: "/dashboard/clients", desc: "Registro de contactos de ventas, agencias y corporativos" },
-  { id: "mediakit", label: "Editor de MediaKits", icon: FileText, path: "/dashboard/mediakits", desc: "Diseño Notion-style y generación de propuestas comerciales inteligentes con IA" },
-  { id: "ai-planner", label: "Planificador IA", icon: Sparkles, path: "/dashboard/ai-planner", desc: "Optimización inteligente de campañas y ROI mediante Inteligencia Artificial" },
-  { id: "slides-sync", label: "Importador Slides", icon: Database, path: "/dashboard/sync", desc: "Sincronización automatizada desde diapositivas de Google Slides" },
-  { id: "gmail", label: "Correo Gmail", icon: MailIcon, path: "/dashboard/gmail", desc: "Bandeja de entrada y envío de correos integrados con Gmail" },
-  { id: "admin", label: "Consola Admin", icon: Shield, path: "/dashboard/admin", desc: "Gobernanza de seguridad, usuarios, roles, logs, storage y SEO técnico" },
-  { id: "settings", label: "Configuración", icon: Settings, path: "/dashboard/settings", desc: "Control de usuario y preferencias del sistema" },
+export const NavGroups = [
+  {
+    groupName: "GENERAL",
+    items: [
+      { id: "home", label: "Dashboard", icon: HomeIcon, path: "/dashboard", desc: "Métricas generales y centro de control comercial" },
+      { id: "leads", label: "Leads", icon: Inbox, path: "/dashboard/leads", desc: "Gestión de leads y prospección comercial" },
+      { id: "gmail", label: "Contactos", icon: MailIcon, path: "/dashboard/gmail", desc: "Bandeja de entrada y envío de correos integrados con Gmail" }
+    ]
+  },
+  {
+    groupName: "OPERACIÓN",
+    items: [
+      { id: "ai-planner", label: "Campañas", icon: Sparkles, path: "/dashboard/ai-planner", desc: "Optimización inteligente de campañas y ROI mediante Inteligencia Artificial" },
+      { id: "clientes", label: "Clientes", icon: Users, path: "/dashboard/clients", desc: "Registro de contactos de ventas, agencias y corporativos" },
+      { id: "locations", label: "Ubicaciones", icon: MapPin, path: "/dashboard/locations", desc: "Georreferenciación y cobertura de soportes en tiempo real" },
+      { id: "inventario", label: "Inventario", icon: Tv, path: "/dashboard/inventory", desc: "Edición y administración del catálogo de soportes físicos y pantallas LED" }
+    ]
+  },
+  {
+    groupName: "ANÁLISIS",
+    items: [
+      { id: "reports", label: "Analytics", icon: BarChart3, path: "/dashboard/reports", desc: "Métricas de conversión y rendimiento comercial" },
+      { id: "mediakit", label: "Reportes", icon: FileText, path: "/dashboard/mediakits", desc: "Diseño Notion-style y generación de propuestas comerciales inteligentes con IA" }
+    ]
+  },
+  {
+    groupName: "CONFIGURACIÓN",
+    items: [
+      { id: "settings", label: "Configuración", icon: Settings, path: "/dashboard/settings", desc: "Control de usuario y preferencias del sistema" },
+      { id: "admin", label: "Usuarios", icon: Shield, path: "/dashboard/admin", desc: "Gobernanza de seguridad, usuarios, roles, logs, storage y SEO técnico" }
+    ]
+  }
 ];
+
+// Flat navigation list for routing and active tab checks
+export const NavItems: NavItem[] = NavGroups.reduce<NavItem[]>((acc, group) => [...acc, ...group.items], []);
 
 export const DashboardView: React.FC = () => {
   const { token, user, userRole: authUserRole } = useAuth();
@@ -96,6 +126,7 @@ export const DashboardView: React.FC = () => {
 
   // General loading flag
   const [loading, setLoading] = useState(true);
+  const [loadingScreens, setLoadingScreens] = useState(true);
 
   // Load state from PostgreSQL APIs
   const fetchDashboardData = useCallback(async () => {
@@ -132,6 +163,128 @@ export const DashboardView: React.FC = () => {
     fetchDashboardData();
   }, [fetchDashboardData]);
 
+  // On mount, load screens from Firestore under centralized management (with local fallback)
+  useEffect(() => {
+    const loadScreensFromFirestore = async () => {
+      setLoadingScreens(true);
+      try {
+        const { collection, getDocs, doc, setDoc } = await import("firebase/firestore");
+        const { db } = await import("../lib/firebase");
+        const snapshot = await getDocs(collection(db, "screens"));
+        const fsScreens: DoohScreen[] = [];
+        snapshot.forEach((docSnap) => {
+          const data = docSnap.data();
+          fsScreens.push({
+            id: docSnap.id,
+            nombre: data.nombre || "",
+            zona: data.zona || "",
+            tipo: data.tipo || "Peatonal",
+            categoria: data.categoria || "Pantallas LED",
+            ciudad: data.ciudad || "Mendoza",
+            impactos: Number(data.impactos) || 0,
+            precio: Number(data.precio) || 0,
+            status: data.status || "Activo",
+            lat: Number(data.lat) || 0,
+            lng: Number(data.lng) || 0,
+            nota: data.nota || "",
+            dimensiones: data.dimensiones || "",
+            brillo: data.brillo || "",
+            refreshRate: data.refreshRate || "",
+            formato: data.formato || "",
+            cobertura: data.cobertura || "",
+          });
+        });
+
+        if (fsScreens.length > 0) {
+          setScreens(fsScreens);
+          setCmsScreens(fsScreens);
+        } else {
+          // If Firestore contains no screens yet, seed it with local store screens
+          const { useCmsStore } = await import("./CmsContext");
+          const defaultScreens = useCmsStore.getState().screens || [];
+          for (const s of defaultScreens) {
+            await setDoc(doc(db, "screens", s.id), s);
+          }
+          setScreens(defaultScreens);
+          setCmsScreens(defaultScreens);
+        }
+      } catch (err) {
+        console.warn("[DashboardView] Firestore screens load failed, falling back:", err);
+        const { useCmsStore } = await import("./CmsContext");
+        const defaultScreens = useCmsStore.getState().screens || [];
+        setScreens(defaultScreens);
+      } finally {
+        // Explicit slight delay for a realistic loading feel to show the skeleton
+        setTimeout(() => {
+          setLoadingScreens(false);
+        }, 1200);
+      }
+    };
+    loadScreensFromFirestore();
+  }, [setCmsScreens]);
+
+  // 1. On mount, load campaigns from Firestore for centralized management
+  useEffect(() => {
+    const loadCampaignsFromFirestore = async () => {
+      try {
+        const { collection, getDocs } = await import("firebase/firestore");
+        const { db } = await import("../lib/firebase");
+        const snapshot = await getDocs(collection(db, "campaigns"));
+        const fsCamps: Campaña[] = [];
+        snapshot.forEach((docSnap) => {
+          const data = docSnap.data();
+          fsCamps.push({
+            id: docSnap.id,
+            reservaId: data.reservaId || "",
+            clienteNombre: data.clienteNombre || "",
+            nombre: data.nombre || "",
+            screenId: data.screenId || "",
+            screenNombre: data.screenNombre || "",
+            fechaInicio: data.fechaInicio || "",
+            fechaFin: data.fechaFin || "",
+            progreso: Number(data.progreso) || 0,
+            estado: data.estado || "Planificada",
+          });
+        });
+        if (fsCamps.length > 0) {
+          setCampanas(fsCamps);
+        }
+      } catch (err) {
+        console.warn("[DashboardView] Firestore campaigns load failed, using local mock data:", err);
+      }
+    };
+    loadCampaignsFromFirestore();
+  }, []);
+
+  // 2. Whenever campanas state changes, sync the latest elements to Firestore
+  useEffect(() => {
+    const syncCampaignsToFirestore = async () => {
+      if (campanas === INITIAL_CAMPAÑAS) return;
+      try {
+        const { doc, setDoc } = await import("firebase/firestore");
+        const { db } = await import("../lib/firebase");
+        
+        for (const c of campanas) {
+          await setDoc(doc(db, "campaigns", c.id), {
+            id: c.id,
+            reservaId: c.reservaId || "",
+            clienteNombre: c.clienteNombre || "",
+            nombre: c.nombre || "",
+            screenId: c.screenId || "",
+            screenNombre: c.screenNombre || "",
+            fechaInicio: c.fechaInicio || "",
+            fechaFin: c.fechaFin || "",
+            progreso: Number(c.progreso) || 0,
+            estado: c.estado || "Planificada",
+          }, { merge: true });
+        }
+      } catch (err) {
+        console.warn("[DashboardView] Firestore campaigns sync failed:", err);
+      }
+    };
+    syncCampaignsToFirestore();
+  }, [campanas]);
+
   // DB-Connected Changelog Logger
   const addLog = useCallback(async (action: string) => {
     if (!token) return;
@@ -164,7 +317,32 @@ export const DashboardView: React.FC = () => {
 
   // Inventory Screen Add
   const handleAddScreen = useCallback(async (screen: DoohScreen) => {
-    if (!token) return;
+    // 1. Save to Firebase Firestore directly for immediate centralized updates
+    let fsAdded = false;
+    try {
+      const { doc, setDoc } = await import("firebase/firestore");
+      const { db } = await import("../lib/firebase");
+      await setDoc(doc(db, "screens", screen.id), screen);
+      fsAdded = true;
+    } catch (fsErr) {
+      console.warn("Direct Firestore screen save failed:", fsErr);
+    }
+
+    if (!token) {
+      if (fsAdded) {
+        setScreens((prev) => {
+          const next = [...prev.filter(s => s.id !== screen.id), screen];
+          setCmsScreens(next);
+          return next;
+        });
+        addLog(`Agregó un nuevo soporte al catálogo comercial: ${screen.nombre}`);
+        toast.success(`Soporte "${screen.nombre}" agregado correctamente.`);
+      } else {
+        toast.error("No hay token disponible ni se pudo conectar a Firestore.");
+      }
+      return;
+    }
+
     try {
       const res = await safeFetchJson<{ success: boolean; data: DoohScreen; error?: string }>("/api/screens", {
         method: "POST",
@@ -178,23 +356,78 @@ export const DashboardView: React.FC = () => {
       if (res.data?.success && res.data.data) {
         const added = res.data.data;
         setScreens((prev) => {
-          const next = [...prev, added];
+          const next = [...prev.filter(s => s.id !== added.id), added];
           setCmsScreens(next);
           return next;
         });
         addLog(`Agregó un nuevo soporte al catálogo comercial: ${screen.nombre}`);
         toast.success(`Soporte "${screen.nombre}" agregado correctamente.`);
       } else {
-        toast.error(res.data?.error || res.error || "No se pudo agregar el soporte comercial.");
+        // If PostgreSQL API fails, keep the Firestore version if it succeeded!
+        if (fsAdded) {
+          setScreens((prev) => {
+            const next = [...prev.filter(s => s.id !== screen.id), screen];
+            setCmsScreens(next);
+            return next;
+          });
+          addLog(`Agregó un nuevo soporte al catálogo comercial: ${screen.nombre}`);
+          toast.success(`Soporte "${screen.nombre}" agregado correctamente.`);
+        } else {
+          toast.error(res.data?.error || res.error || "No se pudo agregar el soporte comercial.");
+        }
       }
     } catch (err) {
-      toast.error("Error de red al intentar agregar el soporte.");
+      if (fsAdded) {
+        setScreens((prev) => {
+          const next = [...prev.filter(s => s.id !== screen.id), screen];
+          setCmsScreens(next);
+          return next;
+        });
+        addLog(`Agregó un nuevo soporte al catálogo comercial: ${screen.nombre}`);
+        toast.success(`Soporte "${screen.nombre}" agregado correctamente.`);
+      } else {
+        toast.error("Error de red al intentar agregar el soporte.");
+      }
     }
   }, [token, userRole, setCmsScreens, addLog, toast]);
 
   // Inventory Screen Update
   const handleUpdateScreen = useCallback(async (id: string, updatedFields: Partial<DoohScreen>) => {
-    if (!token) return;
+    let fsUpdated = false;
+    try {
+      const { doc, updateDoc } = await import("firebase/firestore");
+      const { db } = await import("../lib/firebase");
+      await updateDoc(doc(db, "screens", id), updatedFields);
+      fsUpdated = true;
+    } catch (fsErr) {
+      console.warn("Direct Firestore screen update failed:", fsErr);
+    }
+
+    const screenName = screens.find((s) => s.id === id)?.nombre || id;
+
+    if (!token) {
+      if (fsUpdated) {
+        setScreens((prev) => {
+          const next = prev.map((s) => (s.id === id ? { ...s, ...updatedFields } : s));
+          setCmsScreens(next);
+          return next;
+        });
+        if (updatedFields.status === "Pausado") {
+          addLog(`Archivó temporalmente el soporte comercial: ${screenName}`);
+          toast.info(`Soporte "${screenName}" pausado (archivado).`);
+        } else if (updatedFields.status === "Disponible") {
+          addLog(`Restauró y activó el soporte comercial: ${screenName}`);
+          toast.success(`Soporte "${screenName}" activado y disponible.`);
+        } else {
+          addLog(`Editó especificaciones en soporte comercial: ${screenName}`);
+          toast.success(`Soporte "${screenName}" actualizado correctamente.`);
+        }
+      } else {
+        toast.error("No hay token disponible ni se pudo conectar a Firestore.");
+      }
+      return;
+    }
+
     try {
       const res = await safeFetchJson<{ success: boolean; data: DoohScreen; error?: string }>(`/api/screens/${id}`, {
         method: "PUT",
@@ -212,7 +445,6 @@ export const DashboardView: React.FC = () => {
           setCmsScreens(next);
           return next;
         });
-        const screenName = screens.find((s) => s.id === id)?.nombre || id;
         if (updatedFields.status === "Pausado") {
           addLog(`Archivó temporalmente el soporte comercial: ${screenName}`);
           toast.info(`Soporte "${screenName}" pausado (archivado).`);
@@ -224,16 +456,78 @@ export const DashboardView: React.FC = () => {
           toast.success(`Soporte "${screenName}" actualizado correctamente.`);
         }
       } else {
-        toast.error(res.data?.error || res.error || "No se pudo actualizar el soporte comercial.");
+        if (fsUpdated) {
+          setScreens((prev) => {
+            const next = prev.map((s) => (s.id === id ? { ...s, ...updatedFields } : s));
+            setCmsScreens(next);
+            return next;
+          });
+          if (updatedFields.status === "Pausado") {
+            addLog(`Archivó temporalmente el soporte comercial: ${screenName}`);
+            toast.info(`Soporte "${screenName}" pausado (archivado).`);
+          } else if (updatedFields.status === "Disponible") {
+            addLog(`Restauró y activó el soporte comercial: ${screenName}`);
+            toast.success(`Soporte "${screenName}" activado y disponible.`);
+          } else {
+            addLog(`Editó especificaciones en soporte comercial: ${screenName}`);
+            toast.success(`Soporte "${screenName}" actualizado correctamente.`);
+          }
+        } else {
+          toast.error(res.data?.error || res.error || "No se pudo actualizar el soporte comercial.");
+        }
       }
     } catch (err) {
-      toast.error("Error de red al intentar actualizar el soporte.");
+      if (fsUpdated) {
+        setScreens((prev) => {
+          const next = prev.map((s) => (s.id === id ? { ...s, ...updatedFields } : s));
+          setCmsScreens(next);
+          return next;
+        });
+        if (updatedFields.status === "Pausado") {
+          addLog(`Archivó temporalmente el soporte comercial: ${screenName}`);
+          toast.info(`Soporte "${screenName}" pausado (archivado).`);
+        } else if (updatedFields.status === "Disponible") {
+          addLog(`Restauró y activó el soporte comercial: ${screenName}`);
+          toast.success(`Soporte "${screenName}" activado y disponible.`);
+        } else {
+          addLog(`Editó especificaciones en soporte comercial: ${screenName}`);
+          toast.success(`Soporte "${screenName}" actualizado correctamente.`);
+        }
+      } else {
+        toast.error("Error de red al intentar actualizar el soporte.");
+      }
     }
   }, [token, userRole, screens, setCmsScreens, addLog, toast]);
 
   // Inventory Screen Delete
   const handleDeleteScreen = useCallback(async (id: string) => {
-    if (!token) return;
+    let fsDeleted = false;
+    try {
+      const { doc, deleteDoc } = await import("firebase/firestore");
+      const { db } = await import("../lib/firebase");
+      await deleteDoc(doc(db, "screens", id));
+      fsDeleted = true;
+    } catch (fsErr) {
+      console.warn("Direct Firestore screen delete failed:", fsErr);
+    }
+
+    const screenName = screens.find((s) => s.id === id)?.nombre || id;
+
+    if (!token) {
+      if (fsDeleted) {
+        setScreens((prev) => {
+          const next = prev.filter((s) => s.id !== id);
+          setCmsScreens(next);
+          return next;
+        });
+        addLog(`Eliminó de manera permanente el soporte comercial: ${screenName}`);
+        toast.success(`Soporte "${screenName}" eliminado definitivamente.`);
+      } else {
+        toast.error("No hay token disponible ni se pudo conectar a Firestore.");
+      }
+      return;
+    }
+
     try {
       const res = await safeFetchJson<{ success: boolean; error?: string }>(`/api/screens/${id}`, {
         method: "DELETE",
@@ -243,7 +537,6 @@ export const DashboardView: React.FC = () => {
         },
       });
       if (res.data?.success) {
-        const screenName = screens.find((s) => s.id === id)?.nombre || id;
         setScreens((prev) => {
           const next = prev.filter((s) => s.id !== id);
           setCmsScreens(next);
@@ -252,10 +545,30 @@ export const DashboardView: React.FC = () => {
         addLog(`Eliminó de manera permanente el soporte comercial: ${screenName}`);
         toast.success(`Soporte "${screenName}" eliminado definitivamente.`);
       } else {
-        toast.error(`Error de permisos: ${res.data?.error || res.error || "No tienes privilegios para realizar esta acción."}`);
+        if (fsDeleted) {
+          setScreens((prev) => {
+            const next = prev.filter((s) => s.id !== id);
+            setCmsScreens(next);
+            return next;
+          });
+          addLog(`Eliminó de manera permanente el soporte comercial: ${screenName}`);
+          toast.success(`Soporte "${screenName}" eliminado definitivamente.`);
+        } else {
+          toast.error(`Error de permisos: ${res.data?.error || res.error || "No tienes privilegios para realizar esta acción."}`);
+        }
       }
     } catch (err: any) {
-      toast.error("Error de conexión al intentar eliminar el soporte.");
+      if (fsDeleted) {
+        setScreens((prev) => {
+          const next = prev.filter((s) => s.id !== id);
+          setCmsScreens(next);
+          return next;
+        });
+        addLog(`Eliminó de manera permanente el soporte comercial: ${screenName}`);
+        toast.success(`Soporte "${screenName}" eliminado definitivamente.`);
+      } else {
+        toast.error("Error de conexión al intentar eliminar el soporte.");
+      }
     }
   }, [token, userRole, screens, setCmsScreens, addLog, toast]);
 
@@ -453,30 +766,39 @@ export const DashboardView: React.FC = () => {
           </div>
 
           {/* Links navigation group */}
-          <nav className="p-4 flex-1 space-y-1">
-            {NavItems.map((item) => {
-              const active = location.pathname === item.path || (item.path === "/dashboard" && location.pathname === "/dashboard/");
-              const Icon = item.icon;
+          <nav className="p-4 flex-1 space-y-4">
+            {NavGroups.map((group) => (
+              <div key={group.groupName} className="space-y-1">
+                {!sidebarCollapsed && (
+                  <span className="block px-2 text-[9px] font-black tracking-widest text-stone-400 uppercase font-mono mb-1.5">
+                    {group.groupName}
+                  </span>
+                )}
+                {group.items.map((item) => {
+                  const active = location.pathname === item.path || (item.path === "/dashboard" && location.pathname === "/dashboard/");
+                  const Icon = item.icon;
 
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => navigate(item.path)}
-                  className={`w-full p-2.5 rounded-xl flex items-center gap-3 cursor-pointer text-left transition-all ${
-                    active 
-                      ? "bg-[#06434a] text-white font-bold shadow-sm" 
-                      : "text-stone-500 hover:bg-stone-50 hover:text-stone-900"
-                  }`}
-                >
-                  <Icon className={`h-4.5 w-4.5 shrink-0 ${active ? "text-amber-300 animate-pulse" : ""}`} />
-                  {!sidebarCollapsed && (
-                    <div className="min-w-0 text-left">
-                      <span className="block text-xs leading-none">{item.label}</span>
-                    </div>
-                  )}
-                </button>
-              );
-            })}
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => navigate(item.path)}
+                      className={`w-full p-2 rounded-xl flex items-center gap-3 cursor-pointer text-left transition-all ${
+                        active 
+                          ? "bg-[#06434a] text-white font-bold shadow-xs" 
+                          : "text-stone-500 hover:bg-stone-50 hover:text-stone-900"
+                      }`}
+                    >
+                      <Icon className={`h-4.5 w-4.5 shrink-0 ${active ? "text-amber-300 animate-pulse" : ""}`} />
+                      {!sidebarCollapsed && (
+                        <div className="min-w-0 text-left">
+                          <span className="text-xs leading-none">{item.label}</span>
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            ))}
           </nav>
 
           {/* Return to Public Website section */}
@@ -551,6 +873,7 @@ export const DashboardView: React.FC = () => {
                   onUpdateScreen={handleUpdateScreen}
                   onAddScreen={handleAddScreen}
                   onDeleteScreen={handleDeleteScreen}
+                  isLoading={loadingScreens}
                 />
               }
             />
@@ -634,6 +957,27 @@ export const DashboardView: React.FC = () => {
                   onUpdateScreen={handleUpdateScreen}
                   addLog={addLog}
                 />
+              }
+            />
+
+            <Route
+              path="/leads"
+              element={
+                <LeadsModule />
+              }
+            />
+
+            <Route
+              path="/locations"
+              element={
+                <LocationsModule />
+              }
+            />
+
+            <Route
+              path="/reports"
+              element={
+                <ReportsModule />
               }
             />
 

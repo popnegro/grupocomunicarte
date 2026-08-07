@@ -192,8 +192,21 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
 
     // Draw route polylines and stop markers for LeadMóvil or Móvil screens
     activeScreens.forEach((screen) => {
-      if ((screen.tipo === "LeadMóvil" || screen.tipo === "Móvil") && screen.ruta && screen.ruta.length > 0) {
-        const pathCoords = screen.ruta.map(r => L.latLng(r.lat, r.lng));
+      let parsedRuta: { lat: number; lng: number; nombre: string }[] | null = null;
+      if (screen.ruta) {
+        if (Array.isArray(screen.ruta)) {
+          parsedRuta = screen.ruta;
+        } else if (typeof screen.ruta === "string") {
+          try {
+            parsedRuta = JSON.parse(screen.ruta);
+          } catch (e) {
+            console.error("Error parsing screen.ruta", e);
+          }
+        }
+      }
+
+      if ((screen.tipo === "LeadMóvil" || screen.tipo === "Móvil") && parsedRuta && parsedRuta.length > 0) {
+        const pathCoords = parsedRuta.map(r => L.latLng(r.lat, r.lng));
         const polyline = L.polyline(pathCoords, {
           color: "#f59e0b",
           weight: 4,
@@ -203,8 +216,8 @@ export const InteractiveMap: React.FC<InteractiveMapProps> = ({
         activePolylinesRef.current.push(polyline);
 
         // Draw individual stops
-        screen.ruta.forEach((stop, index) => {
-          const isFirstOrLast = index === 0 || index === screen.ruta!.length - 1;
+        parsedRuta.forEach((stop, index) => {
+          const isFirstOrLast = index === 0 || index === parsedRuta!.length - 1;
           const stopMarker = L.circleMarker([stop.lat, stop.lng], {
             radius: isFirstOrLast ? 7 : 5,
             fillColor: isFirstOrLast ? "#f59e0b" : "#ffffff",

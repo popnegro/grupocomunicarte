@@ -1,10 +1,10 @@
 import { Request, Response, NextFunction } from "express";
 import { adminAuth } from "../lib/firebase-admin"; // Corrected path
-import * as admin from 'firebase-admin'; // Keep for admin.auth.DecodedIdToken type
+import { DecodedIdToken } from "firebase-admin/auth";
 
 // Extend the Request type to include a user property
 export interface AuthRequest extends Request {
-  user?: admin.auth.DecodedIdToken;
+  user?: DecodedIdToken;
 }
 
 export const protect = async (
@@ -35,3 +35,5 @@ export const protect = async (
     });
   }
 };
+
+export const requireAuth = protect;

@@ -74,6 +74,25 @@ app.post('/api/leads', async (req, res) => {
       return res.status(500).json({ success: false, error: { code: "DB_INSERT_FAILED", message: "No se pudo registrar el lead." } });
     }
 
+    // Sync to Firestore under centralized management (safe wrap)
+    try {
+      const { adminDb } = await import('./src/lib/firebase-admin');
+      if (adminDb) {
+        await adminDb.collection('leads').doc(newLead.id).set({
+          id: newLead.id,
+          tenantId: newLead.tenantId,
+          name: newLead.name,
+          email: newLead.email,
+          phone: newLead.phone,
+          message: newLead.message,
+          createdAt: new Date().toISOString(),
+          date: new Date().toISOString()
+        });
+      }
+    } catch (fsErr) {
+      console.warn("Backend: Failed to sync lead to Firestore:", fsErr);
+    }
+
     return res.status(201).json({ success: true, data: insertedLeads[0] });
   } catch (error: any) {
     console.error("[API POST /api/leads]", error);
@@ -115,27 +134,23 @@ app.use('/api/*', (req, res) => {
 });
 
 async function startServer() {
-  if (process.env.NODE_ENV === 'development') {
+  if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: 'spa',
     });
     app.use(vite.middlewares);
-    app.use('*', (req, res) => {
-      const url = req.originalUrl;
-      const html = `... Vite development server HTML ...`; // Placeholder
-      res.status(200).set({ 'Content-Type': 'text/html' }).end(html);
-    });
   } else {
-    app.use(express.static(path.join(__dirname, 'dist')));
+    const distPath = path.join(process.cwd(), 'dist');
+    app.use(express.static(distPath));
     app.get('*', (req, res) => {
-      res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+      res.sendFile(path.join(distPath, 'index.html'));
     });
   }
 
-  const PORT = process.env.PORT || 3000;
-  app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+  const PORT = 3000; // Hardcoded port 3000 required by the infrastructure proxy
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server running on http://0.0.0.0:${PORT}`);
   });
 }
 

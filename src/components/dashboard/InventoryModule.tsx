@@ -28,6 +28,7 @@ import {
   RotateCcw
 } from "lucide-react";
 import { FileUpload } from "./FileUpload";
+import { InventorySkeleton } from "./InventorySkeleton";
 
 interface InventoryModuleProps {
   screens: DoohScreen[];
@@ -35,6 +36,7 @@ interface InventoryModuleProps {
   onUpdateScreen: (id: string, data: Partial<DoohScreen>) => void;
   onAddScreen: (screen: DoohScreen) => void;
   onDeleteScreen: (id: string) => void;
+  isLoading?: boolean;
 }
 
 export const InventoryModule: React.FC<InventoryModuleProps> = ({
@@ -43,6 +45,7 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
   onUpdateScreen,
   onAddScreen,
   onDeleteScreen,
+  isLoading = false,
 }) => {
   // Filters state
   const [selectedCityFilter, setSelectedCityFilter] = useState<string>("Todas");
@@ -289,121 +292,125 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
         </div>
 
         {/* Grid listing */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {filteredScreens.map((screen) => (
-            <div
-              key={screen.id}
-              onClick={() => setActiveScreenId(screen.id)}
-              className={`bg-white border text-left p-5 rounded-2xl cursor-pointer transition-all hover:shadow-md space-y-4 flex flex-col justify-between ${
-                activeScreenId === screen.id 
-                  ? "border-[#06434a] ring-1 ring-[#06434a]/30 shadow-xs" 
-                  : "border-stone-200"
-              }`}
-            >
-              <div className="space-y-2.5">
-                <div className="flex items-start justify-between gap-2">
-                  <span className={`text-[8px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
-                    screen.categoria === "Pantallas LED" 
-                      ? "bg-teal-50 text-teal-700 border border-teal-100" 
-                      : screen.categoria === "LED Móvil"
-                      ? "bg-amber-50 text-amber-700 border border-amber-100"
-                      : "bg-blue-50 text-blue-700 border border-blue-100"
-                  }`}>
-                    {screen.categoria}
-                  </span>
-                  
-                  <span className={`text-[9px] font-extrabold px-2 py-0.5 rounded-md uppercase tracking-wider ${
-                    screen.status === "Activo" || screen.status === "Disponible"
-                      ? "bg-emerald-100/80 text-emerald-950 border border-emerald-200"
-                      : "bg-amber-100/80 text-amber-950 border border-amber-200"
-                  }`}>
-                    {screen.status}
-                  </span>
-                </div>
+        {isLoading ? (
+          <InventorySkeleton count={6} />
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            {filteredScreens.map((screen) => (
+              <div
+                key={screen.id}
+                onClick={() => setActiveScreenId(screen.id)}
+                className={`bg-white border text-left p-5 rounded-2xl cursor-pointer transition-all hover:shadow-md space-y-4 flex flex-col justify-between ${
+                  activeScreenId === screen.id 
+                    ? "border-[#06434a] ring-1 ring-[#06434a]/30 shadow-xs" 
+                    : "border-stone-200"
+                }`}
+              >
+                <div className="space-y-2.5">
+                  <div className="flex items-start justify-between gap-2">
+                    <span className={`text-[8px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider ${
+                      screen.categoria === "Pantallas LED" 
+                        ? "bg-teal-50 text-teal-700 border border-teal-100" 
+                        : screen.categoria === "LED Móvil"
+                        ? "bg-amber-50 text-amber-700 border border-amber-100"
+                        : "bg-blue-50 text-blue-700 border border-blue-100"
+                    }`}>
+                      {screen.categoria}
+                    </span>
+                    
+                    <span className={`text-[9px] font-extrabold px-2 py-0.5 rounded-md uppercase tracking-wider ${
+                      screen.status === "Activo" || screen.status === "Disponible"
+                        ? "bg-emerald-100/80 text-emerald-950 border border-emerald-200"
+                        : "bg-amber-100/80 text-amber-950 border border-amber-200"
+                    }`}>
+                      {screen.status}
+                    </span>
+                  </div>
 
-                <div>
-                  <h4 className="text-xs font-black text-stone-900 leading-snug font-display">
-                    {screen.nombre}
-                  </h4>
-                  <div className="flex items-center gap-1 text-[10px] text-stone-500 font-medium mt-1">
-                    <MapPin className="h-3 w-3 text-[#06434a]/70 shrink-0" />
-                    <span>{screen.ciudad} • {screen.zona}</span>
+                  <div>
+                    <h4 className="text-xs font-black text-stone-900 leading-snug font-display">
+                      {screen.nombre}
+                    </h4>
+                    <div className="flex items-center gap-1 text-[10px] text-stone-500 font-medium mt-1">
+                      <MapPin className="h-3 w-3 text-[#06434a]/70 shrink-0" />
+                      <span>{screen.ciudad} • {screen.zona}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* pricing & impacts summary */}
-              <div className="border-t border-stone-100 pt-3 flex items-center justify-between text-[11px] font-bold text-stone-800">
-                <div className="text-left">
-                  <span className="block text-[8px] text-stone-400 font-bold uppercase tracking-wider">Impactos</span>
-                  <span className="font-mono text-stone-900 mt-0.5 block">
-                    {(screen.impactos / 1000).toFixed(1)}k / día
-                  </span>
+                {/* pricing & impacts summary */}
+                <div className="border-t border-stone-100 pt-3 flex items-center justify-between text-[11px] font-bold text-stone-800">
+                  <div className="text-left">
+                    <span className="block text-[8px] text-stone-400 font-bold uppercase tracking-wider">Impactos</span>
+                    <span className="font-mono text-stone-900 mt-0.5 block">
+                      {(screen.impactos / 1000).toFixed(1)}k / día
+                    </span>
+                  </div>
+
+                  <div className="text-right">
+                    <span className="block text-[8px] text-stone-400 font-bold uppercase tracking-wider">Tarifa</span>
+                    <span className="font-mono text-[#06434a] mt-0.5 block">
+                      ${screen.precio.toLocaleString()}
+                    </span>
+                  </div>
                 </div>
 
-                <div className="text-right">
-                  <span className="block text-[8px] text-stone-400 font-bold uppercase tracking-wider">Tarifa</span>
-                  <span className="font-mono text-[#06434a] mt-0.5 block">
-                    ${screen.precio.toLocaleString()}
-                  </span>
+                {/* CRUD triggers */}
+                <div className="border-t border-stone-100 pt-3 flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
+                  <button
+                    onClick={() => handleDuplicate(screen)}
+                    title="Duplicar Soporte"
+                    className="p-1.5 rounded-lg border border-stone-200 hover:bg-stone-50 text-stone-500 transition-colors cursor-pointer"
+                  >
+                    <Copy className="h-3.5 w-3.5" />
+                  </button>
+
+                  {screen.status !== "Pausado" && screen.status !== "No disponible" ? (
+                    <button
+                      onClick={() => {
+                        onUpdateScreen(screen.id, { status: "Pausado" });
+                        setActiveScreenId(null);
+                      }}
+                      title="Archivar Soporte (Soft Delete)"
+                      className="p-1.5 rounded-lg border border-stone-200 hover:bg-amber-50 text-amber-600 transition-colors cursor-pointer"
+                    >
+                      <Archive className="h-3.5 w-3.5" />
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => onUpdateScreen(screen.id, { status: "Disponible" })}
+                      title="Restaurar Soporte"
+                      className="p-1.5 rounded-lg border border-stone-200 hover:bg-emerald-50 text-emerald-600 transition-colors cursor-pointer"
+                    >
+                      <RotateCcw className="h-3.5 w-3.5" />
+                    </button>
+                  )}
+
+                  {userRole === "admin" && (
+                    <button
+                      onClick={() => {
+                        setScreenToDelete(screen.id);
+                      }}
+                      title="Eliminar del Sistema"
+                      className="p-1.5 rounded-lg border border-red-100 bg-red-50 hover:bg-red-100 text-red-600 transition-colors cursor-pointer"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  )}
                 </div>
+
               </div>
+            ))}
 
-              {/* CRUD triggers */}
-              <div className="border-t border-stone-100 pt-3 flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
-                <button
-                  onClick={() => handleDuplicate(screen)}
-                  title="Duplicar Soporte"
-                  className="p-1.5 rounded-lg border border-stone-200 hover:bg-stone-50 text-stone-500 transition-colors cursor-pointer"
-                >
-                  <Copy className="h-3.5 w-3.5" />
-                </button>
-
-                {screen.status !== "Pausado" && screen.status !== "No disponible" ? (
-                  <button
-                    onClick={() => {
-                      onUpdateScreen(screen.id, { status: "Pausado" });
-                      setActiveScreenId(null);
-                    }}
-                    title="Archivar Soporte (Soft Delete)"
-                    className="p-1.5 rounded-lg border border-stone-200 hover:bg-amber-50 text-amber-600 transition-colors cursor-pointer"
-                  >
-                    <Archive className="h-3.5 w-3.5" />
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => onUpdateScreen(screen.id, { status: "Disponible" })}
-                    title="Restaurar Soporte"
-                    className="p-1.5 rounded-lg border border-stone-200 hover:bg-emerald-50 text-emerald-600 transition-colors cursor-pointer"
-                  >
-                    <RotateCcw className="h-3.5 w-3.5" />
-                  </button>
-                )}
-
-                {userRole === "admin" && (
-                  <button
-                    onClick={() => {
-                      setScreenToDelete(screen.id);
-                    }}
-                    title="Eliminar del Sistema"
-                    className="p-1.5 rounded-lg border border-red-100 bg-red-50 hover:bg-red-100 text-red-600 transition-colors cursor-pointer"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </button>
-                )}
+            {filteredScreens.length === 0 && (
+              <div className="col-span-full py-16 text-center border border-dashed border-stone-200 rounded-3xl space-y-3">
+                <EyeOff className="h-10 w-10 text-stone-300 mx-auto" />
+                <p className="text-xs font-bold text-stone-800">No se encontraron soportes que coincidan con la búsqueda.</p>
+                <p className="text-[10px] text-stone-500">Prueba cambiando los criterios de filtro o buscando otro término.</p>
               </div>
-
-            </div>
-          ))}
-
-          {filteredScreens.length === 0 && (
-            <div className="col-span-full py-16 text-center border border-dashed border-stone-200 rounded-3xl space-y-3">
-              <EyeOff className="h-10 w-10 text-stone-300 mx-auto" />
-              <p className="text-xs font-bold text-stone-800">No se encontraron soportes que coincidan con la búsqueda.</p>
-              <p className="text-[10px] text-stone-500">Prueba cambiando los criterios de filtro o buscando otro término.</p>
-            </div>
-          )}
-        </div>
+            )}
+          </div>
+        )}
 
       </div>
 

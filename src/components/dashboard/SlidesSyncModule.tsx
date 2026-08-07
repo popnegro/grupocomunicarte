@@ -170,9 +170,7 @@ export const SlidesSyncModule: React.FC<SlidesSyncModuleProps> = ({ token, onRef
         onRefreshInventory(); // Refresh parent screen state
         fetchSyncHistory(); // Reload history logs
       } else {
-        const errorMessage = typeof res.error === 'object' 
-          ? res.error.message 
-          : res.error;
+        const errorMessage = res.error;
         // Ensure errorMessage is always a string for toast.error
         toast.error(String(errorMessage) || "Ocurrió un error en el canal de sincronización.", "Fallo de Importación");
         fetchSyncHistory();
@@ -214,9 +212,7 @@ export const SlidesSyncModule: React.FC<SlidesSyncModuleProps> = ({ token, onRef
         fetchSyncHistory(); // Reload history logs
         setSelectedRun(null); // Close expanded details
       } else { // Access error directly from ApiResponse
-        const errorMessage = typeof res.error === 'object' 
-          ? res.error.message 
-          : res.error;
+        const errorMessage = res.error;
 
         toast.error(String(errorMessage) || "No se pudo realizar el rollback.", "Error de Rollback");
       }

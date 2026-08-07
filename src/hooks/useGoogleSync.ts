@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { useToast } from "@/components/ui/Toast";
+import { useToast } from "../components/ui/Toast";
 import { safeFetchJson } from "../lib/apiClient";
 
 interface SyncRun {

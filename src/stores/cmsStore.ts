@@ -1,6 +1,6 @@
 import { create } from "zustand";
-import { DoohScreen, Lead } from "@/types";
-import { apiClient } from "@/lib/apiClient";
+import { DoohScreen, Lead } from "../types";
+import { apiClient } from "../lib/apiClient";
 
 interface CmsState {
   screens: DoohScreen[];

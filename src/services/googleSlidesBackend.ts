@@ -667,7 +667,7 @@ export class GoogleSlidesBackendService {
   /**
    * Restores the complete screens table state to a specific snapshot stored in a previous sync run.
    */
-  public static async rollbackSync(userId: number, syncId: number): Promise<{ success: boolean; restoredCount: number }> {
+  public static async rollbackSync(userId: number, syncId: string): Promise<{ success: boolean; restoredCount: number }> {
     const [history] = await db.select().from(syncHistory).where(eq(syncHistory.id, syncId)).limit(1);
     if (!history) {
       throw new Error("No se encontró el registro histórico de sincronización.");
@@ -727,7 +727,7 @@ export class GoogleSlidesBackendService {
     userName: string,
     presentationId: string
   ): Promise<{
-    syncId: number;
+    syncId: string;
     status: string;
     totalSlides: number;
     importedCount: number;
@@ -744,9 +744,11 @@ export class GoogleSlidesBackendService {
     const backupDataStr = JSON.stringify(currentScreens);
 
     // Create a "running" sync history record
+    const syncId = crypto.randomUUID();
     const [historyRecord] = await db
       .insert(syncHistory)
       .values({
+        id: syncId,
         userId,
         userName,
         status: "running",
@@ -760,8 +762,6 @@ export class GoogleSlidesBackendService {
         backupData: backupDataStr,
       })
       .returning();
-
-    const syncId = historyRecord.id;
 
     let totalSlides = 0;
     let importedCount = 0;

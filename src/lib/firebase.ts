@@ -59,25 +59,30 @@ const initializeFirebaseAppCheck = () => {
 
   if (!siteKey) {
     const environment = isDebug ? "development / Firebase Studio" : "production";
-
-    throw new Error(
+    console.warn(
       [
         `Missing VITE_RECAPTCHA_ENTERPRISE_SITE_KEY for ${environment}.`,
-        "Create a reCAPTCHA Enterprise Website key and expose it as",
-        "VITE_RECAPTCHA_ENTERPRISE_SITE_KEY in the environment used by Vite.",
+        "App Check is disabled. Create a reCAPTCHA Enterprise Website key and expose it as",
+        "VITE_RECAPTCHA_ENTERPRISE_SITE_KEY to enable security attestation.",
         isDebug
           ? "For Debug mode, also set VITE_FIREBASE_APPCHECK_DEBUG=true."
           : "",
       ]
         .filter(Boolean)
-        .join(" "),
+        .join(" ")
     );
+    return null;
   }
 
-  return initializeAppCheck(app, {
-    provider: new ReCaptchaEnterpriseProvider(siteKey),
-    isTokenAutoRefreshEnabled: true,
-  });
+  try {
+    return initializeAppCheck(app, {
+      provider: new ReCaptchaEnterpriseProvider(siteKey),
+      isTokenAutoRefreshEnabled: true,
+    });
+  } catch (error) {
+    console.error("Failed to initialize App Check:", error);
+    return null;
+  }
 };
 
 /**

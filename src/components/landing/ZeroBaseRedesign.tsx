@@ -6,6 +6,7 @@ import { DoohScreen } from "../../types";
 import { SpecsOverlay } from "./SpecsOverlay";
 import { Badge, Button, Input } from "../../design-system";
 import { useCms } from "../CmsContext";
+import { Skeleton } from "../ui/skeleton";
 
 interface ZeroBaseRedesignProps {
   screens: DoohScreen[];
@@ -323,17 +324,17 @@ export const ZeroBaseRedesign: React.FC<ZeroBaseRedesignProps> = ({
               {loadingScreens ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {[...Array(6)].map((_, idx) => (
-                    <div key={idx} className="p-3.5 border border-stone-150 rounded-xl bg-white space-y-3 animate-pulse">
+                    <div key={idx} className="p-3.5 border border-stone-150 rounded-xl bg-white space-y-3">
                       <div className="flex justify-between items-start">
                         <div className="space-y-2 flex-1">
-                          <div className="h-4 bg-stone-100 rounded w-2/3" />
-                          <div className="h-3 bg-stone-50 rounded w-1/2" />
+                          <Skeleton className="h-4 w-2/3" />
+                          <Skeleton className="h-3 w-1/2" />
                         </div>
-                        <div className="h-7 w-7 rounded-full bg-stone-100" />
+                        <Skeleton className="h-7 w-7 rounded-full" />
                       </div>
-                      <div className="flex justify-between items-center pt-2.5 border-t border-stone-50">
-                        <div className="h-3 bg-stone-50 rounded w-1/3" />
-                        <div className="h-3 bg-stone-100 rounded w-1/4" />
+                      <div className="flex justify-between items-center pt-2.5 border-t border-stone-100">
+                        <Skeleton className="h-3 w-1/3" />
+                        <Skeleton className="h-3 w-1/4" />
                       </div>
                     </div>
                   ))}

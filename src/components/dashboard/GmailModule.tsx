@@ -108,9 +108,7 @@ export const GmailModule: React.FC<GmailModuleProps> = ({ token }) => {
         } else if (res.isRateLimited) { // Access directly from ApiResponse
           toast.error("Límite de peticiones alcanzado. Reintentando en unos segundos.");
         } else if (res.error) { // Access directly from ApiResponse
-          const errorMessage = typeof res.error === 'object' 
-            ? res.error.message 
-            : res.error;
+          const errorMessage = res.error;
 
           toast.error(errorMessage || "No se pudieron obtener los correos.", "Error de Bandeja");
         }
@@ -129,13 +127,13 @@ export const GmailModule: React.FC<GmailModuleProps> = ({ token }) => {
     setSelectedMessageId(id);
     setSelectedMessage(null);
     try { // Corrected type for error
-      const res = await safeFetchJson<{ success: boolean; data?: DetailedMessage; error?: string | { message: string } }>(`/api/gmail/messages/${id}`, {
+      const res = await safeFetchJson<{ success: boolean; data?: DetailedMessage }>(`/api/gmail/messages/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.data?.success && res.data.data) {
         setSelectedMessage(res.data.data);
       } else {
-        const errorMessage = typeof res.error === 'object' ? res.error.message : res.error // Access directly from ApiResponse
+        const errorMessage = res.error;
         toast.error(errorMessage || "No se pudo cargar el detalle del correo.", "Error de Lectura");
       }
     } catch (err) {
@@ -178,7 +176,7 @@ export const GmailModule: React.FC<GmailModuleProps> = ({ token }) => {
         // Reload messages after brief delay
         setTimeout(() => fetchMessages(searchQuery), 1000);
       } else {
-        const errorMessage = typeof res.error === 'object' ? res.error.message : res.error // Access directly from ApiResponse
+        const errorMessage = res.error;
         toast.error(errorMessage || "Error al enviar el correo.", "Fallo de Envío");
       }
     } catch (err) {

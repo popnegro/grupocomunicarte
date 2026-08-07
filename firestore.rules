@@ -14,14 +14,43 @@ service cloud.firestore {
       return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
     }
 
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidLead(data) {
+      return data.name is string && data.name.size() <= 200
+          && data.email is string && data.email.size() <= 200
+          && (!('company' in data) || (data.company is string && data.company.size() <= 200))
+          && (!('source' in data) || (data.source is string && data.source.size() <= 100))
+          && (!('status' in data) || (data.status is string && data.status.size() <= 50));
+    }
+
+    function isValidCampaign(data) {
+      return data.nombre is string && data.nombre.size() <= 200
+          && data.estado is string && data.estado.size() <= 50
+          && (!('fechaInicio' in data) || (data.fechaInicio is string && data.fechaInicio.size() <= 50))
+          && (!('fechaFin' in data) || (data.fechaFin is string && data.fechaFin.size() <= 50))
+          && (!('presupuesto' in data) || (data.presupuesto is int || data.presupuesto is float || data.presupuesto == null));
+    }
+
     // Leads collection
     match /leads/{leadId} {
       allow read: if isSignedIn();
-      allow create: if request.resource.data.name is string 
-                    && request.resource.data.email is string
-                    && request.resource.data.name.size() <= 200
-                    && request.resource.data.email.size() <= 200;
+      allow create: if isValidLead(incoming());
       allow update, delete: if isSignedIn();
+    }
+
+    // Campaigns collection
+    match /campaigns/{campaignId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isValidCampaign(incoming());
+      allow update: if isSignedIn() && isValidCampaign(incoming());
+      allow delete: if isSignedIn();
     }
 
     // Public screens collection

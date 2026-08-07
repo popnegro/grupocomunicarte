@@ -143,27 +143,6 @@ export const Footer: React.FC<FooterProps> = ({ onSetActiveView, onSectionScroll
         </div>
       </div>
 
-      {/* Middle section: B2B quick access bar */}
-      <div className="border-t border-stone-200 bg-stone-100/50 py-5">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <span className="inline-block h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-xs text-stone-500 font-semibold">
-              Portal Comercial OOH & Agencias activo
-            </span>
-          </div>
-          {onSetActiveView && (
-            <button
-              onClick={() => onSetActiveView("dashboard")}
-              className="text-xs font-extrabold text-[#06434a] hover:text-[#0b5e67] bg-white border border-stone-200 hover:bg-stone-50 py-2.5 px-5 rounded-full transition-all flex items-center gap-2 shadow-xs cursor-pointer"
-            >
-              <LucideIcons.LogIn className="h-3.5 w-3.5" />
-              <span>Consola Comercial B2B</span>
-            </button>
-          )}
-        </div>
-      </div>
-
       {/* Bottom Legal section */}
       <div className="border-t border-stone-200 bg-stone-100/80 py-8 text-xs text-stone-500">
         <div className="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-6">

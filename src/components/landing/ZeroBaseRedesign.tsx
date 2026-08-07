@@ -124,11 +124,8 @@ export const ZeroBaseRedesign: React.FC<ZeroBaseRedesignProps> = ({
     >
       {/* Minimalist Typographic Header */}
       <div className="max-w-3xl space-y-4 text-left">
-        <Badge variant="primary" className="px-3 py-1 text-[10px]">
-          REDISEÑO ZERO-BASE / PMV ACTIVO
-        </Badge>
-        <h1 className="text-4xl md:text-6xl font-serif text-stone-900 tracking-tight font-black leading-none font-display">
-          Publicidad Exterior Premium, <span className="text-[#06434a] italic">Simplificada.</span>
+        <h1 className="text-4xl md:text-6xl text-stone-900 tracking-tight font-black leading-none font-display">
+          Publicidad Exterior Premium, <span className="text-[#06434a]">Simplificada.</span>
         </h1>
         <p className="text-stone-500 text-sm md:text-base leading-relaxed font-medium max-w-2xl">
           Accedé de forma directa a la red exclusiva de pantallas LED de gran formato de <strong>Grupo Comunicarte</strong> en Mendoza y Buenos Aires. Seleccioná ubicaciones con alto tráfico vehicular certificado, armá tu circuito y pautá en 24 horas sin fricciones comerciales.

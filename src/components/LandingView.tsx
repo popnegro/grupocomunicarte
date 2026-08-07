@@ -249,9 +249,6 @@ export const LandingView: React.FC = () => {
             <div className="max-w-7xl mx-auto px-6 space-y-16">
               {/* Section Header */}
               <div className="text-center max-w-2xl mx-auto space-y-4">
-                <span className="text-[10px] bg-[#06434a]/5 border border-[#06434a]/10 text-[#06434a] font-bold tracking-widest uppercase px-3.5 py-1.5 rounded-full select-none">
-                  ESTRATEGIA OUT-OF-HOME (OOH)
-                </span>
                 <h2 className="text-3xl md:text-4xl tracking-tight text-stone-900 font-display font-black">
                   Soluciones de Comunicación Urbana
                 </h2>
@@ -320,9 +317,6 @@ export const LandingView: React.FC = () => {
             <div className="max-w-7xl mx-auto px-6 space-y-16">
               {/* Section Header */}
               <div className="text-center max-w-2xl mx-auto space-y-4">
-                <span className="text-[10px] bg-[#06434a]/5 border border-[#06434a]/10 text-[#06434a] font-bold tracking-widest uppercase px-3.5 py-1.5 rounded-full select-none">
-                  HISTORIAS DE IMPACTO
-                </span>
                 <h2 className="text-3xl md:text-4xl tracking-tight text-stone-900 font-display font-black">
                   Casos de Éxito Certificados
                 </h2>
@@ -381,9 +375,7 @@ export const LandingView: React.FC = () => {
             <div className="max-w-6xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
               
               <div className="lg:col-span-7 space-y-6 text-left">
-                <span className="text-[10px] bg-stone-200/60 border border-stone-300 text-stone-600 font-bold tracking-widest uppercase px-3.5 py-1.5 rounded-full">
-                  HOLDING DE COMUNICACIÓN URBANA
-                </span>
+            
                 <h2 className="text-3xl font-display font-black tracking-tight text-stone-900">
                   Sobre Grupo Comunicarte
                 </h2>
@@ -428,9 +420,7 @@ export const LandingView: React.FC = () => {
             <div className="max-w-6xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center relative z-10">
               
               <div className="lg:col-span-6 space-y-6 text-left">
-                <span className="text-[9px] bg-white/10 text-stone-300 border border-white/20 font-bold tracking-widest uppercase px-3 py-1 rounded-full">
-                  Canal de Atención B2B Directo
-                </span>
+               
                 <h2 className="text-3xl md:text-4xl font-display font-black tracking-tight leading-tight">
                   Agendá una Asesoría con un Experto
                 </h2>
@@ -457,7 +447,7 @@ export const LandingView: React.FC = () => {
 
               {/* Form */}
               <div className="lg:col-span-6 bg-white text-stone-900 rounded-3xl p-6 md:p-8 shadow-2xl border border-stone-200">
-                <h3 className="text-md font-bold text-stone-900 mb-1 font-display">Completa tu consulta comercial</h3>
+                <h3 className="text-md font-bold text-stone-900 mb-1 font-display">Contacto</h3>
                 <p className="text-stone-500 text-xs mb-6">Nos contactaremos contigo en menos de 24 horas hábiles.</p>
 
                 <div className="space-y-4">

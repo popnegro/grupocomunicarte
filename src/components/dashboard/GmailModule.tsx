@@ -108,7 +108,9 @@ export const GmailModule: React.FC<GmailModuleProps> = ({ token }) => {
         } else if (res.isRateLimited) { // Access directly from ApiResponse
           toast.error("Límite de peticiones alcanzado. Reintentando en unos segundos.");
         } else if (res.error) { // Access directly from ApiResponse
-          const errorMessage = res.error;
+          const errorMessage = typeof res.error === 'object' 
+            ? res.error.message 
+            : res.error;
 
           toast.error(errorMessage || "No se pudieron obtener los correos.", "Error de Bandeja");
         }
@@ -127,13 +129,13 @@ export const GmailModule: React.FC<GmailModuleProps> = ({ token }) => {
     setSelectedMessageId(id);
     setSelectedMessage(null);
     try { // Corrected type for error
-      const res = await safeFetchJson<{ success: boolean; data?: DetailedMessage }>(`/api/gmail/messages/${id}`, {
+      const res = await safeFetchJson<{ success: boolean; data?: DetailedMessage; error?: string | { message: string } }>(`/api/gmail/messages/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.data?.success && res.data.data) {
         setSelectedMessage(res.data.data);
       } else {
-        const errorMessage = res.error;
+        const errorMessage = typeof res.error === 'object' ? res.error.message : res.error // Access directly from ApiResponse
         toast.error(errorMessage || "No se pudo cargar el detalle del correo.", "Error de Lectura");
       }
     } catch (err) {
@@ -176,7 +178,7 @@ export const GmailModule: React.FC<GmailModuleProps> = ({ token }) => {
         // Reload messages after brief delay
         setTimeout(() => fetchMessages(searchQuery), 1000);
       } else {
-        const errorMessage = res.error;
+        const errorMessage = typeof res.error === 'object' ? res.error.message : res.error // Access directly from ApiResponse
         toast.error(errorMessage || "Error al enviar el correo.", "Fallo de Envío");
       }
     } catch (err) {
@@ -320,9 +322,9 @@ export const GmailModule: React.FC<GmailModuleProps> = ({ token }) => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        
+
         {/* LEFT COLUMN: Message List */}
-        <div className="lg:col-span-5 bg-white border border-stone-200/80 rounded-2xl overflow-hidden shadow-2xs flex flex-col min-h-[500px]">
+        <div className="lg:col-span-5 bg-white border border-stone-200/80 rounded-2xl overflow-hidden shadow-2xs flex flex-col min-h-125">
           
           {/* Search Box */}
           <div className="p-4 border-b border-stone-150">
@@ -339,7 +341,7 @@ export const GmailModule: React.FC<GmailModuleProps> = ({ token }) => {
           </div>
 
           {/* Messages list body */}
-          <div className="flex-1 overflow-y-auto divide-y divide-stone-100 max-h-[600px]">
+          <div className="flex-1 overflow-y-auto divide-y divide-stone-100 max-h-150">
             {loadingInbox ? (
               <div className="p-12 text-center space-y-3">
                 <Loader className="h-6 w-6 animate-spin text-stone-400 mx-auto" />
@@ -349,7 +351,7 @@ export const GmailModule: React.FC<GmailModuleProps> = ({ token }) => {
               <div className="p-12 text-center text-stone-400 space-y-2">
                 <Inbox className="h-8 w-8 text-stone-300 mx-auto" />
                 <p className="text-xs font-bold text-stone-600">No hay correos para mostrar</p>
-                <p className="text-[10px] leading-relaxed max-w-[200px] mx-auto">Prueba refrescando o ingresando otro término de búsqueda.</p>
+                <p className="text-[10px] leading-relaxed max-w-50 mx-auto">Prueba refrescando o ingresando otro término de búsqueda.</p>
               </div>
             ) : (
               messages.map((msg) => {
@@ -399,7 +401,7 @@ export const GmailModule: React.FC<GmailModuleProps> = ({ token }) => {
         </div>
 
         {/* RIGHT COLUMN: Reader Pane */}
-        <div className="lg:col-span-7 bg-white border border-stone-200/80 rounded-2xl shadow-2xs overflow-hidden min-h-[500px] flex flex-col justify-between">
+        <div className="lg:col-span-7 bg-white border border-stone-200/80 rounded-2xl shadow-2xs overflow-hidden min-h-125 flex flex-col justify-between">
           {selectedMessageId ? (
             loadingDetail ? (
               <div className="flex-1 flex flex-col items-center justify-center p-12 text-center">
@@ -437,11 +439,11 @@ export const GmailModule: React.FC<GmailModuleProps> = ({ token }) => {
                 </div>
 
                 {/* Body Content - Renders HTML or falls back to text securely */}
-                <div className="flex-1 p-6 overflow-y-auto max-h-[500px] text-left">
+                <div className="flex-1 p-6 overflow-y-auto max-h-125 text-left">
                   {selectedMessage.html ? (
                     // Secure preview inside shadow box or clean sandboxed iframe style, but for simplicity we render inside parsed div
                     <div 
-                      className="text-stone-700 text-xs leading-relaxed space-y-3 prose max-w-none break-words"
+                      className="text-stone-700 text-xs leading-relaxed space-y-3 prose max-w-none wrap-break-word"
                       dangerouslySetInnerHTML={{ 
                         __html: selectedMessage.html
                           // strip malicious script elements for safety (basic sanitize)

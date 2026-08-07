@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { adminAuth } from "../lib/firebase-admin"; // Corrected path
-import { DecodedIdToken } from "firebase-admin/auth";
+import type { DecodedIdToken } from "firebase-admin/auth";
 
 // Extend the Request type to include a user property
 export interface AuthRequest extends Request {
@@ -12,6 +12,13 @@ export const protect = async (
   res: Response,
   next: NextFunction
 ) => {
+  if (!adminAuth) {
+    return res.status(503).json({
+      success: false,
+      error: { code: "FIREBASE_NOT_INITIALIZED", message: "El servicio de autenticación no está disponible en este momento." }
+    });
+  }
+
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith("Bearer ")) {

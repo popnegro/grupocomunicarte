@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { DoohScreen } from "../../types";
-import { Role, Cliente, MediaKit } from "./types";
+import { Role } from "./types";
 import { motion, AnimatePresence } from "motion/react";
 import { downloadMediaKitAsHtml } from "../../utils/mediaKitExport";
 import { 
@@ -25,17 +25,7 @@ import {
   EyeOff, 
   Settings2,
   Archive,
-  RotateCcw,
-  Share2,
-  MessageSquare,
-  Mail,
-  Link,
-  Download,
-  Presentation,
-  Save,
-  User,
-  Minus,
-  CheckCircle2
+  RotateCcw
 } from "lucide-react";
 import { FileUpload } from "./FileUpload";
 
@@ -45,8 +35,6 @@ interface InventoryModuleProps {
   onUpdateScreen: (id: string, data: Partial<DoohScreen>) => void;
   onAddScreen: (screen: DoohScreen) => void;
   onDeleteScreen: (id: string) => void;
-  clientes?: Cliente[];
-  onAddMediaKit?: (mk: MediaKit) => void;
 }
 
 export const InventoryModule: React.FC<InventoryModuleProps> = ({
@@ -55,8 +43,6 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
   onUpdateScreen,
   onAddScreen,
   onDeleteScreen,
-  clientes = [],
-  onAddMediaKit,
 }) => {
   // Filters state
   const [selectedCityFilter, setSelectedCityFilter] = useState<string>("Todas");
@@ -65,33 +51,6 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
   const [selectedStatusFilter, setSelectedStatusFilter] = useState<string>("Todas");
   const [searchQuery, setSearchQuery] = useState("");
   const [showArchived, setShowArchived] = useState(false);
-
-  // Proposal Drawer Cotizador State
-  const [selectedProposalScreens, setSelectedProposalScreens] = useState<string[]>([]);
-  const [screenDurations, setScreenDurations] = useState<Record<string, number>>({});
-  const [discountPercent, setDiscountPercent] = useState<number>(0);
-  const [selectedClientId, setSelectedClientId] = useState<string>("");
-  const [customClientName, setCustomClientName] = useState<string>("");
-  const [validityDays, setValidityDays] = useState<number>(15);
-  const [isProposalDrawerOpen, setIsProposalDrawerOpen] = useState<boolean>(false);
-  const [toastMsg, setToastMsg] = useState<string | null>(null);
-
-  const triggerToast = (msg: string) => {
-    setToastMsg(msg);
-    setTimeout(() => setToastMsg(null), 3000);
-  };
-
-  const toggleSelectProposalScreen = (id: string) => {
-    if (selectedProposalScreens.includes(id)) {
-      setSelectedProposalScreens((prev) => prev.filter((sId) => sId !== id));
-    } else {
-      setSelectedProposalScreens((prev) => [...prev, id]);
-      if (!screenDurations[id]) {
-        setScreenDurations((prev) => ({ ...prev, [id]: 1 }));
-      }
-      setIsProposalDrawerOpen(true);
-    }
-  };
 
   // Delete confirmation state
   const [screenToDelete, setScreenToDelete] = useState<string | null>(null);
@@ -212,116 +171,6 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
       formato: "MP4, JPG",
       cobertura: "Zona comercial"
     });
-  };
-
-  // Proposal Cotizador Calculations
-  const proposalSelectedObjects = useMemo(() => {
-    return screens.filter((s) => selectedProposalScreens.includes(s.id));
-  }, [screens, selectedProposalScreens]);
-
-  const proposalSubtotal = useMemo(() => {
-    return proposalSelectedObjects.reduce((sum, s) => {
-      const w = screenDurations[s.id] || 1;
-      return sum + (s.precio || 0) * w;
-    }, 0);
-  }, [proposalSelectedObjects, screenDurations]);
-
-  const proposalDiscountAmount = useMemo(() => {
-    return (proposalSubtotal * discountPercent) / 100;
-  }, [proposalSubtotal, discountPercent]);
-
-  const proposalFinalTotal = useMemo(() => {
-    return Math.max(0, proposalSubtotal - proposalDiscountAmount);
-  }, [proposalSubtotal, proposalDiscountAmount]);
-
-  const currentClientName = useMemo(() => {
-    if (selectedClientId) {
-      const found = clientes.find((c) => c.id === selectedClientId);
-      if (found) return found.empresa || found.nombre;
-    }
-    return customClientName || "Cliente Comercial";
-  }, [selectedClientId, clientes, customClientName]);
-
-  const handleExportPDF = () => {
-    if (proposalSelectedObjects.length === 0) return;
-    downloadMediaKitAsHtml(
-      proposalSelectedObjects,
-      `Propuesta Comercial - ${currentClientName}`,
-      currentClientName,
-      proposalSelectedObjects[0]?.ciudad || "Mendoza",
-      { notes: `Cotización con ${discountPercent}% de bonificación comercial. Vigencia: ${validityDays} días.` }
-    );
-    triggerToast("¡Ficha Comercial descargada como HTML/PDF listo para imprimir!");
-  };
-
-  const handleShareWhatsApp = () => {
-    if (proposalSelectedObjects.length === 0) return;
-    const msg = encodeURIComponent(
-      `*Grupo Comunicarte - Propuesta Comercial DOOH*\n\n` +
-      `*Cliente:* ${currentClientName}\n` +
-      `*Soportes Seleccionados:* ${proposalSelectedObjects.length} pantallas\n` +
-      `*Detalle:* ${proposalSelectedObjects.map((s) => s.nombre).join(", ")}\n` +
-      `*Subtotal:* $${proposalSubtotal.toLocaleString()}\n` +
-      (discountPercent > 0 ? `*Descuento (${discountPercent}%):* -$${proposalDiscountAmount.toLocaleString()}\n` : "") +
-      `*Inversión Final:* $${proposalFinalTotal.toLocaleString()}\n` +
-      `*Vigencia:* ${validityDays} días\n\n` +
-      `¿Confirmamos la reserva para el inicio de la pauta?`
-    );
-    window.open(`https://wa.me/?text=${msg}`, "_blank");
-    triggerToast("Abriendo WhatsApp con propuesta formateada...");
-  };
-
-  const handleSendEmail = () => {
-    if (proposalSelectedObjects.length === 0) return;
-    const subject = encodeURIComponent(`Propuesta Comercial DOOH - Grupo Comunicarte (${currentClientName})`);
-    const body = encodeURIComponent(
-      `Estimado/a,\n\nCompartimos la propuesta comercial para ${currentClientName}:\n\n` +
-      `Soportes Seleccionados:\n` +
-      proposalSelectedObjects.map((s) => `- ${s.nombre} (${s.ciudad}) - Tarifa semanal: $${s.precio.toLocaleString()}`).join("\n") +
-      `\n\nSubtotal: $${proposalSubtotal.toLocaleString()}\n` +
-      (discountPercent > 0 ? `Descuento Aplicado (${discountPercent}%): -$${proposalDiscountAmount.toLocaleString()}\n` : "") +
-      `Inversión Total: $${proposalFinalTotal.toLocaleString()}\n` +
-      `Vigencia: ${validityDays} días\n\n` +
-      `Atentamente,\nEquipo Comercial Grupo Comunicarte`
-    );
-    window.open(`mailto:?subject=${subject}&body=${body}`, "_blank");
-    triggerToast("Abriendo cliente de correo para enviar propuesta...");
-  };
-
-  const handleCopyLink = () => {
-    const fakeLink = `${window.location.origin}/dashboard/mediakits?s=${selectedProposalScreens.join(",")}`;
-    navigator.clipboard.writeText(fakeLink);
-    triggerToast("¡Enlace de propuesta copiado al portapapeles!");
-  };
-
-  const handleSaveAsMediaKit = () => {
-    if (proposalSelectedObjects.length === 0) return;
-    if (onAddMediaKit) {
-      const newMk: MediaKit = {
-        id: `mk-${Date.now()}`,
-        nombre: `Propuesta ${currentClientName} - ${new Date().toLocaleDateString("es-AR")}`,
-        clienteId: selectedClientId || "client-gen",
-        clienteNombre: currentClientName,
-        ciudad: (proposalSelectedObjects[0]?.ciudad as any) || "Mendoza",
-        screenIds: selectedProposalScreens,
-        version: 1,
-        estado: "Cotizando",
-        comentarios: [],
-        historial: [
-          { id: `h-${Date.now()}`, action: "Propuesta generada desde Cotizador de Inventario", date: new Date().toISOString(), user: "Ejecutivo Comercial" }
-        ],
-        fecha: new Date().toISOString(),
-        presupuesto: proposalFinalTotal,
-        soportesEdicionInline: proposalSelectedObjects.map((s) => ({
-          id: s.id,
-          notas: "",
-          prioridad: "Alta",
-          duracionSem: screenDurations[s.id] || 1
-        }))
-      };
-      onAddMediaKit(newMk);
-      triggerToast("¡Propuesta guardada exitosamente en el CRM de MediaKits!");
-    }
   };
 
   return (
@@ -500,33 +349,8 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
                 </div>
               </div>
 
-              {/* Proposal selection button */}
-              <div className="border-t border-stone-100 pt-3" onClick={(e) => e.stopPropagation()}>
-                <button
-                  type="button"
-                  onClick={() => toggleSelectProposalScreen(screen.id)}
-                  className={`w-full py-2 px-3 rounded-xl text-[10px] font-extrabold uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
-                    selectedProposalScreens.includes(screen.id)
-                      ? "bg-[#06434a] text-white shadow-xs"
-                      : "bg-stone-50 border border-stone-200 text-stone-700 hover:border-[#06434a]/40 hover:bg-[#06434a]/5 hover:text-[#06434a]"
-                  }`}
-                >
-                  {selectedProposalScreens.includes(screen.id) ? (
-                    <>
-                      <Check className="h-3.5 w-3.5 text-amber-300" />
-                      <span>Seleccionado para Propuesta</span>
-                    </>
-                  ) : (
-                    <>
-                      <Plus className="h-3.5 w-3.5 text-[#06434a]" />
-                      <span>Seleccionar para Propuesta</span>
-                    </>
-                  )}
-                </button>
-              </div>
-
               {/* CRUD triggers */}
-              <div className="border-t border-stone-100 pt-2 flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
+              <div className="border-t border-stone-100 pt-3 flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
                 <button
                   onClick={() => handleDuplicate(screen)}
                   title="Duplicar Soporte"
@@ -1150,296 +974,6 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
                   Eliminar Soporte
                 </button>
               </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* Floating Action Pill for Cotizador Drawer */}
-      {selectedProposalScreens.length > 0 && !isProposalDrawerOpen && (
-        <motion.button
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          onClick={() => setIsProposalDrawerOpen(true)}
-          className="fixed bottom-6 right-6 z-40 bg-[#06434a] hover:bg-[#08555e] text-white px-5 py-3.5 rounded-full shadow-2xl border border-teal-300/30 flex items-center gap-3 cursor-pointer group"
-        >
-          <div className="h-6 w-6 rounded-full bg-amber-400 text-stone-950 font-black text-xs flex items-center justify-center">
-            {selectedProposalScreens.length}
-          </div>
-          <div className="text-left leading-tight">
-            <span className="block text-xs font-black tracking-tight">Ver Cotización & Propuesta</span>
-            <span className="block text-[9px] text-teal-200 font-medium">Total: ${proposalFinalTotal.toLocaleString()}</span>
-          </div>
-          <ChevronRight className="h-4 w-4 text-amber-300 group-hover:translate-x-0.5 transition-transform" />
-        </motion.button>
-      )}
-
-      {/* Panel Lateral: Cotizador & Propuesta Comercial Drawer */}
-      <AnimatePresence>
-        {isProposalDrawerOpen && (
-          <div className="fixed inset-0 z-50 flex justify-end bg-stone-900/40 backdrop-blur-xs">
-            <motion.div
-              initial={{ x: "100%" }}
-              animate={{ x: 0 }}
-              exit={{ x: "100%" }}
-              transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="w-full max-w-md bg-white h-full shadow-2xl border-l border-stone-200 flex flex-col justify-between overflow-hidden text-left"
-            >
-              {/* Drawer Header */}
-              <div className="p-5 border-b border-stone-100 bg-[#06434a] text-white flex items-center justify-between shrink-0">
-                <div className="flex items-center gap-2.5">
-                  <div className="p-2 rounded-xl bg-white/10 text-amber-300">
-                    <FileText className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-black font-display tracking-tight text-white">Cotizador Comercial DOOH</h3>
-                    <p className="text-[10px] text-teal-200 font-medium">Crea y comparte la propuesta en menos de 1 minuto</p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setIsProposalDrawerOpen(false)}
-                  className="p-1.5 rounded-xl hover:bg-white/10 text-teal-200 hover:text-white transition-colors cursor-pointer"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-
-              {/* Drawer Content Body */}
-              <div className="p-5 flex-1 overflow-y-auto space-y-6 bg-[#FAF9F5]">
-                
-                {/* 1. Cliente & Vigencia */}
-                <div className="bg-white p-4 rounded-2xl border border-stone-200 space-y-3.5 shadow-2xs">
-                  <div className="flex items-center justify-between border-b border-stone-100 pb-2">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-[#06434a] flex items-center gap-1.5">
-                      <User className="h-3.5 w-3.5" />
-                      <span>Cliente & Destinatario</span>
-                    </span>
-                  </div>
-
-                  <div className="space-y-3">
-                    <div>
-                      <label className="block text-[9px] font-bold text-stone-400 uppercase mb-1">Seleccionar Cliente CRM</label>
-                      <select
-                        value={selectedClientId}
-                        onChange={(e) => {
-                          setSelectedClientId(e.target.value);
-                          if (e.target.value) setCustomClientName("");
-                        }}
-                        className="w-full text-xs font-semibold px-3 py-2 bg-stone-50 border border-stone-200 rounded-xl focus:outline-none focus:border-[#06434a]"
-                      >
-                        <option value="">-- Ingresar Nombre Manualmente --</option>
-                        {clientes.map((c) => (
-                          <option key={c.id} value={c.id}>
-                            {c.empresa} ({c.nombre})
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    {!selectedClientId && (
-                      <div>
-                        <label className="block text-[9px] font-bold text-stone-400 uppercase mb-1">Nombre o Razón Social</label>
-                        <input
-                          type="text"
-                          placeholder="Ej. Mercado Libre / Agencia Havas"
-                          value={customClientName}
-                          onChange={(e) => setCustomClientName(e.target.value)}
-                          className="w-full text-xs font-semibold px-3 py-2 bg-stone-50 border border-stone-200 rounded-xl focus:outline-none focus:border-[#06434a]"
-                        />
-                      </div>
-                    )}
-
-                    <div className="grid grid-cols-2 gap-3 pt-1">
-                      <div>
-                        <label className="block text-[9px] font-bold text-stone-400 uppercase mb-1">Vigencia (Días)</label>
-                        <select
-                          value={validityDays}
-                          onChange={(e) => setValidityDays(Number(e.target.value))}
-                          className="w-full text-xs font-semibold px-3 py-1.5 bg-stone-50 border border-stone-200 rounded-xl"
-                        >
-                          <option value={7}>7 días</option>
-                          <option value={15}>15 días</option>
-                          <option value={30}>30 días</option>
-                        </select>
-                      </div>
-
-                      <div>
-                        <label className="block text-[9px] font-bold text-stone-400 uppercase mb-1">Descuento Bonificado</label>
-                        <div className="flex items-center gap-1 bg-stone-50 border border-stone-200 rounded-xl px-2 py-1">
-                          <input
-                            type="number"
-                            min={0}
-                            max={50}
-                            value={discountPercent}
-                            onChange={(e) => setDiscountPercent(Math.min(50, Math.max(0, Number(e.target.value))))}
-                            className="w-full text-xs font-bold font-mono text-[#06434a] bg-transparent focus:outline-none"
-                          />
-                          <span className="text-xs font-bold text-stone-400">%</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* 2. Soportes Seleccionados List */}
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-stone-500">
-                      Soportes en la Cotización ({proposalSelectedObjects.length})
-                    </span>
-                    {selectedProposalScreens.length > 0 && (
-                      <button
-                        onClick={() => setSelectedProposalScreens([])}
-                        className="text-[10px] font-bold text-red-600 hover:underline cursor-pointer"
-                      >
-                        Vaciar Selección
-                      </button>
-                    )}
-                  </div>
-
-                  {proposalSelectedObjects.length === 0 ? (
-                    <div className="p-8 text-center bg-white rounded-2xl border border-dashed border-stone-300 space-y-2">
-                      <Sparkles className="h-6 w-6 text-stone-300 mx-auto" />
-                      <p className="text-xs font-bold text-stone-600">No hay soportes seleccionados</p>
-                      <p className="text-[10px] text-stone-400">Haz clic en "Seleccionar para Propuesta" en cualquier pantalla del catálogo.</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-2.5">
-                      {proposalSelectedObjects.map((s) => {
-                        const weeks = screenDurations[s.id] || 1;
-                        const itemTotal = (s.precio || 0) * weeks;
-                        return (
-                          <div key={s.id} className="bg-white p-3.5 rounded-2xl border border-stone-200 space-y-2.5 shadow-2xs">
-                            <div className="flex items-start justify-between gap-2">
-                              <div>
-                                <h5 className="text-xs font-bold text-stone-900 leading-snug">{s.nombre}</h5>
-                                <p className="text-[10px] text-stone-500">{s.ciudad} • {s.zona}</p>
-                              </div>
-                              <button
-                                onClick={() => toggleSelectProposalScreen(s.id)}
-                                className="text-stone-400 hover:text-red-500 p-1 cursor-pointer"
-                              >
-                                <X className="h-3.5 w-3.5" />
-                              </button>
-                            </div>
-
-                            <div className="flex items-center justify-between border-t border-stone-100 pt-2 text-[11px]">
-                              {/* Duration controls */}
-                              <div className="flex items-center gap-1.5 bg-stone-100 p-1 rounded-xl">
-                                <button
-                                  onClick={() =>
-                                    setScreenDurations((prev) => ({
-                                      ...prev,
-                                      [s.id]: Math.max(1, (prev[s.id] || 1) - 1)
-                                    }))
-                                  }
-                                  className="h-5 w-5 rounded-lg bg-white shadow-2xs flex items-center justify-center text-stone-700 hover:bg-stone-200 cursor-pointer"
-                                >
-                                  <Minus className="h-3 w-3" />
-                                </button>
-                                <span className="text-[10px] font-extrabold px-1 text-stone-800">
-                                  {weeks} sem.
-                                </span>
-                                <button
-                                  onClick={() =>
-                                    setScreenDurations((prev) => ({
-                                      ...prev,
-                                      [s.id]: (prev[s.id] || 1) + 1
-                                    }))
-                                  }
-                                  className="h-5 w-5 rounded-lg bg-white shadow-2xs flex items-center justify-center text-stone-700 hover:bg-stone-200 cursor-pointer"
-                                >
-                                  <Plus className="h-3 w-3" />
-                                </button>
-                              </div>
-
-                              <div className="text-right">
-                                <span className="font-mono text-xs font-black text-[#06434a]">
-                                  ${itemTotal.toLocaleString()}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-
-                {/* 3. Desglose Económico Total */}
-                {proposalSelectedObjects.length > 0 && (
-                  <div className="bg-[#06434a]/5 p-4 rounded-2xl border border-[#06434a]/15 space-y-2">
-                    <div className="flex items-center justify-between text-xs text-stone-600 font-medium">
-                      <span>Subtotal ({proposalSelectedObjects.length} soportes)</span>
-                      <span className="font-mono font-bold">${proposalSubtotal.toLocaleString()}</span>
-                    </div>
-
-                    {discountPercent > 0 && (
-                      <div className="flex items-center justify-between text-xs text-emerald-700 font-bold">
-                        <span>Bonificación Comercial ({discountPercent}%)</span>
-                        <span className="font-mono">-${proposalDiscountAmount.toLocaleString()}</span>
-                      </div>
-                    )}
-
-                    <div className="border-t border-[#06434a]/20 pt-2 flex items-center justify-between text-sm font-black text-[#06434a]">
-                      <span>Inversión Final Estimada</span>
-                      <span className="font-mono text-base text-[#06434a]">
-                        ${proposalFinalTotal.toLocaleString()}
-                      </span>
-                    </div>
-                  </div>
-                )}
-
-              </div>
-
-              {/* Drawer Footer 1-Click Action Buttons */}
-              {proposalSelectedObjects.length > 0 && (
-                <div className="p-4 border-t border-stone-200 bg-white space-y-2.5 shrink-0">
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      onClick={handleExportPDF}
-                      className="py-2.5 px-3 bg-stone-900 hover:bg-stone-800 text-white rounded-xl text-[10px] font-extrabold uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer shadow-xs"
-                    >
-                      <Download className="h-3.5 w-3.5 text-amber-300" />
-                      <span>Descargar PDF</span>
-                    </button>
-
-                    <button
-                      onClick={handleShareWhatsApp}
-                      className="py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-[10px] font-extrabold uppercase tracking-wider flex items-center justify-center gap-2 cursor-pointer shadow-xs"
-                    >
-                      <MessageSquare className="h-3.5 w-3.5 text-white" />
-                      <span>Enviar WhatsApp</span>
-                    </button>
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-1.5">
-                    <button
-                      onClick={handleSendEmail}
-                      className="py-2 px-2 bg-stone-100 hover:bg-stone-200 text-stone-800 rounded-xl text-[9px] font-bold uppercase flex items-center justify-center gap-1 cursor-pointer"
-                    >
-                      <Mail className="h-3 w-3 text-[#06434a]" />
-                      <span>Correo</span>
-                    </button>
-
-                    <button
-                      onClick={handleCopyLink}
-                      className="py-2 px-2 bg-stone-100 hover:bg-stone-200 text-stone-800 rounded-xl text-[9px] font-bold uppercase flex items-center justify-center gap-1 cursor-pointer"
-                    >
-                      <Link className="h-3 w-3 text-[#06434a]" />
-                      <span>Copiar Link</span>
-                    </button>
-
-                    <button
-                      onClick={handleSaveAsMediaKit}
-                      className="py-2 px-2 bg-[#06434a] hover:bg-[#08555e] text-white rounded-xl text-[9px] font-bold uppercase flex items-center justify-center gap-1 cursor-pointer"
-                    >
-                      <Save className="h-3 w-3 text-amber-300" />
-                      <span>Guardar</span>
-                    </button>
-                  </div>
-                </div>
-              )}
             </motion.div>
           </div>
         )}

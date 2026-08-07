@@ -1,22 +1,63 @@
-import React, { Suspense } from "react";
+import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { motion } from "motion/react";
 import { AuthProvider, useAuth } from "./components/AuthContext";
 import { CmsProvider } from "./components/CmsContext";
+import { LandingView } from "./components/LandingView";
+import { DashboardView } from "./components/DashboardView";
+import { LoginView } from "./components/LoginView";
 import { ToastProvider } from "./components/ui/Toast";
-import { ErrorBoundary } from "./components/ErrorBoundary";
 
-// Lazy-loaded major routes to minimize the initial bundle size
-const LandingView = React.lazy(() => import("./components/LandingView").then(m => ({ default: m.LandingView })));
-const DashboardView = React.lazy(() => import("./components/DashboardView").then(m => ({ default: m.DashboardView })));
-const LoginView = React.lazy(() => import("./components/LoginView").then(m => ({ default: m.LoginView })));
+// High-Contrast Animated Loading screen matching design system
+function LoadingScreen({ message }: { message?: string }) {
+  let authContext: ReturnType<typeof useAuth> | null = null;
+  try {
+    authContext = useAuth();
+  } catch {
+    // Safely fallback if rendered outside AuthProvider
+  }
 
-// High-Contrast Loading spinner matching design system
-function LoadingScreen() {
+  let defaultMessage = "Verificando autenticación y configuración...";
+  if (authContext) {
+    if (authContext.loading) {
+      defaultMessage = "Sincronizando estado de sesión...";
+    } else if (authContext.user) {
+      defaultMessage = authContext.isAdmin
+        ? "Cargando panel de administración..."
+        : "Cargando sesión de usuario...";
+    }
+  }
+
+  const statusMessage = message || defaultMessage;
+
   return (
-    <div className="min-h-screen bg-[#FAF9F5] flex flex-col items-center justify-center font-sans">
-      <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#06434a] border-t-transparent shadow-xs"></div>
-      <p className="mt-4 text-xs font-bold text-stone-500 uppercase tracking-widest">Cargando...</p>
-    </div>
+    <motion.div
+      initial={{ opacity: 0, scale: 0.97 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 0.3, ease: "easeOut" }}
+      className="min-h-screen bg-[#FAF9F5] flex flex-col items-center justify-center p-6 text-center font-sans"
+    >
+      <div className="relative flex items-center justify-center mb-6">
+        <div className="h-12 w-12 animate-spin rounded-full border-4 border-[#06434a] border-t-transparent shadow-xs" />
+        <div className="absolute inset-0 rounded-full border border-[#06434a]/10" />
+      </div>
+      <motion.p
+        initial={{ opacity: 0, y: 5 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1, duration: 0.25 }}
+        className="text-xs font-bold text-[#06434a] uppercase tracking-widest"
+      >
+        {statusMessage}
+      </motion.p>
+      <motion.p
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.2, duration: 0.25 }}
+        className="mt-2 text-[11px] text-stone-500 max-w-xs leading-relaxed"
+      >
+        Por favor espera un momento mientras preparamos el entorno.
+      </motion.p>
+    </motion.div>
   );
 }
 
@@ -25,7 +66,7 @@ function ProtectedRoute({ children, requireAdmin = false }: { children: React.Re
   const { user, loading, isAdmin } = useAuth();
 
   if (loading) {
-    return <LoadingScreen />;
+    return <LoadingScreen message="Verificando permisos de acceso..." />;
   }
 
   if (!user) {
@@ -62,7 +103,7 @@ function LoginRoute() {
   const { user, loading } = useAuth();
 
   if (loading) {
-    return <LoadingScreen />;
+    return <LoadingScreen message="Comprobando estado de autenticación..." />;
   }
 
   if (user) {
@@ -74,42 +115,38 @@ function LoginRoute() {
 
 export default function App() {
   return (
-    <ErrorBoundary>
+    <AuthProvider>
       <ToastProvider>
         <BrowserRouter>
-          <AuthProvider>
-            <CmsProvider>
-              <Suspense fallback={<LoadingScreen />}>
-                <Routes>
-                  {/* Public Landing View & sitemap inner pages */}
-                  <Route path="/" element={<LandingView />} />
-                  <Route path="/nosotros/*" element={<LandingView />} />
-                  <Route path="/espacios-publicitarios/*" element={<LandingView />} />
-                  <Route path="/soluciones/*" element={<LandingView />} />
-                  <Route path="/soportes/*" element={<LandingView />} />
-                  <Route path="/contacto" element={<LandingView />} />
+          <CmsProvider>
+            <Routes>
+              {/* Public Landing View & sitemap inner pages */}
+              <Route path="/" element={<LandingView />} />
+              <Route path="/nosotros/*" element={<LandingView />} />
+              <Route path="/espacios-publicitarios/*" element={<LandingView />} />
+              <Route path="/soluciones/*" element={<LandingView />} />
+              <Route path="/soportes/*" element={<LandingView />} />
+              <Route path="/contacto" element={<LandingView />} />
 
-                  {/* Login Route */}
-                  <Route path="/login" element={<LoginRoute />} />
+              {/* Login Route */}
+              <Route path="/login" element={<LoginRoute />} />
 
-                  {/* Protected Dashboard Suite */}
-                  <Route
-                    path="/dashboard/*"
-                    element={
-                      <ProtectedRoute>
-                        <DashboardView />
-                      </ProtectedRoute>
-                    }
-                  />
+              {/* Protected Dashboard Suite */}
+              <Route
+                path="/dashboard/*"
+                element={
+                  <ProtectedRoute>
+                    <DashboardView />
+                  </ProtectedRoute>
+                }
+              />
 
-                  {/* Fallback to Public Landing */}
-                  <Route path="*" element={<Navigate to="/" replace />} />
-                </Routes>
-              </Suspense>
-            </CmsProvider>
-          </AuthProvider>
+              {/* Fallback to Public Landing */}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </CmsProvider>
         </BrowserRouter>
       </ToastProvider>
-    </ErrorBoundary>
+    </AuthProvider>
   );
 }

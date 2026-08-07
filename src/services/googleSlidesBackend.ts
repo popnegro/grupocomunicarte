@@ -57,16 +57,9 @@ export class GoogleSlidesBackendService {
    * Generates Google OAuth authorization URL for offline access (refresh tokens).
    */
   public static getAuthUrl(userId: number): string {
-    const isGmailEnabled = process.env.ENABLE_GMAIL_INTEGRATION === "true";
-    const scopesList = [
-      "https://www.googleapis.com/auth/presentations",
-      "https://www.googleapis.com/auth/drive"
-    ];
-    if (isGmailEnabled) {
-      scopesList.push("https://www.googleapis.com/auth/gmail.readonly");
-      scopesList.push("https://www.googleapis.com/auth/gmail.send");
-    }
-    const scopes = encodeURIComponent(scopesList.join(" "));
+    const scopes = encodeURIComponent(
+      "https://www.googleapis.com/auth/presentations https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.send"
+    );
     const redirect = encodeURIComponent(this.redirectUri);
     return `https://accounts.google.com/o/oauth2/v2/auth?client_id=${this.clientId}&redirect_uri=${redirect}&response_type=code&scope=${scopes}&access_type=offline&prompt=consent&state=${userId}&login_hint=grupo.comunicarte.dev@gmail.com`;
   }

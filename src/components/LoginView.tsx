@@ -20,10 +20,16 @@ export const LoginView: React.FC = () => {
         setError(
           `El dominio actual ("${currentDomain}") no está en la lista de dominios autorizados de Firebase Auth. Agrega "${currentDomain}" en Firebase Console > Authentication > Settings > Authorized Domains.`
         );
+      } else if (err?.code === "auth/internal-error") {
+        setError(
+          "Error interno de autenticación (auth/internal-error). Por favor, asegúrate de permitir ventanas emergentes o recarga la página e intenta de nuevo."
+        );
       } else if (err?.code === "auth/popup-closed-by-user") {
         setError("Se cerró la ventana de inicio de sesión antes de completar el proceso.");
       } else if (err?.code === "auth/popup-blocked") {
-        setError("El navegador bloqueó la ventana emergente de inicio de sesión. Por favor habilita los popups.");
+        setError(
+          "El navegador o el iframe de vista previa bloqueó la ventana emergente. Abre la aplicación en una pestaña independiente para continuar."
+        );
       } else {
         setError(err?.message || "No se pudo iniciar sesión. Por favor, intenta de nuevo.");
       }
@@ -58,8 +64,15 @@ export const LoginView: React.FC = () => {
         <div className="bg-white py-10 px-6 shadow-sm border border-stone-150 rounded-2xl sm:px-10">
           
           {error && (
-            <div className="mb-4 bg-red-50 border border-red-200 text-red-700 p-3.5 rounded-xl text-xs font-semibold">
-              {error}
+            <div className="mb-4 bg-red-50 border border-red-200 text-red-700 p-3.5 rounded-xl text-xs font-semibold space-y-2">
+              <p>{error}</p>
+              <button
+                type="button"
+                onClick={() => window.open(window.location.href, "_blank")}
+                className="mt-1.5 w-full py-2 px-3 bg-red-100 hover:bg-red-200 text-red-900 rounded-lg text-center font-bold text-[11px] transition-colors cursor-pointer block"
+              >
+                Abrir en nueva pestaña para iniciar sesión sin bloqueos de iframe
+              </button>
             </div>
           )}
 

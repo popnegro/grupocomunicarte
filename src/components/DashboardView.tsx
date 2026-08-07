@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Routes, Route, useNavigate, useLocation, Navigate } from "react-router-dom";
 import { useAuth } from "./AuthContext";
 import { useCms } from "./CmsContext";
@@ -16,16 +16,15 @@ import {
 
 // Modular sub-views
 import { DashboardHeader } from "./dashboard/DashboardHeader";
-import { ModuleErrorBoundary } from "./ModuleErrorBoundary";
-
-// Lazy-loaded analytical and service modules to optimize bundle size
-const DashboardHome = React.lazy(() => import("./dashboard/DashboardHome").then(m => ({ default: m.DashboardHome })));
-const InventoryModule = React.lazy(() => import("./dashboard/InventoryModule").then(m => ({ default: m.InventoryModule })));
-const MediaKitModule = React.lazy(() => import("./dashboard/MediaKitModule").then(m => ({ default: m.MediaKitModule })));
-const ClientsModule = React.lazy(() => import("./dashboard/ClientsModule").then(m => ({ default: m.ClientsModule })));
-const SettingsModule = React.lazy(() => import("./dashboard/SettingsModule").then(m => ({ default: m.SettingsModule })));
-const SlidesSyncModule = React.lazy(() => import("./dashboard/SlidesSyncModule").then(m => ({ default: m.SlidesSyncModule })));
-const AdministrationModule = React.lazy(() => import("./dashboard/AdministrationModule").then(m => ({ default: m.AdministrationModule })));
+import { DashboardHome } from "./dashboard/DashboardHome";
+import { InventoryModule } from "./dashboard/InventoryModule";
+import { MediaKitModule } from "./dashboard/MediaKitModule";
+import { ClientsModule } from "./dashboard/ClientsModule";
+import { SettingsModule } from "./dashboard/SettingsModule";
+import { AiPlannerModule } from "./dashboard/AiPlannerModule";
+import { SlidesSyncModule } from "./dashboard/SlidesSyncModule";
+import { AdministrationModule } from "./dashboard/AdministrationModule";
+import { GmailModule } from "./dashboard/GmailModule";
 
 // Lucide Icons
 import {
@@ -44,9 +43,30 @@ import {
   Mail as MailIcon
 } from "lucide-react";
 
+export interface NavItem {
+  id: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string }>;
+  path: string;
+  desc: string;
+}
+
+// Static navigation items to avoid re-creation on every render
+export const NavItems: NavItem[] = [
+  { id: "home", label: "Consola Principal", icon: HomeIcon, path: "/dashboard", desc: "Métricas generales y centro de control comercial" },
+  { id: "inventario", label: "Inventario Comercial", icon: Tv, path: "/dashboard/inventory", desc: "Edición y administración del catálogo de soportes físicos y pantallas LED" },
+  { id: "clientes", label: "Clientes CRM", icon: Users, path: "/dashboard/clients", desc: "Registro de contactos de ventas, agencias y corporativos" },
+  { id: "mediakit", label: "Editor de MediaKits", icon: FileText, path: "/dashboard/mediakits", desc: "Diseño Notion-style y generación de propuestas comerciales inteligentes con IA" },
+  { id: "ai-planner", label: "Planificador IA", icon: Sparkles, path: "/dashboard/ai-planner", desc: "Optimización inteligente de campañas y ROI mediante Inteligencia Artificial" },
+  { id: "slides-sync", label: "Importador Slides", icon: Database, path: "/dashboard/sync", desc: "Sincronización automatizada desde diapositivas de Google Slides" },
+  { id: "gmail", label: "Correo Gmail", icon: MailIcon, path: "/dashboard/gmail", desc: "Bandeja de entrada y envío de correos integrados con Gmail" },
+  { id: "admin", label: "Consola Admin", icon: Shield, path: "/dashboard/admin", desc: "Gobernanza de seguridad, usuarios, roles, logs, storage y SEO técnico" },
+  { id: "settings", label: "Configuración", icon: Settings, path: "/dashboard/settings", desc: "Control de usuario y preferencias del sistema" },
+];
+
 export const DashboardView: React.FC = () => {
   const { token, user, userRole: authUserRole } = useAuth();
-  const { setActiveView } = useCms();
+  const { setActiveView, setScreens: setCmsScreens } = useCms();
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
@@ -78,7 +98,7 @@ export const DashboardView: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   // Load state from PostgreSQL APIs
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = useCallback(async () => {
     if (!token) return;
     setLoading(true);
     try {
@@ -94,7 +114,10 @@ export const DashboardView: React.FC = () => {
         safeFetchJson<{ success: boolean; data: ChangeLog[] }>("/api/changelogs", { headers }),
       ]);
 
-      if (screensRes.data?.success && Array.isArray(screensRes.data.data)) setScreens(screensRes.data.data);
+      if (screensRes.data?.success && Array.isArray(screensRes.data.data)) {
+        setScreens(screensRes.data.data);
+        setCmsScreens(screensRes.data.data);
+      }
       if (clientsRes.data?.success && Array.isArray(clientsRes.data.data)) setClientes(clientsRes.data.data);
       if (mkRes.data?.success && Array.isArray(mkRes.data.data)) setMediaKits(mkRes.data.data);
       if (logsRes.data?.success && Array.isArray(logsRes.data.data)) setLogs(logsRes.data.data);
@@ -103,14 +126,14 @@ export const DashboardView: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [token, setCmsScreens]);
 
   useEffect(() => {
     fetchDashboardData();
-  }, [token]);
+  }, [fetchDashboardData]);
 
   // DB-Connected Changelog Logger
-  const addLog = async (action: string) => {
+  const addLog = useCallback(async (action: string) => {
     if (!token) return;
     const userLabel = userRole === "admin" ? "Administrador" : userRole === "comercial_dir" ? "Director Comercial" : "Comercial Ejec.";
     const newLog = {
@@ -133,15 +156,14 @@ export const DashboardView: React.FC = () => {
         setLogs((prev) => [res.data!.data, ...prev]);
       }
     } catch (err) {
-      // Fallback
       setLogs((prev) => [newLog, ...prev]);
     }
-  };
+  }, [token, userRole]);
 
   // --- CRUD HANDLERS CONNECTED TO POSTGRESQL ---
 
   // Inventory Screen Add
-  const handleAddScreen = async (screen: DoohScreen) => {
+  const handleAddScreen = useCallback(async (screen: DoohScreen) => {
     if (!token) return;
     try {
       const res = await safeFetchJson<{ success: boolean; data: DoohScreen; error?: string }>("/api/screens", {
@@ -154,7 +176,12 @@ export const DashboardView: React.FC = () => {
         body: JSON.stringify(screen),
       });
       if (res.data?.success && res.data.data) {
-        setScreens((prev) => [...prev, res.data!.data]);
+        const added = res.data.data;
+        setScreens((prev) => {
+          const next = [...prev, added];
+          setCmsScreens(next);
+          return next;
+        });
         addLog(`Agregó un nuevo soporte al catálogo comercial: ${screen.nombre}`);
         toast.success(`Soporte "${screen.nombre}" agregado correctamente.`);
       } else {
@@ -163,10 +190,10 @@ export const DashboardView: React.FC = () => {
     } catch (err) {
       toast.error("Error de red al intentar agregar el soporte.");
     }
-  };
+  }, [token, userRole, setCmsScreens, addLog, toast]);
 
   // Inventory Screen Update
-  const handleUpdateScreen = async (id: string, updatedFields: Partial<DoohScreen>) => {
+  const handleUpdateScreen = useCallback(async (id: string, updatedFields: Partial<DoohScreen>) => {
     if (!token) return;
     try {
       const res = await safeFetchJson<{ success: boolean; data: DoohScreen; error?: string }>(`/api/screens/${id}`, {
@@ -179,7 +206,12 @@ export const DashboardView: React.FC = () => {
         body: JSON.stringify(updatedFields),
       });
       if (res.data?.success && res.data.data) {
-        setScreens((prev) => prev.map((s) => (s.id === id ? res.data!.data : s)));
+        const updated = res.data.data;
+        setScreens((prev) => {
+          const next = prev.map((s) => (s.id === id ? updated : s));
+          setCmsScreens(next);
+          return next;
+        });
         const screenName = screens.find((s) => s.id === id)?.nombre || id;
         if (updatedFields.status === "Pausado") {
           addLog(`Archivó temporalmente el soporte comercial: ${screenName}`);
@@ -197,10 +229,10 @@ export const DashboardView: React.FC = () => {
     } catch (err) {
       toast.error("Error de red al intentar actualizar el soporte.");
     }
-  };
+  }, [token, userRole, screens, setCmsScreens, addLog, toast]);
 
   // Inventory Screen Delete
-  const handleDeleteScreen = async (id: string) => {
+  const handleDeleteScreen = useCallback(async (id: string) => {
     if (!token) return;
     try {
       const res = await safeFetchJson<{ success: boolean; error?: string }>(`/api/screens/${id}`, {
@@ -212,7 +244,11 @@ export const DashboardView: React.FC = () => {
       });
       if (res.data?.success) {
         const screenName = screens.find((s) => s.id === id)?.nombre || id;
-        setScreens((prev) => prev.filter((s) => s.id !== id));
+        setScreens((prev) => {
+          const next = prev.filter((s) => s.id !== id);
+          setCmsScreens(next);
+          return next;
+        });
         addLog(`Eliminó de manera permanente el soporte comercial: ${screenName}`);
         toast.success(`Soporte "${screenName}" eliminado definitivamente.`);
       } else {
@@ -221,10 +257,10 @@ export const DashboardView: React.FC = () => {
     } catch (err: any) {
       toast.error("Error de conexión al intentar eliminar el soporte.");
     }
-  };
+  }, [token, userRole, screens, setCmsScreens, addLog, toast]);
 
   // Clients CRM Add
-  const handleAddCliente = async (cliente: Cliente) => {
+  const handleAddCliente = useCallback(async (cliente: Cliente) => {
     if (!token) return;
     try {
       const res = await safeFetchJson<{ success: boolean; data: Cliente; error?: string }>("/api/clients", {
@@ -245,10 +281,10 @@ export const DashboardView: React.FC = () => {
     } catch (err) {
       toast.error("Error de conexión al intentar registrar el cliente.");
     }
-  };
+  }, [token, addLog, toast]);
 
   // Clients CRM Update
-  const handleUpdateCliente = async (id: string, updatedFields: Partial<Cliente>) => {
+  const handleUpdateCliente = useCallback(async (id: string, updatedFields: Partial<Cliente>) => {
     if (!token) return;
     try {
       const res = await safeFetchJson<{ success: boolean; data: Cliente; error?: string }>(`/api/clients/${id}`, {
@@ -269,10 +305,10 @@ export const DashboardView: React.FC = () => {
     } catch (err) {
       toast.error("Error de conexión al intentar actualizar el cliente.");
     }
-  };
+  }, [token, addLog, toast]);
 
   // MediaKit Creator
-  const handleAddMediaKit = async (mk: MediaKit) => {
+  const handleAddMediaKit = useCallback(async (mk: MediaKit) => {
     if (!token) return;
     try {
       const res = await safeFetchJson<{ success: boolean; data: MediaKit; error?: string }>("/api/mediakits", {
@@ -293,10 +329,10 @@ export const DashboardView: React.FC = () => {
     } catch (err) {
       toast.error("Error de conexión al guardar el MediaKit.");
     }
-  };
+  }, [token, addLog, toast]);
 
   // MediaKit Updater
-  const handleUpdateMediaKit = async (id: string, updatedFields: Partial<MediaKit>) => {
+  const handleUpdateMediaKit = useCallback(async (id: string, updatedFields: Partial<MediaKit>) => {
     if (!token) return;
     try {
       const res = await safeFetchJson<{ success: boolean; data: MediaKit; error?: string }>(`/api/mediakits/${id}`, {
@@ -316,10 +352,10 @@ export const DashboardView: React.FC = () => {
     } catch (err) {
       toast.error("Error de conexión al actualizar el MediaKit.");
     }
-  };
+  }, [token, toast]);
 
   // MediaKit Deleter
-  const handleDeleteMediaKit = async (id: string) => {
+  const handleDeleteMediaKit = useCallback(async (id: string) => {
     if (!token) return;
     try {
       const res = await safeFetchJson<{ success: boolean; error?: string }>(`/api/mediakits/${id}`, {
@@ -338,10 +374,10 @@ export const DashboardView: React.FC = () => {
     } catch (err) {
       toast.error("Error de conexión al eliminar el MediaKit.");
     }
-  };
+  }, [token, addLog, toast]);
 
   // Workflow Transition: Generate Quote from MediaKit
-  const handleGenerateQuoteFromMediaKit = async (mkId: string) => {
+  const handleGenerateQuoteFromMediaKit = useCallback(async (mkId: string) => {
     const mk = mediaKits.find((m) => m.id === mkId);
     if (!mk) return;
 
@@ -353,34 +389,37 @@ export const DashboardView: React.FC = () => {
     const qtId = `qt-gen-${Date.now()}`;
     await handleUpdateMediaKit(mkId, { estado: "Cotizando" });
     addLog(`Generó Cotización #${qtId} (Total: $${baseCost.toLocaleString()}) a partir de propuesta MediaKit: ${mk.nombre}`);
-  };
+  }, [mediaKits, screens, handleUpdateMediaKit, addLog]);
 
   // Interactive UI workflows: Approval bookings
-  const handleApproveReserva = (id: string) => {
+  const handleApproveReserva = useCallback((id: string) => {
     setReservas((prev) =>
       prev.map((r) => (r.id === id ? { ...r, estado: "Confirmada" } : r))
     );
     addLog(`Aprobó y reservó de forma permanente la reserva comercial #${id}`);
-  };
+  }, [addLog]);
 
   // Interactive UI workflows: Approval quotations
-  const handleApproveCotizacion = (id: string) => {
+  const handleApproveCotizacion = useCallback((id: string) => {
     setCotizaciones((prev) =>
       prev.map((q) => (q.id === id ? { ...q, estado: "Aceptada" } : q))
     );
     addLog(`Aprobó propuesta de tarifa comercial en Cotización #${id}`);
-  };
+  }, [addLog]);
 
-  // Sidebar navigation setup
-  const navItems = [
-    { id: "home", label: "Consola Principal", icon: HomeIcon, path: "/dashboard", desc: "Métricas generales y centro de control comercial" },
-    { id: "inventario", label: "Inventario Comercial", icon: Tv, path: "/dashboard/inventory", desc: "Edición y administración del catálogo de soportes físicos y pantallas LED" },
-    { id: "clientes", label: "Clientes CRM", icon: Users, path: "/dashboard/clients", desc: "Registro de contactos de ventas, agencias y corporativos" },
-    { id: "mediakit", label: "Editor de MediaKits", icon: FileText, path: "/dashboard/mediakits", desc: "Diseño Notion-style y generación de propuestas comerciales inteligentes con IA" },
-    { id: "slides-sync", label: "Importador Slides", icon: Database, path: "/dashboard/sync", desc: "Sincronización automatizada desde diapositivas de Google Slides" },
-    { id: "admin", label: "Consola Admin", icon: Shield, path: "/dashboard/admin", desc: "Gobernanza de seguridad, usuarios, roles, logs, storage y SEO técnico" },
-    { id: "settings", label: "Configuración", icon: Settings, path: "/dashboard/settings", desc: "Control de usuario y preferencias del sistema" },
-  ];
+  const handleNavigateToTab = useCallback((tabId: string) => {
+    const matchedTab = NavItems.find(item => item.id === tabId);
+    if (matchedTab) navigate(matchedTab.path);
+  }, [navigate]);
+
+  // Active route header metadata
+  const currentRouteMeta = useMemo(() => {
+    const matched = NavItems.find((n) => n.path === location.pathname) || NavItems[0];
+    return {
+      title: matched?.label || "Consola de Gestión",
+      desc: matched?.desc || "Consola general de administración comercial DOOH.",
+    };
+  }, [location.pathname]);
 
   if (loading) {
     return (
@@ -415,7 +454,7 @@ export const DashboardView: React.FC = () => {
 
           {/* Links navigation group */}
           <nav className="p-4 flex-1 space-y-1">
-            {navItems.map((item) => {
+            {NavItems.map((item) => {
               const active = location.pathname === item.path || (item.path === "/dashboard" && location.pathname === "/dashboard/");
               const Icon = item.icon;
 
@@ -471,32 +510,16 @@ export const DashboardView: React.FC = () => {
 
       {/* 2. Main Content Area */}
       <main className="flex-1 flex flex-col overflow-hidden">
-        {(() => {
-          const matched = navItems.find((n) => n.path === location.pathname) || navItems[0];
-          const headerTitle = matched?.label || "Consola de Gestión";
-          const headerDesc = matched?.desc || "Consola general de administración comercial DOOH.";
-
-          return (
-            <DashboardHeader
-              userRole={userRole}
-              setUserRole={setUserRole}
-              title={headerTitle}
-              description={headerDesc}
-            />
-          );
-        })()}
+        <DashboardHeader
+          userRole={userRole}
+          setUserRole={setUserRole}
+          title={currentRouteMeta.title}
+          description={currentRouteMeta.desc}
+        />
 
         {/* Sub-view router container */}
         <div className="flex-1 overflow-y-auto relative bg-[#FAF9F5]">
-          <React.Suspense
-            fallback={
-              <div className="flex items-center justify-center min-h-[400px] flex-col gap-3 font-sans">
-                <Loader className="w-8 h-8 text-[#06434a] animate-spin" />
-                <span className="text-xs font-bold text-stone-500 uppercase tracking-wider">Cargando módulo de plataforma...</span>
-              </div>
-            }
-          >
-            <Routes>
+          <Routes>
             <Route
               path="/"
               element={
@@ -507,10 +530,7 @@ export const DashboardView: React.FC = () => {
                   campañas={campanas}
                   clientes={clientes}
                   userRole={userRole}
-                  onNavigateToTab={(tabId) => {
-                    const matchedTab = navItems.find(item => item.id === tabId);
-                    if (matchedTab) navigate(matchedTab.path);
-                  }}
+                  onNavigateToTab={handleNavigateToTab}
                   onApproveReserva={handleApproveReserva}
                   onApproveCotizacion={handleApproveCotizacion}
                   setCampañas={setCampanas}
@@ -531,8 +551,6 @@ export const DashboardView: React.FC = () => {
                   onUpdateScreen={handleUpdateScreen}
                   onAddScreen={handleAddScreen}
                   onDeleteScreen={handleDeleteScreen}
-                  clientes={clientes}
-                  onAddMediaKit={handleAddMediaKit}
                 />
               }
             />
@@ -576,14 +594,33 @@ export const DashboardView: React.FC = () => {
             />
 
             <Route
+              path="/ai-planner"
+              element={
+                <AiPlannerModule
+                  screens={screens}
+                  token={token}
+                  onAddMediaKit={handleAddMediaKit}
+                  userRole={userRole}
+                />
+              }
+            />
+
+            <Route
               path="/sync"
               element={
-                <ModuleErrorBoundary moduleName="Sincronización de Google Slides">
-                  <SlidesSyncModule
-                    token={token}
-                    onRefreshInventory={fetchDashboardData}
-                  />
-                </ModuleErrorBoundary>
+                <SlidesSyncModule
+                  token={token}
+                  onRefreshInventory={fetchDashboardData}
+                />
+              }
+            />
+
+            <Route
+              path="/gmail"
+              element={
+                <GmailModule
+                  token={token}
+                />
               }
             />
 
@@ -603,10 +640,10 @@ export const DashboardView: React.FC = () => {
             {/* Fallback inside dashboard routing */}
             <Route path="*" element={<Navigate to="/dashboard" replace />} />
           </Routes>
-          </React.Suspense>
         </div>
       </main>
 
     </div>
   );
 };
+

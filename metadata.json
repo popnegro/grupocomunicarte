@@ -1,6 +1,6 @@
 {
-  "name": "grupocomunicarte",
-  "description": "Imported from GitHub: popnegro/grupocomunicarte",
+  "name": "LeadMóvil DOOH Platform",
+  "description": "Plataforma integral de gestión publicitaria Smart OOH, inventario de pantallas LED, cotizaciones y medidores de impacto en Mendoza.",
   "requestFramePermissions": [
     "geolocation"
   ],

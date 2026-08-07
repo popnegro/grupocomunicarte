@@ -1,11 +1,12 @@
 import React, { useState } from "react";
 import { DoohScreen } from "../types";
 import { useCms } from "./CmsContext";
+import { useCartStore } from "../stores/cartStore";
 import { getScreenAvailability, getDynamicReservationEndDate } from "../utils/availability";
 import { motion } from "motion/react";
-import { Card, CardContent, CardFooter } from "@/src/components/ui/card";
-import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/src/components/ui/dialog";
-import { Badge } from "@/src/components/ui/badge";
+import { Card, CardContent, CardFooter } from "./ui/card";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "./ui/dialog";
+import { Badge } from "./ui/badge";
 import {
   Plus,
   Check,
@@ -148,7 +149,8 @@ export const ScreenCard: React.FC<ScreenCardProps> = ({
   isComparing = false,
   onCompareToggle,
 }) => {
-  const { cart, toggleCart, occupancyMatrix } = useCms();
+  const { cart, toggleCart } = useCartStore();
+  const { occupancyMatrix } = useCms();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const isInCart = cart.includes(screen.id);
 
@@ -363,7 +365,7 @@ export const ScreenCard: React.FC<ScreenCardProps> = ({
           {/* Cart & Compare Action Footer */}
           <CardFooter 
             className="p-5 pt-3 border-t border-stone-100 flex items-center justify-between gap-3 mt-4"
-            onClick={(e) => e.stopPropagation()} // Stop modal from opening when clicking controls
+            onClick={(e: React.MouseEvent<HTMLDivElement>) => e.stopPropagation()} // Stop modal from opening when clicking controls
           >
             {/* Comparison Checkbox */}
             {onCompareToggle ? (

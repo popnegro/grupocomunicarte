@@ -33,9 +33,9 @@ import {
   Truck,
   Filter
 } from "lucide-react";
-import { Input } from "@/src/components/ui/input";
-import { Button } from "@/src/components/ui/button";
-import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/src/components/ui/dialog";
+import { Input } from "../ui/input";
+import { Button } from "../ui/button";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "../ui/dialog";
 
 interface InventoryCatalogProps {
   selectedCity: "Mendoza" | "Buenos Aires";

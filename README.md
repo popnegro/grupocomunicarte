@@ -45,6 +45,7 @@ Plataforma integral de gestión publicitaria Smart OOH, inventario de pantallas 
 | `npm run dev` | Inicia el servidor de desarrollo Express + Vite en puerto 3000 |
 | `npm run lint` | Ejecuta verificación estática de tipos con TypeScript (`tsc --noEmit`) |
 | `npm run build` | Compila el frontend cliente en `dist/` y el servidor CJS en `dist/server.cjs` |
+| `npm run build:clean` | Limpia artefactos anteriores (`dist/`) y compila una compilación limpia desde cero |
 | `npm run start` | Inicia el servidor de producción optimizado desde `dist/server.cjs` |
 
 ---
@@ -59,16 +60,19 @@ Plataforma integral de gestión publicitaria Smart OOH, inventario de pantallas 
 
 ## ☁️ Despliegue en Vercel / Cloud Run
 
+> ⚠️ **Política Obligatoria de Build Limpio**: Siempre ejecuta `npm run build:clean` antes de subir o empaquetar artefactos para producción. Esto elimina cualquier caché anterior o versión remanente en `dist/`, evitando problemas de pantalla blanca, chunks obsoletos o inconsistencias entre el frontend y el servidor.
+
 ### Despliegue Automático en Vercel
 1. Conecta el repositorio GitHub a **Vercel**.
 2. Framework Preset: **Vite / Node.js**.
-3. Configura las **Environment Variables** en la consola de Vercel (ver `.env.example`).
-4. Vercel utilizará la configuración definida en `vercel.json` y la ruta serverless `api/index.ts`.
+3. Configura el comando de compilación (Build Command) en Vercel como `npm run build:clean`.
+4. Configura las **Environment Variables** en la consola de Vercel (ver `.env.example`).
+5. Vercel utilizará la configuración definida en `vercel.json` y la ruta serverless `api/index.ts`.
 
 ### Despliegue en Google Cloud Run / Docker
-1. Compilar el bundle de producción:
+1. Compilar el bundle de producción limpiando artefactos previos:
    ```bash
-   npm run build
+   npm run build:clean
    ```
 2. Ejecutar con Node.js en contenedor:
    ```bash
@@ -91,7 +95,7 @@ Consulta `.env.example` para la lista completa.
 
 ## 🛡️ Checklist de Producción
 - [x] Verificación TypeScript limpia (`tsc --noEmit` sin errores)
-- [x] Build de producción exitoso (`vite build` + `esbuild server.ts`)
+- [x] Build de producción limpio y validado (`npm run build:clean`) sin artefactos o cachés corruptas
 - [x] Resguardo de rutas del Dashboard con `ProtectedRoute` y `ErrorBoundary`
 - [x] Configuración de roles y administración desacoplada por variables de entorno
 - [x] Sanitización de variables de entorno y prevención de fugas de secretos

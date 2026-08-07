@@ -36,9 +36,13 @@ export const FileUpload: React.FC<FileUploadProps> = ({
         const pct = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
         setProgress(pct);
       },
-      (err) => {
+      (err: any) => {
         console.error("Upload error:", err);
-        setError("Error al subir el archivo. Inténtalo de nuevo.");
+        if (err?.code === "storage/unauthorized") {
+          setError("No tienes permiso para subir archivos. Por favor inicia sesión.");
+        } else {
+          setError("Error al subir el archivo. Inténtalo de nuevo.");
+        }
         setIsUploading(false);
       },
       async () => {

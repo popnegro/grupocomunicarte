@@ -1,16 +1,7 @@
 import express, { Request, Response, NextFunction } from "express";
 import path from "path";
 import dotenv from "dotenv";
-
-const Type = {
-  OBJECT: "OBJECT",
-  STRING: "STRING",
-  ARRAY: "ARRAY",
-  INTEGER: "INTEGER",
-  NUMBER: "NUMBER",
-  BOOLEAN: "BOOLEAN",
-};
-
+import { GoogleGenAI, Type } from "@google/genai";
 import { db, isDbConfigured, createPool } from "./src/db/index.ts";
 import {
   users, leads, screens, clientes, mediakits, changelogs, syncHistory, syncErrors,
@@ -41,8 +32,18 @@ app.get("/api/health", (_req: Request, res: Response) => {
 
 // Initialize Gemini SDK
 const geminiApiKey = process.env.GEMINI_API_KEY;
+let ai: GoogleGenAI | null = null;
 
-if (!geminiApiKey) {
+if (geminiApiKey) {
+  ai = new GoogleGenAI({
+    apiKey: geminiApiKey,
+    httpOptions: {
+      headers: {
+        "User-Agent": "aistudio-build",
+      },
+    },
+  });
+} else {
   console.warn("Warning: GEMINI_API_KEY is not defined. AI features will fallback to default responses.");
 }
 
@@ -544,55 +545,28 @@ async function initDb() {
 
 initDb();
 
-// Helper to secure AI calling using native fetch to keep bundle light
+// Helper to secure AI calling
 async function callGemini(prompt: string, responseSchema?: any) {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
+  if (!ai) {
     throw new Error("Gemini AI Client is not initialized (missing API key)");
   }
-
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
-
-  const body: any = {
-    contents: [
-      {
-        parts: [
-          {
-            text: prompt
-          }
-        ]
-      }
-    ],
-    generationConfig: {
-      temperature: 0.7
-    }
+  
+  const config: any = {
+    temperature: 0.7,
   };
 
   if (responseSchema) {
-    body.generationConfig.responseMimeType = "application/json";
-    body.generationConfig.responseSchema = responseSchema;
+    config.responseMimeType = "application/json";
+    config.responseSchema = responseSchema;
   }
 
-  const response = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(body)
+  const response = await ai.models.generateContent({
+    model: "gemini-2.5-flash",
+    contents: prompt,
+    config,
   });
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Gemini API error: ${response.status} - ${errorText}`);
-  }
-
-  const data = await response.json() as any;
-  const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!text) {
-    throw new Error("Invalid or empty response format from Gemini API");
-  }
-
-  return text;
+  return response.text;
 }
 
 // --- API ENDPOINTS ---
@@ -608,30 +582,6 @@ app.post("/api/auth/sync", requireAuth, async (req: AuthRequest, res: Response) 
     console.error("Auth sync error:", error);
     res.status(500).json({ success: false, error: error.message });
   }
-});
-
-// --- FEATURE FLAGS ROAD GUARDS ---
-
-app.use("/api/gmail/*", (req, res, next) => {
-  const isGmailEnabled = process.env.ENABLE_GMAIL_INTEGRATION === "true";
-  if (!isGmailEnabled) {
-    return res.json({
-      enabled: false,
-      message: "Gmail integration disabled in PMV"
-    });
-  }
-  next();
-});
-
-app.use("/api/ai/*", (req, res, next) => {
-  const isAiPlannerEnabled = process.env.ENABLE_AI_PLANNER === "true";
-  if (!isAiPlannerEnabled) {
-    return res.json({
-      enabled: false,
-      message: "AI Planner disabled for PMV"
-    });
-  }
-  next();
 });
 
 // --- GMAIL API ENDPOINTS ---
@@ -2071,9 +2021,12 @@ app.post("/api/ai/data-hub-query", async (req: Request, res: Response) => {
   `;
 
   try {
-    if (geminiApiKey) {
-      const answer = await callGemini(prompt);
-      res.json({ success: true, answer });
+    if (ai) {
+      const response = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: prompt,
+      });
+      res.json({ success: true, answer: response.text });
     } else {
       throw new Error("Gemini AI Client is not initialized");
     }

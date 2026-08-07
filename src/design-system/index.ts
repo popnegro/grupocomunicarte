@@ -17,11 +17,5 @@ export { Card } from "./components/Card";
 export { Modal } from "./components/Modal";
 export { StatsCard } from "./components/StatsCard";
 
-// Providers
-export { ThemeProvider } from "./providers/ThemeProvider";
-
-// Hooks
-export { useTheme } from "./hooks/useTheme";
-
 // Utils
 export { cn } from "./utils/cn";

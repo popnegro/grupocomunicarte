@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { DoohScreen } from "../../types";
 import { MediaKit, Role } from "./types";
 import { useToast } from "../ui/Toast";
+import { safeFetchJson } from "../../lib/apiClient";
 import { 
   Sparkles, 
   DollarSign, 
@@ -81,7 +82,7 @@ export const AiPlannerModule: React.FC<AiPlannerModuleProps> = ({
     }, 1500);
 
     try {
-      const response = await fetch("/api/ai/plan-campaign", {
+      const res = await safeFetchJson<{ success: boolean; data?: any; error?: string }>("/api/ai/plan-campaign", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -94,11 +95,10 @@ export const AiPlannerModule: React.FC<AiPlannerModuleProps> = ({
         }),
       });
 
-      const data = await response.json();
-      if (response.ok && data.success) {
-        setResult(data.data);
+      if (res.ok && res.data?.success && res.data.data) {
+        setResult(res.data.data);
       } else {
-        setError(data.error || "Hubo un error al procesar la planificación con Inteligencia Artificial.");
+        setError(res.data?.error || res.error || "Hubo un error al procesar la planificación con Inteligencia Artificial.");
       }
     } catch (err: any) {
       setError(err.message || "Error de red al conectar con el servidor.");

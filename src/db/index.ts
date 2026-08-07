@@ -17,15 +17,10 @@ export const isDbConfigured = (): boolean => {
   return Boolean((host && user) || dbUrl);
 };
 
-let warnedAboutNoConfig = false;
-
 // Function to create or retrieve the connection pool.
 export const createPool = (): pg.Pool | null => {
   if (!isDbConfigured()) {
-    if (!warnedAboutNoConfig) {
-      console.warn("[Database] No SQL environment variables configured (SQL_HOST/USER or DATABASE_URL/POSTGRES_URL). Operating in local fallback simulation mode.");
-      warnedAboutNoConfig = true;
-    }
+    console.warn("[Database] No SQL environment variables configured (SQL_HOST/USER or DATABASE_URL/POSTGRES_URL).");
     return null;
   }
 

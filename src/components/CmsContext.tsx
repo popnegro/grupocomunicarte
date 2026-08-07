@@ -445,15 +445,32 @@ interface CmsStoreProps {
   updateOccupancy: (screenId: string, weekIndex: number, status: string) => void;
 }
 
+function safeParseStorage<T>(key: string, fallback: T): T {
+  try {
+    const saved = localStorage.getItem(key);
+    if (!saved) return fallback;
+    const parsed = JSON.parse(saved);
+    return parsed !== null && parsed !== undefined ? parsed : fallback;
+  } catch (e) {
+    console.warn(`[CmsContext] Failed to parse localStorage key "${key}", using default fallback:`, e);
+    return fallback;
+  }
+}
+
 export const useCmsStore = create<CmsStoreProps>((set, get) => ({
   content: (() => {
-    const saved = localStorage.getItem("smartweb_cms_content");
-    return saved ? JSON.parse(saved) : DEFAULT_LANDING_CONTENT;
+    const parsed = safeParseStorage<LandingContent | null>("smartweb_cms_content", null);
+    if (!parsed) return DEFAULT_LANDING_CONTENT;
+    return {
+      hero: { ...DEFAULT_LANDING_CONTENT.hero, ...(parsed.hero || {}) },
+      benefits: Array.isArray(parsed.benefits) && parsed.benefits.length > 0 ? parsed.benefits : DEFAULT_LANDING_CONTENT.benefits,
+      faq: Array.isArray(parsed.faq) && parsed.faq.length > 0 ? parsed.faq : DEFAULT_LANDING_CONTENT.faq,
+      seo: { ...DEFAULT_LANDING_CONTENT.seo, ...(parsed.seo || {}) },
+    };
   })(),
   leads: [],
   onboardingAnswers: (() => {
-    const saved = localStorage.getItem("smartweb_onboarding");
-    return saved ? JSON.parse(saved) : null;
+    return safeParseStorage("smartweb_onboarding", null);
   })(),
   activeView: "landing",
   currentDashboardTab: "inventario",
@@ -466,7 +483,7 @@ export const useCmsStore = create<CmsStoreProps>((set, get) => ({
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (parsed && parsed.length > 0 && parsed[0].ciudad) {
+        if (parsed && Array.isArray(parsed) && parsed.length > 0 && parsed[0].ciudad) {
           return parsed;
         }
       } catch (e) {
@@ -476,14 +493,12 @@ export const useCmsStore = create<CmsStoreProps>((set, get) => ({
     return SEED_SCREENS;
   })(),
   cart: (() => {
-    const saved = localStorage.getItem("smartweb_dooh_cart");
-    return saved ? JSON.parse(saved) : [];
+    return safeParseStorage("smartweb_dooh_cart", []);
   })(),
   weeks: 4,
   loadingScreens: false,
   occupancyMatrix: (() => {
-    const saved = localStorage.getItem("smartweb_dooh_occupancy_matrix");
-    return saved ? JSON.parse(saved) : {
+    return safeParseStorage("smartweb_dooh_occupancy_matrix", {
       "sc-01": ["campaign", "campaign", "reserved", "available"],
       "sc-02": ["reserved", "available", "available", "campaign"],
       "sc-03": ["maintenance", "available", "available", "available"],
@@ -492,7 +507,7 @@ export const useCmsStore = create<CmsStoreProps>((set, get) => ({
       "ba-01": ["reserved", "campaign", "campaign", "available"],
       "ba-02": ["available", "reserved", "available", "campaign"],
       "ba-03": ["campaign", "available", "campaign", "available"]
-    };
+    });
   })(),
 
   updateOccupancy: (screenId, weekIndex, status) => set((state) => {
@@ -850,14 +865,10 @@ export const CmsProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const fetchLeads = useCmsStore((state) => state.fetchLeads);
   const fetchPublicScreens = useCmsStore((state) => state.fetchPublicScreens);
   
-  // Fetch dashboard-specific data only when the user is in the dashboard
   useEffect(() => {
-    if (activeView === 'dashboard') {
-      fetchLeads();
-    }
-    // Public screens are needed for the landing page catalog, so we can fetch them more broadly.
-    fetchPublicScreens(); 
-  }, [activeView, fetchLeads, fetchPublicScreens]);
+    fetchLeads();
+    fetchPublicScreens();
+  }, [fetchLeads, fetchPublicScreens]);
 
   return <>{children}</>;
 };

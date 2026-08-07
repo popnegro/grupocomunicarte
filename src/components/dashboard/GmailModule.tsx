@@ -5,6 +5,7 @@ import {
   Loader, Inbox, ArrowUpRight, MessageSquare, Plus, Check, Trash
 } from "lucide-react";
 import { useToast } from "../ui/Toast";
+import { safeFetchJson } from "../../lib/apiClient";
 
 interface GmailMessage {
   id: string;
@@ -55,11 +56,10 @@ export const GmailModule: React.FC<GmailModuleProps> = ({ token }) => {
   const checkConnection = async () => {
     if (!token) return;
     try {
-      const res = await fetch("/api/gmail/status", {
+      const res = await safeFetchJson<{ success: boolean; connected?: boolean }>("/api/gmail/status", {
         headers: { Authorization: `Bearer ${token}` }
       });
-      const data = await res.json();
-      if (data.success && data.connected) {
+      if (res.data?.success && res.data?.connected) {
         setConnected(true);
         fetchMessages();
       } else {
@@ -67,7 +67,6 @@ export const GmailModule: React.FC<GmailModuleProps> = ({ token }) => {
         fetchAuthUrl();
       }
     } catch (err) {
-      console.error("Error checking Gmail connection:", err);
       setConnected(false);
     }
   };
@@ -76,15 +75,14 @@ export const GmailModule: React.FC<GmailModuleProps> = ({ token }) => {
   const fetchAuthUrl = async () => {
     if (!token) return;
     try {
-      const res = await fetch("/api/auth/google/url", {
+      const res = await safeFetchJson<{ success: boolean; url?: string }>("/api/auth/google/url", {
         headers: { Authorization: `Bearer ${token}` }
       });
-      const data = await res.json();
-      if (data.success && data.url) {
-        setAuthUrl(data.url);
+      if (res.data?.success && res.data?.url) {
+        setAuthUrl(res.data.url);
       }
     } catch (err) {
-      console.error("Error getting auth URL:", err);
+      // Ignored gracefully
     }
   };
 
@@ -97,23 +95,23 @@ export const GmailModule: React.FC<GmailModuleProps> = ({ token }) => {
         ? `/api/gmail/messages?q=${encodeURIComponent(query)}` 
         : "/api/gmail/messages";
 
-      const res = await fetch(url, {
+      const res = await safeFetchJson<{ success: boolean; data?: GmailMessage[]; needsAuth?: boolean; error?: string }>(url, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      const data = await res.json();
-      if (data.success) {
-        setMessages(data.data || []);
+      if (res.data?.success) {
+        setMessages(res.data.data || []);
       } else {
-        if (data.needsAuth || res.status === 401) {
+        if (res.data?.needsAuth || res.status === 401) {
           setConnected(false);
           fetchAuthUrl();
-        } else {
-          toast.error(data.error || "No se pudieron obtener los correos.");
+        } else if (res.isRateLimited) {
+          toast.error("Límite de peticiones alcanzado. Reintentando en unos segundos.");
+        } else if (res.error) {
+          toast.error(res.error || "No se pudieron obtener los correos.");
         }
       }
     } catch (err) {
-      console.error("Error fetching Gmail messages:", err);
       toast.error("Error de red al cargar la bandeja de entrada.");
     } finally {
       setLoadingInbox(false);
@@ -127,17 +125,15 @@ export const GmailModule: React.FC<GmailModuleProps> = ({ token }) => {
     setSelectedMessageId(id);
     setSelectedMessage(null);
     try {
-      const res = await fetch(`/api/gmail/messages/${id}`, {
+      const res = await safeFetchJson<{ success: boolean; data?: DetailedMessage; error?: string }>(`/api/gmail/messages/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      const data = await res.json();
-      if (data.success) {
-        setSelectedMessage(data.data);
+      if (res.data?.success && res.data.data) {
+        setSelectedMessage(res.data.data);
       } else {
-        toast.error(data.error || "No se pudo cargar el detalle del correo.");
+        toast.error(res.error || "No se pudo cargar el detalle del correo.");
       }
     } catch (err) {
-      console.error("Error fetching email detail:", err);
       toast.error("Error al cargar el contenido del correo.");
     } finally {
       setLoadingDetail(false);
@@ -155,7 +151,7 @@ export const GmailModule: React.FC<GmailModuleProps> = ({ token }) => {
 
     setSendingEmail(true);
     try {
-      const res = await fetch("/api/gmail/send", {
+      const res = await safeFetchJson<{ success: boolean; error?: string }>("/api/gmail/send", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -168,8 +164,7 @@ export const GmailModule: React.FC<GmailModuleProps> = ({ token }) => {
         })
       });
 
-      const data = await res.json();
-      if (data.success) {
+      if (res.data?.success) {
         toast.success(`Correo enviado con éxito a ${composeTo}`);
         setIsComposeOpen(false);
         setComposeTo("");
@@ -178,7 +173,7 @@ export const GmailModule: React.FC<GmailModuleProps> = ({ token }) => {
         // Reload messages after brief delay
         setTimeout(() => fetchMessages(searchQuery), 1000);
       } else {
-        toast.error(data.error || "Error al enviar el correo.");
+        toast.error(res.data?.error || res.error || "Error al enviar el correo.");
       }
     } catch (err) {
       console.error("Error sending email:", err);
@@ -245,20 +240,26 @@ export const GmailModule: React.FC<GmailModuleProps> = ({ token }) => {
               onClick={() => {
                 setConnecting(true);
                 // Poll connection status every 3 seconds to auto-refresh once they log in
+                let checkCount = 0;
                 const interval = setInterval(async () => {
+                  checkCount++;
+                  if (checkCount > 20) {
+                    clearInterval(interval);
+                    setConnecting(false);
+                    return;
+                  }
                   try {
-                    const res = await fetch("/api/gmail/status", {
+                    const res = await safeFetchJson<{ success: boolean; connected?: boolean }>("/api/gmail/status", {
                       headers: { Authorization: `Bearer ${token}` }
                     });
-                    const d = await res.json();
-                    if (d.success && d.connected) {
+                    if (res.data?.success && res.data?.connected) {
                       setConnected(true);
                       setConnecting(false);
                       clearInterval(interval);
                       fetchMessages();
                     }
                   } catch (e) {}
-                }, 3000);
+                }, 5000);
               }}
               className="inline-flex items-center gap-2 px-6 py-3 text-xs font-black uppercase tracking-wider text-white bg-[#06434a] hover:bg-[#05353b] rounded-xl transition-all shadow-sm cursor-pointer"
             >

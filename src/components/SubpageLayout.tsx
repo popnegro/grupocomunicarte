@@ -1,17 +1,15 @@
-import React, { useState, useEffect, lazy, Suspense, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Lock, Code, Target, X, ChevronRight, AlertCircle, Tv, Calculator, Trash2, PlusCircle, Home, ArrowRight, CheckCircle, FileDown, RefreshCw, Monitor, Layers, Search, LayoutGrid, BookOpen, Clock, Users, Eye } from "lucide-react";
+import * as LucideIcons from "lucide-react";
 import { findSitemapItemBySlug, getBreadcrumbsForSlug, sitemap, SitemapItem } from "../lib/sitemap";
+import { InteractiveMap } from "./InteractiveMap";
 import { ScreenCard } from "./ScreenCard";
-import { DoohScreen } from "@/src/types";
+import { DoohScreen, Lead } from "../types";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { SoportesInventory } from "./SoportesInventory";
 import { optimizeImageUrl } from "@/src/lib/imageUtils";
-import { useCartStore } from "@/cartStore";
-import { useCmsStore } from "@/cmsStore";
 
-const InteractiveMap = lazy(() => import("./InteractiveMap").then(module => ({ default: module.InteractiveMap })));
 // Shared Premium Buenos Aires Screens
 const BUENOS_AIRES_SCREENS: DoohScreen[] = [
   {
@@ -67,16 +65,26 @@ const BUENOS_AIRES_SCREENS: DoohScreen[] = [
 interface SubpageLayoutProps {
   slug: string;
   handleNavigate: (slug: string) => void;
+  screens: DoohScreen[];
+  cart: string[];
+  toggleCart: (id: string) => void;
+  clearCart: () => void;
+  weeks: number;
+  setWeeks: (weeks: number) => void;
+  addLead: (lead: Omit<Lead, "id" | "date">) => Promise<Lead | null>;
 }
 
 export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
   slug,
   handleNavigate,
+  screens,
+  cart,
+  toggleCart,
+  clearCart,
+  weeks,
+  setWeeks,
+  addLead,
 }) => {
-  // Consumir estado y acciones desde los stores de Zustand
-  const { screens, addLead, fetchPublicScreens } = useCmsStore();
-  const { cart, toggleCart, clearCart, weeks, setWeeks } = useCartStore();
-
   const item = findSitemapItemBySlug(slug);
   const breadcrumbs = getBreadcrumbsForSlug(slug);
 
@@ -108,39 +116,30 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
     setSelectedScreenId(null);
   }, [slug]);
 
-  useEffect(() => {
-    // Fetch screens if they are not already loaded
-    if (screens.length === 0) fetchPublicScreens();
-  }, [slug]);
-
   // Filtering calculations
-  const filteredScreens = useMemo(() => activeScreens.filter((screen) => {
-      const matchesSearch =
-        screen.nombre.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        screen.zona.toLowerCase().includes(searchQuery.toLowerCase());
-      
-      // Type checking based on path
-      let matchesType = filterType === "Todos" || screen.tipo === filterType;
-      if (slug.includes("/pantallas-led") || slug.includes("/publicidad-digital")) {
-        // Prefer LED models
-        matchesType = true; 
-      }
-      const matchesZone = filterZone === "Todas" || screen.zona === filterZone;
-      return matchesSearch && matchesType && matchesZone;
-    }), [activeScreens, searchQuery, filterType, filterZone, slug]);
+  const filteredScreens = activeScreens.filter((screen) => {
+    const matchesSearch =
+      screen.nombre.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      screen.zona.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    // Type checking based on path
+    let matchesType = filterType === "Todos" || screen.tipo === filterType;
+    if (slug.includes("/pantallas-led") || slug.includes("/publicidad-digital")) {
+      // Prefer LED models
+      matchesType = true; 
+    }
+    const matchesZone = filterZone === "Todas" || screen.zona === filterZone;
+    return matchesSearch && matchesType && matchesZone;
+  });
 
   const availableZones = ["Todas", ...Array.from(new Set(activeScreens.map((s) => s.zona)))];
 
-  const allKnownScreens = useMemo(() => [...screens, ...BUENOS_AIRES_SCREENS], [screens]);
-
   // Cart calculation helpers
-  const { cartScreens, cartSubtotal, cartTotalImpacts, cartTotalInvestment } = useMemo(() => {
-    const cartItems = allKnownScreens.filter((s) => cart.includes(s.id));
-    const subtotal = cartItems.reduce((sum, s) => sum + s.precio, 0);
-    const totalImpacts = cartItems.reduce((sum, s) => sum + s.impactos, 0) * 7 * weeks;
-    const totalInvestment = subtotal * weeks;
-    return { cartScreens: cartItems, cartSubtotal: subtotal, cartTotalImpacts: totalImpacts, cartTotalInvestment: totalInvestment };
-  }, [cart, screens, weeks]);
+  const allKnownScreens = [...screens, ...BUENOS_AIRES_SCREENS];
+  const cartScreens = allKnownScreens.filter((s) => cart.includes(s.id));
+  const cartSubtotal = cartScreens.reduce((sum, s) => sum + s.precio, 0);
+  const cartTotalImpacts = cartScreens.reduce((sum, s) => sum + s.impactos, 0) * 7 * weeks;
+  const cartTotalInvestment = cartSubtotal * weeks;
 
   // Contact Form inside simulated pages (like /contacto)
   const [contactForm, setContactForm] = useState({
@@ -209,7 +208,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
   if (!item) {
     return (
       <div className="max-w-4xl mx-auto py-20 px-6 text-center space-y-6">
-        <AlertCircle className="h-16 w-16 text-slate-400 mx-auto" />
+        <LucideIcons.AlertCircle className="h-16 w-16 text-slate-400 mx-auto" />
         <h2 className="text-2xl font-black text-slate-900">Ruta no encontrada</h2>
         <p className="text-slate-500 text-sm max-w-md mx-auto">
           La ruta simulada no está definida en el mapa del sitio SEO principal. Comprueba el sitemap.
@@ -261,7 +260,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
           {/* Simulated address bar */}
           <div className="flex-1 max-w-xl mx-auto bg-slate-900 border border-slate-800 rounded-lg py-1 px-3 flex items-center justify-between text-slate-400 text-xs font-mono">
             <div className="flex items-center gap-2 truncate">
-              <Lock className="h-3.5 w-3.5 text-emerald-500 shrink-0" /> 
+              <LucideIcons.Lock className="h-3.5 w-3.5 text-emerald-500 flex-shrink-0" />
               <span className="text-emerald-400 select-all truncate">
                 https://grupocomunicarte.com.ar{item.slug}
               </span>
@@ -283,7 +282,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
               onClick={() => setShowJsonLd(!showJsonLd)}
               className="px-3 py-1 bg-slate-800 hover:bg-slate-750 text-white text-[10px] font-bold rounded-md flex items-center gap-1.5 transition-colors cursor-pointer"
             >
-              <Code className="h-3.5 w-3.5" />
+              <LucideIcons.Code className="h-3.5 w-3.5" />
               <span>Ver Schema JSON-LD</span>
             </button>
           </div>
@@ -293,8 +292,8 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
         <div className="p-4 bg-slate-900/40 grid grid-cols-1 md:grid-cols-4 gap-4 text-xs font-medium border-t border-slate-850/40">
           <div className="space-y-1">
             <span className="text-[10px] text-slate-500 uppercase font-bold block">Palabra Clave Objetivo (SEO)</span>
-            <span className="font-bold font-mono text-slate-200 flex items-center gap-1.5"> 
-              <Target className="h-3.5 w-3.5 text-sky-400" />
+            <span className="text-white font-bold font-mono text-slate-200 flex items-center gap-1.5">
+              <LucideIcons.Target className="h-3.5 w-3.5 text-sky-400" />
               "{item.keyword}"
             </span>
           </div>
@@ -341,7 +340,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
                   onClick={() => setShowJsonLd(false)}
                   className="text-slate-500 hover:text-white"
                 >
-                  <X className="h-4 w-4" />
+                  <LucideIcons.X className="h-4 w-4" />
                 </button>
               </div>
               <pre className="text-[11px] leading-relaxed select-all">{jsonLdSchema}</pre>
@@ -356,7 +355,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
           const isLast = index === breadcrumbs.length - 1;
           return (
             <React.Fragment key={crumb.slug}>
-              {index > 0 && <ChevronRight className="h-3.5 w-3.5 text-slate-350" />}
+              {index > 0 && <LucideIcons.ChevronRight className="h-3.5 w-3.5 text-slate-350" />}
               {isLast ? (
                 <span className="text-slate-900 font-extrabold">{crumb.name}</span>
               ) : (
@@ -404,30 +403,30 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
               ) : (
                 /* Dynamic content-aware vector illustration */
                 <div className="w-full h-full p-5 flex flex-col justify-between relative overflow-hidden select-none">
-                  <div className="absolute inset-0 opacity-5 bg-[radial-gradient(var(--color-secondary)_1.5px,transparent_1.5px)] bg-size-[10px_10px]" />
-                  <div className="absolute -bottom-10 -left-10 w-36 h-36 bg-primary/20 rounded-full blur-2xl" />
+                  <div className="absolute inset-0 opacity-5 bg-[radial-gradient(#07BE8A_1.5px,transparent_1.5px)] bg-[size:10px_10px]" />
+                  <div className="absolute -bottom-10 -left-10 w-36 h-36 bg-[#06434a]/20 rounded-full blur-2xl" />
                   
                   <div className="flex items-center justify-between z-10">
-                    <span className="text-[8px] bg-secondary/20 text-secondary font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
+                    <span className="text-[8px] bg-[#07BE8A]/20 text-[#07BE8A] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
                       {item.intent}
                     </span>
-                    <Tv className="h-4 w-4 text-stone-400" />
+                    <LucideIcons.Tv className="h-4 w-4 text-stone-400" />
                   </div>
 
                   <div className="space-y-1.5 z-10">
-                    <span className="text-[8px] uppercase text-stone-400 font-bold tracking-widest block ">Soporte Inteligente</span>
+                    <span className="text-[8px] uppercase text-stone-400 font-bold tracking-widest block">Soporte Inteligente</span>
                     <div className="text-sm font-display font-black text-white leading-snug truncate">
                       {item.name}
                     </div>
                     <div className="flex items-center gap-1">
-                      <span className="h-1.5 w-1.5 rounded-full bg-secondary" />
+                      <span className="h-1.5 w-1.5 rounded-full bg-[#07BE8A]" />
                       <span className="text-[9px] font-mono font-medium text-stone-300 truncate">Keyword: "{item.keyword}"</span>
                     </div>
                   </div>
 
                   <div className="flex items-center justify-between border-t border-white/5 pt-3 z-10 text-[9px] font-sans font-medium text-stone-400">
                     <span>Indexado Google</span>
-                    <span className="text-secondary font-bold">100% Optimizado</span>
+                    <span className="text-[#07BE8A] font-bold">100% Optimizado</span>
                   </div>
                 </div>
               )}
@@ -449,7 +448,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-150 pb-4">
                   <div>
                     <h2 className="text-xl font-black text-slate-900">
-                      Soportes de Publicidad Exterior en {currentProvince} 
+                      Soportes de Publicidad Exterior en {currentProvince}
                     </h2>
                     <p className="text-slate-500 text-xs">
                       Filtra nuestro catálogo o selecciona un marcador en el mapa para planificar tu campaña.
@@ -457,18 +456,18 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
                   </div>
                   <span className="text-xs bg-slate-100 px-3 py-1 rounded-lg border border-slate-200 font-extrabold text-slate-700">
                     {filteredScreens.length} Pantallas Activas
-                  </span> 
+                  </span>
                 </div>
 
                 {/* Filters */}
                 <div className="flex flex-col sm:flex-row items-center gap-3">
                   <div className="relative w-full sm:w-1/3">
-                    <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400 z-10" />
+                    <LucideIcons.Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400 z-10" />
                     <Input
                       type="text"
                       placeholder="Buscar pantalla..."
                       value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)} 
+                      onChange={(e) => setSearchQuery(e.target.value)}
                       className="pl-9 text-xs h-9"
                     />
                   </div>
@@ -479,7 +478,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
                         key={type}
                         onClick={() => setFilterType(type)}
                         variant={filterType === type ? "default" : "outline"}
-                        size="sm" 
+                        size="sm"
                         className="h-8 text-xs font-bold"
                       >
                         {type}
@@ -490,7 +489,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
                   <div className="w-full sm:w-auto sm:ml-auto">
                     <select
                       value={filterZone}
-                      onChange={(e) => setFilterZone(e.target.value)} 
+                      onChange={(e) => setFilterZone(e.target.value)}
                       className="w-full sm:w-auto px-3 py-2 text-xs border border-slate-200 rounded-lg bg-white text-slate-700 font-bold focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 cursor-pointer"
                     >
                       {availableZones.map((zone) => (
@@ -501,16 +500,14 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
                     </select>
                   </div>
                 </div>
- 
+
                 {/* Simulated Map */}
-                <div className="h-80 bg-slate-50 rounded-xl border border-slate-200 shadow-inner overflow-hidden relative">
-                  <Suspense fallback={<div className="w-full h-full flex items-center justify-center text-xs text-slate-400">Cargando mapa...</div>}>
-                    <InteractiveMap
-                      screens={filteredScreens}
-                      selectedScreenId={selectedScreenId}
-                      onSelectScreen={(id) => setSelectedScreenId(id)}
-                    />
-                  </Suspense>
+                <div className="h-[320px] bg-slate-50 rounded-xl border border-slate-200 shadow-inner overflow-hidden relative">
+                  <InteractiveMap
+                    screens={filteredScreens}
+                    selectedScreenId={selectedScreenId}
+                    onSelectScreen={(id) => setSelectedScreenId(id)}
+                  />
                 </div>
 
                 {/* Interactive list */}
@@ -526,11 +523,11 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
                   </div>
                 ) : (
                   <div className="text-center py-12 border border-dashed border-slate-200 rounded-xl bg-slate-50">
-                    <Tv className="h-10 w-10 text-slate-300 mx-auto mb-2" />
+                    <LucideIcons.Tv className="h-10 w-10 text-slate-300 mx-auto mb-2" />
                     <h4 className="font-extrabold text-slate-800 text-xs">Sin resultados de búsqueda</h4>
                     <p className="text-[11px] text-slate-400 max-w-sm mx-auto mt-1">
                       No hay pantallas que coincidan con los filtros en {currentProvince}. Prueba limpiándolos.
-                    </p> 
+                    </p>
                   </div>
                 )}
               </div>
@@ -558,7 +555,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
                         type="text"
                         required
                         value={contactForm.name}
-                        onChange={(e) => setContactForm({ ...contactForm, name: e.target.value })} 
+                        onChange={(e) => setContactForm({ ...contactForm, name: e.target.value })}
                         placeholder="Ana de la Cruz"
                         className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900"
                       />
@@ -569,7 +566,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
                       </label>
                       <input
                         type="text"
-                        value={contactForm.company} 
+                        value={contactForm.company}
                         onChange={(e) => setContactForm({ ...contactForm, company: e.target.value })}
                         placeholder="Acme Corp"
                         className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900"
@@ -586,7 +583,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
                         type="email"
                         required
                         value={contactForm.email}
-                        onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })} 
+                        onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })}
                         placeholder="ana@empresa.com"
                         className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900"
                       />
@@ -597,7 +594,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
                       </label>
                       <input
                         type="tel"
-                        value={contactForm.phone} 
+                        value={contactForm.phone}
                         onChange={(e) => setContactForm({ ...contactForm, phone: e.target.value })}
                         placeholder="+54 9 261 555-5555"
                         className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900"
@@ -611,7 +608,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
                     </label>
                     <select
                       value={contactForm.spacePreference}
-                      onChange={(e) => setContactForm({ ...contactForm, spacePreference: e.target.value })} 
+                      onChange={(e) => setContactForm({ ...contactForm, spacePreference: e.target.value })}
                       className="w-full px-3 py-2 text-xs border border-slate-200 rounded-lg bg-white text-slate-700 font-bold focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 cursor-pointer"
                     >
                       <option value="Mendoza">Mendoza</option>
@@ -644,7 +641,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
               ) : (
                 <div className="text-center py-10 space-y-4">
                   <div className="h-14 w-14 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto">
-                    <CheckCircle className="h-7 w-7" />
+                    <LucideIcons.CheckCircle className="h-7 w-7" />
                   </div>
                   <div className="space-y-1.5 max-w-sm mx-auto">
                     <h4 className="font-extrabold text-slate-900 text-sm">¡Solicitud Registrada con Éxito!</h4>
@@ -666,8 +663,8 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
           {/* MEDIAKIT & DOWNLOADS CENTER (For /mediakit or /mediakit/descargas) */}
           {slug.startsWith("/mediakit") && (
             <div className="space-y-6">
-              <div className="bg-slate-950 text-white rounded-2xl p-6 md:p-8 space-y-4 relative overflow-hidden ">
-                <div className="absolute inset-0 bg-[linear-gradient(to_right,var(--color-slate-800)_1px,transparent_1px),linear-gradient(to_bottom,var(--color-slate-800)_1px,transparent_1px)] bg-size-[3rem_3rem] opacity-20" />
+              <div className="bg-slate-950 text-white rounded-2xl p-6 md:p-8 space-y-4 relative overflow-hidden">
+                <div className="absolute inset-0 bg-[linear-gradient(to_right,#1f2937_1px,transparent_1px),linear-gradient(to_bottom,#1f2937_1px,transparent_1px)] bg-[size:3rem_3rem] opacity-20" />
                 <div className="relative z-10 space-y-3">
                   <span className="text-[10px] bg-white/10 text-white border border-white/20 font-bold uppercase tracking-widest px-3 py-1 rounded-full">
                     Centro de Descargas Oficial
@@ -685,12 +682,12 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
                     >
                       {mediaKitDownloading ? (
                         <>
-                          <RefreshCw className="h-4 w-4 animate-spin" />
+                          <LucideIcons.RefreshCw className="h-4 w-4 animate-spin" />
                           <span>Preparando descarga...</span>
                         </>
                       ) : (
                         <>
-                          <FileDown className="h-4 w-4 text-slate-950" />
+                          <LucideIcons.FileDown className="h-4 w-4 text-slate-950" />
                           <span>Descargar MediaKit Completo (PDF)</span>
                         </>
                       )}
@@ -703,7 +700,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
                       animate={{ opacity: 1, y: 0 }}
                       className="text-xs text-emerald-400 font-bold flex items-center gap-2 pt-2"
                     >
-                      <CheckCircle className="h-4 w-4 text-emerald-400" />
+                      <LucideIcons.CheckCircle className="h-4 w-4 text-emerald-400" />
                       <span>¡Descarga simulada iniciada con éxito! Archivo procesado correctamente.</span>
                     </motion.div>
                   )}
@@ -720,7 +717,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                   <div className="border border-slate-150 rounded-xl p-4 space-y-3">
                     <div className="flex items-center gap-2 font-bold text-slate-800">
-                      <Monitor className="h-4.5 w-4.5 text-slate-600" />
+                      <LucideIcons.Monitor className="h-4.5 w-4.5 text-slate-600" />
                       <span>Pantallas LED Digitales (DOOH)</span>
                     </div>
                     <ul className="space-y-1.5 text-slate-500 font-medium">
@@ -733,7 +730,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
 
                   <div className="border border-slate-150 rounded-xl p-4 space-y-3">
                     <div className="flex items-center gap-2 font-bold text-slate-800">
-                      <Layers className="h-4.5 w-4.5 text-slate-600" />
+                      <LucideIcons.Layers className="h-4.5 w-4.5 text-slate-600" />
                       <span>Soportes Físicos (Vallas / Monopostes)</span>
                     </div>
                     <ul className="space-y-1.5 text-slate-500 font-medium">
@@ -784,25 +781,25 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
                 <p className="text-slate-500 text-xs leading-relaxed font-medium">
                   Grupo Comunicarte nació hace más de 20 años como un proyecto familiar de cartelería urbana en Mendoza. Hoy, gracias a la confianza de nuestros anunciantes y la digitalización tecnológica de nuestros soportes, nos consolidamos como la referencia multipantalla en el oeste argentino y la autopista metropolitana bonaerense.
                 </p>
- 
+
                 <div className="relative border-l border-slate-200 pl-4 space-y-6 text-xs pt-2">
                   <div className="relative">
-                    <span className="absolute -left-5.25 top-0.5 h-3.5 w-3.5 rounded-full bg-slate-950 border-4 border-white" />
+                    <span className="absolute -left-[21px] top-0.5 h-3.5 w-3.5 rounded-full bg-slate-950 border-4 border-white" />
                     <span className="font-extrabold text-slate-900 block text-xs">Año 2004 - Fundación</span>
                     <p className="text-slate-500 mt-1">Colocación de la primera valla estática en el microcentro de Mendoza.</p>
                   </div>
                   <div className="relative">
-                    <span className="absolute -left-5.25 top-0.5 h-3.5 w-3.5 rounded-full bg-slate-400 border-4 border-white" />
+                    <span className="absolute -left-[21px] top-0.5 h-3.5 w-3.5 rounded-full bg-slate-400 border-4 border-white" />
                     <span className="font-extrabold text-slate-900 block text-xs">Año 2012 - Cobertura Provincial</span>
                     <p className="text-slate-500 mt-1">Llegamos a San Rafael, Maipú y Luján de Cuyo con más de 250 caras estáticas.</p>
                   </div>
                   <div className="relative">
-                    <span className="absolute -left-5.25 top-0.5 h-3.5 w-3.5 rounded-full bg-slate-400 border-4 border-white" />
+                    <span className="absolute -left-[21px] top-0.5 h-3.5 w-3.5 rounded-full bg-slate-400 border-4 border-white" />
                     <span className="font-extrabold text-slate-900 block text-xs">Año 2018 - El Salto Digital (DOOH)</span>
                     <p className="text-slate-500 mt-1">Inauguración de la primera pantalla LED de alta frecuencia en Sarmiento y 9 de Julio.</p>
                   </div>
                   <div className="relative">
-                    <span className="absolute -left-5.25 top-0.5 h-3.5 w-3.5 rounded-full bg-slate-900 animate-pulse border-4 border-white" />
+                    <span className="absolute -left-[21px] top-0.5 h-3.5 w-3.5 rounded-full bg-slate-900 animate-pulse border-4 border-white" />
                     <span className="font-extrabold text-slate-900 block text-xs">Presente - Expansión Metropolitana y SmartWeb</span>
                     <p className="text-slate-500 mt-1">Lanzamiento del portal interactivo B2B y alianza estratégica en Buenos Aires.</p>
                   </div>
@@ -817,7 +814,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-semibold">
                 <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-3 shadow-xs">
                   <div className="p-2.5 bg-sky-50 text-sky-600 rounded-lg inline-block">
-                    <Tv className="h-5 w-5" />
+                    <LucideIcons.Tv className="h-5 w-5" />
                   </div>
                   <h4 className="text-sm font-extrabold text-slate-900">Soportes Digitales Inteligentes (DOOH)</h4>
                   <p className="text-slate-500 font-medium leading-relaxed">
@@ -827,7 +824,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
 
                 <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-3 shadow-xs">
                   <div className="p-2.5 bg-emerald-50 text-emerald-600 rounded-lg inline-block">
-                    <Layers className="h-5 w-5" />
+                    <LucideIcons.Layers className="h-5 w-5" />
                   </div>
                   <h4 className="text-sm font-extrabold text-slate-900">Cartelería Física de Gran Altura (OOH)</h4>
                   <p className="text-slate-500 font-medium leading-relaxed">
@@ -868,7 +865,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
                 id: "peatonal",
                 title: "LED Peatonal UHD",
                 subtitle: "Smart Totems de Ultra Alta Definición",
-                icon: <Users className="h-4 w-4" />,
+                icon: <LucideIcons.Users className="h-4 w-4" />,
                 tag: "Tránsito Peatonal y Comercial",
                 description: "Módulos de pantallas LED digitales UHD adaptados a nivel de vista peatonal, ideales para zonas comerciales de alto tránsito, paseos y corredores urbanos en Mendoza y Buenos Aires. Su resolución ultra fina permite captar detalles con máxima nitidez.",
                 specs: [
@@ -886,7 +883,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
                 id: "vehicular",
                 title: "Monolito Vehicular Gigante",
                 subtitle: "Pantallas Monumentales en Accesos Rápidos",
-                icon: <Tv className="h-4 w-4" />,
+                icon: <LucideIcons.Tv className="h-4 w-4" />,
                 tag: "Corredores Viales y Autopistas",
                 description: "Estructuras de escala monumental posicionadas estratégicamente a gran altura en las autopistas, accesos metropolitanos y avenidas rápidas de mayor volumen diario. Diseñadas para un impacto masivo inmediato.",
                 specs: [
@@ -904,7 +901,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
                 id: "mixto",
                 title: "Pantalla Mixta Dinámica",
                 subtitle: "Impacto Semafórico Estratégico",
-                icon: <Eye className="h-4 w-4" />,
+                icon: <LucideIcons.Eye className="h-4 w-4" />,
                 tag: "Intersecciones Neurálgicas",
                 description: "Ubicadas en esquinas críticas con detención semafórica. Logra una cobertura combinada insuperable: impacta al conductor que espera la luz verde y al peatón que cruza la calle. Ofrece los mayores tiempos de exposición (Dwell Time) del mercado.",
                 specs: [
@@ -922,7 +919,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
                 id: "monoposte",
                 title: "Monoposte Monumental (OOH)",
                 subtitle: "Presencia Corporativa Ininterrumpida",
-                icon: <Layers className="h-4 w-4" />,
+                icon: <LucideIcons.Layers className="h-4 w-4" />,
                 tag: "Cartelería Tradicional de Altura",
                 description: "Estructuras físicas de envergadura arquitectónica. Al no poseer rotación de pantalla, garantizan el 100% de exclusividad para la marca las 24 horas del día. Equipadas con proyectores LED inteligentes de bajo consumo con encendido crepuscular.",
                 specs: [
@@ -940,7 +937,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
                 id: "mobiliario",
                 title: "Mobiliario Urbano Inteligente",
                 subtitle: "Frecuencia Hiperlocal de Cercanía",
-                icon: <Home className="h-4 w-4" />,
+                icon: <LucideIcons.Home className="h-4 w-4" />,
                 tag: "Refugios y Paradas de Colectivos",
                 description: "Publicidad integrada en paradas de autobuses, refugios peatonales y tótems informativos. Proporciona una alta frecuencia de visualización diaria, integrando de manera orgánica las campañas en la rutina diaria del ciudadano.",
                 specs: [
@@ -1050,7 +1047,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
                                 }}
                                 className="px-4 py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs uppercase tracking-wide rounded-xl shadow-xs flex items-center gap-2 transition-all cursor-pointer"
                               >
-                                <Search className="h-4 w-4 text-white" />
+                                <LucideIcons.Search className="h-4 w-4 text-white" />
                                 <span>Filtrar este formato en catálogo</span>
                               </button>
                             </div>
@@ -1067,9 +1064,9 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
                                   alt={f.title}
                                   referrerPolicy="no-referrer"
                                   className="w-full h-full object-cover opacity-40 filter grayscale contrast-125 animate-fadeIn"
-                                  loading="lazy" 
+                                  loading="lazy"
                                 />
-                                <div className="absolute inset-0 bg-linear-to-t from-slate-950 via-slate-950/30 to-transparent" />
+                                <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/30 to-transparent" />
                               </div>
                               <div className="relative z-10 space-y-1">
                                 <span className="text-[8px] font-mono text-emerald-400 font-extrabold tracking-widest block uppercase">Visualización Certificada</span>
@@ -1085,7 +1082,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
                     {/* Compare Matrix Table */}
                     <div className="space-y-3 pt-6 border-t border-stone-100">
                       <h3 className="text-sm font-extrabold text-stone-800 uppercase tracking-wider flex items-center gap-1.5">
-                        <LayoutGrid className="h-4 w-4 text-primary" />
+                        <LucideIcons.LayoutGrid className="h-4 w-4 text-[#06434a]" />
                         Matriz Comparativa de Soportes
                       </h3>
                       <p className="text-xs text-stone-500 font-medium">
@@ -1108,33 +1105,33 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
                               <td className="px-4 py-3 font-bold text-stone-900">LED Peatonal UHD</td>
                               <td className="px-4 py-3">Peatonal</td>
                               <td className="px-4 py-3 font-mono">P2.5 / P3.0 UHD (9:16)</td>
-                              <td className="px-4 py-3 ">15 - 45 segundos</td>
+                              <td className="px-4 py-3">15 - 45 segundos</td>
                               <td className="px-4 py-3 text-stone-500">Mendoza & Baires</td>
-                              <td className="px-4 py-3 text-right text-primary font-black">+30.000 OTS</td>
+                              <td className="px-4 py-3 text-right text-[#06434a] font-black">+30.000 OTS</td>
                             </tr>
                             <tr className="hover:bg-stone-50/50 transition-colors">
                               <td className="px-4 py-3 font-bold text-stone-900">Monolito Vehicular</td>
                               <td className="px-4 py-3">Vehicular</td>
                               <td className="px-4 py-3 font-mono">P4.0 / P5.0 Giant (16:9)</td>
-                              <td className="px-4 py-3 ">3 - 5 segundos</td>
+                              <td className="px-4 py-3">3 - 5 segundos</td>
                               <td className="px-4 py-3 text-stone-500">Mendoza & Autopistas</td>
-                              <td className="px-4 py-3 text-right text-primary font-black">+75.000 OTS</td>
+                              <td className="px-4 py-3 text-right text-[#06434a] font-black">+75.000 OTS</td>
                             </tr>
                             <tr className="hover:bg-stone-50/50 transition-colors">
                               <td className="px-4 py-3 font-bold text-stone-900">Pantalla Mixta Esquinas</td>
                               <td className="px-4 py-3">Vehicular & Peatonal</td>
                               <td className="px-4 py-3 font-mono">P3.0 Sync Semáforo (4:3)</td>
-                              <td className="px-4 py-3 ">30 - 60 segundos</td>
+                              <td className="px-4 py-3">30 - 60 segundos</td>
                               <td className="px-4 py-3 text-stone-500">Microcentros Clave</td>
-                              <td className="px-4 py-3 text-right text-primary font-black">+50.000 OTS</td>
+                              <td className="px-4 py-3 text-right text-[#06434a] font-black">+50.000 OTS</td>
                             </tr>
                             <tr className="hover:bg-stone-50/50 transition-colors">
                               <td className="px-4 py-3 font-bold text-stone-900">Monoposte Gigante</td>
                               <td className="px-4 py-3">Flujo Rápido / Ruta</td>
                               <td className="px-4 py-3 font-mono">CMYK Lona Estática</td>
-                              <td className="px-4 py-3 ">Permanente 24hs</td>
+                              <td className="px-4 py-3">Permanente 24hs</td>
                               <td className="px-4 py-3 text-stone-500">Principales Accesos</td>
-                              <td className="px-4 py-3 text-right text-primary font-black">+120.000 OTS</td>
+                              <td className="px-4 py-3 text-right text-[#06434a] font-black">+120.000 OTS</td>
                             </tr>
                           </tbody>
                         </table>
@@ -1144,7 +1141,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
                     {/* Creative Designing Guidelines (Strong SEO optimization) */}
                     <div className="space-y-3 pt-6 border-t border-stone-100">
                       <h3 className="text-sm font-extrabold text-stone-800 uppercase tracking-wider flex items-center gap-1.5">
-                        <BookOpen className="h-4 w-4 text-primary" />
+                        <LucideIcons.BookOpen className="h-4 w-4 text-[#06434a]" />
                         Diseño para Vía Pública: Claves del Éxito
                       </h3>
                       <p className="text-xs text-stone-500 font-medium">
@@ -1153,7 +1150,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs font-medium">
                         <div className="p-4 bg-stone-50 border border-stone-200/50 rounded-xl space-y-2">
                           <h4 className="font-extrabold text-stone-900 flex items-center gap-1.5">
-                            <Tv className="h-4 w-4 text-primary" />
+                            <LucideIcons.Tv className="h-4 w-4 text-[#06434a]" />
                             Contraste de Fondo
                           </h4>
                           <p className="text-stone-500 leading-relaxed font-medium">
@@ -1162,7 +1159,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
                         </div>
                         <div className="p-4 bg-stone-50 border border-stone-200/50 rounded-xl space-y-2">
                           <h4 className="font-extrabold text-stone-900 flex items-center gap-1.5">
-                            <Clock className="h-4 w-4 text-primary" />
+                            <LucideIcons.Clock className="h-4 w-4 text-[#06434a]" />
                             La Regla de los 3s
                           </h4>
                           <p className="text-stone-500 leading-relaxed font-medium">
@@ -1171,7 +1168,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
                         </div>
                         <div className="p-4 bg-stone-50 border border-stone-200/50 rounded-xl space-y-2">
                           <h4 className="font-extrabold text-stone-900 flex items-center gap-1.5">
-                            <AlertCircle className="h-4 w-4 text-primary" />
+                            <LucideIcons.AlertCircle className="h-4 w-4 text-[#06434a]" />
                             Tipografía de Gran Peso
                           </h4>
                           <p className="text-stone-500 leading-relaxed font-medium">
@@ -1317,7 +1314,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
                 Este contenido es simulado bajo las directrices SEO de alta retención. La URL se encuentra totalmente mapeada en la estructura para evitar errores 404 (páginas huérfanas) y facilitar la indexación automática del rastreador web de Google.
               </p>
               <div className="p-4 bg-slate-50 rounded-xl border border-slate-200/60 flex items-center gap-3 text-xs text-slate-500">
-                <AlertCircle className="h-4.5 w-4.5 text-slate-400" />
+                <LucideIcons.Sparkles className="h-4.5 w-4.5 text-slate-400" />
                 <span>Puedes editar o cambiar la palabra clave <strong>"{item.keyword}"</strong> asignada a esta sección ingresando a la pestaña de Sitemap en el CMS.</span>
               </div>
             </div>
@@ -1332,7 +1329,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
           <div className="bg-white border border-slate-200 rounded-xl p-5 space-y-4 shadow-sm">
             <div className="flex items-center justify-between border-b border-slate-150 pb-3">
               <div className="flex items-center gap-2">
-                <Calculator className="h-4.5 w-4.5 text-slate-900" />
+                <LucideIcons.Calculator className="h-4.5 w-4.5 text-slate-900" />
                 <h3 className="text-xs font-black text-slate-950">Tu Estimación de Presupuesto</h3>
               </div>
               {cartScreens.length > 0 && (
@@ -1340,7 +1337,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
                   onClick={clearCart}
                   className="text-[10px] font-bold text-slate-500 hover:text-red-600 transition-colors flex items-center gap-1 cursor-pointer"
                 >
-                  <Trash2 className="h-3 w-3" />
+                  <LucideIcons.Trash2 className="h-3 w-3" />
                   Limpiar Plan
                 </button>
               )}
@@ -1348,7 +1345,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
 
             {cartScreens.length === 0 ? (
               <div className="text-center py-6 space-y-2">
-                <PlusCircle className="h-6 w-6 text-slate-300 mx-auto" />
+                <LucideIcons.PlusCircle className="h-6 w-6 text-slate-300 mx-auto" />
                 <p className="text-[11px] text-slate-400 leading-relaxed px-2 font-medium">
                   El planificador de campaña está vacío. Agrega pantallas desde el catálogo en vivo de Mendoza o Buenos Aires.
                 </p>
@@ -1359,11 +1356,11 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
                 <div className="flex flex-wrap gap-1 max-h-24 overflow-y-auto pr-1">
                   {cartScreens.map((screen) => (
                     <div
-                      key={screen.id} 
+                      key={screen.id}
                       onClick={() => setSelectedScreenId(screen.id)}
                       className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-slate-50 border border-slate-200 text-[10px] font-bold text-slate-700 hover:border-slate-800 cursor-pointer transition-colors"
                     >
-                      <span className="truncate max-w-30">{screen.nombre}</span>
+                      <span className="truncate max-w-[120px]">{screen.nombre}</span>
                     </div>
                   ))}
                 </div>
@@ -1404,7 +1401,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
                 {!proposalSubmitted ? (
                   <form onSubmit={handleSubmitProposal} className="space-y-2.5 pt-2 border-t border-slate-150">
                     <span className="text-[10px] uppercase font-bold text-slate-400 block">Enviar Plan a un Asesor</span>
-                    <Input
+                    <input
                       type="text"
                       required
                       placeholder="Tu Nombre"
@@ -1412,7 +1409,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
                       onChange={(e) => setProposalClient({ ...proposalClient, name: e.target.value })}
                       className="w-full px-2.5 py-1.5 text-xs border border-slate-200 rounded bg-white text-slate-900"
                     />
-                    <Input
+                    <input
                       type="email"
                       required
                       placeholder="Tu Correo Corporativo"
@@ -1430,7 +1427,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
                   </form>
                 ) : (
                   <div className="text-center py-4 bg-emerald-50 border border-emerald-100 rounded-xl space-y-1">
-                    <CheckCircle className="h-5 w-5 text-emerald-600 mx-auto" />
+                    <LucideIcons.Check className="h-5 h-5 text-emerald-600 mx-auto" />
                     <h5 className="font-extrabold text-emerald-800 text-xs">Propuesta Solicitada</h5>
                     <p className="text-[10px] text-emerald-600">Nuevo Lead creado en el CMS.</p>
                   </div>
@@ -1457,7 +1454,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
                       className="w-full text-left font-bold text-slate-600 hover:text-slate-950 hover:bg-slate-50 px-2 py-1 rounded transition-colors cursor-pointer flex items-center justify-between"
                     >
                       <span className="truncate">{sib.name}</span>
-                      <ArrowRight className="h-3 w-3 text-slate-300" />
+                      <LucideIcons.ArrowRight className="h-3 w-3 text-slate-300" />
                     </button>
                   ))}
                 </div>
@@ -1476,7 +1473,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
                       className="w-full text-left font-bold text-slate-600 hover:text-slate-950 hover:bg-slate-50 px-2 py-1 rounded transition-colors cursor-pointer flex items-center justify-between"
                     >
                       <span className="truncate">{child.name}</span>
-                      <ChevronRight className="h-3.5 w-3.5 text-slate-350" />
+                      <LucideIcons.ChevronRight className="h-3.5 w-3.5 text-slate-350" />
                     </button>
                   ))}
                 </div>
@@ -1488,7 +1485,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
               onClick={() => handleNavigate("/")}
               className="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs uppercase rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 mt-2"
             >
-              <Home className="h-3.5 w-3.5 text-slate-600" />
+              <LucideIcons.Home className="h-3.5 w-3.5 text-slate-600" />
               <span>Volver a la Portada</span>
             </button>
           </div>

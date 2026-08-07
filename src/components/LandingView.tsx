@@ -67,7 +67,7 @@ export const LandingView: React.FC = () => {
     } else if (section === "soportes") {
       navigate("/soportes");
       window.scrollTo({ top: 0, behavior: "smooth" });
-    } else if (location.pathname !== "/") {
+    } else if (location.pathname !== "/" && ["espacios", "soluciones", "nosotros-section", "contacto"].includes(section)) {
         navigate("/");
         setTimeout(() => {
             handleScrollTo(section);

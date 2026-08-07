@@ -56,7 +56,7 @@ export const GmailModule: React.FC<GmailModuleProps> = ({ token }) => {
   const checkConnection = async () => {
     if (!token) return;
     try {
-      const res = await safeFetchJson<{ success: boolean; connected?: boolean }>("/api/auth/google/status", {
+      const res = await safeFetchJson<{ success: boolean; connected?: boolean; }>("/api/auth/google/status", {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.data?.success && res.data?.connected) {
@@ -95,7 +95,7 @@ export const GmailModule: React.FC<GmailModuleProps> = ({ token }) => {
         ? `/api/gmail/messages?q=${encodeURIComponent(query)}` 
         : "/api/gmail/messages";
 
-      const res = await safeFetchJson<{ success: boolean; data?: GmailMessage[]; needsAuth?: boolean; error?: string | { message: string }; isRateLimited?: boolean; }>(url, {
+      const res = await safeFetchJson<{ success: boolean; data?: GmailMessage[]; needsAuth?: boolean; error?: string | { message: string }; isRateLimited?: boolean }>(url, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -105,12 +105,12 @@ export const GmailModule: React.FC<GmailModuleProps> = ({ token }) => {
         if (res.data?.needsAuth || res.status === 401) {
           setConnected(false);
           fetchAuthUrl();
-        } else if (res.isRateLimited) {
+        } else if (res.data?.isRateLimited) {
           toast.error("Límite de peticiones alcanzado. Reintentando en unos segundos.");
-        } else if (res.error) {
-          const errorMessage = typeof res.error === 'object' 
-            ? res.error.message 
-            : res.error;
+        } else if (res.data?.error) {
+          const errorMessage = typeof res.data.error === 'object' 
+            ? res.data.error.message 
+            : res.data.error;
 
           toast.error(errorMessage || "No se pudieron obtener los correos.");
         }
@@ -135,8 +135,8 @@ export const GmailModule: React.FC<GmailModuleProps> = ({ token }) => {
       if (res.data?.success && res.data.data) {
         setSelectedMessage(res.data.data);
       } else {
-        const errorMessage = typeof res.data?.error === 'object' ? res.data.error.message : res.data?.error;
-        toast.error(errorMessage || res.error || "No se pudo cargar el detalle del correo.");
+        const errorMessage = typeof res.data?.error === 'object' ? res.data.error.message : res.data?.error
+        toast.error(errorMessage || "No se pudo cargar el detalle del correo.");
       }
     } catch (err) {
       toast.error("Error al cargar el contenido del correo.");
@@ -178,8 +178,8 @@ export const GmailModule: React.FC<GmailModuleProps> = ({ token }) => {
         // Reload messages after brief delay
         setTimeout(() => fetchMessages(searchQuery), 1000);
       } else {
-        const errorMessage = typeof res.data?.error === 'object' ? res.data.error.message : res.data?.error;
-        toast.error(errorMessage || res.error || "Error al enviar el correo.");
+        const errorMessage = typeof res.data?.error === 'object' ? res.data.error.message : res.data?.error
+        toast.error(errorMessage || "Error al enviar el correo.");
       }
     } catch (err) {
       console.error("Error sending email:", err);
@@ -255,7 +255,7 @@ export const GmailModule: React.FC<GmailModuleProps> = ({ token }) => {
                     return;
                   }
                   try {
-                    const res = await safeFetchJson<{ success: boolean; connected?: boolean }>("/api/auth/google/status", {
+                    const res = await safeFetchJson<{ success: boolean; connected?: boolean; }>("/api/auth/google/status", {
                       headers: { Authorization: `Bearer ${token}` }
                     });
                     if (res.data?.success && res.data?.connected) {

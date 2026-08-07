@@ -1,8 +1,17 @@
 import express, { Request, Response, NextFunction } from "express";
 import path from "path";
 import dotenv from "dotenv";
-import { GoogleGenAI, Type } from "@google/genai";
-import { db } from "./src/db/index.ts";
+
+const Type = {
+  OBJECT: "OBJECT",
+  STRING: "STRING",
+  ARRAY: "ARRAY",
+  INTEGER: "INTEGER",
+  NUMBER: "NUMBER",
+  BOOLEAN: "BOOLEAN",
+};
+
+import { db, isDbConfigured, createPool } from "./src/db/index.ts";
 import {
   users, leads, screens, clientes, mediakits, changelogs, syncHistory, syncErrors,
   tenants, roles, permissions, rolePermissions, userRoles, tags, screenTags, media,
@@ -25,26 +34,314 @@ const PORT = 3000;
 app.use(express.json());
 app.use(requestLogger);
 
+// Health check endpoint
+app.get("/api/health", (_req: Request, res: Response) => {
+  res.json({ status: "ok", timestamp: new Date().toISOString() });
+});
+
 // Initialize Gemini SDK
 const geminiApiKey = process.env.GEMINI_API_KEY;
-let ai: GoogleGenAI | null = null;
 
-if (geminiApiKey) {
-  ai = new GoogleGenAI({
-    apiKey: geminiApiKey,
-    httpOptions: {
-      headers: {
-        "User-Agent": "aistudio-build",
-      },
-    },
-  });
-} else {
+if (!geminiApiKey) {
   console.warn("Warning: GEMINI_API_KEY is not defined. AI features will fallback to default responses.");
+}
+
+// Helper to ensure database tables exist before querying or seeding
+async function ensureTablesExist() {
+  const pool = createPool();
+  if (!pool) return;
+
+  const ddl = `
+    CREATE TABLE IF NOT EXISTS tenants (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      slug TEXT NOT NULL UNIQUE,
+      plan TEXT DEFAULT 'basic' NOT NULL,
+      status TEXT DEFAULT 'active' NOT NULL,
+      created_at TIMESTAMP DEFAULT NOW() NOT NULL,
+      updated_at TIMESTAMP DEFAULT NOW() NOT NULL,
+      deleted_at TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS roles (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      slug TEXT NOT NULL UNIQUE,
+      description TEXT,
+      created_at TIMESTAMP DEFAULT NOW() NOT NULL,
+      updated_at TIMESTAMP DEFAULT NOW() NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS permissions (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      slug TEXT NOT NULL UNIQUE,
+      description TEXT,
+      created_at TIMESTAMP DEFAULT NOW() NOT NULL,
+      updated_at TIMESTAMP DEFAULT NOW() NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS cities (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      slug TEXT NOT NULL UNIQUE,
+      created_at TIMESTAMP DEFAULT NOW() NOT NULL,
+      updated_at TIMESTAMP DEFAULT NOW() NOT NULL,
+      deleted_at TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS categories (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      slug TEXT NOT NULL UNIQUE,
+      created_at TIMESTAMP DEFAULT NOW() NOT NULL,
+      updated_at TIMESTAMP DEFAULT NOW() NOT NULL,
+      deleted_at TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS locations (
+      id TEXT PRIMARY KEY,
+      city_id TEXT REFERENCES cities(id) ON DELETE CASCADE ON UPDATE CASCADE,
+      name TEXT NOT NULL,
+      address TEXT,
+      lat DOUBLE PRECISION NOT NULL,
+      lng DOUBLE PRECISION NOT NULL,
+      created_at TIMESTAMP DEFAULT NOW() NOT NULL,
+      updated_at TIMESTAMP DEFAULT NOW() NOT NULL,
+      deleted_at TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS users (
+      id SERIAL PRIMARY KEY,
+      uid TEXT NOT NULL UNIQUE,
+      email TEXT NOT NULL,
+      tenant_id TEXT REFERENCES tenants(id) ON DELETE SET NULL,
+      created_at TIMESTAMP DEFAULT NOW()
+    );
+
+    CREATE TABLE IF NOT EXISTS user_roles (
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      role_id TEXT NOT NULL REFERENCES roles(id) ON DELETE CASCADE,
+      PRIMARY KEY (user_id, role_id)
+    );
+
+    CREATE TABLE IF NOT EXISTS role_permissions (
+      role_id TEXT NOT NULL REFERENCES roles(id) ON DELETE CASCADE,
+      permission_id TEXT NOT NULL REFERENCES permissions(id) ON DELETE CASCADE,
+      PRIMARY KEY (role_id, permission_id)
+    );
+
+    CREATE TABLE IF NOT EXISTS leads (
+      id SERIAL PRIMARY KEY,
+      name TEXT NOT NULL,
+      email TEXT NOT NULL,
+      company TEXT,
+      source TEXT,
+      status TEXT DEFAULT 'new',
+      date TEXT,
+      value INTEGER DEFAULT 0
+    );
+
+    CREATE TABLE IF NOT EXISTS screens (
+      id TEXT PRIMARY KEY,
+      tenant_id TEXT REFERENCES tenants(id) ON DELETE CASCADE,
+      nombre TEXT NOT NULL,
+      zona TEXT NOT NULL,
+      tipo TEXT NOT NULL,
+      categoria TEXT,
+      ciudad TEXT,
+      impactos INTEGER DEFAULT 0 NOT NULL,
+      precio INTEGER DEFAULT 0 NOT NULL,
+      status TEXT NOT NULL,
+      lat DOUBLE PRECISION NOT NULL,
+      lng DOUBLE PRECISION NOT NULL,
+      nota TEXT,
+      video TEXT,
+      dimensiones TEXT,
+      brillo TEXT,
+      refresh_rate TEXT,
+      formato TEXT,
+      cobertura TEXT,
+      horarios TEXT,
+      ruta TEXT,
+      sync_id INTEGER,
+      hash TEXT,
+      created_at TIMESTAMP DEFAULT NOW() NOT NULL,
+      updated_at TIMESTAMP DEFAULT NOW()
+    );
+
+    CREATE TABLE IF NOT EXISTS clientes (
+      id TEXT PRIMARY KEY,
+      tenant_id TEXT REFERENCES tenants(id) ON DELETE CASCADE,
+      nombre TEXT NOT NULL,
+      empresa TEXT NOT NULL,
+      email TEXT NOT NULL,
+      telefono TEXT NOT NULL,
+      categoria TEXT NOT NULL,
+      campanas_activas INTEGER DEFAULT 0 NOT NULL,
+      total_inversion INTEGER DEFAULT 0 NOT NULL,
+      estado TEXT DEFAULT 'contactado' NOT NULL,
+      notas TEXT,
+      historial_interacciones TEXT,
+      created_at TIMESTAMP DEFAULT NOW() NOT NULL,
+      updated_at TIMESTAMP DEFAULT NOW() NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS mediakits (
+      id TEXT PRIMARY KEY,
+      tenant_id TEXT REFERENCES tenants(id) ON DELETE CASCADE,
+      nombre TEXT NOT NULL,
+      cliente_id TEXT NOT NULL REFERENCES clientes(id) ON DELETE CASCADE ON UPDATE CASCADE,
+      cliente_nombre TEXT NOT NULL,
+      ciudad TEXT NOT NULL,
+      screen_ids TEXT NOT NULL,
+      version INTEGER DEFAULT 1 NOT NULL,
+      estado TEXT NOT NULL,
+      fecha TEXT NOT NULL,
+      presupuesto INTEGER,
+      objetivo TEXT,
+      comentarios TEXT,
+      historial TEXT,
+      soportes_edicion_inline TEXT,
+      created_at TIMESTAMP DEFAULT NOW() NOT NULL,
+      updated_at TIMESTAMP DEFAULT NOW() NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS media_kit_screens (
+      media_kit_id TEXT NOT NULL REFERENCES mediakits(id) ON DELETE CASCADE ON UPDATE CASCADE,
+      screen_id TEXT NOT NULL REFERENCES screens(id) ON DELETE CASCADE ON UPDATE CASCADE,
+      PRIMARY KEY (media_kit_id, screen_id)
+    );
+
+    CREATE TABLE IF NOT EXISTS media_kit_comments (
+      id SERIAL PRIMARY KEY,
+      media_kit_id TEXT NOT NULL REFERENCES mediakits(id) ON DELETE CASCADE ON UPDATE CASCADE,
+      user_id INTEGER REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
+      user_name TEXT NOT NULL,
+      comment_text TEXT NOT NULL,
+      created_at TIMESTAMP DEFAULT NOW() NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS changelogs (
+      id TEXT PRIMARY KEY,
+      "user" TEXT NOT NULL,
+      action TEXT NOT NULL,
+      date TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS google_credentials (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER UNIQUE REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
+      access_token TEXT NOT NULL,
+      refresh_token TEXT NOT NULL,
+      expiry_date TIMESTAMP NOT NULL,
+      scopes TEXT NOT NULL,
+      created_at TIMESTAMP DEFAULT NOW(),
+      updated_at TIMESTAMP DEFAULT NOW()
+    );
+
+    CREATE TABLE IF NOT EXISTS sync_history (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
+      user_name TEXT NOT NULL,
+      status TEXT NOT NULL,
+      duration_ms INTEGER DEFAULT 0,
+      total_slides INTEGER DEFAULT 0,
+      imported_count INTEGER DEFAULT 0,
+      updated_count INTEGER DEFAULT 0,
+      error_count INTEGER DEFAULT 0,
+      presentation_id TEXT NOT NULL,
+      presentation_title TEXT,
+      backup_data TEXT,
+      created_at TIMESTAMP DEFAULT NOW() NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS sync_errors (
+      id SERIAL PRIMARY KEY,
+      sync_id INTEGER REFERENCES sync_history(id) ON DELETE CASCADE ON UPDATE CASCADE,
+      slide_index INTEGER,
+      slide_id TEXT,
+      error_type TEXT NOT NULL,
+      error_message TEXT NOT NULL,
+      severity TEXT NOT NULL,
+      created_at TIMESTAMP DEFAULT NOW() NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS tags (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      slug TEXT NOT NULL UNIQUE,
+      created_at TIMESTAMP DEFAULT NOW() NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS screen_tags (
+      screen_id TEXT NOT NULL REFERENCES screens(id) ON DELETE CASCADE,
+      tag_id TEXT NOT NULL REFERENCES tags(id) ON DELETE CASCADE,
+      PRIMARY KEY (screen_id, tag_id)
+    );
+
+    CREATE TABLE IF NOT EXISTS media (
+      id TEXT PRIMARY KEY,
+      screen_id TEXT NOT NULL REFERENCES screens(id) ON DELETE CASCADE,
+      type TEXT NOT NULL,
+      url TEXT NOT NULL,
+      title TEXT,
+      size_bytes INTEGER,
+      is_hero BOOLEAN DEFAULT FALSE NOT NULL,
+      created_at TIMESTAMP DEFAULT NOW() NOT NULL,
+      updated_at TIMESTAMP DEFAULT NOW() NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS metrics (
+      id TEXT PRIMARY KEY,
+      screen_id TEXT NOT NULL REFERENCES screens(id) ON DELETE CASCADE,
+      metric_type TEXT NOT NULL,
+      value DOUBLE PRECISION NOT NULL,
+      recorded_at TIMESTAMP DEFAULT NOW() NOT NULL,
+      created_at TIMESTAMP DEFAULT NOW() NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS campaigns (
+      id TEXT PRIMARY KEY,
+      tenant_id TEXT REFERENCES tenants(id) ON DELETE CASCADE,
+      cliente_id TEXT NOT NULL REFERENCES clientes(id) ON DELETE CASCADE,
+      media_kit_id TEXT REFERENCES mediakits(id) ON DELETE SET NULL,
+      nombre TEXT NOT NULL,
+      presupuesto INTEGER DEFAULT 0 NOT NULL,
+      estado TEXT DEFAULT 'planificacion' NOT NULL,
+      fecha_inicio TEXT,
+      fecha_fin TEXT,
+      created_at TIMESTAMP DEFAULT NOW() NOT NULL,
+      updated_at TIMESTAMP DEFAULT NOW() NOT NULL,
+      deleted_at TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS campaign_screens (
+      campaign_id TEXT NOT NULL REFERENCES campaigns(id) ON DELETE CASCADE,
+      screen_id TEXT NOT NULL REFERENCES screens(id) ON DELETE CASCADE,
+      precio_acordado INTEGER,
+      fecha_inicio_soporte TEXT,
+      fecha_fin_soporte TEXT,
+      PRIMARY KEY (campaign_id, screen_id)
+    );
+  `;
+
+  try {
+    await pool.query(ddl);
+    console.log("[Bootstrap] Verified database tables exist.");
+  } catch (err) {
+    console.warn("[Bootstrap] Note on database table initialization:", err);
+  }
 }
 
 // Automatically bootstrap database schema and seed data on startup
 async function initDb() {
+  if (!isDbConfigured()) {
+    console.log("[Bootstrap] Database is not configured. Skipping database seed.");
+    return;
+  }
   try {
+    await ensureTablesExist();
     console.log("[Bootstrap] Starting database seed check...");
 
     // 1. Seed Tenants
@@ -247,28 +544,55 @@ async function initDb() {
 
 initDb();
 
-// Helper to secure AI calling
+// Helper to secure AI calling using native fetch to keep bundle light
 async function callGemini(prompt: string, responseSchema?: any) {
-  if (!ai) {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
     throw new Error("Gemini AI Client is not initialized (missing API key)");
   }
-  
-  const config: any = {
-    temperature: 0.7,
+
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+
+  const body: any = {
+    contents: [
+      {
+        parts: [
+          {
+            text: prompt
+          }
+        ]
+      }
+    ],
+    generationConfig: {
+      temperature: 0.7
+    }
   };
 
   if (responseSchema) {
-    config.responseMimeType = "application/json";
-    config.responseSchema = responseSchema;
+    body.generationConfig.responseMimeType = "application/json";
+    body.generationConfig.responseSchema = responseSchema;
   }
 
-  const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash",
-    contents: prompt,
-    config,
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body)
   });
 
-  return response.text;
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Gemini API error: ${response.status} - ${errorText}`);
+  }
+
+  const data = await response.json() as any;
+  const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (!text) {
+    throw new Error("Invalid or empty response format from Gemini API");
+  }
+
+  return text;
 }
 
 // --- API ENDPOINTS ---
@@ -286,7 +610,286 @@ app.post("/api/auth/sync", requireAuth, async (req: AuthRequest, res: Response) 
   }
 });
 
+// --- FEATURE FLAGS ROAD GUARDS ---
+
+app.use("/api/gmail/*", (req, res, next) => {
+  const isGmailEnabled = process.env.ENABLE_GMAIL_INTEGRATION === "true";
+  if (!isGmailEnabled) {
+    return res.json({
+      enabled: false,
+      message: "Gmail integration disabled in PMV"
+    });
+  }
+  next();
+});
+
+app.use("/api/ai/*", (req, res, next) => {
+  const isAiPlannerEnabled = process.env.ENABLE_AI_PLANNER === "true";
+  if (!isAiPlannerEnabled) {
+    return res.json({
+      enabled: false,
+      message: "AI Planner disabled for PMV"
+    });
+  }
+  next();
+});
+
+// --- GMAIL API ENDPOINTS ---
+
+// GET Gmail Connection Status
+app.get("/api/gmail/status", requireAuth, async (req: AuthRequest, res: Response) => {
+  try {
+    const dbUser = await getOrCreateUser(req.user.uid, req.user.email || "");
+    const accessToken = await GoogleSlidesBackendService.getAccessToken(dbUser.id);
+    res.json({ success: true, connected: !!accessToken });
+  } catch (error: any) {
+    res.json({ success: true, connected: false, error: error.message });
+  }
+});
+
+// GET Gmail Message List
+app.get("/api/gmail/messages", requireAuth, async (req: AuthRequest, res: Response) => {
+  try {
+    const dbUser = await getOrCreateUser(req.user.uid, req.user.email || "");
+    const accessToken = await GoogleSlidesBackendService.getAccessToken(dbUser.id);
+
+    const { q } = req.query;
+    const queryParam = q ? `&q=${encodeURIComponent(q as string)}` : "";
+    const listRes = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=15${queryParam}`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        Accept: "application/json"
+      }
+    });
+
+    if (!listRes.ok) {
+      const errText = await listRes.text();
+      return res.status(listRes.status).json({ success: false, error: `Gmail API list error: ${errText}` });
+    }
+
+    const listData = (await listRes.json()) as { messages?: { id: string; threadId: string }[] };
+    const messagesList = listData.messages || [];
+
+    // Fetch details for each message in parallel
+    const detailedMessages = await Promise.all(
+      messagesList.map(async (msg) => {
+        try {
+          const msgRes = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages/${msg.id}?format=metadata&metadataHeaders=subject&metadataHeaders=from&metadataHeaders=to&metadataHeaders=date`, {
+            headers: {
+              Authorization: `Bearer ${accessToken}`,
+              Accept: "application/json"
+            }
+          });
+          if (!msgRes.ok) return null;
+          const msgData = (await msgRes.json()) as any;
+          
+          const headers = msgData.payload?.headers || [];
+          const getHeader = (name: string) => {
+            const h = headers.find((h: any) => h.name.toLowerCase() === name.toLowerCase());
+            return h ? h.value : "";
+          };
+
+          return {
+            id: msgData.id,
+            threadId: msgData.threadId,
+            snippet: msgData.snippet,
+            subject: getHeader("subject") || "(Sin Asunto)",
+            from: getHeader("from") || "(Desconocido)",
+            to: getHeader("to") || "",
+            date: getHeader("date") || "",
+            labelIds: msgData.labelIds || []
+          };
+        } catch (err) {
+          console.error(`Error fetching message ${msg.id} detail:`, err);
+          return null;
+        }
+      })
+    );
+
+    res.json({
+      success: true,
+      data: detailedMessages.filter(m => m !== null)
+    });
+  } catch (error: any) {
+    console.error("Gmail messages fetch error:", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// GET Individual Gmail Message Detail
+app.get("/api/gmail/messages/:id", requireAuth, async (req: AuthRequest, res: Response) => {
+  const { id } = req.params;
+  try {
+    const dbUser = await getOrCreateUser(req.user.uid, req.user.email || "");
+    const accessToken = await GoogleSlidesBackendService.getAccessToken(dbUser.id);
+
+    const msgRes = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages/${id}?format=full`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        Accept: "application/json"
+      }
+    });
+
+    if (!msgRes.ok) {
+      const errText = await msgRes.text();
+      return res.status(msgRes.status).json({ success: false, error: `Gmail API detail error: ${errText}` });
+    }
+
+    const msgData = (await msgRes.json()) as any;
+    const headers = msgData.payload?.headers || [];
+    const getHeader = (name: string) => {
+      const h = headers.find((h: any) => h.name.toLowerCase() === name.toLowerCase());
+      return h ? h.value : "";
+    };
+
+    // Robust body parsing function
+    function getMessageBody(payload: any): { html?: string; text?: string } {
+      let html = "";
+      let text = "";
+
+      function traverse(part: any) {
+        if (part.mimeType === "text/plain" && part.body && part.body.data) {
+          text = Buffer.from(part.body.data, 'base64').toString('utf-8');
+        } else if (part.mimeType === "text/html" && part.body && part.body.data) {
+          html = Buffer.from(part.body.data, 'base64').toString('utf-8');
+        }
+        if (part.parts) {
+          for (const subPart of part.parts) {
+            traverse(subPart);
+          }
+        }
+      }
+
+      if (payload) {
+        if (payload.mimeType === "text/plain" && payload.body && payload.body.data) {
+          text = Buffer.from(payload.body.data, 'base64').toString('utf-8');
+        } else if (payload.mimeType === "text/html" && payload.body && payload.body.data) {
+          html = Buffer.from(payload.body.data, 'base64').toString('utf-8');
+        } else {
+          traverse(payload);
+        }
+      }
+
+      return { html, text };
+    }
+
+    const bodyContent = getMessageBody(msgData.payload);
+
+    res.json({
+      success: true,
+      data: {
+        id: msgData.id,
+        threadId: msgData.threadId,
+        snippet: msgData.snippet,
+        subject: getHeader("subject") || "(Sin Asunto)",
+        from: getHeader("from") || "(Desconocido)",
+        to: getHeader("to") || "",
+        date: getHeader("date") || "",
+        labelIds: msgData.labelIds || [],
+        html: bodyContent.html,
+        text: bodyContent.text || msgData.snippet
+      }
+    });
+  } catch (error: any) {
+    console.error("Gmail message detail error:", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// POST Send Gmail Message
+app.post("/api/gmail/send", requireAuth, async (req: AuthRequest, res: Response) => {
+  const { to, subject, body } = req.body;
+  if (!to || !subject || !body) {
+    return res.status(400).json({ success: false, error: "to, subject and body are required fields." });
+  }
+
+  try {
+    const dbUser = await getOrCreateUser(req.user.uid, req.user.email || "");
+    const accessToken = await GoogleSlidesBackendService.getAccessToken(dbUser.id);
+
+    // Build raw email MIME message
+    const rawMessage = [
+      `To: ${to}`,
+      `Subject: =?utf-8?B?${Buffer.from(subject).toString('base64')}?=`,
+      'MIME-Version: 1.0',
+      'Content-Type: text/html; charset=utf-8',
+      'Content-Transfer-Encoding: base64',
+      '',
+      Buffer.from(body).toString('base64')
+    ].join('\r\n');
+
+    const encodedMessage = Buffer.from(rawMessage)
+      .toString('base64')
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_')
+      .replace(/=+$/, '');
+
+    const sendRes = await fetch("https://gmail.googleapis.com/gmail/v1/users/me/messages/send", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ raw: encodedMessage }),
+    });
+
+    if (!sendRes.ok) {
+      const errText = await sendRes.text();
+      return res.status(sendRes.status).json({ success: false, error: `Gmail API send error: ${errText}` });
+    }
+
+    const sendData = await sendRes.json();
+
+    // Log the action to database audit log
+    try {
+      const logId = `log-gmail-${Math.floor(100000 + Math.random() * 900000)}`;
+      await db.insert(changelogs).values({
+        id: logId,
+        user: dbUser.email,
+        action: `Envió correo Gmail a <${to}> con asunto "${subject}"`,
+        date: new Date().toISOString(),
+      });
+    } catch (logErr) {
+      console.error("Failed to append gmail changelog:", logErr);
+    }
+
+    res.json({ success: true, data: sendData });
+  } catch (error: any) {
+    console.error("Gmail send error:", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // --- GOOGLE WORKSPACE API ENDPOINTS ---
+
+// GET Google OAuth connection status
+app.get("/api/auth/google/status", requireAuth, async (req: AuthRequest, res: Response) => {
+  try {
+    const dbUser = await getOrCreateUser(req.user.uid, req.user.email || "");
+    const accessToken = await GoogleSlidesBackendService.getAccessToken(dbUser.id);
+    res.json({ success: true, connected: !!accessToken });
+  } catch (error: any) {
+    res.json({ success: true, connected: false, error: error.message });
+  }
+});
+
+// GET Google Access Token for Google Picker
+app.get("/api/auth/google/token", requireAuth, async (req: AuthRequest, res: Response) => {
+  try {
+    const dbUser = await getOrCreateUser(req.user.uid, req.user.email || "");
+    const accessToken = await GoogleSlidesBackendService.getAccessToken(dbUser.id);
+    if (!accessToken) {
+      return res.status(401).json({ success: false, error: "No Google account connected." });
+    }
+    res.json({
+      success: true,
+      accessToken,
+      clientId: GoogleSlidesBackendService.clientId
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
 
 // GET Google OAuth redirect URL
 app.get("/api/auth/google/url", requireAuth, async (req: AuthRequest, res: Response) => {
@@ -472,6 +1075,23 @@ app.get("/api/sync/errors/:syncId", requireAuth, async (req: AuthRequest, res: R
     res.json({ success: true, data: errors });
   } catch (error: any) {
     console.error("Error fetching sync errors:", error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// POST Extract Presentation Data (JSON)
+app.post("/api/slides/extract", requireAuth, async (req: AuthRequest, res: Response) => {
+  const { presentationId } = req.body;
+  if (!presentationId) {
+    return res.status(400).json({ success: false, error: "presentationId is required" });
+  }
+
+  try {
+    const dbUser = await getOrCreateUser(req.user.uid, req.user.email || "");
+    const data = await GoogleSlidesBackendService.extractPresentationData(dbUser.id, presentationId);
+    res.json({ success: true, data });
+  } catch (error: any) {
+    console.error("Error extracting presentation data:", error);
     res.status(500).json({ success: false, error: error.message });
   }
 });
@@ -960,16 +1580,27 @@ app.delete("/api/clients/:id", requireAuth, async (req: Request, res: Response) 
   }
 });
 
+// Helper function to safely parse stringified JSON
+function safeJsonParse(val: any, fallback: any = []) {
+  if (!val) return fallback;
+  if (typeof val !== 'string') return val;
+  try {
+    return JSON.parse(val);
+  } catch {
+    return fallback;
+  }
+}
+
 // GET Mediakits
 app.get("/api/mediakits", requireAuth, async (req: Request, res: Response) => {
   try {
     const dbMediakits = await db.select().from(mediakits);
     const formatted = dbMediakits.map(m => ({
       ...m,
-      screenIds: m.screenIds ? JSON.parse(m.screenIds) : [],
-      comentarios: m.comentarios ? JSON.parse(m.comentarios) : [],
-      historial: m.historial ? JSON.parse(m.historial) : [],
-      soportesEdicionInline: m.soportesEdicionInline ? JSON.parse(m.soportesEdicionInline) : []
+      screenIds: safeJsonParse(m.screenIds, []),
+      comentarios: safeJsonParse(m.comentarios, []),
+      historial: safeJsonParse(m.historial, []),
+      soportesEdicionInline: safeJsonParse(m.soportesEdicionInline, [])
     }));
     res.json({ success: true, data: formatted });
   } catch (error: any) {
@@ -986,21 +1617,50 @@ app.post("/api/mediakits", requireAuth, async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, error: "Missing required mediakit fields" });
     }
 
+    if (mkData.clienteId) {
+      const existingClient = await db.select().from(clientes).where(eq(clientes.id, mkData.clienteId)).limit(1);
+      if (existingClient.length === 0) {
+        await db.insert(clientes).values({
+          id: mkData.clienteId,
+          nombre: mkData.clienteNombre || "Cliente General",
+          empresa: mkData.clienteNombre || "Empresa General",
+          email: "contacto@cliente.com",
+          telefono: "+54 9 261 000-0000",
+          categoria: "Directo",
+          estado: "contactado"
+        }).onConflictDoNothing();
+      }
+    }
+
     const valueToInsert = {
-      ...mkData,
-      screenIds: mkData.screenIds ? JSON.stringify(mkData.screenIds) : JSON.stringify([]),
-      comentarios: mkData.comentarios ? JSON.stringify(mkData.comentarios) : JSON.stringify([]),
-      historial: mkData.historial ? JSON.stringify(mkData.historial) : JSON.stringify([]),
-      soportesEdicionInline: mkData.soportesEdicionInline ? JSON.stringify(mkData.soportesEdicionInline) : JSON.stringify([])
+      id: mkData.id,
+      tenantId: mkData.tenantId || null,
+      nombre: mkData.nombre,
+      clienteId: mkData.clienteId,
+      clienteNombre: mkData.clienteNombre || "Cliente General",
+      ciudad: mkData.ciudad || "Mendoza",
+      screenIds: typeof mkData.screenIds === 'string' ? mkData.screenIds : JSON.stringify(mkData.screenIds || []),
+      version: typeof mkData.version === 'number' ? mkData.version : 1,
+      estado: mkData.estado || "Borrador",
+      fecha: mkData.fecha || new Date().toISOString().split('T')[0],
+      presupuesto: typeof mkData.presupuesto === 'number' ? mkData.presupuesto : (mkData.presupuesto ? parseInt(mkData.presupuesto, 10) : null),
+      objetivo: mkData.objetivo || null,
+      comentarios: typeof mkData.comentarios === 'string' ? mkData.comentarios : JSON.stringify(mkData.comentarios || []),
+      historial: typeof mkData.historial === 'string' ? mkData.historial : JSON.stringify(mkData.historial || []),
+      soportesEdicionInline: typeof mkData.soportesEdicionInline === 'string' ? mkData.soportesEdicionInline : JSON.stringify(mkData.soportesEdicionInline || [])
     };
 
     const result = await db.insert(mediakits).values(valueToInsert).returning();
+    if (!result || result.length === 0 || !result[0]) {
+      return res.status(500).json({ success: false, error: "No se pudo crear la propuesta MediaKit en la base de datos." });
+    }
+
     const formatted = {
       ...result[0],
-      screenIds: result[0].screenIds ? JSON.parse(result[0].screenIds) : [],
-      comentarios: result[0].comentarios ? JSON.parse(result[0].comentarios) : [],
-      historial: result[0].historial ? JSON.parse(result[0].historial) : [],
-      soportesEdicionInline: result[0].soportesEdicionInline ? JSON.parse(result[0].soportesEdicionInline) : []
+      screenIds: safeJsonParse(result[0].screenIds, []),
+      comentarios: safeJsonParse(result[0].comentarios, []),
+      historial: safeJsonParse(result[0].historial, []),
+      soportesEdicionInline: safeJsonParse(result[0].soportesEdicionInline, [])
     };
 
     res.json({ success: true, data: formatted });
@@ -1015,18 +1675,43 @@ app.put("/api/mediakits/:id", requireAuth, async (req: Request, res: Response) =
   const { id } = req.params;
   try {
     const updateData = req.body;
-    const valueToUpdate: any = { ...updateData };
+    const valueToUpdate: any = {};
+
+    if (updateData.nombre !== undefined) valueToUpdate.nombre = updateData.nombre;
+    if (updateData.clienteId !== undefined) {
+      valueToUpdate.clienteId = updateData.clienteId;
+      const existingClient = await db.select().from(clientes).where(eq(clientes.id, updateData.clienteId)).limit(1);
+      if (existingClient.length === 0) {
+        await db.insert(clientes).values({
+          id: updateData.clienteId,
+          nombre: updateData.clienteNombre || "Cliente General",
+          empresa: updateData.clienteNombre || "Empresa General",
+          email: "contacto@cliente.com",
+          telefono: "+54 9 261 000-0000",
+          categoria: "Directo",
+          estado: "contactado"
+        }).onConflictDoNothing();
+      }
+    }
+    if (updateData.clienteNombre !== undefined) valueToUpdate.clienteNombre = updateData.clienteNombre;
+    if (updateData.ciudad !== undefined) valueToUpdate.ciudad = updateData.ciudad;
+    if (updateData.version !== undefined) valueToUpdate.version = updateData.version;
+    if (updateData.estado !== undefined) valueToUpdate.estado = updateData.estado;
+    if (updateData.fecha !== undefined) valueToUpdate.fecha = updateData.fecha;
+    if (updateData.presupuesto !== undefined) valueToUpdate.presupuesto = updateData.presupuesto;
+    if (updateData.objetivo !== undefined) valueToUpdate.objetivo = updateData.objetivo;
+
     if (updateData.screenIds !== undefined) {
-      valueToUpdate.screenIds = updateData.screenIds ? JSON.stringify(updateData.screenIds) : JSON.stringify([]);
+      valueToUpdate.screenIds = typeof updateData.screenIds === 'string' ? updateData.screenIds : JSON.stringify(updateData.screenIds || []);
     }
     if (updateData.comentarios !== undefined) {
-      valueToUpdate.comentarios = updateData.comentarios ? JSON.stringify(updateData.comentarios) : JSON.stringify([]);
+      valueToUpdate.comentarios = typeof updateData.comentarios === 'string' ? updateData.comentarios : JSON.stringify(updateData.comentarios || []);
     }
     if (updateData.historial !== undefined) {
-      valueToUpdate.historial = updateData.historial ? JSON.stringify(updateData.historial) : JSON.stringify([]);
+      valueToUpdate.historial = typeof updateData.historial === 'string' ? updateData.historial : JSON.stringify(updateData.historial || []);
     }
     if (updateData.soportesEdicionInline !== undefined) {
-      valueToUpdate.soportesEdicionInline = updateData.soportesEdicionInline ? JSON.stringify(updateData.soportesEdicionInline) : JSON.stringify([]);
+      valueToUpdate.soportesEdicionInline = typeof updateData.soportesEdicionInline === 'string' ? updateData.soportesEdicionInline : JSON.stringify(updateData.soportesEdicionInline || []);
     }
 
     const result = await db.update(mediakits)
@@ -1034,16 +1719,16 @@ app.put("/api/mediakits/:id", requireAuth, async (req: Request, res: Response) =
       .where(eq(mediakits.id, id))
       .returning();
 
-    if (result.length === 0) {
+    if (!result || result.length === 0 || !result[0]) {
       return res.status(404).json({ success: false, error: "MediaKit not found" });
     }
 
     const formatted = {
       ...result[0],
-      screenIds: result[0].screenIds ? JSON.parse(result[0].screenIds) : [],
-      comentarios: result[0].comentarios ? JSON.parse(result[0].comentarios) : [],
-      historial: result[0].historial ? JSON.parse(result[0].historial) : [],
-      soportesEdicionInline: result[0].soportesEdicionInline ? JSON.parse(result[0].soportesEdicionInline) : []
+      screenIds: safeJsonParse(result[0].screenIds, []),
+      comentarios: safeJsonParse(result[0].comentarios, []),
+      historial: safeJsonParse(result[0].historial, []),
+      soportesEdicionInline: safeJsonParse(result[0].soportesEdicionInline, [])
     };
 
     res.json({ success: true, data: formatted });
@@ -1386,12 +2071,9 @@ app.post("/api/ai/data-hub-query", async (req: Request, res: Response) => {
   `;
 
   try {
-    if (ai) {
-      const response = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
-        contents: prompt,
-      });
-      res.json({ success: true, answer: response.text });
+    if (geminiApiKey) {
+      const answer = await callGemini(prompt);
+      res.json({ success: true, answer });
     } else {
       throw new Error("Gemini AI Client is not initialized");
     }
@@ -1466,6 +2148,11 @@ app.get("/api/screens/:screenId/media", requireAuth, async (req: Request, res: R
 
 // --- MOUNT VERSIONED REST API & CENTRAL ERROR HANDLER ---
 app.use("/api/v1", apiV1Router);
+
+// Fallback JSON 404 handler for any unmatched /api/* requests
+app.use("/api/*", (req: Request, res: Response) => {
+  res.status(404).json({ success: false, error: `Endpoint API no encontrado: ${req.method} ${req.originalUrl}` });
+});
 
 // Centralized Error Handling Middleware (must be registered after all routes/routers)
 app.use(errorHandler);

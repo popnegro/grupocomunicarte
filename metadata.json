@@ -1,6 +1,10 @@
 {
-  "name": "SmartWeb CMS & AI Engine",
-  "description": "Plataforma de pautado publicitario OOH y DOOH inteligente, basada en una arquitectura orientada al inventario comercial, MediaKits interactivos y optimización de revenue con IA.",
-  "requestFramePermissions": [],
-  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+  "name": "grupocomunicarte",
+  "description": "Imported from GitHub: popnegro/grupocomunicarte",
+  "requestFramePermissions": [
+    "geolocation"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
 }

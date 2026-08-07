@@ -1,0 +1,49 @@
+{
+  "entities": {
+    "Lead": {
+      "title": "Lead",
+      "description": "Information captured from users via web form or quiz",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string", "maxLength": 200 },
+        "email": { "type": "string", "maxLength": 200 },
+        "company": { "type": "string", "maxLength": 200 },
+        "source": { "type": "string", "maxLength": 100 },
+        "status": { "type": "string", "maxLength": 50 },
+        "date": { "type": "string", "maxLength": 50 },
+        "createdAt": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["name", "email"]
+    },
+    "DoohScreen": {
+      "title": "DoohScreen",
+      "description": "Digital out-of-home screen configuration and status",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "nombre": { "type": "string", "maxLength": 200 },
+        "zona": { "type": "string", "maxLength": 200 },
+        "tipo": { "type": "string", "maxLength": 50 },
+        "precio": { "type": "number" },
+        "impactos": { "type": "number" },
+        "status": { "type": "string", "maxLength": 50 }
+      },
+      "required": ["nombre", "tipo"]
+    }
+  },
+  "firestore": {
+    "/leads/{leadId}": {
+      "schema": { "$ref": "#/entities/Lead" },
+      "description": "Collection of captured leads"
+    },
+    "/screens/{screenId}": {
+      "schema": { "$ref": "#/entities/DoohScreen" },
+      "description": "Collection of public DOOH screens"
+    },
+    "/test/{docId}": {
+      "schema": { "$ref": "#/entities/Lead" },
+      "description": "Test connection document"
+    }
+  }
+}

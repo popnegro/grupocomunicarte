@@ -51,13 +51,6 @@ export const LoginView: React.FC = () => {
             <p className="text-[10px] font-bold text-stone-400 mt-1 leading-none uppercase tracking-widest">SaaS DOOH Platform</p>
           </div>
         </div>
-
-        <h3 className="mt-8 text-center text-2xl font-black text-stone-900 tracking-tight font-display">
-          Consola de Administración
-        </h3>
-        <p className="mt-2 text-center text-xs text-stone-500 max-w">
-          Accede de forma segura para gestionar el inventario comercial DOOH, presupuestos y clientes.
-        </p>
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">

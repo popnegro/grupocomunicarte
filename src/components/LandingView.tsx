@@ -67,7 +67,12 @@ export const LandingView: React.FC = () => {
     } else if (section === "soportes") {
       navigate("/soportes");
       window.scrollTo({ top: 0, behavior: "smooth" });
-    } else if (section === "espacios") {
+    } else if (location.pathname !== "/") {
+        navigate("/");
+        setTimeout(() => {
+            handleScrollTo(section);
+        }, 100);
+    } else if (section === "espacios") { // Kept for explicitness
       setCatalogTab("tarjetas");
       handleScrollTo("espacios");
     } else if (section === "soluciones") {

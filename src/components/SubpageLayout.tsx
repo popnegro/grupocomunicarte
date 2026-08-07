@@ -121,13 +121,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
     const matchesSearch =
       screen.nombre.toLowerCase().includes(searchQuery.toLowerCase()) ||
       screen.zona.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    // Type checking based on path
-    let matchesType = filterType === "Todos" || screen.tipo === filterType;
-    if (slug.includes("/pantallas-led") || slug.includes("/publicidad-digital")) {
-      // Prefer LED models
-      matchesType = true; 
-    }
+    const matchesType = filterType === "Todos" || screen.tipo === filterType;
     const matchesZone = filterZone === "Todas" || screen.zona === filterZone;
     return matchesSearch && matchesType && matchesZone;
   });

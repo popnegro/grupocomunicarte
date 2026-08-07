@@ -56,7 +56,7 @@ export const GmailModule: React.FC<GmailModuleProps> = ({ token }) => {
   const checkConnection = async () => {
     if (!token) return;
     try {
-      const res = await safeFetchJson<{ success: boolean; connected?: boolean }>("/api/gmail/status", {
+      const res = await safeFetchJson<{ success: boolean; connected?: boolean }>("/api/auth/google/status", {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.data?.success && res.data?.connected) {
@@ -95,7 +95,7 @@ export const GmailModule: React.FC<GmailModuleProps> = ({ token }) => {
         ? `/api/gmail/messages?q=${encodeURIComponent(query)}` 
         : "/api/gmail/messages";
 
-      const res = await safeFetchJson<{ success: boolean; data?: GmailMessage[]; needsAuth?: boolean; error?: string }>(url, {
+      const res = await safeFetchJson<{ success: boolean; data?: GmailMessage[]; needsAuth?: boolean; error?: string | { message: string }; isRateLimited?: boolean; }>(url, {
         headers: { Authorization: `Bearer ${token}` }
       });
 
@@ -108,7 +108,11 @@ export const GmailModule: React.FC<GmailModuleProps> = ({ token }) => {
         } else if (res.isRateLimited) {
           toast.error("Límite de peticiones alcanzado. Reintentando en unos segundos.");
         } else if (res.error) {
-          toast.error(res.error || "No se pudieron obtener los correos.");
+          const errorMessage = typeof res.error === 'object' 
+            ? res.error.message 
+            : res.error;
+
+          toast.error(errorMessage || "No se pudieron obtener los correos.");
         }
       }
     } catch (err) {
@@ -124,14 +128,15 @@ export const GmailModule: React.FC<GmailModuleProps> = ({ token }) => {
     setLoadingDetail(true);
     setSelectedMessageId(id);
     setSelectedMessage(null);
-    try {
-      const res = await safeFetchJson<{ success: boolean; data?: DetailedMessage; error?: string }>(`/api/gmail/messages/${id}`, {
+    try { // Corrected type for error
+      const res = await safeFetchJson<{ success: boolean; data?: DetailedMessage; error?: string | { message: string } }>(`/api/gmail/messages/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.data?.success && res.data.data) {
         setSelectedMessage(res.data.data);
       } else {
-        toast.error(res.error || "No se pudo cargar el detalle del correo.");
+        const errorMessage = typeof res.data?.error === 'object' ? res.data.error.message : res.data?.error;
+        toast.error(errorMessage || res.error || "No se pudo cargar el detalle del correo.");
       }
     } catch (err) {
       toast.error("Error al cargar el contenido del correo.");
@@ -151,7 +156,7 @@ export const GmailModule: React.FC<GmailModuleProps> = ({ token }) => {
 
     setSendingEmail(true);
     try {
-      const res = await safeFetchJson<{ success: boolean; error?: string }>("/api/gmail/send", {
+      const res = await safeFetchJson<{ success: boolean; error?: string | { message: string } }>("/api/gmail/send", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -173,7 +178,8 @@ export const GmailModule: React.FC<GmailModuleProps> = ({ token }) => {
         // Reload messages after brief delay
         setTimeout(() => fetchMessages(searchQuery), 1000);
       } else {
-        toast.error(res.data?.error || res.error || "Error al enviar el correo.");
+        const errorMessage = typeof res.data?.error === 'object' ? res.data.error.message : res.data?.error;
+        toast.error(errorMessage || res.error || "Error al enviar el correo.");
       }
     } catch (err) {
       console.error("Error sending email:", err);
@@ -249,7 +255,7 @@ export const GmailModule: React.FC<GmailModuleProps> = ({ token }) => {
                     return;
                   }
                   try {
-                    const res = await safeFetchJson<{ success: boolean; connected?: boolean }>("/api/gmail/status", {
+                    const res = await safeFetchJson<{ success: boolean; connected?: boolean }>("/api/auth/google/status", {
                       headers: { Authorization: `Bearer ${token}` }
                     });
                     if (res.data?.success && res.data?.connected) {

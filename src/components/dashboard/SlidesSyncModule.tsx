@@ -60,7 +60,7 @@ export const SlidesSyncModule: React.FC<SlidesSyncModuleProps> = ({ token, onRef
   const checkGoogleConnection = async () => {
     if (!token) return;
     try { // Use API_ROUTES.auth.googleStatus
-      const res = await safeFetchJson<{ success: boolean; connected?: boolean }>(API_ROUTES.auth.googleStatus, {
+      const res = await safeFetchJson<{ success: boolean; connected?: boolean }>("/api/auth/google/status", {
         headers: { "Authorization": `Bearer ${token}` }
       });
       if (res.data?.success && res.data?.connected) {
@@ -78,7 +78,7 @@ export const SlidesSyncModule: React.FC<SlidesSyncModuleProps> = ({ token, onRef
   const fetchAuthUrl = async () => {
     if (!token) return;
     try { // Use API_ROUTES.auth.googleUrl
-      const res = await safeFetchJson<{ success: boolean; url?: string }>(API_ROUTES.auth.googleUrl, {
+      const res = await safeFetchJson<{ success: boolean; url?: string }>("/api/auth/google/url", {
         headers: { "Authorization": `Bearer ${token}` }
       });
       if (res.data?.success && res.data?.url) {
@@ -94,7 +94,7 @@ export const SlidesSyncModule: React.FC<SlidesSyncModuleProps> = ({ token, onRef
     if (!token) return;
     setLoadingHistory(true);
     try { // Use API_ROUTES.syncHistory
-      const res = await safeFetchJson<{ success: boolean; data: SyncRun[] }>(API_ROUTES.syncHistory, {
+      const res = await safeFetchJson<{ success: boolean; data: SyncRun[] }>("/api/sync/history", {
         headers: {
           "Authorization": `Bearer ${token}`,
           "Content-Type": "application/json"
@@ -146,7 +146,7 @@ export const SlidesSyncModule: React.FC<SlidesSyncModuleProps> = ({ token, onRef
     toast.info("Conectando con Google Slides API y extrayendo metadatos...", "Sincronización Iniciada");
 
     try {
-      const res = await safeFetchJson<{ success: boolean; data?: any; error?: string }>(API_ROUTES.sync, {
+      const res = await safeFetchJson<{ success: boolean; data?: any; error?: string | { message: string } }>("/api/sync/run", {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${token}`,
@@ -170,7 +170,11 @@ export const SlidesSyncModule: React.FC<SlidesSyncModuleProps> = ({ token, onRef
         onRefreshInventory(); // Refresh parent screen state
         fetchSyncHistory(); // Reload history logs
       } else {
-        toast.error(res.data?.error || res.error || "Ocurrió un error en el canal de sincronización.", "Fallo de Importación");
+        const errorMessage = typeof res.data?.error === 'object' 
+          ? res.data.error.message 
+          : res.data?.error;
+
+        toast.error(errorMessage || res.error || "Ocurrió un error en el canal de sincronización.", "Fallo de Importación");
         fetchSyncHistory();
       }
     } catch (err: any) {
@@ -192,7 +196,7 @@ export const SlidesSyncModule: React.FC<SlidesSyncModuleProps> = ({ token, onRef
     toast.info("Restaurando snapshot de base de datos...", "Rollback en Proceso");
 
     try {
-      const res = await safeFetchJson<{ success: boolean; data?: { restoredCount: number }; error?: string }>(API_ROUTES.syncRollback, {
+      const res = await safeFetchJson<{ success: boolean; data?: { restoredCount: number }; error?: string | { message: string } }>("/api/sync/rollback", {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${token}`,
@@ -210,7 +214,11 @@ export const SlidesSyncModule: React.FC<SlidesSyncModuleProps> = ({ token, onRef
         fetchSyncHistory(); // Reload history logs
         setSelectedRun(null); // Close expanded details
       } else {
-        toast.error(res.data?.error || res.error || "No se pudo realizar el rollback.", "Error de Rollback");
+        const errorMessage = typeof res.data?.error === 'object' 
+          ? res.data.error.message 
+          : res.data?.error;
+
+        toast.error(errorMessage || res.error || "No se pudo realizar el rollback.", "Error de Rollback");
       }
     } catch (err: any) {
       toast.error(err.message || "Fallo al conectar con el servidor para ejecutar rollback.", "Error de Conexión");
@@ -230,7 +238,7 @@ export const SlidesSyncModule: React.FC<SlidesSyncModuleProps> = ({ token, onRef
     setSelectedRun(runId);
     setSelectedRunErrors([]);
     try {
-      const res = await safeFetchJson<{ success: boolean; data: SyncError[] }>(API_ROUTES.syncErrors(runId), {
+      const res = await safeFetchJson<{ success: boolean; data: SyncError[] }>(`/api/sync/history/${runId}/errors`, {
         headers: {
           "Authorization": `Bearer ${token}`
         }

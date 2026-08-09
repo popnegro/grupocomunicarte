@@ -165,6 +165,10 @@ export const leads = pgTable('leads', {
   email: text('email').notNull(),
   phone: text('phone'),
   message: text('message').notNull(),
+  company: text('company'),
+  source: text('source').notNull().default('Formulario Web'),
+  status: text('status').notNull().default('new'),
+  value: integer('value').default(0),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });

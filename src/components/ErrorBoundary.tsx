@@ -39,6 +39,7 @@ export class ErrorBoundary extends Component<Props, State> {
       localStorage.removeItem("smartweb_onboarding");
       localStorage.removeItem("smartweb_dooh_screens");
       localStorage.removeItem("smartweb_dooh_cart");
+      localStorage.removeItem("smartweb-cart-storage");
       localStorage.removeItem("smartweb_dooh_occupancy_matrix");
       sessionStorage.clear();
     } catch (e) {

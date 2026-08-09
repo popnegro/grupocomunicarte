@@ -170,7 +170,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
       return <ContactView slug={slug} addLead={addLead} />;
     }
     if (isMediaKit) {
-      return <MediaKitView slug={slug} />;
+      return <MediaKitView slug={slug} addLead={addLead} />;
     }
     if (isNosotros) {
       return <NosotrosView slug={slug} />;

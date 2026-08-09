@@ -5,6 +5,7 @@ import { LandingContent, Lead, OnboardingAnswers, SeoAuditReport, GrowthRecommen
 import { sitemap } from "../lib/sitemap";
 import { API_ROUTES } from "../lib/apiRoutes"; // New import
 import { safeFetchJson, apiClient } from "../lib/apiClient";
+import { useCartStore } from "../stores/cartStore";
 
 const SEED_SCREENS: DoohScreen[] = [
   // MENDOZA PLAZA
@@ -426,11 +427,6 @@ interface CmsStoreProps {
   setCurrentDashboardTab: (tab: string) => void;
   screens: DoohScreen[];
   setScreens: (screens: DoohScreen[] | ((prev: DoohScreen[]) => DoohScreen[])) => void;
-  cart: string[];
-  toggleCart: (id: string) => void;
-  clearCart: () => void;
-  weeks: number;
-  setWeeks: (weeks: number) => void;
   updateScreenStatus: (id: string, status: "Activo" | "Pausado" | "Disponible" | "No disponible") => void;
   updateScreen: (id: string, updated: Partial<DoohScreen>) => void;
   loadingAI: boolean;
@@ -493,10 +489,6 @@ export const useCmsStore = create<CmsStoreProps>((set, get) => ({
     }
     return SEED_SCREENS;
   })(),
-  cart: (() => {
-    return safeParseStorage("smartweb_dooh_cart", []);
-  })(),
-  weeks: 4,
   loadingScreens: false,
   occupancyMatrix: (() => {
     return safeParseStorage("smartweb_dooh_occupancy_matrix", {
@@ -663,20 +655,6 @@ export const useCmsStore = create<CmsStoreProps>((set, get) => ({
     return { screens: nextScreens };
   }),
 
-  toggleCart: (id) => set((state) => {
-    const nextCart = state.cart.includes(id)
-      ? state.cart.filter((item) => item !== id)
-      : [...state.cart, id];
-    localStorage.setItem("smartweb_dooh_cart", JSON.stringify(nextCart));
-    return { cart: nextCart };
-  }),
-
-  clearCart: () => set(() => {
-    localStorage.setItem("smartweb_dooh_cart", JSON.stringify([]));
-    return { cart: [] };
-  }),
-
-  setWeeks: (weeks) => set({ weeks }),
 
   updateScreenStatus: (id, status) => set((state) => {
     const nextScreens = state.screens.map((s) => (s.id === id ? { ...s, status } : s));
@@ -926,5 +904,15 @@ export const CmsProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 };
 
 export const useCms = () => {
-  return useCmsStore();
+  const cms = useCmsStore();
+  const cart = useCartStore();
+
+  return {
+    ...cms,
+    cart: cart.cart,
+    toggleCart: cart.toggleCart,
+    clearCart: cart.clearCart,
+    weeks: cart.weeks,
+    setWeeks: cart.setWeeks,
+  };
 };

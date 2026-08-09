@@ -1,6 +1,6 @@
 import React from "react";
 import { MapPin, Maximize2 } from "lucide-react";
-import { DoohScreen } from "../../types";
+import { DoohScreen } from "../types";
 
 interface ScreenCardHeaderProps {
   screen: DoohScreen;

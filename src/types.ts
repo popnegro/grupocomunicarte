@@ -47,6 +47,7 @@ export interface Lead {
   status: "new" | "contacted" | "qualified" | "closed";
   date: string;
   value?: number;
+  message?: string;
 }
 
 export interface OnboardingAnswers {

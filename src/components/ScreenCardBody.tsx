@@ -1,7 +1,7 @@
 import React from "react";
 import { MapPin, Layers } from "lucide-react";
-import { DoohScreen } from "../../types";
-import { Badge } from "../ui/badge";
+import { DoohScreen } from "../types";
+import { Badge } from "./ui/badge";
 
 interface ScreenCardBodyProps {
   screen: DoohScreen;

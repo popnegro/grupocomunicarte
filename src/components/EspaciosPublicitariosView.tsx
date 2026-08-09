@@ -1,5 +1,5 @@
 import React from "react";
-import { DoohScreen } from "../../types";
+import { DoohScreen } from "../types";
 // Ajusta la ruta según la ubicación real del componente
 import { ScreenCard } from "./ScreenCard";
 

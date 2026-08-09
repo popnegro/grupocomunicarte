@@ -41,15 +41,20 @@ export async function safeFetchJson<T>(
         errorData = { message: response.statusText || "Server error" };
       }
 
+      const status = response.status;
+      const errorType: ApiResponse<T>["errorType"] =
+        status === 429 ? "server" : status >= 400 && status < 500 ? "validation" : "server";
+
       return {
         ok: false,
-        status: response.status,
-        error: errorData.message || `Request failed with status ${response.status}`,
+        status,
+        error: errorData.message || `Request failed with status ${status}`,
         errorDetail: {
-          code: errorData.code || `HTTP_ERROR_${response.status}`,
-          message: errorData.message || `Request failed with status ${response.status}`,
+          code: errorData.code || `HTTP_ERROR_${status}`,
+          message: errorData.message || `Request failed with status ${status}`,
         },
-        errorType: "server",
+        errorType,
+        isRateLimited: status === 429,
       };
     }
 

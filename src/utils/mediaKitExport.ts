@@ -1,6 +1,9 @@
 import { DoohScreen } from "../types";
 import { MediaKit } from "../components/dashboard/types";
 
+const formatPrice = (price: number) =>
+  price === 0 ? "CONSULTAR" : `$${price.toLocaleString("es-AR")}`;
+
 /**
  * Generates a clean, modern, standalone HTML string representing the MediaKit presentation.
  * Designed with a premium print layout (A4 / Letter-safe) that formats perfectly for PDF output.
@@ -139,7 +142,7 @@ export function generateMediaKitHtml(
         ${(screen.impactos / 1000).toFixed(1)}k / día
       </td>
       <td class="font-mono text-right font-bold" style="padding: 12px 16px; font-size: 12px; color: #06434a;">
-        $${screen.precio.toLocaleString()}
+        ${formatPrice(screen.precio)}
       </td>
     </tr>
   `

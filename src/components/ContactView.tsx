@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import * as LucideIcons from "lucide-react";
-import { Lead } from "../../types";
+import { Lead } from "../types";
 
 interface ContactViewProps {
   slug: string;

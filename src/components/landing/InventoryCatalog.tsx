@@ -684,7 +684,11 @@ Mensaje del cliente: ${checkoutForm.message || "Sin mensaje adicional."}
                             </div>
 
                             <button
-                              onClick={() => toggleCart(s.id)}
+                              onClick={() => {
+                                const status = (s.status || "").toLowerCase();
+                                if (["reserved", "no disponible", "pausado"].includes(status)) return;
+                                toggleCart(s.id);
+                              }}
                               className="text-stone-400 hover:text-stone-600 p-1 rounded-full hover:bg-stone-100"
                             >
                               <X className="h-4 w-4" />
@@ -952,7 +956,11 @@ Mensaje del cliente: ${checkoutForm.message || "Sin mensaje adicional."}
                               </div>
 
                               <button
-                                onClick={() => toggleCart(s.id)}
+                                onClick={() => {
+                                const status = (s.status || "").toLowerCase();
+                                if (["reserved", "no disponible", "pausado"].includes(status)) return;
+                                toggleCart(s.id);
+                              }}
                                 className="mt-4 w-full py-2 bg-stone-950 hover:bg-[#06434a] text-white rounded-xl text-[9px] font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 cursor-pointer transition-all"
                               >
                                 <Plus className="h-3 w-3" />
@@ -1113,7 +1121,11 @@ Mensaje del cliente: ${checkoutForm.message || "Sin mensaje adicional."}
                     {/* MediaKit trigger */}
                     <div className="pt-2">
                       <button
-                        onClick={() => toggleCart(s.id)}
+                        onClick={() => {
+                                const status = (s.status || "").toLowerCase();
+                                if (["reserved", "no disponible", "pausado"].includes(status)) return;
+                                toggleCart(s.id);
+                              }}
                         className={`w-full py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
                           inCart
                             ? "bg-stone-100 text-stone-700 hover:bg-stone-200 border border-stone-200"

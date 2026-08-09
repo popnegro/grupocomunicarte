@@ -1,8 +1,8 @@
 import React from "react";
-import { Dialog, DialogContent, DialogTitle, DialogDescription } from "../ui/dialog";
-import { DoohScreen } from "../../types";
-import { useCartStore } from "../../stores/cartStore";
-import { useCms } from "../CmsContext";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "./ui/dialog";
+import { DoohScreen } from "../types";
+import { useCartStore } from "../stores/cartStore";
+import { useCms } from "./CmsContext";
 import { Info, MapPin, Plus, Check } from "lucide-react";
 import { TechnicalSpecs } from "./TechnicalSpecs";
 import { LocationBenefits } from "./LocationBenefits";

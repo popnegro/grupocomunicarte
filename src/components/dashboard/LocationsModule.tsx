@@ -16,6 +16,9 @@ import {
 } from "lucide-react";
 import { useToast } from "../ui/Toast";
 
+const formatPrice = (price: number) =>
+  price === 0 ? "CONSULTAR" : `$${price.toLocaleString("es-AR")}`;
+
 export const LocationsModule: React.FC = () => {
   const { screens } = useCms();
   const { toast } = useToast();
@@ -151,7 +154,7 @@ export const LocationsModule: React.FC = () => {
                 <div className="text-left sm:text-right">
                   <span className="block text-[8px] font-bold text-stone-400 uppercase tracking-widest font-mono">Tarifa Semanal</span>
                   <span className="text-lg font-black text-[#06434a] font-mono">
-                    ${activeScreen.precio.toLocaleString()} <span className="text-xs font-bold text-stone-400">ARS</span>
+                    {formatPrice(activeScreen.precio)} {activeScreen.precio !== 0 && <span className="text-xs font-bold text-stone-400">ARS</span>}
                   </span>
                 </div>
               </div>

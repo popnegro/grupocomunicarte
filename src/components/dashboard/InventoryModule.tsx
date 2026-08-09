@@ -27,12 +27,15 @@ import { downloadMediaKitAsHtml } from "../../utils/mediaKitExport";
 import { MapPin } from "lucide-react";
 import { FileUpload } from "./FileUpload";
 
+const formatPrice = (price: number) =>
+  price === 0 ? "CONSULTAR" : `$${price.toLocaleString("es-AR")}`;
 interface InventoryModuleProps {
   screens: DoohScreen[];
   userRole: Role;
   onUpdateScreen: (id: string, data: Partial<DoohScreen>) => void;
   onAddScreen: (screen: DoohScreen) => void;
   onDeleteScreen: (id: string) => void;
+  isLoading?: boolean;
 }
 
 export const InventoryModule: React.FC<InventoryModuleProps> = ({
@@ -41,6 +44,7 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
   onUpdateScreen,
   onAddScreen,
   onDeleteScreen,
+  isLoading = false,
 }) => {
   // Filters state
   const [selectedCityFilter, setSelectedCityFilter] = useState<string>("Todas");
@@ -342,7 +346,7 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
                 <div className="text-right">
                   <span className="block text-[8px] text-stone-400 font-bold uppercase tracking-wider">Tarifa</span>
                   <span className="font-mono text-[#06434a] mt-0.5 block">
-                    ${screen.precio.toLocaleString()}
+                    ${formatPrice(screen.precio)}
                   </span>
                 </div>
               </div>

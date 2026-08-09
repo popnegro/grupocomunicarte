@@ -199,7 +199,7 @@ export const SoportesView: React.FC<SoportesViewProps> = ({ slug, handleNavigate
                   <div key={f.id} className="w-full aspect-video sm:aspect-4/3 bg-slate-950 rounded-2xl border border-stone-200/60 shadow-md relative overflow-hidden p-5 flex flex-col justify-end group">
                     <div className="absolute inset-0 z-0">
                       <img
-                        src={optimizeImageUrl(f.mock_image, 600)}
+                        src={optimizeImageUrl(f.mock_image)}
                         alt={f.title}
                         referrerPolicy="no-referrer"
                         className="w-full h-full object-cover opacity-40 filter grayscale contrast-125 animate-fadeIn"

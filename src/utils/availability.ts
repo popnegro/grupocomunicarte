@@ -163,3 +163,28 @@ export const getScreenAvailability = (
     daysRemaining: status !== "available" ? days : null,
   };
 };
+
+/**
+ * Commercial validation for a requested campaign duration.
+ * A support is commercially selectable only when its explicit status and
+ * every requested occupancy week are available.
+ */
+export const isScreenAvailableForWeeks = (
+  screen: DoohScreen,
+  occupancyMatrix: Record<string, string[]>,
+  weeks: number
+): boolean => {
+  const normalizedStatus = (screen.status || "").toLowerCase();
+  if (["reserved", "no disponible", "pausado", "upcoming"].includes(normalizedStatus)) {
+    return false;
+  }
+
+  const schedule = occupancyMatrix[screen.id];
+  const requestedWeeks = Math.max(1, Math.min(weeks, 8));
+
+  // Missing occupancy data is treated as available to preserve the existing
+  // public-inventory fallback behavior.
+  if (!schedule) return true;
+
+  return schedule.slice(0, requestedWeeks).every((status) => status === "available");
+};

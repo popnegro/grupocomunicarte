@@ -141,7 +141,7 @@ export const getScreenAvailability = (
   // Visual badges and colors matching requirements
   let badgeLabel = "Disponible";
   let badgeStyle = "bg-emerald-50 text-emerald-700 border-emerald-150";
-  let ctaLabel = "Solicitar presupuesto";
+  let ctaLabel = "Agregar al Media Kit";
 
   if (status === "reserved") {
     badgeLabel = "Reservado";

@@ -111,8 +111,11 @@ export interface DoohScreen {
   ruta?: { lat: number; lng: number; nombre: string }[];
   isFeatured?: boolean;
   featuredOrder?: number | null;
-  media?: ScreenMedia[];
+  media?: ScreenMedia[] | null;
 }
+
+// A public-facing version of the screen, which must not include the price.
+export type PublicDoohScreen = Omit<DoohScreen, 'precio'>;
 
 export interface City {
   id: string;

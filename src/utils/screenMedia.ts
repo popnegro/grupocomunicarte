@@ -1,4 +1,4 @@
-import { DoohScreen } from "../types";
+import { DoohScreen, ScreenMedia } from "../types";
 
 type NormalizedMediaItem = {
   id: string;
@@ -10,6 +10,16 @@ type NormalizedMediaItem = {
   isHero?: boolean;
   createdAt?: string;
   posterUrl?: string;
+};
+
+/**
+ * Represents the minimal data source required to process screen media.
+ * This decouples utility functions from the full DoohScreen model.
+ */
+type ScreenMediaSource = {
+  id: string;
+  video?: string | null;
+  media?: ScreenMedia[] | null;
 };
 
 export const FALLBACK_STREET_PHOTOS = [
@@ -37,7 +47,7 @@ export function sortFeaturedScreens(screens: DoohScreen[], limit = MAX_FEATURED_
     .slice(0, limit);
 }
 
-export function normalizeScreenMedia(screen: Pick<DoohScreen, "id" | "video" | "media">) {
+export function normalizeScreenMedia(screen: ScreenMediaSource) {
   const normalized: NormalizedMediaItem[] = Array.isArray(screen.media)
     ? screen.media
         .filter(Boolean)
@@ -71,11 +81,11 @@ export function normalizeScreenMedia(screen: Pick<DoohScreen, "id" | "video" | "
   return normalized;
 }
 
-export function getHeroMedia(screen: Pick<DoohScreen, "id" | "video" | "media">) {
+export function getHeroMedia(screen: ScreenMediaSource) {
   const media = normalizeScreenMedia(screen);
   return media.find((asset) => asset.isHero) || media[0] || null;
 }
 
-export function getGalleryMedia(screen: Pick<DoohScreen, "id" | "video" | "media">) {
+export function getGalleryMedia(screen: ScreenMediaSource) {
   return normalizeScreenMedia(screen);
 }

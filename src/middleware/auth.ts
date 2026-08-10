@@ -8,8 +8,8 @@ export interface AuthRequest extends Request {
 
 /**
  * Verifies the Firebase ID token and attaches the decoded identity to the request.
- * This middleware is intentionally authentication-only; tenant authorization is
- * handled separately so public endpoints can remain public.
+ * Protected administrative routes require a tenant claim; public endpoints do
+ * not use this middleware.
  */
 export const protect = async (
   req: AuthRequest,
@@ -50,7 +50,19 @@ export const protect = async (
   }
 
   try {
-    req.user = await adminAuth.verifyIdToken(token);
+    const decodedToken = await adminAuth.verifyIdToken(token);
+
+    if (!decodedToken.tenant_id || typeof decodedToken.tenant_id !== "string") {
+      return res.status(403).json({
+        success: false,
+        error: {
+          code: "TENANT_REQUIRED",
+          message: "Acceso denegado: Tenant no identificado para el usuario.",
+        },
+      });
+    }
+
+    req.user = decodedToken;
     return next();
   } catch (error) {
     console.error("Error verifying Firebase ID token:", error);
@@ -65,9 +77,8 @@ export const protect = async (
 };
 
 /**
- * Requires a tenant claim after authentication. Never falls back to a default
- * tenant for authenticated administrative requests, preventing cross-tenant
- * data access when a token is misconfigured.
+ * Requires a tenant claim after authentication. Kept as a composable middleware
+ * for routes that want to make the authorization boundary explicit.
  */
 export const requireTenant = async (
   req: AuthRequest,

@@ -33,7 +33,10 @@ export function validatePaginationQuery(query: any): PaginationQueryDTO {
 export function validateSpaceDTO(body: any) {
   const errors: Record<string, string> = {};
 
-  if (!body.nombre || typeof body.nombre !== "string" || body.nombre.trim() === "") {
+  // Name is only required if it's explicitly part of the body for an update.
+  // For creation, the API handler should enforce it separately.
+  // For partial updates, it might not be present.
+  if (body.nombre !== undefined && (typeof body.nombre !== "string" || body.nombre.trim() === "")) {
     errors.nombre = "Name (nombre) is required and must be a non-empty string";
   }
 
@@ -51,8 +54,10 @@ export function validateSpaceDTO(body: any) {
     }
   }
 
-  if (body.status && !["Activo", "Mantenimiento", "Inactivo"].includes(body.status)) {
-    errors.status = "Status must be either 'Activo', 'Mantenimiento' or 'Inactivo'";
+  const allowedStatuses = ["Activo", "Pausado", "Disponible", "No disponible", "available", "reserved", "upcoming"];
+  if (body.status && !allowedStatuses.includes(body.status)) {
+    errors.status = `Status must be one of: ${allowedStatuses.join(", ")}`;
+
   }
 
   if (body.isFeatured !== undefined && typeof body.isFeatured !== "boolean" && body.isFeatured !== "true" && body.isFeatured !== "false") {
@@ -71,7 +76,7 @@ export function validateSpaceDTO(body: any) {
   }
 
   return {
-    nombre: String(body.nombre).trim(),
+    nombre: body.nombre ? String(body.nombre).trim() : undefined,
     zona: body.zona ? String(body.zona).trim() : null,
     tipo: body.tipo ? String(body.tipo).trim() : null,
     categoria: body.categoria ? String(body.categoria).trim() : null,

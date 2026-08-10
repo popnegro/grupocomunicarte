@@ -4,7 +4,7 @@ import { useLocation } from "react-router-dom";
 import { LandingContent, Lead, OnboardingAnswers, SeoAuditReport, GrowthRecommendation, DoohScreen } from "../types";
 import { sitemap } from "../lib/sitemap";
 import { API_ROUTES } from "../lib/apiRoutes"; // New import
-import { safeFetchJson, apiClient } from "../lib/apiClient";
+import { safeFetchJson, apiClient } from "../lib/apiClient"; // apiClient is already imported
 import { useCartStore } from "../stores/cartStore";
 
 const SEED_SCREENS: DoohScreen[] = [
@@ -437,12 +437,18 @@ interface CmsStoreProps {
   updateScreenStatus: (id: string, status: "Activo" | "Pausado" | "Disponible" | "No disponible") => void;
   updateScreen: (id: string, updated: Partial<DoohScreen>) => void;
   loadingAI: boolean;
+  // New properties for optimistic UI and error handling
+  isSavingScreen: boolean;
+  savingScreenError: string | null;
   generateAIContent: (onboarding: OnboardingAnswers) => Promise<void>;
   seoReport: SeoAuditReport | null;
   runSeoAudit: () => Promise<void>;
   growthRecs: GrowthRecommendation[];
   runGrowthRecs: (visitors: number, convRate: number) => Promise<void>;
   fetchLeads: () => Promise<void>;
+  // New properties for screen CRUD
+  addScreen: (screen: Omit<DoohScreen, "id">) => Promise<void>;
+  deleteScreen: (id: string) => Promise<void>;
   loadingScreens: boolean;
   fetchPublicScreens: () => Promise<void>;
   occupancyMatrix: Record<string, string[]>;
@@ -480,6 +486,8 @@ export const useCmsStore = create<CmsStoreProps>((set, get) => ({
   currentDashboardTab: "inventario",
   activeSlug: "/",
   loadingAI: false,
+  isSavingScreen: false,
+  savingScreenError: null,
   seoReport: null,
   growthRecs: [],
   screens: (() => {
@@ -652,11 +660,60 @@ export const useCmsStore = create<CmsStoreProps>((set, get) => ({
     return { screens: nextScreens };
   }),
 
-  updateScreen: (id, updated) => set((state) => {
-    const nextScreens = state.screens.map((s) => (s.id === id ? { ...s, ...updated } : s));
-    localStorage.setItem("smartweb_dooh_screens", JSON.stringify(nextScreens));
-    return { screens: nextScreens };
-  }),
+  updateScreen: async (id, updated): Promise<DoohScreen> => {
+    set({ isSavingScreen: true, savingScreenError: null });
+    const originalScreens = get().screens;
+
+    // Optimistic update
+    set((state) => ({
+      screens: state.screens.map((s) => (s.id === id ? { ...s, ...updated } : s)),
+    }));
+
+    try {
+      const res = await apiClient.put<{ success: boolean; data: DoohScreen; error?: any }>(`/api/screens/${id}`, updated);
+
+      if (res.ok && res.data?.success && res.data.data) {
+        const updatedScreen = res.data.data;
+        // On success, confirm the update with server data
+        set((state) => ({
+          screens: state.screens.map((s) => (s.id === id ? updatedScreen : s)),
+          isSavingScreen: false,
+        }));
+        // Optional: update localStorage as a cache, but not as the source of truth for persistence.
+        // localStorage.setItem("smartweb_dooh_screens", JSON.stringify(get().screens));
+        return updatedScreen;
+      } else {
+        // On failure, revert optimistic update and set error
+        const errorMessage = res.data?.error?.message || res.error || "Error al guardar el soporte.";
+        set({ screens: originalScreens, savingScreenError: errorMessage });
+        throw new Error(errorMessage);
+      }
+    } catch (e: any) {
+      // On network/unexpected error, revert and set error
+      set({ screens: originalScreens, isSavingScreen: false, savingScreenError: e.message || "Error de red al guardar." });
+      throw e;
+    } finally {
+      set({ isSavingScreen: false });
+    }
+  },
+
+  addScreen: async (newScreenData) => {
+    const res = await apiClient.post<{ success: boolean; data: DoohScreen }>('/api/screens', newScreenData);
+    if (res.ok && res.data?.success && res.data.data) {
+      set(state => ({ screens: [res.data!.data, ...state.screens] }));
+    } else {
+      throw new Error(res.error || 'Failed to add screen');
+    }
+  },
+
+  deleteScreen: async (id) => {
+    const res = await apiClient.delete(`/api/screens/${id}`);
+    if (res.ok) {
+      set(state => ({ screens: state.screens.filter(s => s.id !== id) }));
+    } else {
+      throw new Error(res.error || 'Failed to delete screen');
+    }
+  },
 
   fetchLeads: async () => {
     try {

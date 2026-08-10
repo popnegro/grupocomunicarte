@@ -103,4 +103,18 @@ export const apiClient = {
       body: data ? JSON.stringify(data) : undefined,
     });
   },
+  put: <T>(path: string, data?: any, options?: RequestInit) => {
+    return safeFetchJson<T>(path, {
+      ...options,
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        ...(options?.headers || {}),
+      },
+      body: data ? JSON.stringify(data) : undefined,
+    });
+  },
+  delete: <T>(path: string, options?: RequestInit) => {
+    return safeFetchJson<T>(path, { ...options, method: "DELETE" });
+  },
 };

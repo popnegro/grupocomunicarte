@@ -4,11 +4,12 @@ import cors from 'cors';
 import { createServer as createViteServer } from 'vite';
 import path from 'path';
 
-import { db } from './src/db';
-import { leads, screens } from './src/db/schema';
+import { db } from './src/db/index';
+import { leads, screens, clientes, mediakits, changelogs } from './src/db/schema';
 import { eq, desc, and, or } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
 import { protect, AuthRequest } from './src/middleware/auth'; // Import the protect middleware and AuthRequest type
+import { validateSpaceDTO } from './src/validation/validator';
 import { MediaRepository } from './src/repositories/index';
 import { getGalleryMedia, sortFeaturedScreens } from './src/utils/screenMedia';
 
@@ -22,12 +23,6 @@ app.use(cors({
   credentials: Boolean(allowedOrigin),
 }));
 
-// Placeholder for existing routes (e.g., AI, Google Sync, Auth)
-// These are generic handlers to prevent 404s for routes not explicitly defined yet.
-app.all('/api/ai/*', (req, res) => res.status(200).json({ success: true, message: `${req.method} ${req.originalUrl} placeholder` }));
-app.all('/api/sync/*', (req, res) => res.status(200).json({ success: true, message: `${req.method} ${req.originalUrl} placeholder` }));
-app.all('/api/auth/*', (req, res) => res.status(200).json({ success: true, message: `${req.method} ${req.originalUrl} placeholder` }));
-app.all('/api/gmail/*', (req, res) => res.status(200).json({ success: true, message: `${req.method} ${req.originalUrl} placeholder` }));
 
 // Ensure Firebase Admin SDK is initialized
 import './src/lib/firebase-admin';
@@ -47,9 +42,9 @@ app.get('/api/leads', protect, async (req: AuthRequest, res) => { // Apply prote
     return res.status(200).json({ success: true, data: allLeads });
   } catch (error) {
     console.error("[API GET /api/leads]", error);
-    return res.status(500).json({ 
-      success: false, 
-      error: { code: "DB_ERROR", message: "Error al obtener los leads." } 
+    return res.status(500).json({
+      success: false,
+      error: { code: "DB_ERROR", message: "Error al obtener los leads." }
     });
   }
 });
@@ -260,12 +255,35 @@ app.post('/api/screens', protect, async (req: AuthRequest, res) => {
 });
 
 app.put('/api/screens/:id', protect, async (req: AuthRequest, res) => {
+  const tenantId = req.user?.tenant_id;
+  if (!tenantId) {
+    return res.status(403).json({ success: false, error: { code: "FORBIDDEN", message: "Acceso denegado: Tenant no identificado." } });
+  }
+
   try {
+    // Do not allow tenantId to be changed from the body
+    const { tenantId: _, ...updateData } = req.body;
+
+    // Validate and sanitize the incoming partial data.
+    // The validator is adjusted to not require all fields for an update.
+    // It will throw on invalid data types.
+    const validatedData = validateSpaceDTO(updateData);
+
+    // We only want to set the fields that were actually passed in the body.
+    // The validator returns a full object, so we filter it.
+    const sanitizedData = Object.keys(updateData).reduce((acc, key) => ({ ...acc, [key]: (validatedData as any)[key] }), {});
+    const finalPayload = {
+      ...updateData,
+      updatedAt: new Date(),
+    };
+
     const updated = await db
       .update(screens)
-      .set({ ...req.body, updatedAt: new Date() })
-      .where(eq(screens.id, req.params.id))
+      .set(finalPayload)
+      .where(and(eq(screens.id, req.params.id), eq(screens.tenantId, tenantId)))
       .returning();
+
+    if (updated.length === 0) return res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: "Soporte no encontrado o sin permisos para actualizar." } });
     return res.status(200).json({ success: true, data: updated[0] });
   } catch (error) {
     console.error("[API PUT /api/screens/:id]", error);
@@ -274,14 +292,164 @@ app.put('/api/screens/:id', protect, async (req: AuthRequest, res) => {
 });
 
 app.delete('/api/screens/:id', protect, async (req: AuthRequest, res) => {
+  const tenantId = req.user?.tenant_id;
+  if (!tenantId) {
+    return res.status(403).json({ success: false, error: { code: "FORBIDDEN", message: "Acceso denegado: Tenant no identificado." } });
+  }
+
   try {
-    const deleted = await db.delete(screens).where(eq(screens.id, req.params.id)).returning();
+    const deleted = await db.delete(screens).where(and(eq(screens.id, req.params.id), eq(screens.tenantId, tenantId))).returning();
+    if (deleted.length === 0) {
+      return res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: "Soporte no encontrado o sin permisos para eliminar." } });
+    }
     return res.status(200).json({ success: true, data: deleted[0] || null });
   } catch (error) {
     console.error("[API DELETE /api/screens/:id]", error);
     return res.status(500).json({ success: false, error: { code: "DB_ERROR", message: "Error al eliminar el soporte." } });
   }
 });
+
+// CRUD /api/clients
+app.get('/api/clients', protect, async (req: AuthRequest, res) => {
+  const tenantId = req.user?.tenant_id;
+  if (!tenantId) return res.status(403).json({ success: false, error: { code: "FORBIDDEN", message: "Acceso denegado: Tenant no identificado." } });
+  try {
+    const rows = await db.select().from(clientes).where(eq(clientes.tenantId, tenantId)).orderBy(desc(clientes.createdAt));
+    return res.status(200).json({ success: true, data: rows });
+  } catch (error) {
+    console.error("[API GET /api/clients]", error);
+    return res.status(500).json({ success: false, error: { code: "DB_ERROR", message: "Error al obtener los clientes." } });
+  }
+});
+
+app.post('/api/clients', protect, async (req: AuthRequest, res) => {
+  const tenantId = req.user?.tenant_id;
+  if (!tenantId) return res.status(403).json({ success: false, error: { code: "FORBIDDEN", message: "Acceso denegado: Tenant no identificado." } });
+  try {
+    const { nombre, empresa, email } = req.body;
+    if (!nombre || !empresa || !email) {
+      return res.status(400).json({ success: false, error: { code: "VALIDATION_ERROR", message: "Nombre, empresa y email son obligatorios." } });
+    }
+    const newClient = { id: uuidv4(), tenantId, ...req.body };
+    const inserted = await db.insert(clientes).values(newClient).returning();
+    return res.status(201).json({ success: true, data: inserted[0] });
+  } catch (error) {
+    console.error("[API POST /api/clients]", error);
+    return res.status(500).json({ success: false, error: { code: "DB_ERROR", message: "Error al crear el cliente." } });
+  }
+});
+
+app.put('/api/clients/:id', protect, async (req: AuthRequest, res) => {
+  const tenantId = req.user?.tenant_id;
+  if (!tenantId) return res.status(403).json({ success: false, error: { code: "FORBIDDEN", message: "Acceso denegado: Tenant no identificado." } });
+  try {
+    const { tenantId: _, ...updateData } = req.body;
+    const finalPayload = { ...updateData, updatedAt: new Date() };
+    const updated = await db.update(clientes).set(finalPayload).where(and(eq(clientes.id, req.params.id), eq(clientes.tenantId, tenantId))).returning();
+    if (updated.length === 0) return res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: "Cliente no encontrado o sin permisos para actualizar." } });
+    return res.status(200).json({ success: true, data: updated[0] });
+  } catch (error) {
+    console.error("[API PUT /api/clients/:id]", error);
+    return res.status(500).json({ success: false, error: { code: "DB_ERROR", message: "Error al actualizar el cliente." } });
+  }
+});
+
+// CRUD /api/mediakits
+app.get('/api/mediakits', protect, async (req: AuthRequest, res) => {
+  const tenantId = req.user?.tenant_id;
+  if (!tenantId) return res.status(403).json({ success: false, error: { code: "FORBIDDEN", message: "Acceso denegado: Tenant no identificado." } });
+  try {
+    const rows = await db.select().from(mediakits).where(eq(mediakits.tenantId, tenantId)).orderBy(desc(mediakits.createdAt));
+    return res.status(200).json({ success: true, data: rows });
+  } catch (error) {
+    console.error("[API GET /api/mediakits]", error);
+    return res.status(500).json({ success: false, error: { code: "DB_ERROR", message: "Error al obtener los media kits." } });
+  }
+});
+
+app.post('/api/mediakits', protect, async (req: AuthRequest, res) => {
+  const tenantId = req.user?.tenant_id;
+  if (!tenantId) return res.status(403).json({ success: false, error: { code: "FORBIDDEN", message: "Acceso denegado: Tenant no identificado." } });
+  try {
+    const { nombre } = req.body;
+    if (!nombre) {
+      return res.status(400).json({ success: false, error: { code: "VALIDATION_ERROR", message: "El nombre del media kit es obligatorio." } });
+    }
+    const newMediaKit = { id: uuidv4(), tenantId, ...req.body };
+    const inserted = await db.insert(mediakits).values(newMediaKit).returning();
+    return res.status(201).json({ success: true, data: inserted[0] });
+  } catch (error) {
+    console.error("[API POST /api/mediakits]", error);
+    return res.status(500).json({ success: false, error: { code: "DB_ERROR", message: "Error al crear el media kit." } });
+  }
+});
+
+app.put('/api/mediakits/:id', protect, async (req: AuthRequest, res) => {
+  const tenantId = req.user?.tenant_id;
+  if (!tenantId) return res.status(403).json({ success: false, error: { code: "FORBIDDEN", message: "Acceso denegado: Tenant no identificado." } });
+  try {
+    const { tenantId: _, ...updateData } = req.body;
+    const finalPayload = { ...updateData, updatedAt: new Date() };
+    const updated = await db.update(mediakits).set(finalPayload).where(and(eq(mediakits.id, req.params.id), eq(mediakits.tenantId, tenantId))).returning();
+    if (updated.length === 0) return res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: "Media kit no encontrado o sin permisos para actualizar." } });
+    return res.status(200).json({ success: true, data: updated[0] });
+  } catch (error) {
+    console.error("[API PUT /api/mediakits/:id]", error);
+    return res.status(500).json({ success: false, error: { code: "DB_ERROR", message: "Error al actualizar el media kit." } });
+  }
+});
+
+app.delete('/api/mediakits/:id', protect, async (req: AuthRequest, res) => {
+  const tenantId = req.user?.tenant_id;
+  if (!tenantId) return res.status(403).json({ success: false, error: { code: "FORBIDDEN", message: "Acceso denegado: Tenant no identificado." } });
+  try {
+    const deleted = await db.delete(mediakits).where(and(eq(mediakits.id, req.params.id), eq(mediakits.tenantId, tenantId))).returning();
+    if (deleted.length === 0) return res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: "Media kit no encontrado o sin permisos para eliminar." } });
+    return res.status(200).json({ success: true, data: deleted[0] });
+  } catch (error) {
+    console.error("[API DELETE /api/mediakits/:id]", error);
+    return res.status(500).json({ success: false, error: { code: "DB_ERROR", message: "Error al eliminar el media kit." } });
+  }
+});
+
+// CRUD /api/changelogs
+app.get('/api/changelogs', protect, async (req: AuthRequest, res) => {
+  // Note: changelogs table does not have tenantId, this is a global log for now.
+  // In a real multi-tenant system, this would need a tenantId column.
+  try {
+    const rows = await db.select().from(changelogs).orderBy(desc(changelogs.date)).limit(100);
+    return res.status(200).json({ success: true, data: rows });
+  } catch (error) {
+    console.error("[API GET /api/changelogs]", error);
+    return res.status(500).json({ success: false, error: { code: "DB_ERROR", message: "Error al obtener los registros de cambios." } });
+  }
+});
+
+app.post('/api/changelogs', protect, async (req: AuthRequest, res) => {
+  try {
+    const { user, action } = req.body;
+    if (!user || !action) {
+      return res.status(400).json({ success: false, error: { code: "VALIDATION_ERROR", message: "Usuario y acción son obligatorios." } });
+    }
+    const newLog = {
+      id: `log-${uuidv4()}`,
+      user,
+      action,
+      date: new Date().toISOString(),
+    };
+    const inserted = await db.insert(changelogs).values(newLog).returning();
+    return res.status(201).json({ success: true, data: inserted[0] });
+  } catch (error) {
+    console.error("[API POST /api/changelogs]", error);
+    return res.status(500).json({ success: false, error: { code: "DB_ERROR", message: "Error al crear el registro de cambios." } });
+  }
+});
+
+// Placeholder for other routes to prevent 404s for routes not explicitly defined yet.
+app.all('/api/ai/*', (req, res) => res.status(200).json({ success: true, message: `${req.method} ${req.originalUrl} placeholder` }));
+app.all('/api/sync/*', (req, res) => res.status(200).json({ success: true, message: `${req.method} ${req.originalUrl} placeholder` }));
+app.all('/api/auth/*', (req, res) => res.status(200).json({ success: true, message: `${req.method} ${req.originalUrl} placeholder` }));
+app.all('/api/gmail/*', (req, res) => res.status(200).json({ success: true, message: `${req.method} ${req.originalUrl} placeholder` }));
 
 // Lightweight production health endpoint. It reports configuration readiness
 // without exposing secret values or database credentials.

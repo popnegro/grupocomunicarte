@@ -24,16 +24,21 @@ export const ContactView: React.FC<ContactViewProps> = ({ slug, addLead }) => {
     if (!contactForm.name || !contactForm.email) return;
 
     setIsSubmittingContact(true);
-    await addLead({
-      name: contactForm.name,
-      email: contactForm.email,
-      company: contactForm.company || "Subpage Contact",
-      source: `Contacto SEO - Ruta: ${slug}`,
-      status: "new",
-      value: 1200,
-    });
-    setIsSubmittingContact(false);
-    setContactSubmitted(true);
+    try {
+      await addLead({
+        name: contactForm.name,
+        email: contactForm.email,
+        company: contactForm.company || "Subpage Contact",
+        source: `Contacto SEO - Ruta: ${slug}`,
+        status: "new",
+        value: 1200,
+      });
+      setContactSubmitted(true);
+    } catch (error) {
+      console.error("[ContactView] Contact submission failed:", error);
+    } finally {
+      setIsSubmittingContact(false);
+    }
   };
 
   return (

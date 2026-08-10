@@ -1,6 +1,14 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
+const MIN_WEEKS = 1;
+const MAX_WEEKS = 8;
+
+const normalizeWeeks = (weeks: number): number => {
+  if (!Number.isFinite(weeks)) return MIN_WEEKS;
+  return Math.min(MAX_WEEKS, Math.max(MIN_WEEKS, Math.floor(weeks)));
+};
+
 interface CartState {
   cart: string[];
   weeks: number;
@@ -41,12 +49,22 @@ export const useCartStore = create<CartState>()(
             ? state.cart.filter((itemId) => itemId !== id)
             : [...state.cart, id],
         })),
-      clearCart: () => set({ cart: [], weeks: 1 }),
-      setWeeks: (weeks) => set({ weeks }),
+      clearCart: () => set({ cart: [], weeks: MIN_WEEKS }),
+      setWeeks: (weeks) => set({ weeks: normalizeWeeks(weeks) }),
     }),
     {
       name: "smartweb-cart-storage",
       partialize: (state) => ({ cart: state.cart, weeks: state.weeks }),
+      merge: (persistedState, currentState) => {
+        const persisted = persistedState as Partial<CartState> | undefined;
+        return {
+          ...currentState,
+          cart: Array.isArray(persisted?.cart)
+            ? persisted.cart.filter((id): id is string => typeof id === "string")
+            : currentState.cart,
+          weeks: normalizeWeeks(Number(persisted?.weeks ?? currentState.weeks)),
+        };
+      },
     }
   )
 );

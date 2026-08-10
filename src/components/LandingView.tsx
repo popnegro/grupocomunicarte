@@ -90,16 +90,21 @@ export const LandingView: React.FC = () => {
     if (!contactForm.name || !contactForm.email) return;
 
     setIsSubmittingContact(true);
-    await addLead({
-      name: contactForm.name,
-      email: contactForm.email,
-      company: contactForm.company || "Consulta General",
-      source: `Formulario de Contacto (${contactForm.spacePreference})`,
-      status: "new",
-      value: 1500, // estimated lead strategic value
-    });
-    setIsSubmittingContact(false);
-    setContactSubmitted(true);
+    try {
+      await addLead({
+        name: contactForm.name,
+        email: contactForm.email,
+        company: contactForm.company || "Consulta General",
+        source: `Formulario de Contacto (${contactForm.spacePreference})`,
+        status: "new",
+        value: 1500, // estimated lead strategic value
+      });
+      setContactSubmitted(true);
+    } catch (error) {
+      console.error("[LandingView] Contact submission failed:", error);
+    } finally {
+      setIsSubmittingContact(false);
+    }
   };
 
   // Exactly 6 sophisticated solutions matching Design System

@@ -7,12 +7,7 @@ import { useToast } from "./ui/Toast";
 import { safeFetchJson } from "../lib/apiClient";
 
 // Shared types and local helpers
-import { Role, MediaKit, Cliente, ChangeLog, Cotizacion, Reserva, Campaña } from "./dashboard/types";
-import { 
-  INITIAL_COTIZACIONES, 
-  INITIAL_RESERVAS, 
-  INITIAL_CAMPAÑAS, 
-} from "./dashboard/mockData";
+import { Role, MediaKit, Cliente, ChangeLog } from "./dashboard/types";
 
 // Modular sub-views
 import { DashboardHeader } from "./dashboard/DashboardHeader";
@@ -61,34 +56,53 @@ export const NavGroups = [
   {
     groupName: "GENERAL",
     items: [
-      { id: "home", label: "Dashboard", icon: HomeIcon, path: "/dashboard", desc: "Métricas generales y centro de control comercial" },
-      { id: "leads", label: "Leads", icon: Inbox, path: "/dashboard/leads", desc: "Gestión de leads y prospección comercial" },
-      { id: "gmail", label: "Contactos", icon: MailIcon, path: "/dashboard/gmail", desc: "Bandeja de entrada y envío de correos integrados con Gmail" }
-    ]
+      {
+        id: "home",
+        label: "Dashboard",
+        icon: HomeIcon,
+        path: "/dashboard",
+        desc: "Centro de control comercial",
+      },
+      {
+        id: "leads",
+        label: "Leads",
+        icon: Inbox,
+        path: "/dashboard/leads",
+        desc: "Gestión de solicitudes comerciales",
+      },
+    ],
   },
   {
     groupName: "OPERACIÓN",
     items: [
-      { id: "ai-planner", label: "Campañas", icon: Sparkles, path: "/dashboard/ai-planner", desc: "Optimización inteligente de campañas y ROI mediante Inteligencia Artificial" },
-      { id: "clientes", label: "Clientes", icon: Users, path: "/dashboard/clients", desc: "Registro de contactos de ventas, agencias y corporativos" },
-      { id: "locations", label: "Ubicaciones", icon: MapPin, path: "/dashboard/locations", desc: "Georreferenciación y cobertura de soportes en tiempo real" },
-      { id: "inventario", label: "Inventario", icon: Tv, path: "/dashboard/inventory", desc: "Edición y administración del catálogo de soportes físicos y pantallas LED" }
-    ]
-  },
-  {
-    groupName: "ANÁLISIS",
-    items: [
-      { id: "reports", label: "Analytics", icon: BarChart3, path: "/dashboard/reports", desc: "Métricas de conversión y rendimiento comercial" },
-      { id: "mediakit", label: "Reportes", icon: FileText, path: "/dashboard/mediakits", desc: "Diseño Notion-style y generación de propuestas comerciales inteligentes con IA" }
-    ]
+      {
+        id: "inventario",
+        label: "Soportes",
+        icon: Tv,
+        path: "/dashboard/inventory",
+        desc: "Catálogo y disponibilidad de soportes",
+      },
+      {
+        id: "mediakit",
+        label: "Media Kits",
+        icon: FileText,
+        path: "/dashboard/mediakits",
+        desc: "Propuestas y circuitos comerciales",
+      },
+    ],
   },
   {
     groupName: "CONFIGURACIÓN",
     items: [
-      { id: "settings", label: "Configuración", icon: Settings, path: "/dashboard/settings", desc: "Control de usuario y preferencias del sistema" },
-      { id: "admin", label: "Usuarios", icon: Shield, path: "/dashboard/admin", desc: "Gobernanza de seguridad, usuarios, roles, logs, storage y SEO técnico" }
-    ]
-  }
+      {
+        id: "admin",
+        label: "Usuarios",
+        icon: Shield,
+        path: "/dashboard/admin",
+        desc: "Usuarios, roles y administración",
+      },
+    ],
+  },
 ];
 
 // Flat navigation list for routing and active tab checks
@@ -120,10 +134,7 @@ export const DashboardView: React.FC = () => {
   const [logs, setLogs] = useState<ChangeLog[]>([]);
 
   // States initialized from mock templates for analytical simulation
-  const [cotizaciones, setCotizaciones] = useState<Cotizacion[]>(INITIAL_COTIZACIONES);
-  const [reservas, setReservas] = useState<Reserva[]>(INITIAL_RESERVAS);
-  const [campanas, setCampanas] = useState<Campaña[]>(INITIAL_CAMPAÑAS);
-
+ 
   // General loading flag
   const [loading, setLoading] = useState(true);
   const [loadingScreens, setLoadingScreens] = useState(true);
@@ -222,68 +233,6 @@ export const DashboardView: React.FC = () => {
     };
     loadScreensFromFirestore();
   }, [setCmsScreens]);
-
-  // 1. On mount, load campaigns from Firestore for centralized management
-  useEffect(() => {
-    const loadCampaignsFromFirestore = async () => {
-      try {
-        const { collection, getDocs } = await import("firebase/firestore");
-        const { db } = await import("../lib/firebase");
-        const snapshot = await getDocs(collection(db, "campaigns"));
-        const fsCamps: Campaña[] = [];
-        snapshot.forEach((docSnap) => {
-          const data = docSnap.data();
-          fsCamps.push({
-            id: docSnap.id,
-            reservaId: data.reservaId || "",
-            clienteNombre: data.clienteNombre || "",
-            nombre: data.nombre || "",
-            screenId: data.screenId || "",
-            screenNombre: data.screenNombre || "",
-            fechaInicio: data.fechaInicio || "",
-            fechaFin: data.fechaFin || "",
-            progreso: Number(data.progreso) || 0,
-            estado: data.estado || "Planificada",
-          });
-        });
-        if (fsCamps.length > 0) {
-          setCampanas(fsCamps);
-        }
-      } catch (err) {
-        console.warn("[DashboardView] Firestore campaigns load failed, using local mock data:", err);
-      }
-    };
-    loadCampaignsFromFirestore();
-  }, []);
-
-  // 2. Whenever campanas state changes, sync the latest elements to Firestore
-  useEffect(() => {
-    const syncCampaignsToFirestore = async () => {
-      if (campanas === INITIAL_CAMPAÑAS) return;
-      try {
-        const { doc, setDoc } = await import("firebase/firestore");
-        const { db } = await import("../lib/firebase");
-        
-        for (const c of campanas) {
-          await setDoc(doc(db, "campaigns", c.id), {
-            id: c.id,
-            reservaId: c.reservaId || "",
-            clienteNombre: c.clienteNombre || "",
-            nombre: c.nombre || "",
-            screenId: c.screenId || "",
-            screenNombre: c.screenNombre || "",
-            fechaInicio: c.fechaInicio || "",
-            fechaFin: c.fechaFin || "",
-            progreso: Number(c.progreso) || 0,
-            estado: c.estado || "Planificada",
-          }, { merge: true });
-        }
-      } catch (err) {
-        console.warn("[DashboardView] Firestore campaigns sync failed:", err);
-      }
-    };
-    syncCampaignsToFirestore();
-  }, [campanas]);
 
   // DB-Connected Changelog Logger
   const addLog = useCallback(async (action: string) => {
@@ -705,20 +654,6 @@ export const DashboardView: React.FC = () => {
   }, [mediaKits, screens, handleUpdateMediaKit, addLog]);
 
   // Interactive UI workflows: Approval bookings
-  const handleApproveReserva = useCallback((id: string) => {
-    setReservas((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, estado: "Confirmada" } : r))
-    );
-    addLog(`Aprobó y reservó de forma permanente la reserva comercial #${id}`);
-  }, [addLog]);
-
-  // Interactive UI workflows: Approval quotations
-  const handleApproveCotizacion = useCallback((id: string) => {
-    setCotizaciones((prev) =>
-      prev.map((q) => (q.id === id ? { ...q, estado: "Aceptada" } : q))
-    );
-    addLog(`Aprobó propuesta de tarifa comercial en Cotización #${id}`);
-  }, [addLog]);
 
   const handleNavigateToTab = useCallback((tabId: string) => {
     const matchedTab = NavItems.find(item => item.id === tabId);
@@ -846,21 +781,12 @@ export const DashboardView: React.FC = () => {
               path="/"
               element={
                 <DashboardHome
-                  mediaKits={mediaKits}
-                  cotizaciones={cotizaciones}
-                  reservas={reservas}
-                  campañas={campanas}
-                  clientes={clientes}
-                  userRole={userRole}
-                  onNavigateToTab={handleNavigateToTab}
-                  onApproveReserva={handleApproveReserva}
-                  onApproveCotizacion={handleApproveCotizacion}
-                  setCampañas={setCampanas}
-                  setClientes={setClientes}
-                  setCotizaciones={setCotizaciones}
-                  setReservas={setReservas}
-                  addLog={addLog}
-                />
+  mediaKits={mediaKits}
+  clientes={clientes}
+  userRole={userRole}
+  onNavigateToTab={handleNavigateToTab}
+  addLog={addLog}
+/>
               }
             />
 

@@ -21,6 +21,7 @@ import {
   AlertCircle
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
+import { formatPrice } from "../../utils/formatPrice";
 
 interface AiPlannerModuleProps {
   screens: DoohScreen[];
@@ -399,7 +400,7 @@ export const AiPlannerModule: React.FC<AiPlannerModuleProps> = ({
                           </span>
                           <h5 className="text-xs font-bold text-stone-900 truncate font-display">{screen.nombre}</h5>
                           <div className="flex gap-4 text-[9px] font-mono text-stone-400 font-bold">
-                            <span>Tarifa:{" "}<strong className="text-stone-700">{screen.precio === 0? "CONSULTAR":`$${screen.precio.toLocaleString("es-AR")} /sem`}</strong></span>
+                            <span>Tarifa:{" "}<strong className="text-stone-700">{`${formatPrice(screen.precio)} /sem`}</strong></span>
                             <span>Impacto: <strong className="text-stone-700">{screen.impactos.toLocaleString()} /sem</strong></span>
                           </div>
                         </div>

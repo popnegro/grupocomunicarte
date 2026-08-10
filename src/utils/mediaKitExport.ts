@@ -1,8 +1,6 @@
 import { DoohScreen } from "../types";
 import { MediaKit } from "../components/dashboard/types";
-
-const formatPrice = (price: number) =>
-  price === 0 ? "CONSULTAR" : `$${price.toLocaleString("es-AR")}`;
+import { formatPrice } from "./formatPrice";
 
 /**
  * Generates a clean, modern, standalone HTML string representing the MediaKit presentation.

@@ -5,9 +5,8 @@ import { downloadMediaKitAsHtml } from "../../utils/mediaKitExport";
 import { useAuth } from "../AuthContext";
 import { GoogleAuthProvider } from "firebase/auth";
 import { safeFetchJson } from "../../lib/apiClient";
+import { formatPrice } from "../../utils/formatPrice";
 
-const formatPrice = (price: number) =>
-  price === 0 ? "CONSULTAR" : `$${price.toLocaleString("es-AR")}`;
 import { 
   FileText, 
   Sparkles, 

@@ -5,6 +5,7 @@ import { DoohScreen } from "../../types";
 import { optimizeImageUrl } from "@/src/lib/imageUtils";
 import { useCms } from "../CmsContext";
 import { getScreenAvailability, getDynamicReservationEndDate } from "../../utils/availability";
+import { formatPrice } from "../../utils/formatPrice";
 
 interface SpecsOverlayProps {
   screen: DoohScreen;
@@ -478,7 +479,7 @@ export const SpecsOverlay: React.FC<SpecsOverlayProps> = ({
             <div className="text-left">
               <span className="block text-[8px] font-bold text-stone-400 uppercase tracking-wider">Inversión Estimada</span>
               <span className="text-sm font-black text-[#006e2f] font-sans uppercase tracking-wide">
-                {screen.precio === 0 ? "Consultar" : `${screen.precio.toLocaleString()} / Semana`}
+                {`${formatPrice(screen.precio)} / Semana`}
               </span>
             </div>
 

@@ -119,16 +119,21 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
     if (!proposalClient.name || !proposalClient.email || cartScreens.length === 0) return;
 
     setIsSubmittingProposal(true);
-    await addLead({
-      name: proposalClient.name,
-      email: proposalClient.email,
-      company: proposalClient.company,
-      source: `Cotizador SEO - Ruta: ${slug}`,
-      status: "qualified",
-      value: cartTotalInvestment,
-    });
-    setIsSubmittingProposal(false);
-    setProposalSubmitted(true);
+    try {
+      await addLead({
+        name: proposalClient.name,
+        email: proposalClient.email,
+        company: proposalClient.company,
+        source: `Cotizador SEO - Ruta: ${slug}`,
+        status: "qualified",
+        value: cartTotalInvestment,
+      });
+      setProposalSubmitted(true);
+    } catch (error) {
+      console.error("[SubpageLayout] Proposal submission failed:", error);
+    } finally {
+      setIsSubmittingProposal(false);
+    }
   };
 
   if (!item) {
@@ -489,7 +494,7 @@ export const SubpageLayout: React.FC<SubpageLayoutProps> = ({
                   <input
                     type="range"
                     min="1"
-                    max="12"
+                    max="8"
                     value={weeks}
                     onChange={(e) => setWeeks(Number(e.target.value))}
                     className="w-full accent-slate-900 cursor-pointer"

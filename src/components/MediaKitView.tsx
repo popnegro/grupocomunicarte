@@ -394,7 +394,7 @@ export const MediaKitView: React.FC<MediaKitViewProps> = ({ slug, addLead }) => 
                     <div className="mb-1.5 font-['Inter'] text-sm font-medium text-[#161d16]">
                       Fechas de interés <span className="text-red-600">*</span>
                     </div>
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
                         <label htmlFor="media-kit-start" className="mb-1 block font-['Inter'] text-[11px] font-semibold uppercase tracking-wider text-[#637063]">Desde</label>
                         <input
@@ -470,7 +470,7 @@ export const MediaKitView: React.FC<MediaKitViewProps> = ({ slug, addLead }) => 
             <button
               onClick={handleDownloadMediaKit}
               disabled={mediaKitDownloading}
-              className="px-6 py-3 bg-white text-slate-950 hover:bg-slate-100 font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md cursor-pointer flex items-center gap-2"
+              className="w-full sm:w-auto justify-center px-6 py-3 bg-white text-slate-950 hover:bg-slate-100 font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md cursor-pointer flex items-center gap-2"
             >
               {mediaKitDownloading ? (
                 <>

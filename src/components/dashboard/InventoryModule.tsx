@@ -26,9 +26,8 @@ import {
 import { downloadMediaKitAsHtml } from "../../utils/mediaKitExport";
 import { MapPin } from "lucide-react";
 import { FileUpload } from "./FileUpload";
+import { formatPrice } from "../../utils/formatPrice";
 
-const formatPrice = (price: number) =>
-  price === 0 ? "CONSULTAR" : `$${price.toLocaleString("es-AR")}`;
 interface InventoryModuleProps {
   screens: DoohScreen[];
   userRole: Role;
@@ -346,7 +345,7 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
                 <div className="text-right">
                   <span className="block text-[8px] text-stone-400 font-bold uppercase tracking-wider">Tarifa</span>
                   <span className="font-mono text-[#06434a] mt-0.5 block">
-                    ${formatPrice(screen.precio)}
+                    {formatPrice(screen.precio)}
                   </span>
                 </div>
               </div>

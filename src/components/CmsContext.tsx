@@ -598,46 +598,21 @@ export const useCmsStore = create<CmsStoreProps>((set, get) => ({
   }),
 
   addLead: async (leadData) => {
-    let fsLead: Lead | null = null;
-    try {
-      const { doc, setDoc } = await import("firebase/firestore");
-      const { db } = await import("../lib/firebase");
-      const id = `lead-${Date.now()}`;
-      const newFsDoc: Lead = {
-        ...leadData,
-        id,
-        date: new Date().toISOString(),
-      };
-      await setDoc(doc(db, "leads", id), newFsDoc);
-      fsLead = newFsDoc;
-    } catch (fsErr) {
-      if (process.env.NODE_ENV !== "production") {
-        console.warn("Direct Firestore lead save failed, fallback to API:", fsErr);
-      }
+    const res = await safeFetchJson<{ success: boolean; data?: Lead; error?: { code?: string; message?: string } }>(API_ROUTES.leads, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(leadData),
+    });
+
+    if (res.ok && res.data?.success && res.data.data) {
+      const added = res.data.data;
+      set((state) => ({ leads: [added, ...state.leads] }));
+      return added;
     }
 
-    try {
-      const res = await safeFetchJson<{ success: boolean; data?: any }>(API_ROUTES.leads, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(leadData),
-      });
-      if (res.data?.success && res.data.data) {
-        const added = res.data.data;
-        set((state) => ({ leads: [added, ...state.leads] }));
-        return added;
-      }
-    } catch (err) {
-      // Fallback
-    }
-
-    const fallbackLead = fsLead || {
-      ...leadData,
-      id: String(get().leads.length + 1),
-      date: new Date().toISOString(),
-    };
-    set((state) => ({ leads: [fallbackLead, ...state.leads] }));
-    return fallbackLead;
+    const message = res.errorDetail?.message || res.error || "No se pudo registrar el lead.";
+    console.error("[addLead] Lead submission failed:", message);
+    throw new Error(message);
   },
 
   saveOnboarding: (answers) => {

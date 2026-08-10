@@ -240,21 +240,26 @@ ${proposalDetails}
 Mensaje del cliente: ${checkoutForm.message || "Sin mensaje adicional."}
     `;
 
-    await addLead({
-      name: checkoutForm.name,
-      email: checkoutForm.email,
-      company: checkoutForm.company || "Pyme / Independiente",
-      source: `MediaKit Web Marketplace (${selectedCity})`,
-      status: "qualified",
-      value: 2500, // estimated lead strategic value
-    });
+    try {
+      await addLead({
+        name: checkoutForm.name,
+        email: checkoutForm.email,
+        company: checkoutForm.company || "Pyme / Independiente",
+        source: `MediaKit Web Marketplace (${selectedCity})`,
+        status: "qualified",
+        value: 2500, // estimated lead strategic value
+      });
 
-    // Simulate database receipt
-    setTimeout(() => {
+      // Preserve the existing success transition after confirmed persistence.
+      setTimeout(() => {
+        setIsSubmitting(false);
+        setIsSubmitted(true);
+        clearCart();
+      }, 1200);
+    } catch (error) {
+      console.error("[InventoryCatalog] Proposal submission failed:", error);
       setIsSubmitting(false);
-      setIsSubmitted(true);
-      clearCart();
-    }, 1200);
+    }
   };
 
   return (
@@ -986,7 +991,7 @@ Mensaje del cliente: ${checkoutForm.message || "Sin mensaje adicional."}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 100 }}
             transition={{ type: "spring", stiffness: 100 }}
-            className="fixed bottom-6 left-6 right-6 lg:left-auto lg:right-12 z-40 bg-white border border-stone-200/80 p-4 rounded-2xl shadow-2xl shadow-stone-900/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4 max-w-2xl select-none"
+            className="fixed bottom-4 left-3 right-3 sm:bottom-6 sm:left-6 sm:right-6 lg:left-auto lg:right-12 z-40 bg-white border border-stone-200/80 p-4 rounded-2xl shadow-2xl shadow-stone-900/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4 max-w-2xl select-none"
           >
             <div className="flex items-center gap-3">
               <div className="p-2 bg-[#06434a]/10 text-[#06434a] rounded-xl">

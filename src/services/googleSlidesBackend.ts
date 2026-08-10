@@ -4,6 +4,7 @@ import { eq, desc } from "drizzle-orm";
 import crypto from "crypto";
 import fs from "fs";
 import path from "path";
+import { formatPrice } from "../utils/formatPrice";
 
 interface GoogleTokenResponse {
   access_token: string;
@@ -613,7 +614,7 @@ export class GoogleSlidesBackendService {
         `MÉTRICAS Y COMPROMISO DE AUDIENCIA\n\n` +
         `• Impactos Estimados: \n  ${((screen.impactos || 0) / 1000).toFixed(1)}k visualizaciones / día\n\n` +
         `• Impactos Semanales: \n  ${(((screen.impactos || 0) * 7) / 1000).toFixed(1)}k visualizaciones / semana\n\n` +
-        `• Tarifa Semanal Cotizada: \n  ${(screen.precio || 0) === 0 ? "CONSULTAR" : `$${(screen.precio || 0).toLocaleString("es-AR")} ARS`}\n\n` +
+        `• Tarifa Semanal Cotizada: \n  ${formatPrice(screen.precio)} ARS\n\n` +
         `• Nota / Orientación:\n  ${screen.nota || "Ubicación Premium de alto impacto geocatalizado para recordación de marca directa."}`;
 
       requests.push({

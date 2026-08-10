@@ -15,9 +15,7 @@ import {
   Maximize2
 } from "lucide-react";
 import { useToast } from "../ui/Toast";
-
-const formatPrice = (price: number) =>
-  price === 0 ? "CONSULTAR" : `$${price.toLocaleString("es-AR")}`;
+import { formatPrice } from "../../utils/formatPrice";
 
 export const LocationsModule: React.FC = () => {
   const { screens } = useCms();

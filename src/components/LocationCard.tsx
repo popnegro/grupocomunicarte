@@ -1,6 +1,7 @@
 import React from "react";
 import { BaseCard } from "./BaseCard";
 import { MapPin, ShieldCheck } from "lucide-react";
+import { formatPrice } from "../utils/formatPrice";
 
 export interface LocationCardProps {
   id: string;
@@ -17,9 +18,6 @@ export interface LocationCardProps {
   isInCart?: boolean;
   onToggleCart?: () => void;
 }
-
-const formatPrice = (price: number): string =>
-  price === 0 ? "CONSULTAR" : `$${price.toLocaleString("es-AR")}`;
 
 export const LocationCard: React.FC<LocationCardProps> = ({
   id,

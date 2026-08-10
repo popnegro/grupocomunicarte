@@ -183,11 +183,11 @@ export const DashboardView: React.FC = () => {
         const { db } = await import("../lib/firebase");
         const snapshot = await getDocs(collection(db, "screens"));
         const fsScreens: DoohScreen[] = [];
-        snapshot.forEach((docSnap) => {
-          const data = docSnap.data();
-          fsScreens.push({
-            id: docSnap.id,
-            nombre: data.nombre || "",
+          snapshot.forEach((docSnap) => {
+            const data = docSnap.data();
+            fsScreens.push({
+              id: docSnap.id,
+              nombre: data.nombre || "",
             zona: data.zona || "",
             tipo: data.tipo || "Peatonal",
             categoria: data.categoria || "Pantallas LED",
@@ -199,12 +199,16 @@ export const DashboardView: React.FC = () => {
             lng: Number(data.lng) || 0,
             nota: data.nota || "",
             dimensiones: data.dimensiones || "",
-            brillo: data.brillo || "",
-            refreshRate: data.refreshRate || "",
-            formato: data.formato || "",
-            cobertura: data.cobertura || "",
+              brillo: data.brillo || "",
+              refreshRate: data.refreshRate || "",
+              formato: data.formato || "",
+              cobertura: data.cobertura || "",
+              video: data.video || undefined,
+              isFeatured: Boolean(data.isFeatured),
+              featuredOrder: data.featuredOrder ?? null,
+              media: Array.isArray(data.media) ? data.media : undefined,
+            });
           });
-        });
 
         if (fsScreens.length > 0) {
           setScreens(fsScreens);
@@ -916,4 +920,3 @@ export const DashboardView: React.FC = () => {
     </div>
   );
 };
-

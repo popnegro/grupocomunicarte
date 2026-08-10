@@ -98,6 +98,8 @@ export const screens = pgTable('screens', {
   hash: text('hash'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  isFeatured: boolean("is_featured").notNull().default(false),
+  featuredOrder: integer("featured_order"),
 });
 
 // 2.4. Clientes y Campañas Publicitarias

@@ -16,7 +16,9 @@ export const SEED_SCREENS = [
     brillo: "5,500 nits (Auto-Dimming)",
     refreshRate: "3,840 Hz (Flicker-Free)",
     formato: "MP4, JPG, HTML5",
-    cobertura: "Alta densidad peatonal y turística"
+    cobertura: "Alta densidad peatonal y turística",
+    isFeatured: true,
+    featuredOrder: 1
   },
   {
     id: "sc-02",
@@ -35,7 +37,9 @@ export const SEED_SCREENS = [
     brillo: "6,500 nits (High-Contrast)",
     refreshRate: "3,840 Hz",
     formato: "MP4, JPG",
-    cobertura: "Público ABC1 de alto nivel de consumo"
+    cobertura: "Público ABC1 de alto nivel de consumo",
+    isFeatured: true,
+    featuredOrder: 2
   },
   {
     id: "sc-03",
@@ -54,7 +58,9 @@ export const SEED_SCREENS = [
     brillo: "5,000 nits",
     refreshRate: "1,920 Hz",
     formato: "MP4, JPG",
-    cobertura: "Comercio local y cercanía"
+    cobertura: "Comercio local y cercanía",
+    isFeatured: true,
+    featuredOrder: 3
   },
   {
     id: "sc-04",
@@ -73,7 +79,9 @@ export const SEED_SCREENS = [
     brillo: "Iluminación LED Backlight",
     refreshRate: "N/A",
     formato: "Lona Tensada Vinílica",
-    cobertura: "Público joven, nocturno y polo estudiantil"
+    cobertura: "Público joven, nocturno y polo estudiantil",
+    isFeatured: true,
+    featuredOrder: 4
   },
   {
     id: "sc-05",

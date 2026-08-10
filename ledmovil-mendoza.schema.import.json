@@ -1,0 +1,32 @@
+{
+  "screens": [
+    {
+      "id": "mza-mov-01",
+      "tenantId": null,
+      "nombre": "Camión LED / LED Móvil",
+      "zona": "Recorrido Gran Mendoza",
+      "tipo": "Móvil",
+      "categoria": "LED Móvil",
+      "ciudad": "Mendoza",
+      "impactos": null,
+      "precio": null,
+      "status": "Activo",
+      "dimensiones": null,
+      "brillo": null,
+      "refreshRate": null,
+      "formato": null,
+      "cobertura": null,
+      "ruta": null,
+      "lat": null,
+      "lng": null,
+      "nota": "No es soporte estático; es pauta móvil con recorrido y horarios",
+      "video": null,
+      "horarios": "Recorrido Gran Mendoza",
+      "syncId": null,
+      "hash": null,
+      "isFeatured": false,
+      "featuredOrder": null
+    }
+  ],
+  "media": []
+}

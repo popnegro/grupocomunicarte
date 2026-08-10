@@ -6,9 +6,11 @@ import path from 'path';
 
 import { db } from './src/db';
 import { leads, screens } from './src/db/schema';
-import { eq, desc, and } from 'drizzle-orm';
+import { eq, desc, and, or } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
 import { protect, AuthRequest } from './src/middleware/auth'; // Import the protect middleware and AuthRequest type
+import { MediaRepository } from './src/repositories/index';
+import { getGalleryMedia, sortFeaturedScreens } from './src/utils/screenMedia';
 
 const isVercel = process.env.VERCEL === '1';
 const allowedOrigin = process.env.CORS_ORIGIN;
@@ -195,13 +197,89 @@ app.get('/api/public/screens', async (req, res) => {
       .from(screens)
       .where(and(
         eq(screens.tenantId, defaultTenantId),
-        eq(screens.status, 'Activo')
+        or(eq(screens.status, 'Activo'), eq(screens.status, 'Disponible'))
       ));
 
-    return res.status(200).json({ success: true, data: publicScreens });
+    const orderedScreens = sortFeaturedScreens(publicScreens, publicScreens.length);
+    const screensWithMedia = await Promise.all(
+      orderedScreens.map(async (screen) => ({
+        ...screen,
+        media: [
+          ...getGalleryMedia(screen),
+          ...(await MediaRepository.findByScreenId(screen.id)),
+        ],
+      }))
+    );
+
+    return res.status(200).json({ success: true, data: screensWithMedia });
   } catch (error) {
     console.error("[API GET /api/public/screens]", error);
     return res.status(500).json({ success: false, error: { code: "DB_ERROR", message: "Error al obtener las pantallas públicas." } });
+  }
+});
+
+// 9. CRUD /api/screens
+app.get('/api/screens', protect, async (req: AuthRequest, res) => {
+  try {
+    const tenantId = req.user?.tenant_id || process.env.DEFAULT_TENANT_ID;
+    let query = db.select().from(screens);
+    if (tenantId) {
+      query = query.where(eq(screens.tenantId, tenantId)) as any;
+    }
+    const rows = await query.orderBy(desc(screens.updatedAt));
+    return res.status(200).json({ success: true, data: rows });
+  } catch (error) {
+    console.error("[API GET /api/screens]", error);
+    return res.status(500).json({ success: false, error: { code: "DB_ERROR", message: "Error al obtener los soportes." } });
+  }
+});
+
+app.post('/api/screens', protect, async (req: AuthRequest, res) => {
+  try {
+    const tenantId = req.user?.tenant_id || process.env.DEFAULT_TENANT_ID || null;
+    const body = req.body ?? {};
+    if (!body.nombre || typeof body.nombre !== "string") {
+      return res.status(400).json({ success: false, error: { code: "VALIDATION_ERROR", message: "El nombre del soporte es obligatorio." } });
+    }
+
+    const newScreen = {
+      id: body.id || uuidv4(),
+      tenantId,
+      ...body,
+      isFeatured: body.isFeatured === true || body.isFeatured === "true",
+      featuredOrder: body.featuredOrder === undefined || body.featuredOrder === null || body.featuredOrder === "" ? null : Number(body.featuredOrder),
+      updatedAt: new Date(),
+    };
+
+    const inserted = await db.insert(screens).values(newScreen).returning();
+    return res.status(201).json({ success: true, data: inserted[0] });
+  } catch (error) {
+    console.error("[API POST /api/screens]", error);
+    return res.status(500).json({ success: false, error: { code: "DB_ERROR", message: "Error al crear el soporte." } });
+  }
+});
+
+app.put('/api/screens/:id', protect, async (req: AuthRequest, res) => {
+  try {
+    const updated = await db
+      .update(screens)
+      .set({ ...req.body, updatedAt: new Date() })
+      .where(eq(screens.id, req.params.id))
+      .returning();
+    return res.status(200).json({ success: true, data: updated[0] });
+  } catch (error) {
+    console.error("[API PUT /api/screens/:id]", error);
+    return res.status(500).json({ success: false, error: { code: "DB_ERROR", message: "Error al actualizar el soporte." } });
+  }
+});
+
+app.delete('/api/screens/:id', protect, async (req: AuthRequest, res) => {
+  try {
+    const deleted = await db.delete(screens).where(eq(screens.id, req.params.id)).returning();
+    return res.status(200).json({ success: true, data: deleted[0] || null });
+  } catch (error) {
+    console.error("[API DELETE /api/screens/:id]", error);
+    return res.status(500).json({ success: false, error: { code: "DB_ERROR", message: "Error al eliminar el soporte." } });
   }
 });
 

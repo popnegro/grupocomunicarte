@@ -354,6 +354,13 @@ const SEED_SCREENS: DoohScreen[] = [
   }
 ];
 
+const SEEDED_FEATURED_SCREEN_ORDER: Record<string, number> = {
+  "sc-01": 1,
+  "sc-02": 2,
+  "sc-03": 3,
+  "sc-04": 4,
+};
+
 const DEFAULT_LANDING_CONTENT: LandingContent = {
   hero: {
     badge: "🚀 ACELERADOR COMERCIAL INTELIGENTE",
@@ -481,13 +488,21 @@ export const useCmsStore = create<CmsStoreProps>((set, get) => ({
       try {
         const parsed = JSON.parse(saved);
         if (parsed && Array.isArray(parsed) && parsed.length > 0 && parsed[0].ciudad) {
-          return parsed;
+          return parsed.map((screen) => ({
+            ...screen,
+            isFeatured: SEEDED_FEATURED_SCREEN_ORDER[screen.id] !== undefined ? true : Boolean(screen.isFeatured),
+            featuredOrder: SEEDED_FEATURED_SCREEN_ORDER[screen.id] ?? screen.featuredOrder ?? null,
+          }));
         }
       } catch (e) {
         console.error("Error parsing stored screens, falling back", e);
       }
     }
-    return SEED_SCREENS;
+    return SEED_SCREENS.map((screen) => ({
+      ...screen,
+      isFeatured: SEEDED_FEATURED_SCREEN_ORDER[screen.id] !== undefined ? true : screen.isFeatured,
+      featuredOrder: SEEDED_FEATURED_SCREEN_ORDER[screen.id] ?? screen.featuredOrder ?? null,
+    }));
   })(),
   loadingScreens: false,
   occupancyMatrix: (() => {

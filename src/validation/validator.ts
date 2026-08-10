@@ -55,6 +55,17 @@ export function validateSpaceDTO(body: any) {
     errors.status = "Status must be either 'Activo', 'Mantenimiento' or 'Inactivo'";
   }
 
+  if (body.isFeatured !== undefined && typeof body.isFeatured !== "boolean" && body.isFeatured !== "true" && body.isFeatured !== "false") {
+    errors.isFeatured = "Featured flag (isFeatured) must be a boolean";
+  }
+
+  if (body.featuredOrder !== undefined && body.featuredOrder !== null && body.featuredOrder !== "") {
+    const val = Number(body.featuredOrder);
+    if (!Number.isFinite(val) || val < 1) {
+      errors.featuredOrder = "Featured order (featuredOrder) must be a positive number";
+    }
+  }
+
   if (Object.keys(errors).length > 0) {
     throw new ValidationError(errors, "Invalid advertising space (screen) details");
   }
@@ -74,6 +85,11 @@ export function validateSpaceDTO(body: any) {
     formato: body.formato ? String(body.formato).trim() : null,
     cobertura: body.cobertura ? String(body.cobertura).trim() : null,
     ruta: body.ruta ? String(body.ruta).trim() : null,
+    video: body.video ? String(body.video).trim() : null,
+    isFeatured: body.isFeatured === true || body.isFeatured === "true",
+    featuredOrder: body.featuredOrder === undefined || body.featuredOrder === null || body.featuredOrder === ""
+      ? null
+      : Number(body.featuredOrder),
     tenantId: body.tenantId ? String(body.tenantId).trim() : "tenant-default"
   };
 }

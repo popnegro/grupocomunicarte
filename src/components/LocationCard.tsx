@@ -1,7 +1,6 @@
 import React from "react";
 import { BaseCard } from "./BaseCard";
 import { MapPin, ShieldCheck } from "lucide-react";
-import { formatPrice } from "../utils/formatPrice";
 
 export interface LocationCardProps {
   id: string;
@@ -9,7 +8,6 @@ export interface LocationCardProps {
   zone: string;
   province: string;
   impacts: number;
-  price: number;
   status: "Disponible" | "Pautado" | string;
   imageSrc?: string;
   type: string;
@@ -25,7 +23,6 @@ export const LocationCard: React.FC<LocationCardProps> = ({
   zone,
   province,
   impacts,
-  price,
   status,
   imageSrc,
   type,
@@ -58,10 +55,7 @@ export const LocationCard: React.FC<LocationCardProps> = ({
         </span>
 
         <span className="text-sm font-bold text-stone-900 font-display flex items-baseline gap-0.5">
-          <span>{formatPrice(price)}</span>
-          {price !== 0 && (
-            <span className="text-[10px] text-stone-400 font-normal">/sem</span>
-          )}
+          <span>Tarifa bajo cotización</span>
         </span>
       </div>
 

@@ -27,6 +27,7 @@ import { downloadMediaKitAsHtml } from "../../utils/mediaKitExport";
 import { MapPin } from "lucide-react";
 import { FileUpload } from "./FileUpload";
 import { formatPrice } from "../../utils/formatPrice";
+import { sortFeaturedScreens } from "../../utils/screenMedia";
 
 interface InventoryModuleProps {
   screens: DoohScreen[];
@@ -118,6 +119,10 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
     });
   }, [screens, selectedCityFilter, selectedCategoryFilter, searchQuery, showArchived, selectedTypeFilter, selectedStatusFilter]);
 
+  const sortedScreens = useMemo(() => {
+    return sortFeaturedScreens(filteredScreens, filteredScreens.length);
+  }, [filteredScreens]);
+
   const handleDuplicate = (screen: DoohScreen) => {
     const duplicated: DoohScreen = {
       ...screen,
@@ -150,6 +155,8 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
       refreshRate: newScreenForm.refreshRate,
       formato: newScreenForm.formato,
       cobertura: newScreenForm.cobertura,
+      isFeatured: false,
+      featuredOrder: null,
     };
 
     onAddScreen(screen);
@@ -291,7 +298,7 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
 
         {/* Grid listing */}
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {filteredScreens.map((screen) => (
+          {sortedScreens.map((screen) => (
             <div
               key={screen.id}
               onClick={() => setActiveScreenId(screen.id)}
@@ -397,7 +404,7 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
             </div>
           ))}
 
-          {filteredScreens.length === 0 && (
+          {sortedScreens.length === 0 && (
             <div className="col-span-full py-16 text-center border border-dashed border-stone-200 rounded-3xl space-y-3">
               <EyeOff className="h-10 w-10 text-stone-300 mx-auto" />
               <p className="text-xs font-bold text-stone-800">No se encontraron soportes que coincidan con la búsqueda.</p>
@@ -503,6 +510,41 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
 
                     <div className="grid grid-cols-2 gap-3">
                       <div className="space-y-1">
+                        <label className="block text-[8px] font-extrabold text-stone-400 uppercase tracking-widest">⭐ Destacada</label>
+                        <button
+                          type="button"
+                          onClick={() => onUpdateScreen(selectedScreen.id, {
+                            isFeatured: !selectedScreen.isFeatured,
+                            featuredOrder: !selectedScreen.isFeatured ? (selectedScreen.featuredOrder ?? 1) : null,
+                          })}
+                          className={`w-full px-2.5 py-1.5 text-[11px] font-extrabold rounded-lg border transition-colors ${
+                            selectedScreen.isFeatured
+                              ? "bg-amber-50 text-amber-800 border-amber-200"
+                              : "bg-stone-50 text-stone-500 border-stone-200"
+                          }`}
+                        >
+                          {selectedScreen.isFeatured ? "Sí, está destacada" : "No destacada"}
+                        </button>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="block text-[8px] font-extrabold text-stone-400 uppercase tracking-widest">Orden destacado</label>
+                        <input
+                          type="number"
+                          min={1}
+                          disabled={!selectedScreen.isFeatured}
+                          value={selectedScreen.featuredOrder ?? ""}
+                          onChange={(e) => onUpdateScreen(selectedScreen.id, {
+                            featuredOrder: e.target.value ? Number(e.target.value) : null,
+                          })}
+                          className="w-full px-2.5 py-1.5 text-[11px] border border-stone-200 rounded-lg bg-stone-50/50 focus:outline-none font-mono disabled:opacity-50 disabled:cursor-not-allowed"
+                          placeholder="1"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1">
                         <label className="block text-[8px] font-extrabold text-stone-400 uppercase tracking-widest">Precio por Semana</label>
                         <input
                           type="number"
@@ -567,6 +609,12 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
                         className="w-full px-2.5 py-1.5 text-[11px] border border-stone-200 rounded-lg bg-stone-50/50 focus:outline-none leading-relaxed"
                       />
                     </div>
+
+                    {selectedScreen.isFeatured && (
+                      <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-3 text-[10px] font-semibold text-amber-800">
+                        Esta ubicación aparecerá en la sección pública de destacadas con prioridad #{selectedScreen.featuredOrder ?? 1}.
+                      </div>
+                    )}
 
                     {/* PDF/Print Export Action for Single Asset */}
                     <div className="pt-2">

@@ -75,6 +75,18 @@ export interface GrowthRecommendation {
   impact: string; // "Bajo" | "Medio" | "Alto"
 }
 
+export interface ScreenMedia {
+  id: string;
+  screenId: string;
+  type: "image" | "video" | "drone";
+  url: string;
+  title?: string;
+  sizeBytes?: number;
+  isHero?: boolean;
+  createdAt?: string;
+  posterUrl?: string;
+}
+
 export interface DoohScreen {
   id: string;
   nombre: string;
@@ -97,6 +109,9 @@ export interface DoohScreen {
   cobertura?: string;
   horarios?: string;
   ruta?: { lat: number; lng: number; nombre: string }[];
+  isFeatured?: boolean;
+  featuredOrder?: number | null;
+  media?: ScreenMedia[];
 }
 
 export interface City {

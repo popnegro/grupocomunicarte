@@ -1,280 +1,168 @@
 # GRUPO COMUNICARTE
 # DESIGN.md
-# MASTER DESIGN CONTRACT
-# PMV — LANDING + DASHBOARD
-# LIGHT THEME
-# DESKTOP + MOBILE
+# LANDING UX/UI DESIGN CONTRACT
+# GOOGLE STUDIO / STITCH
+# BRANCH: feat/landing-studio
 
 ---
 
-# 01. PROPÓSITO
+# 01. OBJETIVO
 
-Este documento es el CONTRATO MAESTRO
-DE DISEÑO del proyecto Grupo Comunicarte.
+Este documento es el contrato de diseño para una única tarea:
 
-Es la fuente principal de verdad para:
+REDISEÑAR EXCLUSIVAMENTE LA UX/UI DE LA LANDING PÚBLICA DE GRUPO COMUNICARTE.
 
-- identidad visual
-- logo
-- colores
-- tipografía
-- componentes
-- UX
-- navegación
-- Landing
-- Dashboard
-- responsive
-- estados
-- soportes
-- mapas
-- Media Kit
+La referencia funcional de partida es la rama:
 
-Toda pantalla nueva DEBE respetar
-este documento.
+`feat/fase-02-ubicaciones-destacadas`
 
-Toda modificación DEBE respetar
-este documento.
+La rama de trabajo para Google Studio es:
 
-NO reinterpretar libremente
-las reglas establecidas aquí.
+`feat/landing-studio`
 
----
+El objetivo es mejorar:
 
-# 02. PRIORIDAD DE DECISIONES
-
-Cuando exista una contradicción,
-utilizar este orden:
-
-1. DESIGN.md
-2. Assets oficiales del proyecto
-3. Reglas funcionales explícitas
-4. Orden actual
-5. Pantalla seleccionada
-6. Referencias externas
-
-Las referencias externas
-NUNCA tienen prioridad sobre
-este DESIGN.md.
-
----
-
-# 03. ASSETS OFICIALES
-
-## LOGO OFICIAL
-
-El proyecto contiene el asset:
-
-gc-brand.png
-
-Este archivo es el LOGO OFICIAL
-DE GRUPO COMUNICARTE.
-
-Utilizar EXACTAMENTE este asset.
-
-NO recrear el logo.
-
-NO redibujar el logo.
-
-NO escribir "GRUPO COMUNICARTE"
-como sustituto del logo.
-
-NO generar un logo nuevo.
-
-NO utilizar un logo generado
-por Stitch.
-
-NO utilizar un wordmark inventado.
-
-NO reemplazar el archivo
-por texto estilizado.
-
-NO modificar la identidad
-del archivo.
-
----
-
-## REGLA DE USO DEL LOGO
-
-Cuando una pantalla requiera
-el logo de Grupo Comunicarte:
-
-UTILIZAR:
-
-gc-brand.png
-
-como imagen / asset.
-
-El logo debe conservar:
-
-- proporciones
-- relación de aspecto
-- identidad gráfica
-- transparencia
-- integridad visual
-
-NO deformar.
-
-NO estirar.
-
-NO comprimir visualmente.
-
-NO alterar sus proporciones.
-
----
-
-## FONDO
-
-El archivo gc-brand.png posee
-transparencia.
-
-Mantener la transparencia.
-
-NO agregar automáticamente:
-
-- caja blanca
-- rectángulo
-- fondo de color
-- contenedor innecesario
-
-El logo debe integrarse
-sobre las superficies del
-Design System.
-
----
-
-## LOGO EN NAVBAR
-
-La Navbar debe utilizar
-gc-brand.png.
-
-NO mostrar un texto simulando
-el logo.
-
-NO utilizar:
-
-"GRUPO COMUNICARTE"
-
-como sustituto gráfico.
-
-El texto puede aparecer
-como contenido cuando corresponda,
-pero NO como reemplazo del logo.
-
----
-
-## LOGO EN DASHBOARD
-
-El Dashboard también debe
-utilizar gc-brand.png.
-
-Aplicar el mismo principio:
-
-UN ASSET OFICIAL
-+
-DIFERENTES TAMAÑOS RESPONSIVE.
-
----
-
-# 04. IDENTIDAD DE MARCA
-
-Marca:
-
-GRUPO COMUNICARTE
-
-La identidad debe transmitir:
-
-- profesionalismo
-- confianza
-- cobertura
-- tecnología
-- publicidad exterior
-- capacidad comercial
-
-La interfaz debe evitar
-una estética excesivamente
-corporativa o genérica.
-
----
-
-# 05. LIGHT THEME
-
-LIGHT THEME ES OBLIGATORIO.
-
-Todo el proyecto debe diseñarse
-en Light Theme.
-
-NO utilizar:
-
-- Dark Theme
-- fondos negros
-- cards negras
-- sidebar negro
-- superficies oscuras
-- estética neon
-- cyberpunk
-- Tech-Noir
-
-Si una referencia externa
-utiliza Dark Theme:
-
-IGNORAR EL TEMA OSCURO.
-
-Utilizar únicamente:
-
+- jerarquía visual
 - composición
-- jerarquía
-- estructura
-- UX
+- navegación
+- conversión
+- claridad comercial
+- arquitectura de información
+- responsive
+- accesibilidad
+- consistencia visual
+- percepción de producto profesional
+
+NO es objetivo de esta tarea rediseñar ni modificar el Dashboard.
 
 ---
 
-# 06. PRINCIPIO VISUAL
+# 02. REGLA PRINCIPAL — UX/UI ONLY
 
-## MENOS ES MÁS
+Google Studio debe trabajar exclusivamente sobre la presentación y experiencia de la Landing.
 
-Toda pantalla debe priorizar:
+SE PUEDE MODIFICAR:
 
-- claridad
+- layout
+- composición
+- spacing
+- tipografía dentro del sistema existente
+- tamaños visuales
 - jerarquía
-- simplicidad
-- legibilidad
-- consistencia
+- cards
+- botones
+- navegación visual
+- Hero
+- secciones de Landing
+- grids
+- responsive
+- estados visuales
+- microinteracciones sutiles
+- accesibilidad visual
+- orden visual del contenido existente cuando mejore claramente la UX
 
-Evitar:
+NO SE PUEDE MODIFICAR:
 
-- ruido visual
-- información duplicada
-- badges innecesarios
-- flotantes innecesarios
-- overlays redundantes
-- exceso de sombras
-- exceso de colores
-- exceso de bordes
-- animaciones innecesarias
+- API
+- endpoints
+- contratos de API
+- autenticación
+- Firebase
+- Supabase
+- base de datos
+- modelos TypeScript
+- entidades de negocio
+- lógica comercial
+- lógica de selección global
+- persistencia
+- reglas de disponibilidad
+- routing existente
+- URLs existentes
+- variables de entorno
+- configuración de Vercel
+- configuración de build
+- backend
+- Dashboard
+- permisos
+- seguridad
 
-Cada elemento debe justificar
-su existencia.
+NO crear funcionalidades de negocio nuevas para resolver un problema visual.
 
 ---
 
-# 07. REFERENCIA LANDING
+# 03. REGLA DE PRESERVACIÓN
 
-Referencia:
+ANTES DE CREAR:
+
+1. Buscar componente existente.
+2. Reutilizarlo si cumple.
+3. Adaptarlo si es necesario.
+4. Crear un componente nuevo únicamente si no existe una alternativa razonable.
+
+NO duplicar componentes.
+
+NO duplicar lógica.
+
+NO duplicar datos.
+
+NO reemplazar una implementación funcional únicamente porque otra parezca visualmente más moderna.
+
+La implementación existente es la fuente de verdad funcional.
+
+---
+
+# 04. SCOPE EXACTO
+
+EL SCOPE ES:
+
+LANDING PÚBLICA.
+
+Incluye únicamente la experiencia comercial pública que conduce al usuario hacia la exploración de soportes y solicitud de Media Kit.
+
+Áreas objetivo:
+
+1. Navbar
+2. Hero
+3. Propuesta de valor
+4. Ubicaciones Destacadas
+5. Explorador de Soportes cuando sea parte de la experiencia pública
+6. Cobertura
+7. CTA Media Kit
+8. Footer
+9. Estados visuales relacionados con estas áreas
+10. Responsive de estas áreas
+
+NO rediseñar:
+
+- Dashboard
+- pantallas administrativas
+- autenticación
+- gestión de soportes
+- Leads
+- Media Kits administrativos
+- configuración
+- backend
+
+---
+
+# 05. REFERENCIA DE DISEÑO
+
+Utilizar como referencia visual:
 
 https://shadcnspace.com/templates/preview/homely-nextjs
 
-Utilizar Homely como referencia
-para:
+Homely sirve únicamente como referencia de:
 
-- composición
 - ritmo visual
+- composición
+- spacing
+- jerarquía
 - navegación
 - Hero
-- secciones
 - cards
 - grids
-- spacing
 - CTAs
+- equilibrio entre imagen y contenido
 - experiencia comercial
 - responsive
 
@@ -283,370 +171,388 @@ NO copiar:
 - branding
 - logo
 - colores
-- imágenes
 - textos
+- imágenes
 - contenido inmobiliario
 - identidad inmobiliaria
-- estructura de negocio
+- componentes específicos que no correspondan al producto
+- estructura comercial de Homely
 
-Homely es una referencia
-VISUAL Y UX.
-
-NO es una plantilla
-para copiar literalmente.
+La referencia externa nunca tiene prioridad sobre este documento ni sobre el código existente.
 
 ---
 
-# 08. REFERENCIA DASHBOARD
+# 06. IDENTIDAD DE MARCA
 
-Referencia:
+Marca:
 
-https://shadcnspace.com/blocks/dashboard-ui/dashboard-shell
+GRUPO COMUNICARTE
 
-Utilizar Dashboard Shell
-como referencia estructural.
+La Landing debe transmitir:
 
-Priorizar:
+- profesionalismo
+- confianza
+- cobertura territorial
+- tecnología
+- publicidad exterior
+- capacidad comercial
+- claridad
+- solidez
 
-- sidebar
-- header
-- navegación
-- área principal
-- jerarquía administrativa
-- responsive
-
-Preferir la variante
-Modern Dashboard Shell.
-
-NO copiar:
-
-- contenido ficticio
-- métricas de ejemplo
-- branding
-- colores
-- módulos ajenos al producto
-
----
-
-# 09. SISTEMA DE DISEÑO
-
-Utilizar componentes
-reutilizables.
-
-REGLA:
-
-BUSCAR
-↓
-REUTILIZAR
-↓
-ADAPTAR
-↓
-CREAR SOLO SI ES NECESARIO
-
-NO crear componentes
-duplicados.
-
-NO crear variantes
-innecesarias.
-
----
-
-# 10. TIPOGRAFÍA
-
-Prioridad:
-
-- Geist
-- Inter
-- JetBrains Mono
-
-No agregar nuevas familias
-sin autorización explícita.
-
-JetBrains Mono:
-
-- datos técnicos
-- metadata
-- identificadores
-
-NO utilizar JetBrains Mono
-como tipografía principal.
-
----
-
-# 11. COLOR
-
-Utilizar el sistema cromático
-de marca existente.
-
-El verde de marca representa
-la principal acción.
-
-Utilizarlo para:
-
-- CTA principal
-- estados activos
-- selección
-- indicadores relevantes
-- elementos de marca
-
-NO utilizar verde excesivamente.
-
-Fondos:
-
-- blancos
-- neutrales claros
-
-Texto:
-
-- oscuro
-- alto contraste
-
----
-
-# 12. RESPONSIVE
-
-REGLA OBLIGATORIA:
-
-NINGUNA PANTALLA ESTÁ TERMINADA
-SIN:
-
-DESKTOP
-+
-MOBILE
-
-Toda pantalla nueva debe
-contemplar ambas experiencias.
-
----
-
-# 13. MOBILE
-
-Mobile NO es Desktop reducido.
-
-Mobile debe adaptar:
-
-- navegación
-- layout
-- cards
-- spacing
-- formularios
-- mapas
-- tablas
-- CTAs
-- orden de contenido
-
-Mantener:
-
-- identidad
-- jerarquía
-- funcionalidades
-- acciones
-
----
-
-# 14. TOUCH
-
-Todos los elementos interactivos
-deben ser adecuados para touch.
+La estética debe sentirse como una plataforma comercial profesional de publicidad exterior, no como una plantilla genérica.
 
 Evitar:
 
-- botones pequeños
-- targets demasiado próximos
-- controles difíciles de tocar
+- estética inmobiliaria
+- estética fintech
+- estética SaaS genérica
+- cyberpunk
+- neon
+- dark-tech
+- exceso de gradientes
+- exceso de glassmorphism
+- exceso de efectos decorativos
 
 ---
 
-# 15. LANDING
+# 07. LIGHT THEME OBLIGATORIO
 
-La Landing es la experiencia
-pública y comercial.
+La Landing debe utilizar LIGHT THEME.
 
-Debe permitir:
+Preferir:
 
+- blanco
+- gris muy claro
+- neutrales claros
+- superficies limpias
+- texto oscuro
+- verde de marca como acento
+
+NO utilizar como lenguaje principal:
+
+- fondos negros
+- cards negras
+- dark mode
+- superficies oscuras
+- neon
+- cyberpunk
+
+Si una referencia externa utiliza dark mode, conservar únicamente su estructura o jerarquía útil y adaptar todo a Light Theme.
+
+---
+
+# 08. LOGO OFICIAL
+
+El logo oficial es:
+
+`gc-brand.png`
+
+UTILIZAR EXACTAMENTE ESTE ASSET.
+
+NO:
+
+- recrear el logo
+- redibujarlo
+- escribir el nombre como sustituto visual
+- generar un wordmark alternativo
+- utilizar un logo generado por IA
+- deformarlo
+- alterar sus proporciones
+- añadir fondos innecesarios
+
+Conservar transparencia, proporción e identidad.
+
+---
+
+# 09. TIPOGRAFÍA
+
+Prioridad:
+
+1. Geist
+2. Inter
+3. JetBrains Mono para datos técnicos o metadata
+
+NO incorporar nuevas familias tipográficas.
+
+La tipografía principal debe favorecer:
+
+- legibilidad
+- jerarquía
+- percepción premium
+- lectura rápida
+- claridad comercial
+
+---
+
+# 10. COLOR
+
+Utilizar el sistema cromático existente del proyecto.
+
+El verde de marca funciona como color de acción.
+
+Usarlo para:
+
+- CTA principal
+- enlaces activos
+- selección
+- estados positivos
+- indicadores relevantes
+- acentos de marca
+
+NO convertir toda la interfaz en verde.
+
+El color debe establecer jerarquía, no decorar.
+
+---
+
+# 11. PRINCIPIO VISUAL
+
+MENOS ES MÁS.
+
+Prioridades:
+
+1. claridad
+2. jerarquía
+3. legibilidad
+4. conversión
+5. confianza
+6. consistencia
+
+Evitar:
+
+- ruido visual
+- información repetida
+- exceso de badges
+- exceso de sombras
+- exceso de bordes
+- exceso de colores
+- exceso de iconos
+- overlays innecesarios
+- animaciones decorativas
+- elementos flotantes sin función
+
+Cada elemento debe responder a una necesidad de UX.
+
+---
+
+# 12. ARQUITECTURA DE INFORMACIÓN
+
+La Landing debe guiar al usuario mediante este recorrido:
+
+DESCUBRIR
+↓
+ENTENDER
+↓
 EXPLORAR
 ↓
-CONOCER
+CONOCER UN SOPORTE
 ↓
-UBICAR
+UBICARLO
 ↓
-SELECCIONAR
+SELECCIONARLO
 ↓
-SOLICITAR
+SOLICITAR MEDIA KIT
+
+No introducir fricción innecesaria entre estas etapas.
 
 ---
 
-# 16. LANDING — ESTRUCTURA
+# 13. JERARQUÍA DE LA LANDING
 
-La Landing debe contemplar:
+Orden visual recomendado:
 
 1. Navbar
 2. Hero
 3. Propuesta de valor
 4. Ubicaciones Destacadas
-5. Explorador de Soportes
+5. Explorador / acceso a soportes
 6. Cobertura
 7. CTA Media Kit
 8. Footer
 
-NO agregar nuevas secciones
-sin una orden explícita.
+NO agregar nuevas secciones de negocio.
+
+Si una sección existente necesita una mejor composición, rediseñarla sin alterar su propósito funcional.
 
 ---
 
-# 17. NAVBAR
+# 14. NAVBAR
 
-Debe contener:
+Debe comunicar inmediatamente:
 
-- logo oficial gc-brand.png
+- identidad
 - navegación
-- CTA relevante
+- acceso a la acción comercial principal
 
 Desktop:
 
-navegación horizontal.
+- logo oficial
+- navegación horizontal
+- CTA principal claramente identificado
 
 Mobile:
 
-navegación colapsada.
+- logo
+- menú compacto
+- navegación accesible
+- CTA accesible sin saturar la cabecera
 
-NO utilizar texto como
-sustituto del logo.
+La navegación debe ser simple y predecible.
+
+NO introducir megamenús.
+
+NO introducir navegación secundaria innecesaria.
 
 ---
 
-# 18. HERO
+# 15. HERO
 
-Debe comunicar:
+El Hero es el principal punto de conversión y debe explicar rápidamente qué ofrece Grupo Comunicarte.
 
-- qué ofrece Grupo Comunicarte
+Debe contener:
+
+- headline claro
+- supporting copy breve
+- CTA principal
+- soporte visual relevante
+
+La propuesta debe responder visualmente:
+
+¿QUÉ OFRECE?
+¿DÓNDE ESTÁ?
+¿POR QUÉ ES RELEVANTE?
+¿QUÉ PUEDO HACER AHORA?
+
+Evitar:
+
+- titulares genéricos
+- párrafos largos
+- múltiples CTAs con igual peso
+- hero excesivamente alto
+- decoración sin función
+
+El CTA primario debe tener mayor jerarquía que cualquier acción secundaria.
+
+---
+
+# 16. PROPUESTA DE VALOR
+
+Debe transformar características en beneficios comerciales.
+
+Priorizar conceptos como:
+
 - cobertura
-- tipos de soportes
-- propuesta de valor
-
-Debe existir:
-
-Título
-+
-Descripción
-+
-CTA principal
-
-Evitar múltiples CTAs
-sin jerarquía.
-
----
-
-# 19. UBICACIONES DESTACADAS
-
-Presentar una selección
-comercial reducida.
-
-NO representa todo el catálogo.
-
-El catálogo completo
-pertenece al Explorador.
-
----
-
-# 20. DESTACADOS — DATOS
-
-Las Ubicaciones Destacadas
-deben provenir de soportes
-administrados desde el Dashboard.
-
-NO hardcodear.
-
-El Dashboard debe permitir
-seleccionar cuáles son
-destacados.
-
----
-
-# 21. DESTACADOS — CANTIDAD
-
-Recomendación:
-
-4–6 soportes.
-
-El catálogo completo
-puede contener hasta 50.
-
----
-
-# 22. CARD DE SOPORTE
-
-Cada card debe mostrar:
-
-- imagen
-- nombre
-- ubicación
-- formato
+- visibilidad
+- ubicación estratégica
+- formatos
 - disponibilidad
+- capacidad de planificación
 
-CTAs:
+Utilizar bloques breves y escaneables.
 
-[ Ver detalle ]
-
-[ Ubicar en el mapa ]
-
-NO agregar:
-
-[ Solicitar Media Kit ]
-
-directamente en la card.
+No convertir esta sección en una lista extensa de características técnicas.
 
 ---
 
-# 23. VER DETALLE
+# 17. UBICACIONES DESTACADAS
 
-Debe abrir el detalle
-del soporte.
+Es una sección comercial de descubrimiento.
 
-El detalle pertenece
-al mismo sistema de soportes.
+Debe presentar una selección reducida y atractiva de soportes.
 
----
+Objetivo UX:
 
-# 24. UBICAR EN EL MAPA
+captar interés → mostrar contexto → permitir explorar.
 
-Debe llevar al Explorador
-y ubicar el soporte.
+Recomendación visual:
 
-GPS:
+4–6 soportes visibles en desktop cuando el contenido disponible lo permita.
 
-punto.
+No presentar esta sección como el catálogo completo.
 
-LEDMÓVIL:
+No hardcodear contenido nuevo.
 
-recorrido.
-
-NO mostrar LEDMÓVIL
-como puntos aislados.
+Los datos existentes deben continuar siendo la fuente funcional.
 
 ---
 
-# 25. DETALLE DEL SOPORTE
+# 18. CARD DE SOPORTE
 
-Debe mostrar:
+La card debe funcionar como resumen comercial.
 
-- imagen
-- nombre
-- ubicación
-- formato
-- disponibilidad
-- información técnica
-- información comercial
+Jerarquía recomendada:
 
-CTA:
+1. imagen
+2. nombre
+3. ubicación
+4. formato
+5. disponibilidad
+6. acciones
 
-[ Agregar al Media Kit ]
+Debe existir una jerarquía clara entre información primaria y metadata.
+
+Evitar cards sobrecargadas.
+
+Evitar textos largos.
+
+Evitar cinco o más acciones en una card.
+
+Acciones existentes deben conservar su significado funcional, especialmente:
+
+- Ver detalle
+- Ubicar en el mapa
+
+NO agregar una acción comercial nueva únicamente por diseño.
 
 ---
 
-# 26. SELECCIÓN DE SOPORTES
+# 19. IMÁGENES
 
-Flujo:
+Las imágenes deben ser protagonistas cuando aporten información comercial.
+
+Priorizar:
+
+- proporciones consistentes
+- recortes controlados
+- buena relación imagen/contenido
+- carga visual equilibrada
+
+Evitar:
+
+- imágenes distorsionadas
+- crops arbitrarios
+- imágenes decorativas sin relación con el soporte
+- overlays que oculten información relevante
+
+NO inventar imágenes de soportes que no existan.
+
+---
+
+# 20. DISPONIBILIDAD
+
+Los estados existentes deben conservar su significado.
+
+Estados principales:
+
+- DISPONIBLE
+- EN RESERVA
+
+EN RESERVA:
+
+- permanece visible
+- puede consultarse
+- debe verse claramente como estado distinto
+- no debe parecer un error
+
+Usar color, iconografía y texto de manera conjunta.
+
+NO depender únicamente del color.
+
+---
+
+# 21. DETALLE Y SELECCIÓN
+
+Cuando la Landing muestre acceso a detalle o selección, preservar el flujo funcional existente:
 
 CARD
 ↓
@@ -656,513 +562,574 @@ AGREGAR AL MEDIA KIT
 ↓
 SELECCIONADO
 
-La selección es GLOBAL.
+La UI puede mejorar la claridad del flujo, pero NO cambiar su lógica.
 
----
+El estado seleccionado debe ser inequívoco y sutil.
 
-# 27. SELECCIÓN GLOBAL
-
-La selección debe persistir
-entre:
-
-- destacados
-- explorador
-- mapa
-- detalle
-- Media Kit
-
-NO crear selecciones
-independientes.
-
----
-
-# 28. ESTADO SELECCIONADO
-
-Debe reconocerse claramente.
-
-Utilizar:
+Preferir:
 
 - check
 - borde
 - estado activo
 - CTA actualizado
 
-Mantenerlo sutil.
+Evitar:
 
-NO utilizar:
-
+- card completamente verde
 - overlays grandes
-- cards completamente verdes
 - animaciones excesivas
 
 ---
 
-# 29. INDICADOR GLOBAL
+# 22. INDICADOR DE MEDIA KIT
 
-Cuando existan soportes:
+Cuando existan soportes seleccionados, el usuario debe poder reconocer fácilmente que existe una selección global.
 
-mostrar:
+La UI puede mostrar un indicador como:
 
 "3 soportes seleccionados"
 
-y:
+junto con:
 
-[ Ver Media Kit ]
+"Ver Media Kit"
 
-Debe ser visible
-sin generar ruido.
+Debe permanecer visible sin convertirse en un elemento invasivo.
+
+NO crear una segunda selección local.
+
+NO modificar la persistencia existente.
 
 ---
 
-# 30. EXPLORADOR
+# 23. EXPLORADOR
 
-Puede contener hasta
-50 soportes.
+Cuando forme parte de la Landing pública, el Explorador debe facilitar:
 
-Debe priorizar:
-
-- lista
-- mapa
+- descubrimiento
+- búsqueda visual
 - ubicación
-- detalle
+- comparación
+- acceso al detalle
+
+La interfaz debe mantener el contexto del usuario.
+
+Evitar que el usuario pierda su ubicación dentro del flujo.
+
+Priorizar una relación clara entre:
+
+LISTA ↔ MAPA ↔ DETALLE
 
 ---
 
-# 31. EXPLORADOR — FLUJO
+# 24. MAPA
 
-OBLIGATORIO:
-
-LISTA
-↓
-SELECCIONAR SOPORTE
-↓
-DETALLE
-↓
-VOLVER
-
-El detalle debe cargarse
-dentro del mismo contexto
-del Explorador.
-
----
-
-# 32. MAPA
-
-Priorizar:
-
-- puntos GPS
-- ubicaciones
-- recorridos
-
-NO cubrir el mapa
-con información redundante.
-
----
-
-# 33. LEDMÓVIL
-
-LEDMÓVIL es un recorrido.
-
-Representar como:
-
-RUTA / TRAYECTO
-
-NO como puntos GPS aislados.
-
----
-
-# 34. DISPONIBILIDAD
-
-Estados:
-
-DISPONIBLE
-EN RESERVA
-
-EN RESERVA:
-
-- permanece visible
-- estado muted
-- puede consultarse
-- puede agregarse al Media Kit
-
-NO ocultar.
-
----
-
-# 35. MEDIA KIT — SIN SOPORTES
-
-Mostrar:
-
-- Nombre completo
-- Empresa
-- WhatsApp
-- Email
-- Mensaje
-- Enviar
-
-El usuario puede contactar
-sin seleccionar soportes.
-
----
-
-# 36. MEDIA KIT — CON SOPORTES
-
-Mostrar:
-
-- Nombre completo
-- Empresa
-- WhatsApp
-- Email
-- Pantallas seleccionadas
-- Fechas de interés
-- Enviar
-
----
-
-# 37. FECHAS
-
-Cuando existen soportes:
-
-Fecha desde
-Fecha hasta
-
-Regla:
-
-Fecha desde <= Fecha hasta
-
----
-
-# 38. DASHBOARD
-
-El Dashboard es una aplicación
-administrativa.
-
-Estructura:
-
-SIDEBAR
-+
-HEADER
-+
-MAIN CONTENT
-
-Utilizar Dashboard Shell
-como referencia.
-
----
-
-# 39. DASHBOARD — PMV
-
-Módulos:
-
-Inicio
-Soportes
-Leads
-Media Kits
-
-NO incluir:
-
-Contenido
-Integraciones
-
-salvo orden explícita futura.
-
----
-
-# 40. DASHBOARD — SOPORTES
-
-Debe permitir:
-
-- listar
-- buscar
-- visualizar
-- editar
-- disponibilidad
-- destacar
-- quitar destacado
-
----
-
-# 41. DASHBOARD — DESTACADOS
-
-Debe permitir seleccionar
-qué soportes aparecen
-en Ubicaciones Destacadas.
-
-Quitar destacado
-NO elimina soporte.
-
----
-
-# 42. DASHBOARD — LEADS
-
-Debe permitir visualizar:
-
-- nombre
-- empresa
-- WhatsApp
-- email
-- soportes
-- fechas
-- mensaje
-- fecha
-
----
-
-# 43. DASHBOARD — MEDIA KITS
-
-Debe permitir visualizar:
-
-- contacto
-- empresa
-- WhatsApp
-- email
-- soportes
-- fechas
-- mensaje
-- fecha de solicitud
-
----
-
-# 44. DASHBOARD — MOBILE
-
-Desktop:
-
-sidebar.
-
-Mobile:
-
-drawer / navegación colapsada.
-
-Mantener las mismas
-funcionalidades.
-
----
-
-# 45. FORMULARIOS
-
-Utilizar:
-
-- labels
-- validación
-- mensajes de error
-- spacing
-- CTA principal
-
-Mobile:
-
-una columna.
-
----
-
-# 46. TABLAS
+El mapa es una herramienta de ubicación, no un elemento decorativo.
 
 Priorizar:
 
 - legibilidad
-- estados
-- búsqueda
-- acciones
+- puntos GPS
+- recorridos
+- contexto geográfico
+- selección activa
 
-Mobile:
+LEDMÓVIL debe representarse como recorrido/trayecto cuando corresponda.
 
-adaptar mediante:
+NO convertir recorridos en una colección visualmente confusa de puntos.
 
+---
+
+# 25. CTA MEDIA KIT
+
+El CTA final debe funcionar como cierre comercial de la Landing.
+
+Debe responder:
+
+¿Qué hago si ya me interesa?
+
+La sección debe tener:
+
+- headline claro
+- explicación breve
+- acción principal
+
+No agregar múltiples acciones con el mismo peso.
+
+La CTA debe sentirse como continuación natural del recorrido, no como un banner aislado.
+
+---
+
+# 26. FOOTER
+
+El Footer debe cerrar la experiencia sin competir con el CTA principal.
+
+Priorizar:
+
+- identidad
+- navegación secundaria necesaria
+- información institucional existente
+- contacto existente
+
+NO agregar enlaces ficticios.
+
+NO inventar redes, direcciones, teléfonos o datos comerciales.
+
+---
+
+# 27. RESPONSIVE
+
+NINGUNA MODIFICACIÓN ESTÁ TERMINADA SIN DESKTOP + MOBILE.
+
+Mobile NO es Desktop reducido.
+
+Debe adaptarse:
+
+- navegación
+- orden de contenido
+- tamaños
 - cards
-- scroll horizontal
-- filas responsive
-
----
-
-# 47. EMPTY STATES
-
-Cuando no existan datos:
-
-mostrar:
-
-- contexto
-- explicación
-- acción
-
-Nunca mostrar
-una pantalla vacía
-sin explicación.
-
----
-
-# 48. ACCESSIBILITY
-
-Mantener:
-
-- contraste
-- focus
-- labels
-- teclado
-- touch targets
-- jerarquía semántica
-
-No depender únicamente
-del color.
-
----
-
-# 49. NO DUPLICAR DATOS
-
-Un soporte debe ser
-una entidad única.
-
-Utilizar la misma información
-en:
-
-- destacados
-- explorador
+- spacing
+- CTAs
+- imágenes
+- formularios
 - mapa
-- detalle
-- Media Kit
+
+La prioridad en mobile es:
+
+1. contenido esencial
+2. acción principal
+3. lectura rápida
+4. navegación simple
+
+---
+
+# 28. BREAKPOINTS
+
+Utilizar los breakpoints y patrones responsive existentes del proyecto.
+
+NO introducir una arquitectura responsive paralela.
+
+NO crear breakpoints arbitrarios si los existentes permiten resolver el diseño.
+
+El resultado debe ser consistente con Tailwind y con la implementación actual.
+
+---
+
+# 29. TOUCH TARGETS
+
+Todos los controles interactivos deben ser cómodos para touch.
+
+Evitar:
+
+- botones demasiado pequeños
+- iconos aislados sin área táctil suficiente
+- controles demasiado próximos
+- navegación difícil de operar con una mano
+
+---
+
+# 30. ACCESIBILIDAD
+
+Mantener como mínimo:
+
+- contraste adecuado
+- focus visible
+- labels comprensibles
+- jerarquía semántica
+- navegación por teclado
+- targets táctiles adecuados
+- estados comprensibles sin depender únicamente del color
+- textos alternativos cuando correspondan
+
+No sacrificar accesibilidad por estética.
+
+---
+
+# 31. COMPONENTES
+
+Preferir componentes existentes del proyecto.
+
+Patrón obligatorio:
+
+BUSCAR
+↓
+REUTILIZAR
+↓
+ADAPTAR
+↓
+CREAR SOLO SI ES NECESARIO
+
+NO duplicar:
+
+- botones
+- cards
+- badges
+- modales
+- headers
+- layouts
+- componentes de navegación
+
+Si un componente existente necesita una variante visual, preferir una variante controlada antes que duplicarlo.
+
+---
+
+# 32. ICONOGRAFÍA
+
+Utilizar la iconografía existente del proyecto.
+
+Si se requieren iconos nuevos y el proyecto ya utiliza Lucide, mantener Lucide.
+
+NO introducir múltiples familias de iconos.
+
+Los iconos deben reforzar significado, no reemplazar texto esencial.
+
+---
+
+# 33. ANIMACIÓN
+
+Utilizar motion únicamente cuando aporte:
+
+- orientación
+- feedback
+- continuidad
+- percepción de interacción
+
+Preferir animaciones cortas y discretas.
+
+NO utilizar:
+
+- parallax excesivo
+- entradas permanentes
+- efectos de rebote
+- animaciones que retrasen la acción
+- movimiento decorativo constante
+
+La interacción debe sentirse rápida.
+
+---
+
+# 34. ESTADOS UI
+
+Considerar visualmente:
+
+- default
+- hover
+- focus
+- active
+- selected
+- disabled
+- loading
+- empty
+- error
+
+No crear estados funcionales nuevos; diseñar únicamente la presentación de los estados que ya existen o que sean necesarios para una interfaz completa.
+
+---
+
+# 35. EMPTY / LOADING / ERROR
+
+Toda zona dinámica visible debe tener una representación comprensible cuando corresponda.
+
+EMPTY:
+
+- explicar el contexto
+- evitar pantallas vacías sin significado
+
+LOADING:
+
+- feedback claro
+- no bloquear innecesariamente toda la Landing
+
+ERROR:
+
+- mensaje comprensible
+- acción de recuperación cuando exista
+
+No inventar lógica de recuperación nueva.
+
+---
+
+# 36. CONTENIDO
+
+NO inventar:
+
+- precios
+- disponibilidad
+- ubicaciones
+- métricas
+- estadísticas
+- clientes
+- testimonios
+- logos de clientes
+- certificaciones
+- datos comerciales
+
+Utilizar el contenido real existente.
+
+Si falta contenido para una decisión visual, usar un placeholder claramente identificable únicamente durante el diseño y no dejarlo como contenido de producción.
+
+---
+
+# 37. DATOS Y LÓGICA
+
+La fuente de datos existente debe permanecer intacta.
+
+NO convertir datos dinámicos en contenido hardcodeado.
+
+NO reemplazar datos reales por mocks.
+
+NO introducir inventarios paralelos.
+
+NO crear arrays de soportes únicamente para resolver la presentación.
+
+La UI debe adaptarse a los datos existentes.
+
+---
+
+# 38. ROUTING
+
+NO cambiar rutas existentes.
+
+NO migrar BrowserRouter/HashRouter.
+
+NO crear nuevas rutas para resolver un cambio puramente visual.
+
+Si una pantalla ya tiene una ruta funcional, conservarla.
+
+---
+
+# 39. API / BACKEND
+
+NO modificar:
+
+- endpoints
+- fetchers
+- contratos
+- payloads
+- validaciones de backend
+- autenticación
+- autorización
+- base de datos
+
+Si una limitación del backend afecta la presentación, adaptar la UI sin alterar el contrato.
+
+---
+
+# 40. DEPENDENCIAS
+
+NO agregar dependencias nuevas salvo necesidad técnica excepcional y explícitamente autorizada.
+
+Preferir:
+
+- React existente
+- Tailwind existente
+- componentes existentes
+- Lucide existente
+
+No introducir otra librería de UI para resolver una necesidad visual.
+
+---
+
+# 41. ARCHIVOS PROTEGIDOS
+
+Tratar como protegidos salvo instrucción explícita:
+
+- API
+- backend
+- autenticación
+- configuración de Firebase
+- configuración de Supabase
+- modelos de datos
+- tipos de dominio
+- variables de entorno
+- configuración de Vercel
+- configuración de build
 - Dashboard
+- lógica comercial
+
+La modificación debe concentrarse en componentes y estilos de la Landing.
 
 ---
 
-# 50. NO DUPLICAR LÓGICA
+# 42. NO REDISEÑAR EL DASHBOARD
 
-Desktop y Mobile:
+Esta iteración NO incluye Dashboard.
 
-UNA MISMA LÓGICA
-+
-DOS PRESENTACIONES RESPONSIVE
+NO modificar:
 
----
+- sidebar administrativo
+- header administrativo
+- tablas administrativas
+- formularios administrativos
+- vistas de Leads
+- vistas de Media Kits
+- gestión de soportes
+- Inicio del Dashboard
 
-# 51. NO DECISIONES ALEATORIAS
-
-Si algo no está definido:
-
-1. seguir DESIGN.md
-2. utilizar asset existente
-3. reutilizar componente
-4. conservar patrón existente
-5. elegir solución simple
-
-NO inventar.
+Si un componente es compartido por Landing y Dashboard, modificarlo únicamente si la modificación mantiene compatibilidad y es estrictamente necesaria para la Landing.
 
 ---
 
-# 52. QUICK EDIT
+# 43. NO CAMBIAR EL DESIGN SYSTEM GLOBAL
 
-Cuando se seleccione
-una pantalla:
+No redefinir globalmente colores, tokens, spacing o tipografía si el cambio solo es necesario para una sección.
 
-ESA PANTALLA ES LA BASE.
+Preferir ajustes locales y coherentes.
 
-Modificar únicamente
-lo solicitado.
-
-NO rediseñar otras pantallas.
-
-NO cambiar el Design System.
-
-NO cambiar Light Theme.
-
-NO cambiar navegación
-sin autorización.
+Si se detecta una mejora global realmente necesaria, documentarla como propuesta y NO aplicarla automáticamente.
 
 ---
 
-# 53. ALCANCE
+# 44. CRITERIO DE CALIDAD VISUAL
 
-El proyecto se construirá
-en dos grandes fases.
+La Landing final debe sentirse:
 
-FASE 1:
+- premium
+- clara
+- moderna
+- comercial
+- confiable
+- tecnológica sin ser fría
+- visualmente ordenada
+- rápida de entender
 
-LANDING
+Debe evitar sentirse:
 
-FASE 2:
-
-DASHBOARD
-
-No generar ambas fases
-simultáneamente.
-
----
-
-# 54. ORDEN DE IMPLEMENTACIÓN
-
-Landing:
-
-01. Landing Base
-02. Ubicaciones Destacadas
-03. Explorador
-04. Detalle + Selección
-05. Media Kit
-06. Páginas secundarias
-07. Auditoría Responsive
-
-Después:
-
-Dashboard.
+- genérica
+- recargada
+- amateur
+- inmobiliaria
+- excesivamente corporativa
+- experimental sin propósito
 
 ---
 
-# 55. CRITERIO DE FINALIZACIÓN
+# 45. CRITERIO DE CONVERSIÓN
 
-Una pantalla está terminada
-cuando cumple:
+Cada sección debe tener una función dentro del recorrido comercial.
 
-Desktop ✓
-Mobile ✓
+Preguntar visualmente:
+
+¿El usuario entiende qué ofrecemos?
+¿Entiende dónde estamos?
+¿Puede descubrir soportes?
+¿Puede conocer un soporte?
+¿Puede ubicarlo?
+¿Puede seleccionarlo?
+¿Entiende cómo solicitar el Media Kit?
+
+Reducir fricción antes de agregar elementos.
+
+---
+
+# 46. REGLA DE CAMBIO
+
+Cuando se solicite una modificación concreta:
+
+1. identificar la pantalla
+2. identificar el componente
+3. preservar la lógica
+4. modificar la presentación
+5. comprobar desktop
+6. comprobar mobile
+7. comprobar estados
+8. comprobar accesibilidad
+
+NO aprovechar una modificación pequeña para rediseñar toda la aplicación.
+
+---
+
+# 47. VALIDACIÓN ANTES DE FINALIZAR
+
+Antes de considerar terminado el trabajo:
+
+- revisar todos los cambios del diff
+- comprobar que solo afectan Landing/UI
+- ejecutar TypeScript
+- ejecutar build
+- verificar desktop
+- verificar mobile
+- verificar navegación existente
+- verificar CTAs existentes
+- verificar selección existente
+- verificar Media Kit existente
+- verificar que no se modificó Dashboard
+- verificar que no se modificaron API/backend
+
+Comandos esperados:
+
+`npx tsc --noEmit`
+
+`npm run build`
+
+---
+
+# 48. CRITERIO DE ACEPTACIÓN
+
+ACEPTAR SOLO SI:
+
+UX mejorada ✓
+UI mejorada ✓
+Landing exclusivamente ✓
 Light Theme ✓
 Logo oficial ✓
-Design System ✓
-Responsive ✓
-Accessibility ✓
-Estados ✓
-UX consistente ✓
+Componentes reutilizados ✓
+Responsive desktop ✓
+Responsive mobile ✓
+Accesibilidad ✓
+Lógica existente preservada ✓
+Datos existentes preservados ✓
+Rutas preservadas ✓
+API preservada ✓
+Dashboard preservado ✓
+Build correcto ✓
 
 ---
 
-# 56. PRINCIPIOS FINALES
+# 49. INSTRUCCIÓN FINAL PARA GOOGLE STUDIO
 
-LIGHT THEME.
+REDISEÑA LA LANDING DE GRUPO COMUNICARTE UTILIZANDO ESTE DESIGN.md COMO CONTRATO.
 
-MENOS ES MÁS.
+Trabaja únicamente sobre UX/UI.
 
-LOGO OFICIAL = gc-brand.png.
+Usa la rama `feat/landing-studio` como espacio de trabajo.
 
-NO RECREAR EL LOGO.
+Toma `feat/fase-02-ubicaciones-destacadas` como estado funcional de referencia.
 
-DESKTOP + MOBILE.
+Conserva toda la lógica existente.
 
-COMPONENTES REUTILIZABLES.
+Conserva todos los datos existentes.
 
-NO DUPLICAR DATOS.
+Conserva las rutas existentes.
 
-NO DUPLICAR LÓGICA.
+Conserva las APIs existentes.
 
-CARD = RESUMEN.
+Conserva la autenticación existente.
 
-DETALLE = INFORMACIÓN COMPLETA.
+No modifiques el Dashboard.
 
-MAPA = UBICACIÓN / RECORRIDO.
+No inventes contenido comercial.
 
-MEDIA KIT = SELECCIÓN + SOLICITUD.
+No reemplaces datos reales por mocks.
 
-DASHBOARD = ADMINISTRACIÓN.
+No agregues nuevas funcionalidades de negocio.
 
-HOMELY = REFERENCIA LANDING.
+No agregues nuevas dependencias salvo autorización explícita.
 
-DASHBOARD SHELL = REFERENCIA DASHBOARD.
+No cambies la identidad de Grupo Comunicarte.
 
-NO COPIAR IDENTIDADES EXTERNAS.
+No recrees el logo.
 
-NO TOMAR DECISIONES AL AZAR.
+No copies literalmente Homely ni ninguna identidad externa.
 
-CONSERVAR ANTES DE CREAR.
+PRIORIDAD:
 
-REUTILIZAR ANTES DE INVENTAR.
+1. funcionalidad existente
+2. este DESIGN.md
+3. assets existentes
+4. componentes existentes
+5. referencia visual Homely
 
-RESPONSIVE NO SIGNIFICA REDUCIR.
+Objetivo final:
 
-RESPONSIVE SIGNIFICA ADAPTAR.
-
-EL ASSET OFICIAL SIEMPRE TIENE
-PRIORIDAD SOBRE UNA RECREACIÓN VISUAL.
+UNA LANDING MÁS PROFESIONAL, MÁS CLARA, MÁS COMERCIAL Y MÁS CONVINCENTE, SIN ALTERAR EL NÚCLEO FUNCIONAL DEL PRODUCTO.

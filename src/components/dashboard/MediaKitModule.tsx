@@ -4,6 +4,12 @@ import { DoohScreen } from "../../types";
 import { downloadMediaKitAsHtml } from "../../utils/mediaKitExport";
 import { useAuth } from "../AuthContext";
 import { GoogleAuthProvider } from "firebase/auth";
+import {
+  auth,
+  googleAuthProvider,
+  googleSlidesAuthProvider,
+  signInWithPopup,
+} from "../../lib/firebase-auth";
 import { safeFetchJson } from "../../lib/apiClient";
 import { formatPrice } from "../../utils/formatPrice";
 
@@ -142,12 +148,7 @@ export const MediaKitModule: React.FC<MediaKitModuleProps> = ({
               
               // Fallback inside timer to frontend login if backend auth failed or is not fully configured
               triggerToast("Iniciando autenticación interactiva de Google...");
-              const {
-  googleSlidesAuthProvider,
-  googleAuthProvider,
-  signInWithPopup,
-  auth,
-} = await import("../../lib/firebase-auth");
+              
               let loginRes;
               try {
                 loginRes = await signInWithPopup(auth, googleSlidesAuthProvider);
@@ -167,9 +168,7 @@ export const MediaKitModule: React.FC<MediaKitModuleProps> = ({
         } else {
           // Fallback: Trigger Google Login popup on the frontend to get the accessToken
           triggerToast("Iniciando autenticación interactiva de Google...");
-          const { googleAuthProvider, signInWithPopup, auth } = await import(
-  "../../lib/firebase-auth"
-);
+          
           const loginRes = await signInWithPopup(auth, googleAuthProvider);
           const credential = GoogleAuthProvider.credentialFromResult(loginRes);
           if (credential?.accessToken) {

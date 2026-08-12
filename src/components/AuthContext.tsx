@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { safeFetchJson } from "../lib/apiClient";
+<<<<<<< HEAD
 import type { User, UserMetadata } from "firebase/auth";
 import {
   auth,
@@ -10,6 +11,14 @@ import {
   GoogleAuthProvider,
   signOut,
 } from "../lib/firebase-auth-core";
+=======
+import type { User, Auth, GoogleAuthProvider, UserMetadata } from "firebase/auth";
+import {
+  auth,
+  googleAuthProvider,
+  signInWithRedirect,
+} from "../lib/firebase-auth";
+>>>>>>> f25a24f (refactor: consolidate firebase auth imports)
 
 export interface AuthContextProps {
   user: User | null;
@@ -51,6 +60,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const initializeAuth = async () => {
       try {
+<<<<<<< HEAD
         unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
           if (cancelled) return;
           setLoading(true);
@@ -69,6 +79,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               });
             } catch (error) {
               console.error("Error fetching or syncing token:", error);
+=======
+        // Get the auth instance from the local firebase setup
+        
+        // Dynamically import only the functions needed from firebase/auth
+        const { onAuthStateChanged, getRedirectResult, GoogleAuthProvider } = await import("firebase/auth");
+
+        const unsubscribe = onAuthStateChanged(
+          auth,
+          async (currentUser) => {
+            setLoading(true);
+            if (currentUser) {
+              setUser(currentUser);
+              try {
+                const idToken = await currentUser.getIdToken(true);
+                setToken(idToken);
+
+                // Sync with PostgreSQL
+                await safeFetchJson("/api/auth/sync", {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${idToken}`,
+                  },
+                });
+              } catch (error) {
+                console.error("Error fetching or syncing token:", error);
+              }
+            } else {
+              setUser(null);
+              setToken(null);
+              setGoogleAccessToken(null);
+>>>>>>> f25a24f (refactor: consolidate firebase auth imports)
             }
           } else {
             setUser(null);
@@ -113,6 +155,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const loginWithGoogle = async () => {
     setLoading(true);
+<<<<<<< HEAD
+=======
+    
+>>>>>>> f25a24f (refactor: consolidate firebase auth imports)
     await signInWithRedirect(auth, googleAuthProvider);
   };
 
@@ -172,6 +218,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setGoogleAccessToken(null);
         return;
       }
+<<<<<<< HEAD
+=======
+       // Import auth instance
+      const { signOut } = await import("firebase/auth"); // Import signOut function
+>>>>>>> f25a24f (refactor: consolidate firebase auth imports)
       await signOut(auth);
       setUser(null);
       setToken(null);

@@ -1,4 +1,4 @@
-import { SpacesRepository, CampaignsRepository, MediaKitsRepository, TenantsRepository } from "../repositories/index.ts";
+import { SpacesRepository, CampaignsRepository, MediaKitsRepository, TenantsRepository, ClientsRepository } from "../repositories/index.ts";
 import { db } from "../db/index.ts";
 import { screens, campaigns, leads, metrics, clientes } from "../db/schema.ts";
 import { eq, sql, and } from "drizzle-orm";
@@ -79,6 +79,32 @@ export const MediaKitsService = {
   async deleteMediaKit(id: string) {
     await this.getMediaKitDetails(id); // checks existence
     return MediaKitsRepository.delete(id);
+  }
+};
+
+export const ClientsService = {
+  async getClients(dto: PaginationQueryDTO) {
+    return ClientsRepository.findAndCount(dto);
+  },
+
+  async getClientDetails(id: string) {
+    const client = await ClientsRepository.findById(id);
+    if (!client) throw new Error("Client not found");
+    return client;
+  },
+
+  async createClient(data: any) {
+    return ClientsRepository.create(data);
+  },
+
+  async updateClient(id: string, data: any) {
+    await this.getClientDetails(id); // checks existence
+    return ClientsRepository.update(id, data);
+  },
+
+  async deleteClient(id: string) {
+    await this.getClientDetails(id); // checks existence
+    return ClientsRepository.delete(id);
   }
 };
 

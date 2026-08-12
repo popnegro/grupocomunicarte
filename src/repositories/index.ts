@@ -1,7 +1,7 @@
 import { db } from "../db/index.ts";
 import {
   screens, cities, categories, media, mediakits, campaigns, campaignScreens,
-  users, roles, permissions, userRoles, rolePermissions, tenants
+  users, roles, permissions, userRoles, rolePermissions, tenants, clientes
 } from "../db/schema.ts";
 import { eq, like, and, or, desc, asc, sql } from "drizzle-orm";
 import { PaginationQueryDTO } from "../validation/validator.ts";
@@ -196,6 +196,69 @@ export const MediaKitsRepository = {
 
   async delete(id: string) {
     const [deletedRow] = await db.delete(mediakits).where(eq(mediakits.id, id)).returning();
+    return deletedRow || null;
+  }
+};
+
+export const ClientsRepository = {
+  async findAndCount(dto: PaginationQueryDTO) {
+    let conditions = [];
+
+    if (dto.search) {
+      conditions.push(
+        or(
+          like(clientes.nombre, `%${dto.search}%`),
+          like(clientes.empresa, `%${dto.search}%`)
+        )
+      );
+    }
+
+    if (dto.filters?.tenantId) {
+      conditions.push(eq(clientes.tenantId, dto.filters.tenantId));
+    }
+
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
+    let query = db.select().from(clientes);
+    if (whereClause) {
+      query = query.where(whereClause) as any;
+    }
+
+    query = query.orderBy(desc(clientes.createdAt)) as any;
+
+    const data = await query.limit(dto.limit).offset(dto.offset);
+
+    let countQuery = db.select({ count: sql<number>`count(*)` }).from(clientes);
+    if (whereClause) {
+      countQuery = countQuery.where(whereClause) as any;
+    }
+    const [countResult] = await countQuery;
+    const total = Number(countResult?.count || 0);
+
+    return { data, total, page: dto.page, limit: dto.limit };
+  },
+
+  async findById(id: string) {
+    const [row] = await db.select().from(clientes).where(eq(clientes.id, id)).limit(1);
+    return row || null;
+  },
+
+  async create(data: any) {
+    const [newRow] = await db.insert(clientes).values(data).returning();
+    return newRow;
+  },
+
+  async update(id: string, data: any) {
+    const [updatedRow] = await db
+      .update(clientes)
+      .set({ ...data, updatedAt: new Date() })
+      .where(eq(clientes.id, id))
+      .returning();
+    return updatedRow;
+  },
+
+  async delete(id: string) {
+    const [deletedRow] = await db.delete(clientes).where(eq(clientes.id, id)).returning();
     return deletedRow || null;
   }
 };

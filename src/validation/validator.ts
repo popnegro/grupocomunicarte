@@ -193,3 +193,33 @@ export function validateMediaKitDTO(body: any) {
     tenantId: body.tenantId ? String(body.tenantId).trim() : "tenant-default"
   };
 }
+
+export function validateClientDTO(body: any) {
+  const errors: Record<string, string> = {};
+
+  if (body.nombre !== undefined && (typeof body.nombre !== "string" || body.nombre.trim() === "")) {
+    errors.nombre = "Client name (nombre) is required and must be a non-empty string";
+  }
+
+  if (body.empresa !== undefined && (typeof body.empresa !== "string" || body.empresa.trim() === "")) {
+    errors.empresa = "Company (empresa) is required and must be a non-empty string";
+  }
+
+  if (body.email !== undefined && (typeof body.email !== "string" || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.email))) {
+    errors.email = "Email is not valid";
+  }
+
+  if (Object.keys(errors).length > 0) {
+    throw new ValidationError(errors, "Invalid client details");
+  }
+
+  return {
+    nombre: body.nombre ? String(body.nombre).trim() : undefined,
+    empresa: body.empresa ? String(body.empresa).trim() : undefined,
+    email: body.email ? String(body.email).trim().toLowerCase() : undefined,
+    telefono: body.telefono ? String(body.telefono).trim() : null,
+    cuit: body.cuit ? String(body.cuit).trim() : null,
+    condicionIva: body.condicionIva ? String(body.condicionIva).trim() : null,
+    tenantId: body.tenantId ? String(body.tenantId).trim() : "tenant-default"
+  };
+}

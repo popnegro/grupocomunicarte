@@ -1,103 +1,56 @@
-# LeadMóvil DOOH Platform — Grupo Comunicarte (PMV Producción)
+<img src="https://avatars2.githubusercontent.com/u/2810941?v=3&s=96" alt="Google Cloud Platform logo" title="Google Cloud Platform" align="right" height="96" width="96"/>
 
-Plataforma integral de gestión publicitaria Smart OOH, inventario de pantallas LED, cotizaciones, analíticas de impacto y consola de administración DOOH.
+# Simple application to interact with Gemini API
 
----
+"NodeJS: Gemini API" is a simple sample application that shows you how to interact with Google's Gemini APIs .
 
-## 🚀 Guía de Inicio Rápido (Desarrollo Local)
+## Table of Contents
 
-### Requisitos Previos
-- **Node.js**: v18 o superior
-- **npm**: v9 o superior
+* [Directory contents](#directory-contents)
+* [Setting up the API Key](#setting-up-the-api-key)
+* [Getting started](#getting-started-with-vs-code)
+* [Sign up for user research](#sign-up-for-user-research)
 
-### Pasos de Instalación
+## Directory contents
+* `launch.json` - config file for later when you deploy your application to Google Cloud
+* `index.js` - the Node sample application that asks Gemini API to generate content based on a prompt
+* `package.json` - includes the google generative ai dependency
 
-1. **Clonar o descargar el repositorio**:
-   ```bash
-   git clone <URL_DEL_REPOSITO>
-   cd grupocomunicarte
-   ```
+## Setting up the API Key
+Before you can use the Gemini API, you must first obtain an API key. If you don't already have one, create a key with one click in Google AI Studio.
+[Get API](https://makersuite.google.com/app/apikey)
 
-2. **Instalar dependencias**:
-   ```bash
-   npm install
-   ```
+## Getting started with Cloud Code
 
-3. **Configurar Variables de Entorno**:
-   Copia el archivo `.env.example` a `.env` (o `.env.local` en desarrollo):
-   ```bash
-   cp .env.example .env
-   ```
-   Asigna las claves correspondientes (`GEMINI_API_KEY`, `VITE_ADMIN_EMAILS`, etc.).
+### Run the application locally
 
-4. **Iniciar Servidor de Desarrollo**:
-   ```bash
-   npm run dev
-   ```
-   Abre la aplicación en `http://localhost:3000`.
+1. Make sure you have generated the API key as shown above. Please make sure to use and store this key securely.
 
----
+1. Install the package using
+```npm install @google/generative-ai```
 
-## 🛠️ Comandos Principales
+1. Run this using
+```node index.js```
 
-| Comando | Descripción |
-|---|---|
-| `npm run dev` | Inicia el servidor de desarrollo Express + Vite en puerto 3000 |
-| `npm run lint` | Ejecuta verificación estática de tipos con TypeScript (`tsc --noEmit`) |
-| `npm run build` | Compila el frontend cliente en `dist/` y el servidor CJS en `dist/server.cjs` |
-| `npm run build:clean` | Limpia artefactos anteriores (`dist/`) y compila una compilación limpia desde cero |
-| `npm run start` | Inicia el servidor de producción optimizado desde `dist/server.cjs` |
+### Documentation
+1. You can see detailed API Reference for the Gemini APIs [here](https://googledevai.google.com/api)
 
----
+1. You can see more samples and things to do [here](https://googledevai.google.com/tutorials/python_quickstart)
 
-## 🔑 Autenticación y Cuenta Administradora Principal
+### Other things to try
 
-- La cuenta administradora principal por defecto es: **`grupo.comunicarte.dev@gmail.com`**.
-- Las cuentas administradoras autorizadas se configuran mediante la variable de entorno `VITE_ADMIN_EMAILS` (separadas por comas) o mediante la colección de roles en Firestore, evitando codificar correos de forma rígida.
-- El panel de administración (`/dashboard/admin`) está resguardado mediante `ProtectedRoute` con validación de rol `admin`.
+1. If you're new to Google Cloud, [create an account](https://console.cloud.google.com/freetrial/signup/tos) to evaluate how our products perform in real-world scenarios. New customers also get $300 in free credits to run, test, and deploy workloads.
 
----
+1. Install the Cloud Code [VS Code plugin](https://cloud.google.com/code/docs/vscode/install#installing) or [Jetbrains Extension](https://cloud.google.com/code/docs/intellij/install) if you haven't already.
 
-## ☁️ Despliegue en Vercel / Cloud Run
+1. Access Cloud Code [documentation](https://cloud.google.com/code/docs/) to learn how you can deploy your app to Google Cloud
 
-> ⚠️ **Política Obligatoria de Build Limpio**: Siempre ejecuta `npm run build:clean` antes de subir o empaquetar artefactos para producción. Esto elimina cualquier caché anterior o versión remanente en `dist/`, evitando problemas de pantalla blanca, chunks obsoletos o inconsistencias entre el frontend y el servidor.
+### Sign up for user research
 
-### Despliegue Automático en Vercel
-1. Conecta el repositorio GitHub a **Vercel**.
-2. Framework Preset: **Vite / Node.js**.
-3. Configura el comando de compilación (Build Command) en Vercel como `npm run build:clean`.
-4. Configura las **Environment Variables** en la consola de Vercel (ver `.env.example`).
-5. Vercel utilizará la configuración definida en `vercel.json` y la ruta serverless `api/index.ts`.
+We want to hear your feedback!
 
-### Despliegue en Google Cloud Run / Docker
-1. Compilar el bundle de producción limpiando artefactos previos:
-   ```bash
-   npm run build:clean
-   ```
-2. Ejecutar con Node.js en contenedor:
-   ```bash
-   npm run start
-   ```
-   El servidor responderá en el puerto `3000` en host `0.0.0.0`.
+The Cloud Code team is inviting our user community to sign-up to participate in Google User Experience Research.
 
----
+If you’re invited to join a study, you may try out a new product or tell us what you think about the products you use every day. At this time, Google is only sending invitations for upcoming remote studies. Once a study is complete, you’ll receive a token of thanks for your participation such as a gift card or some Google swag.
 
-## 📋 Variables de Entorno Principales
-
-Consulta `.env.example` para la lista completa.
-- `GEMINI_API_KEY`: Clave de servidor para la IA de planificación comercial DOOH.
-- `VITE_ADMIN_EMAILS`: Correos electrónicos autorizados con rol Administrador.
-- `OFFICIAL_GMAIL_ACCOUNT`: Cuenta de Gmail oficial autorizada para la integración de Google Slides/Gmail.
-- `DATABASE_URL` / `POSTGRES_URL`: Cadena de conexión para PostgreSQL / Cloud SQL (opcional).
-- `RESEND_API_KEY`: Servicio de envío de notificaciones por email.
-
----
-
-## 🛡️ Checklist de Producción
-- [x] Verificación TypeScript limpia (`tsc --noEmit` sin errores)
-- [x] Build de producción limpio y validado (`npm run build:clean`) sin artefactos o cachés corruptas
-- [x] Resguardo de rutas del Dashboard con `ProtectedRoute` y `ErrorBoundary`
-- [x] Configuración de roles y administración desacoplada por variables de entorno
-- [x] Sanitización de variables de entorno y prevención de fugas de secretos
-- [x] Archivo `vercel.json` y entrada serverless `api/index.ts` probados y operativos
-
+[Sign up using this link](https://google.qualtrics.com/jfe/form/SV_4Me7SiMewdvVYhL?reserved=1&utm_source=In-product&Q_Language=en&utm_medium=own_prd&utm_campaign=Q1&productTag=clou&campaignDate=January2021&referral_code=UXbT481079) and answer a few questions about yourself, as this will help our research team match you to studies that are a great fit.

@@ -9,7 +9,7 @@ import {
   getRedirectResult,
   GoogleAuthProvider,
   signOut,
-} from "../lib/firebase-auth";
+} from "../lib/firebase-auth-core";
 
 export interface AuthContextProps {
   user: User | null;
@@ -81,20 +81,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const result = await getRedirectResult(auth);
         if (result && !cancelled) {
           const credential = GoogleAuthProvider.credentialFromResult(result);
-          if (credential?.accessToken) {
-            setGoogleAccessToken(credential.accessToken);
-          }
-
+          if (credential?.accessToken) setGoogleAccessToken(credential.accessToken);
           const idToken = await result.user.getIdToken(true);
           if (!cancelled) {
             setToken(idToken);
             setUser(result.user);
             await safeFetchJson("/api/auth/sync", {
               method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${idToken}`,
-              },
+              headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
             });
           }
         }
@@ -111,7 +105,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     initializeAuth();
-
     return () => {
       cancelled = true;
       unsubscribe?.();
@@ -156,17 +149,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         refreshToken: "demo-refresh-token",
         delete: async () => { console.log("Demo user delete called"); },
       } as unknown as User;
-
       setUser(demoUser);
       setToken("demo-token-abc-123");
       setGoogleAccessToken("demo-google-access-token");
-
       await safeFetchJson("/api/auth/sync", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer demo-token-abc-123",
-        },
+        headers: { "Content-Type": "application/json", "Authorization": "Bearer demo-token-abc-123" },
       });
     } catch (err) {
       console.error("Demo login error:", err);
@@ -205,8 +193,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
+  if (!context) throw new Error("useAuth must be used within an AuthProvider");
   return context;
 };

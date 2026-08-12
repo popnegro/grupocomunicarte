@@ -5,6 +5,7 @@ import { createServer as createViteServer } from 'vite';
 import path from 'path';
 
 import { db } from './src/db/index';
+import { apiV1Router } from './src/api/v1/router';
 import { leads, screens, clientes, mediakits, changelogs } from './src/db/schema';
 import { eq, desc, and, or } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
@@ -27,6 +28,9 @@ app.use(cors({
 
 // Ensure Firebase Admin SDK is initialized
 import './src/lib/firebase-admin';
+
+// Mount the v1 API router
+app.use('/api/v1', apiV1Router);
 
 // GET /api/leads
 app.get('/api/leads', protect, async (req: AuthRequest, res) => { // Apply protect middleware

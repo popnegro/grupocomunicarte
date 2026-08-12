@@ -1,5 +1,6 @@
 // src/db/schema.ts
-import { pgTable, text, timestamp, integer, doublePrecision, boolean, serial, primaryKey } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, integer, doublePrecision, boolean, serial, primaryKey, pgEnum, jsonb } from 'drizzle-orm/pg-core';
+import { relations } from 'drizzle-orm';
 
 // 2.1. Gestión Multi-Inquilino (Multi-Tenant)
 export const tenants = pgTable('tenants', {
@@ -37,6 +38,13 @@ export const users = pgTable('users', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
+
+export const usersRelations = relations(users, ({ one }) => ({
+  tenant: one(tenants, {
+    fields: [users.tenantId],
+    references: [tenants.id],
+  }),
+}));
 
 export const userRoles = pgTable('user_roles', {
   userId: integer('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
@@ -177,17 +185,6 @@ export const campaigns = pgTable('campaigns', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
-export const campaignScreens = pgTable('campaign_screens', {
-  campaignId: text('campaign_id').references(() => campaigns.id, { onDelete: 'cascade' }).notNull(),
-  screenId: text('screen_id').references(() => screens.id, { onDelete: 'cascade' }).notNull(),
-  precioAcordado: integer('precio_acordado'),
-  fechaInicioSoporte: text('fecha_inicio_soporte'),
-  fechaFinSoporte: text('fecha_fin_soporte'),
-}, (t) => [
-  primaryKey({ columns: [t.campaignId, t.screenId] })
-]);
-
-// 2.5. Recursos Multimedia, Etiquetas y Métricas de Rendimiento
 export const leads = pgTable('leads', {
   id: text('id').primaryKey(),
   tenantId: text('tenant_id').references(() => tenants.id, { onDelete: 'cascade' }),
@@ -203,6 +200,54 @@ export const leads = pgTable('leads', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
+
+// --- Quotes Section ---
+
+export const quoteStatusEnum = pgEnum('quote_status', ['REQUESTED', 'QUOTED', 'ACCEPTED', 'REJECTED', 'EXPIRED']);
+
+export const quotes = pgTable('quotes', {
+  id: text('id').primaryKey(),
+  tenantId: text('tenant_id').references(() => tenants.id, { onDelete: 'cascade' }).notNull(),
+  leadId: text('lead_id').references(() => leads.id, { onDelete: 'set null' }),
+  userId: integer('user_id').references(() => users.id, { onDelete: 'set null' }),
+  status: quoteStatusEnum('status').default('REQUESTED').notNull(),
+
+  // Initial request data
+  message: text('message'),
+  screenIds: jsonb('screen_ids'), // Array of screen IDs
+  startDate: timestamp('start_date'),
+  endDate: timestamp('end_date'),
+
+  // Admin-provided quote data
+  quotedPrice: doublePrecision('quoted_price'),
+  adminComments: text('admin_comments'),
+  validUntil: timestamp('valid_until'),
+
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+export const quotesRelations = relations(quotes, ({ one }) => ({
+  lead: one(leads, {
+    fields: [quotes.leadId],
+    references: [leads.id],
+  }),
+}));
+
+export type Quote = typeof quotes.$inferSelect;
+export type NewQuote = typeof quotes.$inferInsert;
+
+export const campaignScreens = pgTable('campaign_screens', {
+  campaignId: text('campaign_id').references(() => campaigns.id, { onDelete: 'cascade' }).notNull(),
+  screenId: text('screen_id').references(() => screens.id, { onDelete: 'cascade' }).notNull(),
+  precioAcordado: integer('precio_acordado'),
+  fechaInicioSoporte: text('fecha_inicio_soporte'),
+  fechaFinSoporte: text('fecha_fin_soporte'),
+}, (t) => [
+  primaryKey({ columns: [t.campaignId, t.screenId] })
+]);
+
+// 2.5. Recursos Multimedia, Etiquetas y Métricas de Rendimiento
 export const tags = pgTable('tags', {
   id: text('id').primaryKey(),
   name: text('name').notNull(),

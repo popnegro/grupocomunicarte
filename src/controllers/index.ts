@@ -10,6 +10,7 @@ import {
   CitiesRepository, CategoriesRepository, MediaRepository, UsersRepository, RolesRepository, PermissionsRepository, TenantsRepository
 } from "../repositories/index.ts";
 import { logger } from "../middleware/logger.ts";
+import { quotesController } from './quotes.controller.ts';
 
 export const SpacesController = {
   async getAll(req: SecureAuthRequest, res: Response, next: NextFunction) {
@@ -67,6 +68,8 @@ export const SpacesController = {
     }
   }
 };
+
+export const QuotesController = quotesController;
 
 export const CampaignsController = {
   async getAll(req: SecureAuthRequest, res: Response, next: NextFunction) {

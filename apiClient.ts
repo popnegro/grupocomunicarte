@@ -22,13 +22,16 @@ interface Lead {
 
 interface Quote {
   id: string;
-  status: string;
-  total: number;
-  validUntil: Date;
-  clientId: string;
+  status: 'REQUESTED' | 'QUOTED' | 'ACCEPTED' | 'REJECTED' | 'EXPIRED';
+  quotedPrice: number | null;
+  validUntil: string | null; // ISO Date String
+  leadId: string | null;
   userId: string;
-  createdAt: Date;
-  client?: { id: string; name: string }; // Include relations as returned by API
+  createdAt: string; // ISO Date String
+  lead?: {
+    id: string;
+    name: string;
+  };
 }
 
 interface MediaKit {

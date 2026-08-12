@@ -4,7 +4,7 @@ import { defaultRateLimiter } from "../../middleware/rateLimiter.ts";
 import { cacheMiddleware } from "../../middleware/cache.ts";
 import { requirePermission } from "../../middleware/rbac.ts";
 import {
-  SpacesController, CampaignsController, MediaKitsController, CitiesController,
+  SpacesController, CampaignsController, MediaKitsController, CitiesController, QuotesController,
   CategoriesController, MediaController, UsersController, DashboardController,
   SearchController, TenantsController
 } from "../../controllers/index.ts";
@@ -56,6 +56,13 @@ router.get("/mediakits/:id", cacheMiddleware(10000), MediaKitsController.getById
 router.post("/mediakits", requirePermission("edit_campaigns"), MediaKitsController.create);
 router.put("/mediakits/:id", requirePermission("edit_campaigns"), MediaKitsController.update);
 router.delete("/mediakits/:id", requirePermission("edit_campaigns"), MediaKitsController.delete);
+
+// --- QUOTES ---
+// This entity manages commercial quotes requested by leads/clients.
+router.get("/quotes", requirePermission("view_quotes"), QuotesController.getAll);
+router.get("/quotes/:id", requirePermission("view_quotes"), QuotesController.getById);
+router.post("/quotes", requirePermission("create_quotes"), QuotesController.create);
+router.put("/quotes/:id", requirePermission("edit_quotes"), QuotesController.update);
 
 
 // --- MEDIA ASSETS ---

@@ -1,8 +1,8 @@
-import { SpacesRepository, CampaignsRepository, MediaKitsRepository, TenantsRepository, ClientsRepository } from "../repositories/index.ts";
-import { db } from "../db/index.ts";
-import { screens, campaigns, leads, metrics, clientes } from "../db/schema.ts";
+import { SpacesRepository, CampaignsRepository, MediaKitsRepository, TenantsRepository, ClientsRepository } from "../repositories/index";
+import { db } from "../../src/db/index";
+import { screens, campaigns, leads, metrics, clientes } from "../../src/db/schema";
 import { eq, sql, and } from "drizzle-orm";
-import { PaginationQueryDTO } from "../validation/validator.ts";
+import { PaginationQueryDTO } from "../validation/validator";
 
 export const SpacesService = {
   async getSpaces(dto: PaginationQueryDTO) {

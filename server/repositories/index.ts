@@ -1,10 +1,10 @@
-import { db } from "../db/index.ts";
+import { db } from "../../src/db/index";
 import {
   screens, cities, categories, media, mediakits, campaigns, campaignScreens,
   users, roles, permissions, userRoles, rolePermissions, tenants, clientes
-} from "../db/schema.ts";
+} from "../../src/db/schema";
 import { eq, like, and, or, desc, asc, sql } from "drizzle-orm";
-import { PaginationQueryDTO } from "../validation/validator.ts";
+import { PaginationQueryDTO } from "../validation/validator";
 
 export const SpacesRepository = {
   async findAndCount(dto: PaginationQueryDTO) {

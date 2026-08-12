@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { quoteStatusEnum } from '../db/schema';
+import { quoteStatusEnum } from '../../src/db/schema';
 
 export const quoteCreateSchema = z.object({
   leadId: z.string().uuid(),

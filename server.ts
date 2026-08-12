@@ -5,13 +5,13 @@ import { createServer as createViteServer } from 'vite';
 import path from 'path';
 
 import { db } from './src/db/index';
-import { apiV1Router } from './src/api/v1/router';
+import { apiV1Router } from './server/api/v1/router';
 import { leads, screens, clientes, mediakits, changelogs } from './src/db/schema';
 import { eq, desc, and, or } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
-import { protect, AuthRequest } from './src/middleware/auth'; // Import the protect middleware and AuthRequest type
-import { validateSpaceDTO } from './src/validation/validator';
-import { MediaRepository } from './src/repositories/index';
+import { protect, AuthRequest } from './server/middleware/auth'; // Import the protect middleware and AuthRequest type
+import { validateSpaceDTO } from './server/validation/validator';
+import { MediaRepository } from './server/repositories/index';
 import { getGalleryMedia } from './src/utils/screenMedia';
 
 const isVercel = process.env.VERCEL === '1';
@@ -27,7 +27,7 @@ app.use(cors({
 
 
 // Ensure Firebase Admin SDK is initialized
-import './src/lib/firebase-admin';
+import './server/firebase-admin';
 
 // Mount the v1 API router
 app.use('/api/v1', apiV1Router);
@@ -105,7 +105,7 @@ app.post('/api/leads', async (req, res) => {
 
     // Sync to Firestore under centralized management (safe wrap)
     try {
-      const { adminDb } = await import('./src/lib/firebase-admin');
+      const { adminDb } = await import('./server/firebase-admin');
       if (adminDb) {
         await adminDb.collection('leads').doc(newLead.id).set({
           ...newLead,

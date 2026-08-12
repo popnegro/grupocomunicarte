@@ -1,9 +1,9 @@
 import { quotesRepository, QuotesRepository } from '../repositories/quotes.repository';
-import { NewQuote, Quote, quoteStatusEnum, users } from '../db/schema';
+import { NewQuote, Quote, quoteStatusEnum, users } from '../../src/db/schema';
 import { AppError } from '../middleware/errorHandler';
 import { z } from 'zod';
 import { quoteUpdateSchema } from '../validation/quotes.validator';
-import { db } from '../db';
+import { db } from '../../src/db';
 import { eq } from 'drizzle-orm';
 
 export class QuotesService {

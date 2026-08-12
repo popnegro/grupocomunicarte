@@ -1,6 +1,6 @@
 // src/lib/apiClient.ts
 
-import { auth } from "./firebase";
+import { auth } from "./firebase-auth";
 
 interface ApiResponse<T> {
   ok: boolean;

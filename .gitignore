@@ -7,3 +7,6 @@ coverage/
 .env*
 .env
 !.env.example
+
+# Generated development artifact
+stats.html

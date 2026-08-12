@@ -1,7 +1,8 @@
 import React from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { motion } from "motion/react";
-import { AuthProvider, useAuth } from "./components/AuthContext";
+import { LazyAuthProvider } from "./components/LazyAuthProvider";
+import { useAuth } from "./components/AuthContext";
 import { CmsProvider } from "./components/CmsContext";
 import { LandingView } from "./components/LandingView";
 import { DashboardView } from "./components/DashboardView";
@@ -115,7 +116,7 @@ function LoginRoute() {
 
 export default function App() {
   return (
-    <AuthProvider>
+    <LazyAuthProvider>
       <ToastProvider>
         <BrowserRouter>
           <CmsProvider>
@@ -151,6 +152,6 @@ export default function App() {
           </CmsProvider>
         </BrowserRouter>
       </ToastProvider>
-    </AuthProvider>
+    </LazyAuthProvider>
   );
 }

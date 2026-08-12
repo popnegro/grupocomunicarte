@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { collection, getDocs, doc, setDoc, updateDoc, deleteDoc } from "firebase/firestore";
-import { db } from "../lib/firebase";
+import { db } from "../lib/firebase-firestore";
 import { DoohScreen } from "../types";
 
 export interface UseInventoryResult {

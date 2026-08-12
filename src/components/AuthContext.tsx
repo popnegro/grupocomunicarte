@@ -1,9 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { User, onAuthStateChanged, signOut, GoogleAuthProvider } from "firebase/auth";
-import { auth, googleAuthProvider, signInWithRedirect, getRedirectResult } from "../lib/firebase";
 import { safeFetchJson } from "../lib/apiClient";
+import type { User, Auth, GoogleAuthProvider, UserMetadata } from "firebase/auth";
 
-interface AuthContextProps {
+export interface AuthContextProps {
   user: User | null;
   loading: boolean;
   token: string | null;
@@ -16,7 +15,7 @@ interface AuthContextProps {
   setGoogleAccessToken: (token: string | null) => void;
 }
 
-const AuthContext = createContext<AuthContextProps | undefined>(undefined);
+export const AuthContext = createContext<AuthContextProps | undefined>(undefined);
 
 // Configurable list of admin emails (reads from env var or defaults to main admin email)
 const getAdminEmails = (): string[] => {
@@ -38,71 +37,68 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const isAdmin = Boolean(user?.email && adminEmails.includes(user.email.toLowerCase()));
   const userRole = isAdmin ? "admin" : "viewer";
 
+  // Effect for handling auth state changes and redirect results
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(
-      auth,
-      async (currentUser) => {
-        setLoading(true);
-        if (currentUser) {
-          setUser(currentUser);
-          try {
-            const idToken = await currentUser.getIdToken(true);
-            setToken(idToken);
-            
-            // Sync with PostgreSQL
-            await safeFetchJson("/api/auth/sync", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${idToken}`,
-              },
-            });
-          } catch (error) {
-            console.error("Error fetching or syncing token:", error);
-          }
-        } else {
-          setUser(null);
-          setToken(null);
-          setGoogleAccessToken(null);
-        }
-        setLoading(false);
-      },
-      (error) => {
-        console.error("Auth state change error:", error);
-        setUser(null);
-        setToken(null);
-        setGoogleAccessToken(null);
-        setLoading(false);
-      }
-    );
-
-    return () => unsubscribe();
-  }, []);
-
-
-  useEffect(() => {
-    const handleRedirectResult = async () => {
+    const initializeAuth = async () => {
       try {
+        // Get the auth instance from the local firebase setup
+        const { auth } = await import("../lib/firebase");
+        // Dynamically import only the functions needed from firebase/auth
+        const { onAuthStateChanged, getRedirectResult, GoogleAuthProvider } = await import("firebase/auth");
+
+        const unsubscribe = onAuthStateChanged(
+          auth,
+          async (currentUser) => {
+            setLoading(true);
+            if (currentUser) {
+              setUser(currentUser);
+              try {
+                const idToken = await currentUser.getIdToken(true);
+                setToken(idToken);
+
+                // Sync with PostgreSQL
+                await safeFetchJson("/api/auth/sync", {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${idToken}`,
+                  },
+                });
+              } catch (error) {
+                console.error("Error fetching or syncing token:", error);
+              }
+            } else {
+              setUser(null);
+              setToken(null);
+              setGoogleAccessToken(null);
+            }
+            // Defer setting loading to false until after redirect handling
+          },
+          (error) => {
+            console.error("Auth state change error:", error);
+            setUser(null);
+            setToken(null);
+            setGoogleAccessToken(null);
+            setLoading(false);
+          }
+        );
+
+        // Handle redirect result after initializing auth
         const result = await getRedirectResult(auth);
         if (result) {
           const credential = GoogleAuthProvider.credentialFromResult(result);
           if (credential?.accessToken) {
             setGoogleAccessToken(credential.accessToken);
           }
-          
+
           const idToken = await result.user.getIdToken(true);
           setToken(idToken);
           setUser(result.user);
 
           // Sync with PostgreSQL
-          await safeFetchJson("/api/auth/sync", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": `Bearer ${idToken}`,
-            },
-          });
+          await safeFetchJson("/api/auth/sync", { method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${idToken}` } });
         }
+        return unsubscribe;
       } catch (error) {
         console.error("Google redirect login failed:", error);
       } finally {
@@ -110,31 +106,45 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     };
 
-    handleRedirectResult();
+    const unsubscribePromise = initializeAuth();
+
+    return () => {
+      unsubscribePromise.then(unsubscribe => unsubscribe && unsubscribe());
+    };
   }, []);
 
   const loginWithGoogle = async () => {
     setLoading(true);
+    const { auth, googleAuthProvider, signInWithRedirect } = await import("../lib/firebase");
     await signInWithRedirect(auth, googleAuthProvider);
   };
 
   const loginAsDemo = async () => {
     setLoading(true);
     try {
-      const demoUser = {
+      const demoUser: User = {
         uid: "demo-user-123",
         email: "grupo.comunicarte.dev@gmail.com",
         displayName: "Usuario Demo",
         emailVerified: true,
         isAnonymous: false,
-        metadata: {},
+        metadata: {
+          creationTime: new Date().toISOString(),
+          lastSignInTime: new Date().toISOString(),
+        } as UserMetadata,
         providerData: [],
         getIdToken: async () => "demo-token-abc-123",
         getIdTokenResult: async () => ({ token: "demo-token-abc-123", claims: {} }),
         reload: async () => {},
         toJSON: () => ({}),
-      } as any as User;
-
+        // Missing properties for a complete Firebase User object:
+        providerId: "firebase",
+        photoURL: null,
+        phoneNumber: null,
+        tenantId: null,
+        refreshToken: "demo-refresh-token",
+        delete: async () => { console.log("Demo user delete called"); },
+      } as User;
       setUser(demoUser);
       setToken("demo-token-abc-123");
       setGoogleAccessToken("demo-google-access-token");
@@ -164,6 +174,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setLoading(false);
         return;
       }
+      const { auth } = await import("../lib/firebase"); // Import auth instance
+      const { signOut } = await import("firebase/auth"); // Import signOut function
       await signOut(auth);
       setUser(null);
       setToken(null);

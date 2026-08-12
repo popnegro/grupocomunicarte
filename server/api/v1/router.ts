@@ -1,14 +1,14 @@
 import { Router } from "express";
-import { requireAuth } from "../../middleware/auth.ts";
-import { defaultRateLimiter } from "../../middleware/rateLimiter.ts";
-import { cacheMiddleware } from "../../middleware/cache.ts";
-import { requirePermission } from "../../middleware/rbac.ts";
+import { requireAuth } from "../../middleware/auth";
+import { defaultRateLimiter } from "../../middleware/rateLimiter";
+import { cacheMiddleware } from "../../middleware/cache";
+import { requirePermission } from "../../middleware/rbac";
 import {
   SpacesController, CampaignsController, MediaKitsController, CitiesController, QuotesController,
   CategoriesController, MediaController, UsersController, DashboardController,
   SearchController, TenantsController
-} from "../../controllers/index.ts";
-import { SwaggerController } from "../../controllers/swaggerController.ts";
+} from "../../controllers/index";
+import { SwaggerController } from "../../controllers/swaggerController";
 
 const router = Router();
 

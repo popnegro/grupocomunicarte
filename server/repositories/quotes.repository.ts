@@ -1,5 +1,5 @@
-import { db } from '../db';
-import { quotes, NewQuote, Quote, leads } from '../db/schema';
+import { db } from '../../src/db';
+import { quotes, NewQuote, Quote, leads } from '../../src/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
 

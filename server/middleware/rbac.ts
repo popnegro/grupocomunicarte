@@ -1,7 +1,7 @@
 import { Response, NextFunction } from "express";
 import { AuthRequest } from "./auth.ts";
-import { db } from "../db/index.ts";
-import { users, userRoles, roles, rolePermissions, permissions } from "../db/schema.ts";
+import { db } from "../../src/db/index";
+import { users, userRoles, roles, rolePermissions, permissions } from "../../src/db/schema";
 import { eq } from "drizzle-orm";
 import { ForbiddenError, UnauthorizedError } from "./errorHandler.ts";
 import { logger } from "./logger.ts";

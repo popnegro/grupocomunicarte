@@ -1,16 +1,16 @@
 import { Response, NextFunction } from "express";
-import { SecureAuthRequest } from "../middleware/rbac.ts";
+import { SecureAuthRequest } from "../middleware/rbac";
 import {
   SpacesService, CampaignsService, MediaKitsService, DashboardService, SearchService
-} from "../services/appServices.ts";
+} from "../services/appServices";
 import {
   validatePaginationQuery, validateSpaceDTO, validateCampaignDTO, validateMediaDTO, validateMediaKitDTO
-} from "../validation/validator.ts";
+} from "../validation/validator";
 import {
   CitiesRepository, CategoriesRepository, MediaRepository, UsersRepository, RolesRepository, PermissionsRepository, TenantsRepository
-} from "../repositories/index.ts";
-import { logger } from "../middleware/logger.ts";
-import { quotesController } from './quotes.controller.ts';
+} from "../repositories/index";
+import { logger } from "../middleware/logger";
+import { quotesController } from './quotes.controller';
 
 export const SpacesController = {
   async getAll(req: SecureAuthRequest, res: Response, next: NextFunction) {

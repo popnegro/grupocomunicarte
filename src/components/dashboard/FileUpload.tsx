@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
-import { storage } from "../../lib/firebase";
+import { storage } from "../../lib/firebase-storage";
 import { Upload, File, CheckCircle2, AlertCircle } from "lucide-react";
 
 interface FileUploadProps {

@@ -142,7 +142,12 @@ export const MediaKitModule: React.FC<MediaKitModuleProps> = ({
               
               // Fallback inside timer to frontend login if backend auth failed or is not fully configured
               triggerToast("Iniciando autenticación interactiva de Google...");
-              const { googleSlidesAuthProvider, googleAuthProvider, signInWithPopup, auth } = await import("../../lib/firebase");
+              const {
+  googleSlidesAuthProvider,
+  googleAuthProvider,
+  signInWithPopup,
+  auth,
+} = await import("../../lib/firebase-auth");
               let loginRes;
               try {
                 loginRes = await signInWithPopup(auth, googleSlidesAuthProvider);
@@ -162,7 +167,9 @@ export const MediaKitModule: React.FC<MediaKitModuleProps> = ({
         } else {
           // Fallback: Trigger Google Login popup on the frontend to get the accessToken
           triggerToast("Iniciando autenticación interactiva de Google...");
-          const { googleAuthProvider, signInWithPopup, auth } = await import("../../lib/firebase");
+          const { googleAuthProvider, signInWithPopup, auth } = await import(
+  "../../lib/firebase-auth"
+);
           const loginRes = await signInWithPopup(auth, googleAuthProvider);
           const credential = GoogleAuthProvider.credentialFromResult(loginRes);
           if (credential?.accessToken) {

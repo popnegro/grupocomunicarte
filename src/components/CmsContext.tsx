@@ -351,7 +351,7 @@ export const useCmsStore = create<CmsStoreProps>((set, get) => ({
   fetchLeads: async () => {
     try {
       const { collection, getDocs, query, limit } = await import("firebase/firestore");
-      const { db } = await import("../lib/firebase");
+      const { db } = await import("../lib/firebase-firestore");
       const leadsCol = collection(db, "leads");
       // query the top 100 leads
       const q = query(leadsCol, limit(100));

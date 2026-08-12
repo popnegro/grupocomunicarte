@@ -1,22 +1,18 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { User, onAuthStateChanged, signOut, GoogleAuthProvider } from "firebase/auth";
 import {
   auth,
   googleAuthProvider,
   signInWithRedirect,
   getRedirectResult,
-} from "../lib/firebase-auth";
+} from "../lib/firebase-auth-core";
 import { safeFetchJson } from "../lib/apiClient";
-import { AuthContext, AuthContextProps } from "./AuthContext";
+import { AuthContext } from "./AuthContext";
 
-
-// Configurable list of admin emails (reads from env var or defaults to main admin email)
 const getAdminEmails = (): string[] => {
   const envAdmins = (import.meta as any).env?.VITE_ADMIN_EMAILS || "";
   const list = envAdmins.split(",").map((e: string) => e.trim().toLowerCase()).filter(Boolean);
-  if (!list.includes("grupo.comunicarte.dev@gmail.com")) {
-    list.push("grupo.comunicarte.dev@gmail.com");
-  }
+  if (!list.includes("grupo.comunicarte.dev@gmail.com")) list.push("grupo.comunicarte.dev@gmail.com");
   return list;
 };
 
@@ -25,52 +21,40 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
   const [token, setToken] = useState<string | null>(null);
   const [googleAccessToken, setGoogleAccessToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-
   const adminEmails = getAdminEmails();
   const isAdmin = Boolean(user?.email && adminEmails.includes(user.email.toLowerCase()));
   const userRole = isAdmin ? "admin" : "viewer";
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(
-      auth,
-      async (currentUser) => {
-        setLoading(true);
-        if (currentUser) {
-          setUser(currentUser);
-          try {
-            const idToken = await currentUser.getIdToken(true);
-            setToken(idToken);
-            
-            // Sync with PostgreSQL
-            await safeFetchJson("/api/auth/sync", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${idToken}`,
-              },
-            });
-          } catch (error) {
-            console.error("Error fetching or syncing token:", error);
-          }
-        } else {
-          setUser(null);
-          setToken(null);
-          setGoogleAccessToken(null);
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      setLoading(true);
+      if (currentUser) {
+        setUser(currentUser);
+        try {
+          const idToken = await currentUser.getIdToken(true);
+          setToken(idToken);
+          await safeFetchJson("/api/auth/sync", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
+          });
+        } catch (error) {
+          console.error("Error fetching or syncing token:", error);
         }
-        setLoading(false);
-      },
-      (error) => {
-        console.error("Auth state change error:", error);
+      } else {
         setUser(null);
         setToken(null);
         setGoogleAccessToken(null);
-        setLoading(false);
       }
-    );
-
+      setLoading(false);
+    }, (error) => {
+      console.error("Auth state change error:", error);
+      setUser(null);
+      setToken(null);
+      setGoogleAccessToken(null);
+      setLoading(false);
+    });
     return () => unsubscribe();
   }, []);
-
 
   useEffect(() => {
     const handleRedirectResult = async () => {
@@ -78,21 +62,13 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
         const result = await getRedirectResult(auth);
         if (result) {
           const credential = GoogleAuthProvider.credentialFromResult(result);
-          if (credential?.accessToken) {
-            setGoogleAccessToken(credential.accessToken);
-          }
-          
+          if (credential?.accessToken) setGoogleAccessToken(credential.accessToken);
           const idToken = await result.user.getIdToken(true);
           setToken(idToken);
           setUser(result.user);
-
-          // Sync with PostgreSQL
           await safeFetchJson("/api/auth/sync", {
             method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": `Bearer ${idToken}`,
-            },
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${idToken}` },
           });
         }
       } catch (error) {
@@ -101,7 +77,6 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
         setLoading(false);
       }
     };
-
     handleRedirectResult();
   }, []);
 
@@ -122,22 +97,24 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
         metadata: {},
         providerData: [],
         getIdToken: async () => "demo-token-abc-123",
-        getIdTokenResult: async () => ({ token: "demo-token-abc-123", claims: {} }),
+        getIdTokenResult: async () => ({
+          token: "demo-token-abc-123",
+          claims: {},
+          authTime: new Date().toISOString(),
+          expirationTime: new Date(Date.now() + 3600000).toISOString(),
+          issuedAtTime: new Date().toISOString(),
+          signInProvider: "custom",
+          signInSecondFactor: null,
+        }),
         reload: async () => {},
         toJSON: () => ({}),
-      } as any as User;
-
+      } as unknown as User;
       setUser(demoUser);
       setToken("demo-token-abc-123");
       setGoogleAccessToken("demo-google-access-token");
-      
-      // Sync with auth placeholder
       await safeFetchJson("/api/auth/sync", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer demo-token-abc-123",
-        },
+        headers: { "Content-Type": "application/json", "Authorization": "Bearer demo-token-abc-123" },
       });
     } catch (err) {
       console.error("Demo login error:", err);
@@ -150,21 +127,15 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
     setLoading(true);
     try {
       if (user?.uid === "demo-user-123") {
-        setUser(null);
-        setToken(null);
-        setGoogleAccessToken(null);
-        setLoading(false);
-        return;
+        setUser(null); setToken(null); setGoogleAccessToken(null); return;
       }
       await signOut(auth);
-      setUser(null);
-      setToken(null);
-      setGoogleAccessToken(null);
-      setLoading(false);
+      setUser(null); setToken(null); setGoogleAccessToken(null);
     } catch (error) {
-      setLoading(false);
       console.error("Logout failed:", error);
       throw error;
+    } finally {
+      setLoading(false);
     }
   };
 

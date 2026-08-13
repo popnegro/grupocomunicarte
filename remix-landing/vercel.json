@@ -31,6 +31,18 @@
       "destination": "/index.html"
     },
     {
+      "source": "/login",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/dashboard",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/dashboard/:path*",
+      "destination": "/index.html"
+    },
+    {
       "source": "/api/inventory",
       "destination": "/inventory.json"
     }

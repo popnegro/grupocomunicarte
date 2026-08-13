@@ -1,13 +1,13 @@
-export type AppView = 
-  | 'landing' 
-  | 'login' 
-  | 'dashboard' 
-  | 'mediakit' 
-  | 'nosotros' 
-  | 'soportes' 
-  | 'soportes-led' 
-  | 'soportes-tradicional' 
-  | 'soportes-led-movil' 
+export type AppView =
+  | 'landing'
+  | 'login'
+  | 'dashboard'
+  | 'mediakit'
+  | 'nosotros'
+  | 'soportes'
+  | 'soportes-led'
+  | 'soportes-tradicional'
+  | 'soportes-led-movil'
   | 'soluciones';
 
 export type UserRole = 'SúperAdmin' | 'Admin';
@@ -42,20 +42,34 @@ export interface Support {
   videoUrl?: string;
   status: SupportStatus;
   size: string;
-  // Specific for LED Móvil route visualization on the map
   routePoints?: RoutePoint[];
-  // For Media Kit & technical specifications
-  refPoints?: string[]; // nearby reference points (e.g. "Cerca de Terminal", "Frente a Shopping")
-  contactsCount?: string; // Estimated monthly views/contacts
-  resolution?: string; // Resolution if digital/LED
-  orientation?: string; // Orientation if applicable
-  illumination?: string; // Lighting type
-  audio?: string; // Audio capabilities
+  refPoints?: string[];
+  contactsCount?: string;
+  resolution?: string;
+  orientation?: string;
+  illumination?: string;
+  audio?: string;
 }
 
 export interface SelectedSupport {
   id: string;
   support: Support;
+}
+
+export interface SupportReservation {
+  id: string;
+  supportId: string;
+  clientName: string;
+  startDate: string;
+  endDate: string;
+  status: 'reserved' | 'confirmed' | 'cancelled';
+  notes?: string;
+}
+
+export interface SupportAvailabilityResult {
+  supportId: string;
+  status: 'available' | 'reserved' | 'conflict';
+  conflicts: SupportReservation[];
 }
 
 export interface Lead {
@@ -81,8 +95,7 @@ export interface MediaKit {
   createdAt: string;
   comments?: string;
   supportIds: string[];
-  // For export structure
-  slidesLayout?: string; // presentation style choice
+  slidesLayout?: string;
   campaignStartDate?: string;
   campaignEndDate?: string;
 }

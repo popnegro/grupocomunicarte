@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, type ReactNode } from 'react';
 import { Navigate, Route, Routes, Outlet } from 'react-router-dom';
 import { useApp } from './context/AppContext';
 import { Navbar } from './components/Navbar';
@@ -14,7 +14,8 @@ const DashboardSupportsPage = lazy(() => import('./components/DashboardSupportsP
 const DashboardLeadsPage = lazy(() => import('./components/DashboardLeadsPage').then((module) => ({ default: module.DashboardLeadsPage })));
 const DashboardClientsPage = lazy(() => import('./components/DashboardClientsPage').then((module) => ({ default: module.DashboardClientsPage })));
 const DashboardMediaKitPage = lazy(() => import('./components/DashboardMediaKitPage').then((module) => ({ default: module.DashboardMediaKitPage })));
-const SeoPage = lazy(() => import('./components/SeoPage'));
+const MarketingSeoPage = lazy(() => import('./components/SeoPage').then((module) => ({ default: module.MarketingSeoPage })));
+const SupportSeoPage = lazy(() => import('./components/SeoPage').then((module) => ({ default: module.SupportSeoPage })));
 
 const PageLayout = () => (
   <>
@@ -32,7 +33,7 @@ const PageLayout = () => (
   </>
 );
 
-const ProtectedDashboardModule = ({ children }: { children: React.ReactNode }) => {
+const ProtectedDashboardModule = ({ children }: { children: ReactNode }) => {
   const { user } = useApp();
   return user ? <DashboardShell>{children}</DashboardShell> : <Navigate to="/login" replace />;
 };
@@ -43,7 +44,7 @@ const RouteFallback = () => (
   </div>
 );
 
-const LazyRoute = ({ children }: { children: React.ReactNode }) => (
+const LazyRoute = ({ children }: { children: ReactNode }) => (
   <Suspense fallback={<RouteFallback />}>{children}</Suspense>
 );
 
@@ -63,12 +64,12 @@ export default function App() {
         <Route path="/dashboard/mediakits" element={<LazyRoute><ProtectedDashboardModule><DashboardMediaKitPage /></ProtectedDashboardModule></LazyRoute>} />
 
         <Route element={<PageLayout />}>
-          <Route path="/nosotros" element={<LazyRoute><SeoPage.MarketingSeoPage kind="nosotros" /></LazyRoute>} />
-          <Route path="/soluciones" element={<LazyRoute><SeoPage.MarketingSeoPage kind="soluciones" /></LazyRoute>} />
-          <Route path="/soportes-publicitarios" element={<LazyRoute><SeoPage.SupportSeoPage kind="base" /></LazyRoute>} />
-          <Route path="/soportes-publicitarios/pantallas-led" element={<LazyRoute><SeoPage.SupportSeoPage kind="led" /></LazyRoute>} />
-          <Route path="/soportes-publicitarios/tradicional" element={<LazyRoute><SeoPage.SupportSeoPage kind="tradicional" /></LazyRoute>} />
-          <Route path="/soportes-publicitarios/led-movil" element={<LazyRoute><SeoPage.SupportSeoPage kind="movil" /></LazyRoute>} />
+          <Route path="/nosotros" element={<LazyRoute><MarketingSeoPage kind="nosotros" /></LazyRoute>} />
+          <Route path="/soluciones" element={<LazyRoute><MarketingSeoPage kind="soluciones" /></LazyRoute>} />
+          <Route path="/soportes-publicitarios" element={<LazyRoute><SupportSeoPage kind="base" /></LazyRoute>} />
+          <Route path="/soportes-publicitarios/pantallas-led" element={<LazyRoute><SupportSeoPage kind="led" /></LazyRoute>} />
+          <Route path="/soportes-publicitarios/tradicional" element={<LazyRoute><SupportSeoPage kind="tradicional" /></LazyRoute>} />
+          <Route path="/soportes-publicitarios/led-movil" element={<LazyRoute><SupportSeoPage kind="movil" /></LazyRoute>} />
           <Route path="/mediakit" element={<LazyRoute><div className="py-16 px-4 max-w-4xl mx-auto"><ContactForm /></div></LazyRoute>} />
           <Route path="/soportes" element={<Navigate to="/soportes-publicitarios" replace />} />
           <Route path="/soportes/led" element={<Navigate to="/soportes-publicitarios/pantallas-led" replace />} />

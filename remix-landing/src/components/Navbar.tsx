@@ -102,7 +102,17 @@ export function Navbar() {
           )}
         </div>
 
-        <div className="hidden lg:flex lg:items-center lg:justify-end">
+        <div className="hidden items-center gap-2 lg:flex lg:justify-end">
+          <Link
+            to="/explorer"
+            className={`rounded-xl px-4 py-2.5 text-sm font-extrabold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#049A41] ${
+              isActiveRoute(pathname, '/explorer')
+                ? 'bg-[#E8F0E4] text-[#082028]'
+                : 'text-slate-700 hover:bg-[#E8F0E4] hover:text-[#082028]'
+            }`}
+          >
+            Explorar ubicaciones
+          </Link>
           <Link
             to="/mediakit"
             className="rounded-xl bg-[#049A41] px-4 py-2.5 text-sm font-extrabold text-white shadow-sm transition-colors hover:bg-[#038537] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#049A41]"
@@ -163,7 +173,16 @@ export function Navbar() {
                   </div>
                 ))}
               </div>
-              <div className="mt-6 border-t border-slate-200 pt-6">
+              <div className="mt-6 border-t border-slate-200 pt-6 space-y-2">
+                <Link
+                  to="/explorer"
+                  onClick={closeMenus}
+                  className={`block rounded-xl px-4 py-3 text-center text-base font-extrabold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#049A41] ${
+                    isActiveRoute(pathname, '/explorer') ? 'bg-[#E8F0E4] text-[#082028]' : 'bg-slate-50 text-slate-900 hover:bg-[#E8F0E4]'
+                  }`}
+                >
+                  Explorar ubicaciones
+                </Link>
                 <Link
                   to="/mediakit"
                   onClick={closeMenus}

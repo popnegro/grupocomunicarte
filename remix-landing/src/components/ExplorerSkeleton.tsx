@@ -52,7 +52,7 @@ export function ExplorerInventorySkeleton() {
         </div>
 
         <div className="lg:col-span-7">
-          <div className="animate-pulse h-[600px] rounded-2xl border border-[#DCE4DF] bg-[#F7F9F7]" />
+          <div className="animate-pulse h-150 rounded-2xl border border-[#DCE4DF] bg-[#F7F9F7]" />
         </div>
       </div>
     </section>

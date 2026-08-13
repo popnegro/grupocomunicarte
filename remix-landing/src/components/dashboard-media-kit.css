@@ -17,7 +17,7 @@
   width: 100%;
 }
 
-.dashboard-media-kit-embedded .lg\\:grid-cols-\\[420px_1fr\\] {
+.dashboard-media-kit-embedded .lg\:grid-cols-\[420px_1fr\] {
   grid-template-columns: minmax(320px, 380px) minmax(0, 1fr) !important;
   align-items: start;
 }
@@ -34,7 +34,7 @@
 }
 
 /* Availability becomes a deliberate commercial status block. */
-.dashboard-media-kit-embedded form .bg-\\[\\#F7F9F7\\].p-3 {
+.dashboard-media-kit-embedded form .bg-\[\#F7F9F7\].p-3 {
   border-color: #dce4df;
 }
 
@@ -43,7 +43,7 @@
   min-width: 0;
 }
 
-.dashboard-media-kit-embedded > section > section > div.rounded-2xl.bg-\\[\\#082028\\] {
+.dashboard-media-kit-embedded > section > section > div.rounded-2xl.bg-\[\#082028\] {
   min-height: 220px;
   display: flex;
   flex-direction: column;
@@ -93,7 +93,7 @@
     backdrop-filter: blur(10px);
   }
 
-  .dashboard-media-kit-embedded > section > section > div.rounded-2xl.bg-\\[\\#082028\\] {
+  .dashboard-media-kit-embedded > section > section > div.rounded-2xl.bg-\[\#082028\] {
     min-height: 200px;
     padding: 1.5rem !important;
   }
@@ -112,7 +112,7 @@
 
 /* B2C keeps the immersive hero and larger imagery. */
 .dashboard-media-kit-embedded:has(form select option:checked[value='B2C'])
-  > section > section > div.rounded-2xl.bg-\\[\\#082028\\] {
+  > section > section > div.rounded-2xl.bg-\[\#082028\] {
   min-height: 260px;
   padding: 2.25rem !important;
 }
@@ -134,7 +134,7 @@
 }
 
 .dashboard-media-kit-embedded:has(form select option:checked[value='B2B'])
-  > section > section > div.rounded-2xl.bg-\\[\\#082028\\] {
+  > section > section > div.rounded-2xl.bg-\[\#082028\] {
   min-height: 180px;
   background: #ffffff !important;
   border: 1px solid #dce4df;
@@ -143,14 +143,14 @@
 }
 
 .dashboard-media-kit-embedded:has(form select option:checked[value='B2B'])
-  > section > section > div.rounded-2xl.bg-\\[\\#082028\\] > p:first-child {
+  > section > section > div.rounded-2xl.bg-\[\#082028\] > p:first-child {
   color: #049a41 !important;
 }
 
 .dashboard-media-kit-embedded:has(form select option:checked[value='B2B'])
-  > section > section > div.rounded-2xl.bg-\\[\\#082028\\] p.text-slate-200,
+  > section > section > div.rounded-2xl.bg-\[\#082028\] p.text-slate-200,
 .dashboard-media-kit-embedded:has(form select option:checked[value='B2B'])
-  > section > section > div.rounded-2xl.bg-\\[\\#082028\\] p.text-slate-300 {
+  > section > section > div.rounded-2xl.bg-\[\#082028\] p.text-slate-300 {
   color: #64748b !important;
 }
 

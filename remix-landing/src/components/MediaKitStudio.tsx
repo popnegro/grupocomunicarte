@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { CalendarDays, CheckCircle2, FileText, Presentation, AlertCircle, MapPin, UserRound } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
-import type { Lead, MediaKit, Support } from '../types';
+import type { Lead, MediaKit, MediaKitAudience, Support } from '../types';
 import { jsPDF } from 'jspdf';
 import pptxgen from 'pptxgenjs';
 
@@ -48,7 +48,7 @@ export function MediaKitStudio() {
   const [endDate, setEndDate] = useState('');
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [comments, setComments] = useState('');
-  const [slidesLayout, setSlidesLayout] = useState('Modern Pitch');
+  const [slidesLayout, setSlidesLayout] = useState<MediaKitAudience>('B2C');
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [savedKit, setSavedKit] = useState<MediaKit | null>(null);
   const [localDateMetadata, setLocalDateMetadata] = useState<Record<string, LocalDateMetadata>>(() => readLocalDates());
@@ -314,7 +314,7 @@ export function MediaKitStudio() {
               <label><span className="mb-1 flex items-center gap-1 text-[10px] font-extrabold uppercase text-[#40515A]"><CalendarDays className="h-3.5 w-3.5" /> Inicio</span><input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className="w-full rounded-xl border border-[#DCE4DF] px-3 py-2.5 text-sm outline-none focus:border-[#049A41]" /></label>
               <label><span className="mb-1 flex items-center gap-1 text-[10px] font-extrabold uppercase text-[#40515A]"><CalendarDays className="h-3.5 w-3.5" /> Fin</span><input type="date" value={endDate} min={startDate || undefined} onChange={(e) => setEndDate(e.target.value)} className="w-full rounded-xl border border-[#DCE4DF] px-3 py-2.5 text-sm outline-none focus:border-[#049A41]" /></label>
             </div>
-            <label className="block"><span className="mb-1 block text-[10px] font-extrabold uppercase text-[#40515A]">Estilo de presentación</span><select value={slidesLayout} onChange={(e) => setSlidesLayout(e.target.value)} className="w-full rounded-xl border border-[#DCE4DF] bg-white px-3 py-2.5 text-sm"><option>Modern Pitch</option><option>Corporate</option><option>Minimal</option></select></label>
+            <label className="block"><span className="mb-1 block text-[10px] font-extrabold uppercase text-[#40515A]">Estilo de presentación</span><select value={slidesLayout} onChange={(e) => setSlidesLayout(e.target.value as MediaKitAudience)} className="w-full rounded-xl border border-[#DCE4DF] bg-white px-3 py-2.5 text-sm"><option>Modern Pitch</option><option>Corporate</option><option>Minimal</option></select></label>
 
             <div>
               <div className="mb-2 flex items-center justify-between"><span className="text-[10px] font-extrabold uppercase text-[#40515A]">Soportes</span><span className="text-[10px] font-bold text-[#049A41]">{selectedIds.length} seleccionados</span></div>

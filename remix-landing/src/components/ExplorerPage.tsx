@@ -5,8 +5,8 @@ import { useApp } from '../context/AppContext';
 import { InteractiveMap } from './InteractiveMap';
 import { SpecsOverlay } from './SpecsOverlay';
 import { SupportImage } from './SupportImage';
-import { SelectionBar } from './SelectionBar';
 import { ExplorerInventorySkeleton } from './ExplorerSkeleton';
+import { SelectionBar } from './SelectionBar';
 import { Search, X, Map as MapIcon, List as ListIcon, RotateCcw, AlertCircle, Eye, Circle, CheckCircle2, ArrowLeft } from 'lucide-react';
 import { AnimatePresence } from 'motion/react';
 

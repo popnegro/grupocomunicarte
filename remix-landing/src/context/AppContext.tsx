@@ -2,32 +2,27 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Support, Lead, MediaKit, UserSession, SupportType, SupportPlaza, SupportPlazaFilter, SupportStatus, ExplorerViewMode, AppView } from '../types';
 
 interface AppContextType {
-  // App views
   currentView: AppView;
   setView: (view: AppView) => void;
   navigateToExplorerWithType: (type: SupportType | 'Todos') => void;
   currentDashboardTab: 'metrics' | 'inventory' | 'leads' | 'mediakits';
   setDashboardTab: (tab: 'metrics' | 'inventory' | 'leads' | 'mediakits') => void;
 
-  // Campaign Period
   campaignStartDate: string | null;
   campaignEndDate: string | null;
   setCampaignDates: (start: string | null, end: string | null) => void;
 
-  // Session state
   user: UserSession | null;
   token: string | null;
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
 
-  // Core business lists
   supports: Support[];
   leads: Lead[];
   mediaKits: MediaKit[];
   isLoading: boolean;
   errorMsg: string | null;
 
-  // Selection / Quotation Cart
   selectedSupports: Support[];
   toggleSupportSelection: (support: Support) => void;
   clearSelection: () => void;
@@ -37,7 +32,6 @@ interface AppContextType {
   isSubmittingLead: boolean;
   submitLead: (leadData: { name: string; company: string; email: string; phone: string; message?: string }) => Promise<boolean>;
 
-  // Filters & Explorer
   currentPlaza: SupportPlazaFilter;
   setCurrentPlaza: (plaza: SupportPlazaFilter) => void;
   currentType: SupportType | 'Todos';
@@ -52,7 +46,6 @@ interface AppContextType {
   setActiveSupportId: (id: string | null) => void;
   resetExplorerFilters: () => void;
 
-  // Admin Actions
   addSupport: (support: Omit<Support, 'id'>) => Promise<boolean>;
   updateSupport: (id: string, support: Partial<Support>) => Promise<boolean>;
   deleteSupport: (id: string) => Promise<boolean>;
@@ -60,11 +53,17 @@ interface AppContextType {
   createMediaKit: (mediaKitData: { title: string; clientName: string; plaza: SupportPlaza; comments?: string; supportIds: string[]; slidesLayout?: string }) => Promise<boolean>;
   deleteMediaKit: (id: string) => Promise<boolean>;
 
-  // Helper trigger
   refreshAllData: () => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
+const PUBLIC_SELECTION_STORAGE_KEY = 'gc_public_selection';
+
+interface PersistedSelectionState {
+  selectedSupports: Support[];
+  campaignStartDate: string | null;
+  campaignEndDate: string | null;
+}
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [currentView, setView] = useState<AppView>('landing');
@@ -81,7 +80,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }, 100);
   };
 
-  // Campaign Period
   const [campaignStartDate, setCampaignStartDate] = useState<string | null>(null);
   const [campaignEndDate, setCampaignEndDate] = useState<string | null>(null);
 
@@ -100,7 +98,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  // Filters & Explorer State
   const [currentPlaza, setCurrentPlaza] = useState<SupportPlazaFilter>('Todas');
   const [currentType, setCurrentType] = useState<SupportType | 'Todos'>('Todos');
   const [currentStatus, setCurrentStatus] = useState<SupportStatus | 'Todos'>('Todos');
@@ -115,10 +112,43 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setSearchQuery('');
   };
 
-  // Client Selection
   const [selectedSupports, setSelectedSupports] = useState<Support[]>([]);
 
-  // Load initial session if saved
+  useEffect(() => {
+    try {
+      const rawSelection = localStorage.getItem(PUBLIC_SELECTION_STORAGE_KEY);
+      if (rawSelection) {
+        const persisted = JSON.parse(rawSelection) as Partial<PersistedSelectionState>;
+        if (Array.isArray(persisted.selectedSupports)) {
+          setSelectedSupports(persisted.selectedSupports.slice(0, 50));
+        }
+        if (typeof persisted.campaignStartDate === 'string' || persisted.campaignStartDate === null) {
+          setCampaignStartDate(persisted.campaignStartDate ?? null);
+        }
+        if (typeof persisted.campaignEndDate === 'string' || persisted.campaignEndDate === null) {
+          setCampaignEndDate(persisted.campaignEndDate ?? null);
+        }
+      }
+    } catch (error) {
+      console.warn('No se pudo restaurar la selección pública guardada.', error);
+      localStorage.removeItem(PUBLIC_SELECTION_STORAGE_KEY);
+    }
+  }, []);
+
+  useEffect(() => {
+    const persistedState: PersistedSelectionState = {
+      selectedSupports,
+      campaignStartDate,
+      campaignEndDate,
+    };
+
+    try {
+      localStorage.setItem(PUBLIC_SELECTION_STORAGE_KEY, JSON.stringify(persistedState));
+    } catch (error) {
+      console.warn('No se pudo persistir la selección pública.', error);
+    }
+  }, [selectedSupports, campaignStartDate, campaignEndDate]);
+
   useEffect(() => {
     const savedToken = localStorage.getItem('gc_token');
     const savedUser = localStorage.getItem('gc_user');
@@ -130,7 +160,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     fetchSupports();
   }, []);
 
-  // Fetch admin-only resources on token change or active dashboard
   useEffect(() => {
     if (token) {
       fetchLeads();
@@ -145,8 +174,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (!res.ok) throw new Error('Error al cargar soportes.');
       const data = await res.json();
       setSupports(data);
-    } catch (e: any) {
-      setErrorMsg(e.message || 'Error de conexión con el servidor.');
+    } catch (error: unknown) {
+      setErrorMsg(error instanceof Error ? error.message : 'Error de conexión con el servidor.');
     } finally {
       setIsLoading(false);
     }
@@ -155,30 +184,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const fetchLeads = async () => {
     if (!token) return;
     try {
-      const res = await fetch('/api/leads', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setLeads(data);
-      }
-    } catch (e) {
-      console.error('Error fetching leads:', e);
+      const res = await fetch('/api/leads', { headers: { 'Authorization': `Bearer ${token}` } });
+      if (res.ok) setLeads(await res.json());
+    } catch (error) {
+      console.error('Error fetching leads:', error);
     }
   };
 
   const fetchMediaKits = async () => {
     if (!token) return;
     try {
-      const res = await fetch('/api/mediakits', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setMediaKits(data);
-      }
-    } catch (e) {
-      console.error('Error fetching mediakits:', e);
+      const res = await fetch('/api/mediakits', { headers: { 'Authorization': `Bearer ${token}` } });
+      if (res.ok) setMediaKits(await res.json());
+    } catch (error) {
+      console.error('Error fetching mediakits:', error);
     }
   };
 
@@ -189,19 +208,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
       });
-
       const data = await res.json();
-      if (!res.ok) {
-        return { success: false, error: data.error || 'Fallo de autenticación.' };
-      }
-
+      if (!res.ok) return { success: false, error: data.error || 'Fallo de autenticación.' };
       setToken(data.token);
       setUser(data.user);
       localStorage.setItem('gc_token', data.token);
       localStorage.setItem('gc_user', JSON.stringify(data.user));
       setView('dashboard');
       return { success: true };
-    } catch (e: any) {
+    } catch {
       return { success: false, error: 'No se pudo conectar con el servidor de autenticación.' };
     }
   };
@@ -224,20 +239,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setSelectionError(null);
     setSelectedSupports(prev => {
       const isSelected = prev.some(s => s.id === support.id);
-      if (isSelected) {
-        return prev.filter(s => s.id !== support.id);
-      } else {
-        if (prev.length >= MAX_SELECTION_LIMIT) {
-          setSelectionError(`Has alcanzado el límite máximo de ${MAX_SELECTION_LIMIT} soportes seleccionados para tu campaña.`);
-          return prev;
-        }
-        return [...prev, support];
+      if (isSelected) return prev.filter(s => s.id !== support.id);
+      if (prev.length >= MAX_SELECTION_LIMIT) {
+        setSelectionError(`Has alcanzado el límite máximo de ${MAX_SELECTION_LIMIT} soportes seleccionados para tu campaña.`);
+        return prev;
       }
+      return [...prev, support];
     });
   };
 
   const clearSelection = () => {
     setSelectedSupports([]);
+    setCampaignStartDate(null);
+    setCampaignEndDate(null);
     setSelectionError(null);
   };
 
@@ -252,150 +266,77 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         campaignStartDate,
         campaignEndDate
       };
-
       const res = await fetch('/api/leads', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)
       });
-
-      setIsSubmittingLead(false);
       if (res.ok) {
         clearSelection();
-        fetchLeads(); // update in background if logged in
+        if (token) fetchLeads();
         return true;
       }
       return false;
-    } catch (e) {
-      setIsSubmittingLead(false);
-      console.error('Error submitting lead:', e);
+    } catch (error) {
+      console.error('Error submitting lead:', error);
       return false;
+    } finally {
+      setIsSubmittingLead(false);
     }
   };
 
-  // ADMIN OPERATIONS
   const addSupport = async (support: Omit<Support, 'id'>) => {
     if (!token) return false;
     try {
-      const res = await fetch('/api/inventory', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(support)
-      });
-      if (res.ok) {
-        await fetchSupports();
-        return true;
-      }
+      const res = await fetch('/api/inventory', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify(support) });
+      if (res.ok) { await fetchSupports(); return true; }
       return false;
-    } catch (e) {
-      console.error('Error adding support:', e);
-      return false;
-    }
+    } catch (error) { console.error('Error adding support:', error); return false; }
   };
 
   const updateSupport = async (id: string, support: Partial<Support>) => {
     if (!token) return false;
     try {
-      const res = await fetch(`/api/inventory/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(support)
-      });
-      if (res.ok) {
-        await fetchSupports();
-        return true;
-      }
+      const res = await fetch(`/api/inventory/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify(support) });
+      if (res.ok) { await fetchSupports(); return true; }
       return false;
-    } catch (e) {
-      console.error('Error updating support:', e);
-      return false;
-    }
+    } catch (error) { console.error('Error updating support:', error); return false; }
   };
 
   const deleteSupport = async (id: string) => {
     if (!token) return false;
     try {
-      const res = await fetch(`/api/inventory/${id}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (res.ok) {
-        await fetchSupports();
-        return true;
-      }
+      const res = await fetch(`/api/inventory/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+      if (res.ok) { await fetchSupports(); return true; }
       return false;
-    } catch (e) {
-      console.error('Error deleting support:', e);
-      return false;
-    }
+    } catch (error) { console.error('Error deleting support:', error); return false; }
   };
 
   const updateLeadStatus = async (id: string, status: 'pending' | 'contacted' | 'archived') => {
     if (!token) return false;
     try {
-      const res = await fetch(`/api/leads/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ status })
-      });
-      if (res.ok) {
-        await fetchLeads();
-        return true;
-      }
+      const res = await fetch(`/api/leads/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify({ status }) });
+      if (res.ok) { await fetchLeads(); return true; }
       return false;
-    } catch (e) {
-      console.error('Error updating lead status:', e);
-      return false;
-    }
+    } catch (error) { console.error('Error updating lead status:', error); return false; }
   };
 
   const createMediaKit = async (mediaKitData: { title: string; clientName: string; plaza: SupportPlaza; comments?: string; supportIds: string[]; slidesLayout?: string }) => {
     if (!token) return false;
     try {
-      const res = await fetch('/api/mediakits', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify(mediaKitData)
-      });
-      if (res.ok) {
-        await fetchMediaKits();
-        return true;
-      }
+      const res = await fetch('/api/mediakits', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` }, body: JSON.stringify(mediaKitData) });
+      if (res.ok) { await fetchMediaKits(); return true; }
       return false;
-    } catch (e) {
-      console.error('Error creating media kit:', e);
-      return false;
-    }
+    } catch (error) { console.error('Error creating media kit:', error); return false; }
   };
 
   const deleteMediaKit = async (id: string) => {
     if (!token) return false;
     try {
-      const res = await fetch(`/api/mediakits/${id}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (res.ok) {
-        await fetchMediaKits();
-        return true;
-      }
+      const res = await fetch(`/api/mediakits/${id}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } });
+      if (res.ok) { await fetchMediaKits(); return true; }
       return false;
-    } catch (e) {
-      console.error('Error deleting media kit:', e);
-      return false;
-    }
+    } catch (error) { console.error('Error deleting media kit:', error); return false; }
   };
 
   const refreshAllData = () => {
@@ -428,8 +369,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
 export const useApp = () => {
   const context = useContext(AppContext);
-  if (context === undefined) {
-    throw new Error('useApp must be used within an AppProvider');
-  }
+  if (context === undefined) throw new Error('useApp must be used within an AppProvider');
   return context;
 };

@@ -1,1 +1,73 @@
 @import "tailwindcss";
+
+/* Grupo Comunicarte — dashboard light shell guardrails.
+   These overrides preserve existing CRUD/layout behavior while enforcing the DESIGN.md light theme. */
+#dashboard-wrapper > header {
+  background: #ffffff !important;
+  color: #082028 !important;
+  border-bottom-color: #dce4df !important;
+}
+
+#dashboard-wrapper > header .text-white,
+#dashboard-wrapper > header .text-slate-200,
+#dashboard-wrapper > header .text-slate-300 {
+  color: #082028 !important;
+}
+
+#dashboard-wrapper > header .bg-white\/10 {
+  background: #f7f9f7 !important;
+  color: #40515a !important;
+  border-color: #dce4df !important;
+}
+
+#dashboard-wrapper > header .hover\:bg-white\/20:hover {
+  background: #e8f0e4 !important;
+}
+
+#dashboard-wrapper > header .border-l {
+  border-color: #dce4df !important;
+}
+
+#dashboard-wrapper > header .bg-red-500\/20 {
+  background: #fff1f2 !important;
+  color: #991b1b !important;
+  border-color: #fecdd3 !important;
+}
+
+#dashboard-wrapper > header .hover\:bg-red-500\/30:hover {
+  background: #ffe4e6 !important;
+}
+
+#dashboard-wrapper > div > aside {
+  background: #ffffff !important;
+}
+
+#dashboard-wrapper > div > aside .bg-\[\#082028\] {
+  background: #e8f0e4 !important;
+  color: #082028 !important;
+}
+
+#dashboard-wrapper > div > aside .text-white {
+  color: #082028 !important;
+}
+
+#dashboard-wrapper > div > aside button:hover {
+  color: #082028;
+}
+
+/* Keep brand green as the primary dashboard action/state accent. */
+#dashboard-wrapper .bg-\[\#7C3AED\] {
+  background: #049a41 !important;
+}
+
+#dashboard-wrapper .hover\:bg-\[\#6D28D9\]:hover {
+  background: #038537 !important;
+}
+
+#dashboard-wrapper .text-\[\#7C3AED\] {
+  color: #049a41 !important;
+}
+
+#dashboard-wrapper .border-\[\#7C3AED\] {
+  border-color: #049a41 !important;
+}

@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { Support } from '../types';
 import { useApp } from '../context/AppContext';
-import { X, Play, Eye, Maximize2, CheckCircle2, Circle, Navigation, MapPin, AlertCircle, Compass, Sun, Volume2, Monitor } from 'lucide-react';
+import { X, Play, Eye, Maximize2, CheckCircle2, Circle, Navigation, MapPin, AlertCircle, Compass, Sun, Volume2, Monitor, type LucideIcon } from 'lucide-react';
 import { motion } from 'motion/react';
 import { SupportImage } from './SupportImage';
 
@@ -9,6 +9,12 @@ interface SpecsOverlayProps {
   support: Support;
   onClose: () => void;
   onFocusOnMap?: () => void;
+}
+
+interface TechnicalSpec {
+  label: string;
+  value: string;
+  Icon: LucideIcon;
 }
 
 export function SpecsOverlay({ support, onClose, onFocusOnMap }: SpecsOverlayProps) {
@@ -27,6 +33,15 @@ export function SpecsOverlay({ support, onClose, onFocusOnMap }: SpecsOverlayPro
     if (onFocusOnMap) onFocusOnMap();
     else document.getElementById('interactive-map')?.scrollIntoView({ behavior: 'smooth' });
   };
+
+  const technicalSpecs: TechnicalSpec[] = [
+    { label: 'Dimensiones', value: support.size, Icon: Maximize2 },
+    { label: 'Tráfico Est.', value: support.contactsCount || 'Ver métricas', Icon: Eye },
+    { label: 'Resolución', value: support.resolution || (support.type.includes('LED') ? '1920x1080 (HD)' : 'Impresión Lona 300DPI'), Icon: Monitor },
+    { label: 'Iluminación', value: support.illumination || (support.type.includes('LED') ? 'LED Backlight 24/7' : 'Backlight Halógeno'), Icon: Sun },
+    { label: 'Orientación', value: support.orientation || 'Frontal a Tráfico Principal', Icon: Compass },
+    { label: 'Audio', value: support.audio || 'Sin Audio (Normativa OOH)', Icon: Volume2 },
+  ];
 
   return (
     <>
@@ -56,7 +71,12 @@ export function SpecsOverlay({ support, onClose, onFocusOnMap }: SpecsOverlayPro
           </div>
 
           <div><h4 className="mb-2 text-[10px] font-extrabold uppercase tracking-wider text-[#40515A]">Especificaciones Técnicas</h4><div className="grid grid-cols-2 gap-2.5">
-            {[['Dimensiones', support.size, Maximize2], ['Tráfico Est.', support.contactsCount || 'Ver métricas', Eye], ['Resolución', support.resolution || (support.type.includes('LED') ? '1920x1080 (HD)' : 'Impresión Lona 300DPI'), Monitor], ['Iluminación', support.illumination || (support.type.includes('LED') ? 'LED Backlight 24/7' : 'Backlight Halógeno'), Sun], ['Orientación', support.orientation || 'Frontal a Tráfico Principal', Compass], ['Audio', support.audio || 'Sin Audio (Normativa OOH)', Volume2]].map(([label, value, Icon]) => { const IconComponent = Icon; return <div key={label as string} className="flex items-center space-x-2.5 rounded-xl border border-[#DCE4DF] bg-[#F7F9F7] p-2.5 sm:p-3"><div className="shrink-0 rounded-lg bg-[#E8F0E4] p-2 text-[#049A41]"><IconComponent className="h-3.5 w-3.5" /></div><div className="min-w-0"><p className="text-[9px] font-extrabold uppercase text-[#64748B]">{label}</p><p className="truncate text-xs font-extrabold text-[#082028]">{value}</p></div></div>; })}
+            {technicalSpecs.map(({ label, value, Icon }) => (
+              <div key={label} className="flex items-center space-x-2.5 rounded-xl border border-[#DCE4DF] bg-[#F7F9F7] p-2.5 sm:p-3">
+                <div className="shrink-0 rounded-lg bg-[#E8F0E4] p-2 text-[#049A41]"><Icon className="h-3.5 w-3.5" /></div>
+                <div className="min-w-0"><p className="text-[9px] font-extrabold uppercase text-[#64748B]">{label}</p><p className="truncate text-xs font-extrabold text-[#082028]">{value}</p></div>
+              </div>
+            ))}
           </div></div>
 
           <div><h4 className="mb-1 text-[10px] font-extrabold uppercase tracking-wider text-[#40515A]">Descripción</h4><p className="rounded-xl border border-[#DCE4DF] bg-[#F7F9F7] p-3 text-xs leading-relaxed text-[#082028]">{support.description}</p></div>

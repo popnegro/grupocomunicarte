@@ -1,7 +1,7 @@
 import { useMemo, useState, type FormEvent } from 'react';
-import { ArrowLeft, CalendarDays, CheckCircle2, Download, FileText, Presentation, AlertCircle, MapPin } from 'lucide-react';
+import { ArrowLeft, CalendarDays, CheckCircle2, FileText, Presentation, AlertCircle, MapPin } from 'lucide-react';
 import { useApp } from '../context/AppContext';
-import type { MediaKit, Support, SupportStatus } from '../types';
+import type { MediaKit, Support } from '../types';
 import { jsPDF } from 'jspdf';
 import pptxgen from 'pptxgenjs';
 
@@ -10,6 +10,13 @@ interface ConflictResult {
   status: 'available' | 'reserved' | 'conflict';
   reason?: string;
 }
+
+interface LocalDateMetadata {
+  campaignStartDate: string;
+  campaignEndDate: string;
+}
+
+const MEDIA_KIT_DATES_KEY = 'gc_mediakit_dates';
 
 const toDate = (value: string) => new Date(`${value}T00:00:00`);
 
@@ -22,6 +29,15 @@ const formatDate = (value?: string) => value
   ? new Intl.DateTimeFormat('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(toDate(value))
   : '—';
 
+const readLocalDates = (): Record<string, LocalDateMetadata> => {
+  try {
+    const raw = localStorage.getItem(MEDIA_KIT_DATES_KEY);
+    return raw ? JSON.parse(raw) as Record<string, LocalDateMetadata> : {};
+  } catch {
+    return {};
+  }
+};
+
 export function MediaKitStudio() {
   const { user, token, supports, mediaKits } = useApp();
   const [title, setTitle] = useState('');
@@ -33,6 +49,17 @@ export function MediaKitStudio() {
   const [slidesLayout, setSlidesLayout] = useState('Modern Pitch');
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [savedKit, setSavedKit] = useState<MediaKit | null>(null);
+  const [localDateMetadata, setLocalDateMetadata] = useState<Record<string, LocalDateMetadata>>(() => readLocalDates());
+
+  const datedMediaKits = useMemo(
+    () => mediaKits.map((kit) => {
+      const metadata = localDateMetadata[kit.id];
+      return metadata
+        ? { ...kit, campaignStartDate: metadata.campaignStartDate, campaignEndDate: metadata.campaignEndDate }
+        : kit;
+    }),
+    [localDateMetadata, mediaKits]
+  );
 
   const selectedSupports = useMemo(
     () => selectedIds.map((id) => supports.find((support) => support.id === id)).filter((support): support is Support => Boolean(support)),
@@ -45,7 +72,8 @@ export function MediaKitStudio() {
       if (support.status === 'reserved') {
         return { supportId: support.id, status: 'reserved', reason: 'El soporte está marcado como RESERVADO.' };
       }
-      const conflictingKit = mediaKits.find((kit) =>
+      const conflictingKit = datedMediaKits.find((kit) =>
+        kit.id !== savedKit?.id &&
         kit.supportIds.includes(support.id) &&
         overlaps(startDate, endDate, kit.campaignStartDate, kit.campaignEndDate)
       );
@@ -58,7 +86,7 @@ export function MediaKitStudio() {
       }
       return { supportId: support.id, status: 'available' };
     });
-  }, [endDate, mediaKits, selectedSupports, startDate]);
+  }, [datedMediaKits, endDate, savedKit?.id, selectedSupports, startDate]);
 
   const hasValidDates = Boolean(startDate && endDate && startDate <= endDate);
   const hasConflicts = availability.some((item) => item.status !== 'available');
@@ -132,14 +160,22 @@ export function MediaKitStudio() {
         setStatusMessage(data.error || 'No se pudo guardar el Media Kit.');
         return;
       }
-      setSavedKit(data as MediaKit);
-      setStatusMessage('Media Kit guardado correctamente.');
+
+      const persistedKit = { ...data as MediaKit, campaignStartDate: startDate, campaignEndDate: endDate };
+      const nextMetadata = {
+        ...localDateMetadata,
+        [persistedKit.id]: { campaignStartDate: startDate, campaignEndDate: endDate },
+      };
+      localStorage.setItem(MEDIA_KIT_DATES_KEY, JSON.stringify(nextMetadata));
+      setLocalDateMetadata(nextMetadata);
+      setSavedKit(persistedKit);
+      setStatusMessage('Media Kit guardado correctamente. Las fechas de campaña quedaron asociadas al documento.');
     } catch {
       setStatusMessage('No se pudo conectar con el servidor.');
     }
   };
 
-  const exportPdf = async () => {
+  const exportPdf = () => {
     const kit = buildKit();
     const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
     const margin = 16;
@@ -201,7 +237,7 @@ export function MediaKitStudio() {
     const titleSlide = pptx.addSlide();
     titleSlide.background = { color: '082028' };
     titleSlide.addText(kit.title || 'Media Kit Comercial', { x: 0.6, y: 1.2, w: 12, h: 0.6, fontSize: 28, bold: true, color: 'FFFFFF' });
-    titleSlide.addText(`Cliente: ${kit.clientName || '—'}\nPlaza: ${kit.plaza}\nCampaña: ${formatDate(kit.campaignStartDate)} → ${formatDate(kit.campaignEndDate)}`, { x: 0.6, y: 2.1, w: 11, h: 1.4, fontSize: 16, color: 'DCE4DF', breakLine: false });
+    titleSlide.addText(`Cliente: ${kit.clientName || '—'}\nPlaza: ${kit.plaza}\nCampaña: ${formatDate(kit.campaignStartDate)} → ${formatDate(kit.campaignEndDate)}`, { x: 0.6, y: 2.1, w: 11, h: 1.4, fontSize: 16, color: 'DCE4DF' });
 
     for (const support of selectedSupports) {
       const slide = pptx.addSlide();
@@ -222,7 +258,7 @@ export function MediaKitStudio() {
             slide.addImage({ data: dataUrl, x: 6.2, y: 1.25, w: 6.2, h: 4.1 });
           }
         } catch {
-          // Ignore remote image failures and keep the slide textual.
+          // Remote images are optional; keep the slide usable when CORS blocks an image.
         }
       }
     }

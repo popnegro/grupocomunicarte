@@ -6,7 +6,7 @@ import { LandingPage } from './components/LandingPage';
 import { ExplorerPage } from './components/ExplorerPage';
 import { ContactForm } from './components/ContactForm';
 import { LoginView } from './components/LoginView';
-import { DashboardView } from './components/DashboardView';
+import { DashboardRoute } from './components/DashboardRoute';
 import { DashboardInventoryStatus } from './components/DashboardInventoryStatus';
 import { MediaKitStudio } from './components/MediaKitStudio';
 import { MarketingSeoPage, SupportSeoPage } from './components/SeoPage';
@@ -34,7 +34,7 @@ const ProtectedDashboard = () => {
   if (!user) return <Navigate to="/login" replace />;
   return (
     <>
-      <DashboardView />
+      <DashboardRoute />
       <a
         href="/dashboard/mediakits"
         className="fixed bottom-5 right-5 z-40 inline-flex items-center gap-2 rounded-full bg-[#049A41] px-4 py-3 text-xs font-extrabold text-white shadow-lg transition hover:bg-[#037d34]"

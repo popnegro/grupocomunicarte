@@ -3,8 +3,6 @@ import { CalendarDays, CheckCircle2, FileText, Presentation, AlertCircle, MapPin
 import { useSearchParams } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import type { Lead, MediaKit, MediaKitAudience, Support } from '../types';
-import { jsPDF } from 'jspdf';
-import pptxgen from 'pptxgenjs';
 
 interface ConflictResult {
   supportId: string;
@@ -198,7 +196,8 @@ export function MediaKitStudio() {
     }
   };
 
-  const exportPdf = () => {
+  const exportPdf = async () => {
+    const { jsPDF } = await import('jspdf');
     const kit = buildKit();
     const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
     const margin = 16;
@@ -249,6 +248,7 @@ export function MediaKitStudio() {
   };
 
   const exportPptx = async () => {
+    const { default: pptxgen } = await import('pptxgenjs');
     const kit = buildKit();
     const pptx = new pptxgen();
     pptx.layout = 'LAYOUT_WIDE';

@@ -52,6 +52,8 @@ export interface Support {
   audio?: string;
   reservedFrom?: string;
   reservedUntil?: string;
+  featured?: boolean;
+  featuredOrder?: number;
 }
 
 export interface SelectedSupport {

@@ -1,18 +1,21 @@
 import { useMemo, useState } from 'react';
 import { CalendarDays, FileText, Search, Users } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import { MediaKitHistorySkeleton } from './DashboardSkeleton';
 
 const formatDate = (value?: string) => {
   if (!value) return '—';
+  const date = new Date(`${value}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return '—';
   return new Intl.DateTimeFormat('es-AR', {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
-  }).format(new Date(`${value}T00:00:00`));
+  }).format(date);
 };
 
 export function MediaKitHistory() {
-  const { mediaKits, supports } = useApp();
+  const { mediaKits, supports, mediaKitsLoading } = useApp();
   const [query, setQuery] = useState('');
 
   const filteredKits = useMemo(() => {
@@ -27,7 +30,13 @@ export function MediaKitHistory() {
       });
   }, [mediaKits, query]);
 
-  const clientCount = new Set(mediaKits.map((kit) => kit.clientName.trim()).filter(Boolean)).size;
+  const clientCount = new Set(
+    mediaKits.map((kit) => kit.clientName.trim()).filter(Boolean),
+  ).size;
+
+  if (mediaKitsLoading) {
+    return <MediaKitHistorySkeleton />;
+  }
 
   return (
     <section className="space-y-4">

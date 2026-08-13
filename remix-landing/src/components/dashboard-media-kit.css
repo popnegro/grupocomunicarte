@@ -12,6 +12,93 @@
   display: none !important;
 }
 
+/* Shared Dashboard canvas */
+.dashboard-media-kit-embedded {
+  width: 100%;
+}
+
 .dashboard-media-kit-embedded .lg\:grid-cols-\[420px_1fr\] {
-  max-width: none;
+  grid-template-columns: minmax(320px, 380px) minmax(0, 1fr) !important;
+  align-items: start;
+}
+
+/* Form and preview use the same Dashboard card language. */
+.dashboard-media-kit-embedded form,
+.dashboard-media-kit-embedded > section > section {
+  border-color: #dce4df !important;
+  border-radius: 1rem !important;
+}
+
+.dashboard-media-kit-embedded form {
+  position: relative;
+}
+
+/* Availability becomes a deliberate commercial status block. */
+.dashboard-media-kit-embedded form .bg-\[\#F7F9F7\].p-3 {
+  border-color: #dce4df;
+}
+
+/* Preview canvas. */
+.dashboard-media-kit-embedded > section > section {
+  min-width: 0;
+}
+
+.dashboard-media-kit-embedded > section > section > div.rounded-2xl.bg-\[\#082028\] {
+  min-height: 220px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+/* Keep export actions visible while reviewing a long preview. */
+@media (min-width: 768px) {
+  .dashboard-media-kit-embedded > section > section > div.mb-5 {
+    position: sticky;
+    top: 4.75rem;
+    z-index: 10;
+    background: #fff;
+    padding-top: 0.25rem;
+  }
+}
+
+/* Mobile: preserve hierarchy and keep primary actions reachable. */
+@media (max-width: 767px) {
+  .dashboard-media-kit-embedded > section {
+    gap: 1rem;
+  }
+
+  .dashboard-media-kit-embedded > section > div {
+    gap: 1rem;
+  }
+
+  .dashboard-media-kit-embedded > section > div > form,
+  .dashboard-media-kit-embedded > section > div > section {
+    padding: 1rem !important;
+  }
+
+  .dashboard-media-kit-embedded form button[type='submit'] {
+    position: sticky;
+    bottom: 0.75rem;
+    z-index: 20;
+    box-shadow: 0 8px 24px rgba(8, 32, 40, 0.14);
+  }
+
+  .dashboard-media-kit-embedded > section > section > div.mb-5 {
+    position: sticky;
+    top: 4rem;
+    z-index: 15;
+    margin-inline: -1rem;
+    padding: 0.75rem 1rem;
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(10px);
+  }
+
+  .dashboard-media-kit-embedded > section > section > div.rounded-2xl.bg-\[\#082028\] {
+    min-height: 200px;
+    padding: 1.5rem !important;
+  }
+
+  .dashboard-media-kit-embedded > section > section > div.mt-5 > article {
+    display: block;
+  }
 }

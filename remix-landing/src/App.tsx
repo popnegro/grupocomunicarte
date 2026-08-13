@@ -1,13 +1,10 @@
-import { Routes, Route, Outlet } from 'react-router-dom';
+import { Navigate, Route, Routes, Outlet } from 'react-router-dom';
 import { Navbar } from './components/Navbar';
 import { BrandLogo } from './components/BrandLogo';
 import { LandingPage } from './components/LandingPage';
-import { AboutPage } from '../server/AboutPage';
-import { SupportsPage } from '../server/SupportsPage';
-import { SupportTypePage } from '../server/SupportTypePage';
-import { SolutionsPage } from '../server/SolutionsPage';
 import { ExplorerPage } from './components/ExplorerPage';
 import { ContactForm } from './components/ContactForm';
+import { MarketingSeoPage, SupportSeoPage } from './components/SeoPage';
 
 const PageLayout = () => (
   <>
@@ -34,13 +31,18 @@ export default function App() {
         <Route path="/" element={<LandingPage />} />
 
         <Route element={<PageLayout />}>
-          <Route path="/nosotros" element={<AboutPage />} />
-          <Route path="/soportes" element={<SupportsPage />} />
-          <Route path="/soportes/led" element={<SupportTypePage type="led" />} />
-          <Route path="/soportes/tradicional" element={<SupportTypePage type="tradicional" />} />
-          <Route path="/soportes/led-movil" element={<SupportTypePage type="led-movil" />} />
-          <Route path="/soluciones" element={<SolutionsPage />} />
+          <Route path="/nosotros" element={<MarketingSeoPage kind="nosotros" />} />
+          <Route path="/soluciones" element={<MarketingSeoPage kind="soluciones" />} />
+          <Route path="/soportes-publicitarios" element={<SupportSeoPage kind="base" />} />
+          <Route path="/soportes-publicitarios/pantallas-led" element={<SupportSeoPage kind="led" />} />
+          <Route path="/soportes-publicitarios/tradicional" element={<SupportSeoPage kind="tradicional" />} />
+          <Route path="/soportes-publicitarios/led-movil" element={<SupportSeoPage kind="movil" />} />
           <Route path="/mediakit" element={<div className="py-16 px-4 max-w-4xl mx-auto"><ContactForm /></div>} />
+
+          <Route path="/soportes" element={<Navigate to="/soportes-publicitarios" replace />} />
+          <Route path="/soportes/led" element={<Navigate to="/soportes-publicitarios/pantallas-led" replace />} />
+          <Route path="/soportes/tradicional" element={<Navigate to="/soportes-publicitarios/tradicional" replace />} />
+          <Route path="/soportes/led-movil" element={<Navigate to="/soportes-publicitarios/led-movil" replace />} />
         </Route>
 
         <Route path="/explorer" element={<ExplorerPage />} />

@@ -1,15 +1,15 @@
 import { MediaKitStudio } from './MediaKitStudio';
+import { MediaKitHistory } from './MediaKitHistory';
 import './dashboard-media-kit.css';
 
 /**
- * Embeds the Media Kit Studio inside the shared Dashboard shell.
- * The Studio retains its business logic and export engine while the
- * administrative shell owns navigation, spacing and page chrome.
+ * Media Kit Studio and persistent history inside the shared Dashboard shell.
  */
 export function DashboardMediaKitPage() {
   return (
-    <div className="dashboard-media-kit-embedded">
+    <div className="dashboard-media-kit-embedded space-y-8">
       <MediaKitStudio />
+      <MediaKitHistory />
     </div>
   );
 }

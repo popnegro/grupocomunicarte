@@ -11,7 +11,7 @@ import { DashboardShell } from './components/DashboardShell';
 import { DashboardSupportsPage } from './components/DashboardSupportsPage';
 import { DashboardLeadsPage } from './components/DashboardLeadsPage';
 import { DashboardClientsPage } from './components/DashboardClientsPage';
-import { MediaKitStudio } from './components/MediaKitStudio';
+import { DashboardMediaKitPage } from './components/DashboardMediaKitPage';
 import { MarketingSeoPage, SupportSeoPage } from './components/SeoPage';
 
 const PageLayout = () => (
@@ -57,7 +57,7 @@ export default function App() {
         <Route path="/dashboard/inventario" element={<Navigate to="/dashboard/soportes" replace />} />
         <Route path="/dashboard/leads" element={<ProtectedDashboardModule><DashboardLeadsPage /></ProtectedDashboardModule>} />
         <Route path="/dashboard/clients" element={<ProtectedDashboardModule><DashboardClientsPage /></ProtectedDashboardModule>} />
-        <Route path="/dashboard/mediakits" element={<ProtectedDashboardModule><MediaKitStudio /></ProtectedDashboardModule>} />
+        <Route path="/dashboard/mediakits" element={<ProtectedDashboardModule><DashboardMediaKitPage /></ProtectedDashboardModule>} />
 
         <Route element={<PageLayout />}>
           <Route path="/nosotros" element={<MarketingSeoPage kind="nosotros" />} />

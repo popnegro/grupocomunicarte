@@ -23,8 +23,9 @@ backup_file "src/components/ExplorerSkeleton.tsx"
 
 python3 - <<'PY'
 from pathlib import Path
+import re
 
-# 1. DashboardSupportsPage: remove unused MapPin import.
+# 1. DashboardSupportsPage: remove unused MapPin import and keep the import stable.
 p = Path('src/components/DashboardSupportsPage.tsx')
 if p.exists():
     s = p.read_text()
@@ -51,25 +52,39 @@ if p.exists():
     s = s.replace('\\\\', '\\')
     p.write_text(s)
 
-# 4. Explorer: normalize utility classes and add the shared skeleton import.
+# 4. Explorer: normalize utility classes, deduplicate the skeleton import, and use the shared skeleton.
 p = Path('src/components/ExplorerPage.tsx')
 if p.exists():
     s = p.read_text()
-    s = s.replace(
-        'import { SupportImage } from \'./SupportImage\';',
-        'import { SupportImage } from \'./SupportImage\';\nimport { ExplorerInventorySkeleton } from \'./ExplorerSkeleton\';',
-    )
+
+    skeleton_import = "import { ExplorerInventorySkeleton } from './ExplorerSkeleton';"
+    # Remove every existing occurrence first, then insert exactly one.
+    s = s.replace(skeleton_import + '\n', '')
+    s = s.replace(skeleton_import, '')
+
+    support_import = "import { SupportImage } from './SupportImage';"
+    if support_import in s:
+        s = s.replace(
+            support_import,
+            support_import + '\n' + skeleton_import,
+            1,
+        )
+    else:
+        s = skeleton_import + '\n' + s
+
     s = s.replace('focus-visible:outline focus-visible:outline-2', 'focus-visible:outline-2')
     s = s.replace('h-[600px]', 'h-150')
-    s = s.replace(
-        '<div className="flex flex-col items-center justify-center py-12 text-center"><LoaderCircle className="mx-auto h-12 w-12 animate-spin text-slate-300" /><h3 className="mt-2 text-sm font-medium text-gray-900">Cargando inventario...</h3><p className="mt-1 text-sm text-gray-500">Estamos preparando las ubicaciones disponibles.</p></div>',
-        '<ExplorerInventorySkeleton />',
-    )
-    s = s.replace(', LoaderCircle', '')
-    s = s.replace('LoaderCircle, ', '')
+
+    spinner_block = '<div className="flex flex-col items-center justify-center py-12 text-center"><LoaderCircle className="mx-auto h-12 w-12 animate-spin text-slate-300" /><h3 className="mt-2 text-sm font-medium text-gray-900">Cargando inventario...</h3><p className="mt-1 text-sm text-gray-500">Estamos preparando las ubicaciones disponibles.</p></div>'
+    s = s.replace(spinner_block, '<ExplorerInventorySkeleton />')
+
+    # Remove LoaderCircle from lucide imports regardless of spacing/order.
+    s = re.sub(r'\bLoaderCircle,\s*', '', s)
+    s = re.sub(r',\s*LoaderCircle\b', '', s)
+    s = re.sub(r'\{\s*LoaderCircle\s*,\s*', '{ ', s)
     p.write_text(s)
 
-# 5. Explorer skeleton should not use arbitrary height now that Tailwind 4 canonical utilities are available.
+# 5. Explorer skeleton canonical utility.
 p = Path('src/components/ExplorerSkeleton.tsx')
 if p.exists():
     s = p.read_text().replace('h-[600px]', 'h-150')

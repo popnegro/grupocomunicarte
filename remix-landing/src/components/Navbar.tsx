@@ -7,11 +7,11 @@ const navigation = [
   { name: 'Nosotros', href: '/nosotros' },
   {
     name: 'Soportes',
-    href: '/soportes',
+    href: '/soportes-publicitarios',
     dropdown: [
-      { name: 'LED', href: '/soportes/led' },
-      { name: 'Tradicional', href: '/soportes/tradicional' },
-      { name: 'LED Móvil', href: '/soportes/led-movil' },
+      { name: 'Pantallas LED', href: '/soportes-publicitarios/pantallas-led' },
+      { name: 'Tradicional', href: '/soportes-publicitarios/tradicional' },
+      { name: 'LED Móvil', href: '/soportes-publicitarios/led-movil' },
     ],
   },
   { name: 'Soluciones', href: '/soluciones' },
@@ -72,7 +72,7 @@ export function Navbar() {
                   <ChevronDown className="h-4 w-4 flex-none text-slate-400" aria-hidden="true" />
                 </Link>
                 {dropdownOpen && (
-                  <div className="absolute left-0 top-full z-10 mt-1 w-56 rounded-xl border border-slate-200 bg-white p-2 shadow-xl ring-1 ring-black/5">
+                  <div className="absolute left-0 top-full z-10 mt-1 w-64 rounded-xl border border-slate-200 bg-white p-2 shadow-xl ring-1 ring-black/5">
                     {item.dropdown.map((subItem) => (
                       <Link
                         key={subItem.name}

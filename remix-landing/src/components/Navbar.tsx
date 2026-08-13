@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, ChevronDown } from 'lucide-react';
 import { BrandLogo } from './BrandLogo';
+import { useApp } from '../context/AppContext';
 
 const navigation = [
   { name: 'Nosotros', href: '/nosotros' },
@@ -20,10 +21,26 @@ const navigation = [
 const isActiveRoute = (pathname: string, href: string) =>
   href === '/' ? pathname === '/' : pathname === href || pathname.startsWith(`${href}/`);
 
+function QuoteCount({ count }: { count: number }) {
+  if (count === 0) return null;
+
+  return (
+    <span
+      aria-label={`${count} ${count === 1 ? 'soporte seleccionado' : 'soportes seleccionados'}`}
+      className="inline-flex min-w-5 items-center justify-center rounded-full bg-white px-1.5 py-0.5 text-[10px] font-extrabold leading-none text-[#049A41]"
+    >
+      {count > 99 ? '99+' : count}
+    </span>
+  );
+}
+
 export function Navbar() {
   const { pathname } = useLocation();
+  const { selectedSupports } = useApp();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+
+  const quoteCount = selectedSupports.length;
 
   const closeMenus = () => {
     setMobileMenuOpen(false);
@@ -115,9 +132,11 @@ export function Navbar() {
           </Link>
           <Link
             to="/mediakit"
-            className="rounded-xl bg-[#049A41] px-4 py-2.5 text-sm font-extrabold text-white shadow-sm transition-colors hover:bg-[#038537] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#049A41]"
+            className="inline-flex items-center gap-2 rounded-xl bg-[#049A41] px-4 py-2.5 text-sm font-extrabold text-white shadow-sm transition-colors hover:bg-[#038537] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#049A41]"
           >
-            Solicitar cotización <span aria-hidden="true">→</span>
+            Solicitar cotización
+            <QuoteCount count={quoteCount} />
+            <span aria-hidden="true">→</span>
           </Link>
         </div>
       </nav>
@@ -186,9 +205,10 @@ export function Navbar() {
                 <Link
                   to="/mediakit"
                   onClick={closeMenus}
-                  className="block rounded-xl bg-[#049A41] px-4 py-3 text-center text-base font-extrabold text-white shadow-sm hover:bg-[#038537] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#049A41]"
+                  className="flex items-center justify-center gap-2 rounded-xl bg-[#049A41] px-4 py-3 text-center text-base font-extrabold text-white shadow-sm hover:bg-[#038537] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#049A41]"
                 >
                   Solicitar cotización
+                  <QuoteCount count={quoteCount} />
                 </Link>
               </div>
             </div>

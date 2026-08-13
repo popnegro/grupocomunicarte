@@ -50,7 +50,7 @@ export function Navbar() {
   return (
     <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/95 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-white/85">
       <nav className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8" aria-label="Navegación principal">
-        <Link to="/" onClick={closeMenus} className="shrink-0 rounded-lg p-1.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#049A41]">
+        <Link to="/" onClick={closeMenus} className="shrink-0 rounded-lg p-1.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#049A41]">
           <span className="sr-only">Grupo Comunicarte</span>
           <BrandLogo size="sm" variant="full" />
         </Link>
@@ -79,7 +79,7 @@ export function Navbar() {
               >
                 <Link
                   to={item.href}
-                  className={`flex items-center gap-x-1 rounded-lg px-2 py-2 text-sm font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#049A41] ${
+                  className={`flex items-center gap-x-1 rounded-lg px-2 py-2 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#049A41] ${
                     isActiveRoute(pathname, item.href) ? 'text-[#049A41]' : 'text-slate-800 hover:text-[#049A41]'
                   }`}
                   aria-haspopup="menu"
@@ -95,7 +95,7 @@ export function Navbar() {
                         key={subItem.name}
                         to={subItem.href}
                         onClick={closeMenus}
-                        className={`block rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#049A41] ${
+                        className={`block rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#049A41] ${
                           isActiveRoute(pathname, subItem.href) ? 'bg-[#E8F0E4] text-[#082028]' : 'text-slate-700 hover:bg-slate-50 hover:text-[#082028]'
                         }`}
                       >
@@ -109,7 +109,7 @@ export function Navbar() {
               <Link
                 key={item.name}
                 to={item.href}
-                className={`rounded-lg px-2 py-2 text-sm font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#049A41] ${
+                className={`rounded-lg px-2 py-2 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#049A41] ${
                   isActiveRoute(pathname, item.href) ? 'text-[#049A41]' : 'text-slate-800 hover:text-[#049A41]'
                 }`}
               >
@@ -122,7 +122,7 @@ export function Navbar() {
         <div className="hidden items-center gap-2 lg:flex lg:justify-end">
           <Link
             to="/explorer"
-            className={`rounded-xl px-4 py-2.5 text-sm font-extrabold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#049A41] ${
+            className={`rounded-xl px-4 py-2.5 text-sm font-extrabold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#049A41] ${
               isActiveRoute(pathname, '/explorer')
                 ? 'bg-[#E8F0E4] text-[#082028]'
                 : 'text-slate-700 hover:bg-[#E8F0E4] hover:text-[#082028]'
@@ -132,7 +132,7 @@ export function Navbar() {
           </Link>
           <Link
             to="/mediakit"
-            className="inline-flex items-center gap-2 rounded-xl bg-[#049A41] px-4 py-2.5 text-sm font-extrabold text-white shadow-sm transition-colors hover:bg-[#038537] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#049A41]"
+            className="inline-flex items-center gap-2 rounded-xl bg-[#049A41] px-4 py-2.5 text-sm font-extrabold text-white shadow-sm transition-colors hover:bg-[#038537] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#049A41]"
           >
             Solicitar cotización
             <QuoteCount count={quoteCount} />
@@ -146,7 +146,7 @@ export function Navbar() {
           <div className="fixed inset-0 z-40 bg-slate-950/20" onClick={closeMenus} aria-hidden="true" />
           <div className="fixed inset-y-0 right-0 z-50 w-full overflow-y-auto border-l border-slate-200 bg-white px-6 py-6 shadow-2xl sm:max-w-sm">
             <div className="flex items-center justify-between">
-              <Link to="/" onClick={closeMenus} className="rounded-lg p-1.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#049A41]">
+              <Link to="/" onClick={closeMenus} className="rounded-lg p-1.5 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#049A41]">
                 <span className="sr-only">Grupo Comunicarte</span>
                 <BrandLogo size="sm" variant="full" />
               </Link>
@@ -167,7 +167,7 @@ export function Navbar() {
                     <Link
                       to={item.href}
                       onClick={closeMenus}
-                      className={`block rounded-xl px-3 py-2.5 text-base font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#049A41] ${
+                      className={`block rounded-xl px-3 py-2.5 text-base font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#049A41] ${
                         isActiveRoute(pathname, item.href) ? 'bg-[#E8F0E4] text-[#082028]' : 'text-slate-900 hover:bg-slate-50'
                       }`}
                     >
@@ -180,7 +180,7 @@ export function Navbar() {
                             key={subItem.name}
                             to={subItem.href}
                             onClick={closeMenus}
-                            className={`block rounded-lg px-3 py-2 text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#049A41] ${
+                            className={`block rounded-lg px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#049A41] ${
                               isActiveRoute(pathname, subItem.href) ? 'text-[#049A41]' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
                             }`}
                           >
@@ -192,11 +192,11 @@ export function Navbar() {
                   </div>
                 ))}
               </div>
-              <div className="mt-6 border-t border-slate-200 pt-6 space-y-2">
+              <div className="mt-6 space-y-2 border-t border-slate-200 pt-6">
                 <Link
                   to="/explorer"
                   onClick={closeMenus}
-                  className={`block rounded-xl px-4 py-3 text-center text-base font-extrabold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#049A41] ${
+                  className={`block rounded-xl px-4 py-3 text-center text-base font-extrabold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#049A41] ${
                     isActiveRoute(pathname, '/explorer') ? 'bg-[#E8F0E4] text-[#082028]' : 'bg-slate-50 text-slate-900 hover:bg-[#E8F0E4]'
                   }`}
                 >
@@ -205,7 +205,7 @@ export function Navbar() {
                 <Link
                   to="/mediakit"
                   onClick={closeMenus}
-                  className="flex items-center justify-center gap-2 rounded-xl bg-[#049A41] px-4 py-3 text-center text-base font-extrabold text-white shadow-sm hover:bg-[#038537] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#049A41]"
+                  className="flex items-center justify-center gap-2 rounded-xl bg-[#049A41] px-4 py-3 text-center text-base font-extrabold text-white shadow-sm hover:bg-[#038537] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#049A41]"
                 >
                   Solicitar cotización
                   <QuoteCount count={quoteCount} />

@@ -1,9 +1,10 @@
 import { useState } from 'react';
+import type { ChangeEvent, FC, FormEvent } from 'react';
 import { useApp } from '../context/AppContext';
 import { Mail, Phone, Building, User, FileText, CheckCircle, AlertCircle, Trash2, ArrowRight, Calendar } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
-export const ContactForm: React.FC = () => {
+export const ContactForm: FC = () => {
   const {
     selectedSupports,
     toggleSupportSelection,
@@ -34,12 +35,12 @@ export const ContactForm: React.FC = () => {
   const startFormatted = formatDateShort(campaignStartDate);
   const endFormatted = formatDateShort(campaignEndDate);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (isSubmittingLead) return;
 
@@ -213,9 +214,7 @@ export const ContactForm: React.FC = () => {
                 type="submit"
                 disabled={isSubmittingLead}
                 className={`w-full py-3.5 px-4 text-xs font-extrabold text-white rounded-xl shadow-xs flex items-center justify-center gap-2 transition-all ${
-                  isSubmittingLead
-                    ? 'bg-[#082028] cursor-wait'
-                    : 'bg-[#049A41] hover:bg-[#038537] shadow-md'
+                  isSubmittingLead ? 'bg-[#082028] cursor-wait' : 'bg-[#049A41] hover:bg-[#038537] shadow-md'
                 }`}
               >
                 {isSubmittingLead ? 'Procesando...' : selectedSupports.length > 0 ? 'Solicitar cotización' : 'Contactar al equipo comercial'}

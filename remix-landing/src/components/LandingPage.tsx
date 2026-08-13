@@ -9,19 +9,19 @@ const formats = [
   {
     title: 'Pantallas LED',
     description: 'Alta visibilidad para campañas de impacto en puntos estratégicos.',
-    href: '/soportes/led',
+    href: '/soportes-publicitarios/pantallas-led',
     icon: Monitor,
   },
   {
     title: 'Soportes tradicionales',
     description: 'Presencia urbana sostenida en corredores y ubicaciones de alto tránsito.',
-    href: '/soportes/tradicional',
+    href: '/soportes-publicitarios/tradicional',
     icon: MapPin,
   },
   {
     title: 'LED Móvil',
     description: 'Una pantalla que lleva tu campaña a distintos puntos de la ciudad.',
-    href: '/soportes/led-movil',
+    href: '/soportes-publicitarios/led-movil',
     icon: Smartphone,
   },
 ];

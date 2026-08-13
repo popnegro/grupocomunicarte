@@ -1,11 +1,13 @@
 import { useState, type FormEvent } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { Lock, Mail, Eye, EyeOff, AlertCircle, ArrowLeft } from 'lucide-react';
 import { motion } from 'motion/react';
 import { BrandLogo } from './BrandLogo';
 
 export function LoginView() {
-  const { login, setView } = useApp();
+  const { login } = useApp();
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -27,7 +29,10 @@ export function LoginView() {
 
     if (!result.success) {
       setErrorMsg(result.error || 'Credenciales inválidas.');
+      return;
     }
+
+    navigate('/dashboard', { replace: true });
   };
 
   return (
@@ -37,10 +42,9 @@ export function LoginView() {
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-md bg-white border border-[#DCE4DF] rounded-2xl shadow-xs overflow-hidden"
       >
-        {/* Header decoration */}
         <div className="p-6 bg-[#082028] text-white flex flex-col items-center text-center relative border-b border-[#049A41]/30">
           <button
-            onClick={() => setView('landing')}
+            onClick={() => navigate('/')}
             className="absolute left-4 top-1/2 -translate-y-1/2 p-2 hover:bg-white/10 rounded-xl transition-all text-slate-300"
             title="Volver a la Landing"
           >
@@ -53,7 +57,6 @@ export function LoginView() {
           <p className="text-xs text-slate-300 mt-0.5">Grupo Comunicarte S.A.</p>
         </div>
 
-        {/* Form Body */}
         <div className="p-6 space-y-6">
           <form onSubmit={handleSubmit} className="space-y-4">
             {errorMsg && (
@@ -63,7 +66,6 @@ export function LoginView() {
               </div>
             )}
 
-            {/* Email Field */}
             <div className="relative">
               <label className="block text-[10px] uppercase font-extrabold text-[#40515A] mb-1 tracking-wider">Correo Electrónico</label>
               <div className="relative">
@@ -79,7 +81,6 @@ export function LoginView() {
               </div>
             </div>
 
-            {/* Password Field */}
             <div className="relative">
               <label className="block text-[10px] uppercase font-extrabold text-[#40515A] mb-1 tracking-wider">Contraseña</label>
               <div className="relative">
@@ -102,7 +103,6 @@ export function LoginView() {
               </div>
             </div>
 
-            {/* Login Button */}
             <button
               type="submit"
               disabled={isLoggingIn}
@@ -114,20 +114,12 @@ export function LoginView() {
             </button>
           </form>
 
-          {/* Help box detailing the default demo credentials */}
           <div className="bg-[#F7F9F7] border border-[#DCE4DF] p-4 rounded-xl space-y-2">
             <h4 className="text-[10px] font-extrabold text-[#40515A] uppercase tracking-wider">Acceso de Demostración</h4>
             <div className="space-y-1.5 text-[11px] text-[#082028]">
-              <div className="flex flex-col gap-0.5">
-                <span className="font-extrabold text-[10px] text-[#049A41] uppercase">SúperAdmin:</span>
-                <span className="text-[#082028] font-mono text-[10.5px]">superadmin@grupocomunicarte.com</span>
-                <span className="text-[#40515A] text-[9.5px]">Clave: supercomunicarte2026!</span>
-              </div>
-              <div className="flex flex-col gap-0.5 border-t border-[#DCE4DF] pt-1.5 mt-1">
-                <span className="font-extrabold text-[10px] text-[#049A41] uppercase">Admin:</span>
-                <span className="text-[#082028] font-mono text-[10.5px]">admin@grupocomunicarte.com</span>
-                <span className="text-[#40515A] text-[9.5px]">Clave: admincomunicarte2026!</span>
-              </div>
+              <p className="text-[10px] text-[#64748B] leading-5">
+                Use las credenciales entregadas por el administrador del sistema. Las credenciales reales no se muestran en el cliente.
+              </p>
             </div>
           </div>
         </div>

@@ -10,3 +10,6 @@ coverage/
 
 # Generated development artifact
 stats.html
+
+# Vercel local configuration
+.vercel/

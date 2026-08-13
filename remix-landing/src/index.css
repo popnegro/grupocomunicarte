@@ -2,6 +2,11 @@
 
 /* Grupo Comunicarte — dashboard light shell guardrails.
    These overrides preserve existing CRUD/layout behavior while enforcing the DESIGN.md light theme. */
+#dashboard-wrapper {
+  background: #f7f9f7 !important;
+  color: #082028;
+}
+
 #dashboard-wrapper > header {
   background: #ffffff !important;
   color: #082028 !important;

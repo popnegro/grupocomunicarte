@@ -1,7 +1,10 @@
 import crypto from 'crypto';
 
-// Dynamically generate a secure key on startup if not provided
-const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(32).toString('hex');
+const JWT_SECRET = process.env.JWT_SECRET?.trim();
+
+if (!JWT_SECRET || JWT_SECRET.length < 32) {
+  throw new Error('JWT_SECRET is required and must contain at least 32 characters. Configure it in the environment before starting the server.');
+}
 
 function base64urlEncode(str: string): string {
   return Buffer.from(str)
@@ -19,7 +22,7 @@ function base64urlDecode(str: string): string {
   return Buffer.from(base64, 'base64').toString('utf8');
 }
 
-export function signToken(payload: any, expiresInSeconds = 7200): string {
+export function signToken(payload: Record<string, unknown>, expiresInSeconds = 7200): string {
   const header = { alg: 'HS256', typ: 'JWT' };
   const exp = Math.floor(Date.now() / 1000) + expiresInSeconds;
   const fullPayload = { ...payload, exp };
@@ -36,7 +39,7 @@ export function signToken(payload: any, expiresInSeconds = 7200): string {
   return `${signatureInput}.${signature}`;
 }
 
-export function verifyToken(token: string): any {
+export function verifyToken(token: string): Record<string, unknown> {
   const parts = token.split('.');
   if (parts.length !== 3) {
     throw new Error('Token corrupto u inválido.');
@@ -53,8 +56,8 @@ export function verifyToken(token: string): any {
     throw new Error('Firma de token inválida.');
   }
 
-  const payload = JSON.parse(base64urlDecode(payloadStr));
-  if (payload.exp && Date.now() / 1000 > payload.exp) {
+  const payload = JSON.parse(base64urlDecode(payloadStr)) as Record<string, unknown>;
+  if (typeof payload.exp === 'number' && Date.now() / 1000 > payload.exp) {
     throw new Error('Token expirado.');
   }
 

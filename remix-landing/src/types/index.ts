@@ -16,6 +16,7 @@ export type SupportPlaza = 'Mendoza' | 'Buenos Aires';
 export type SupportPlazaFilter = 'Todas' | SupportPlaza;
 export type SupportStatus = 'available' | 'reserved';
 export type AvailabilityStatus = 'available' | 'reserved' | 'unavailable' | 'checking';
+export type MediaKitAudience = 'B2B' | 'B2C';
 
 export type ExplorerViewMode = 'map' | 'list';
 
@@ -97,7 +98,8 @@ export interface MediaKit {
   createdAt: string;
   comments?: string;
   supportIds: string[];
-  slidesLayout?: string;
+  slidesLayout?: MediaKitAudience;
+  audience?: MediaKitAudience;
   campaignStartDate?: string;
   campaignEndDate?: string;
 }

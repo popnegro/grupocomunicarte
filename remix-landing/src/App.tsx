@@ -1,18 +1,20 @@
+import { lazy, Suspense } from 'react';
 import { Navigate, Route, Routes, Outlet } from 'react-router-dom';
 import { useApp } from './context/AppContext';
 import { Navbar } from './components/Navbar';
 import { BrandLogo } from './components/BrandLogo';
 import { LandingPage } from './components/LandingPage';
-import { ExplorerPage } from './components/ExplorerPage';
-import { ContactForm } from './components/ContactForm';
-import { LoginView } from './components/LoginView';
-import { DashboardShell } from './components/DashboardShell';
-import { DashboardHome } from './components/DashboardHome';
-import { DashboardSupportsPage } from './components/DashboardSupportsPage';
-import { DashboardLeadsPage } from './components/DashboardLeadsPage';
-import { DashboardClientsPage } from './components/DashboardClientsPage';
-import { DashboardMediaKitPage } from './components/DashboardMediaKitPage';
-import { MarketingSeoPage, SupportSeoPage } from './components/SeoPage';
+
+const ExplorerPage = lazy(() => import('./components/ExplorerPage').then((module) => ({ default: module.ExplorerPage })));
+const ContactForm = lazy(() => import('./components/ContactForm').then((module) => ({ default: module.ContactForm })));
+const LoginView = lazy(() => import('./components/LoginView').then((module) => ({ default: module.LoginView })));
+const DashboardShell = lazy(() => import('./components/DashboardShell').then((module) => ({ default: module.DashboardShell })));
+const DashboardHome = lazy(() => import('./components/DashboardHome').then((module) => ({ default: module.DashboardHome })));
+const DashboardSupportsPage = lazy(() => import('./components/DashboardSupportsPage').then((module) => ({ default: module.DashboardSupportsPage })));
+const DashboardLeadsPage = lazy(() => import('./components/DashboardLeadsPage').then((module) => ({ default: module.DashboardLeadsPage })));
+const DashboardClientsPage = lazy(() => import('./components/DashboardClientsPage').then((module) => ({ default: module.DashboardClientsPage })));
+const DashboardMediaKitPage = lazy(() => import('./components/DashboardMediaKitPage').then((module) => ({ default: module.DashboardMediaKitPage })));
+const SeoPage = lazy(() => import('./components/SeoPage'));
 
 const PageLayout = () => (
   <>
@@ -35,36 +37,46 @@ const ProtectedDashboardModule = ({ children }: { children: React.ReactNode }) =
   return user ? <DashboardShell>{children}</DashboardShell> : <Navigate to="/login" replace />;
 };
 
+const RouteFallback = () => (
+  <div className="min-h-[40vh] flex items-center justify-center px-6">
+    <div className="text-sm font-semibold text-slate-500">Cargando…</div>
+  </div>
+);
+
+const LazyRoute = ({ children }: { children: React.ReactNode }) => (
+  <Suspense fallback={<RouteFallback />}>{children}</Suspense>
+);
+
 export default function App() {
   return (
     <div className="font-sans bg-gray-50 min-h-screen">
       <Routes>
         <Route path="/" element={<LandingPage />} />
-        <Route path="/login" element={<LoginView />} />
+        <Route path="/login" element={<LazyRoute><LoginView /></LazyRoute>} />
 
-        <Route path="/dashboard" element={<ProtectedDashboardModule><DashboardHome /></ProtectedDashboardModule>} />
-        <Route path="/dashboard/soportes" element={<ProtectedDashboardModule><DashboardSupportsPage /></ProtectedDashboardModule>} />
+        <Route path="/dashboard" element={<LazyRoute><ProtectedDashboardModule><DashboardHome /></ProtectedDashboardModule></LazyRoute>} />
+        <Route path="/dashboard/soportes" element={<LazyRoute><ProtectedDashboardModule><DashboardSupportsPage /></ProtectedDashboardModule></LazyRoute>} />
         <Route path="/dashboard/inventario" element={<Navigate to="/dashboard/soportes" replace />} />
-        <Route path="/dashboard/leads" element={<ProtectedDashboardModule><DashboardLeadsPage /></ProtectedDashboardModule>} />
-        <Route path="/dashboard/clientes" element={<ProtectedDashboardModule><DashboardClientsPage /></ProtectedDashboardModule>} />
+        <Route path="/dashboard/leads" element={<LazyRoute><ProtectedDashboardModule><DashboardLeadsPage /></ProtectedDashboardModule></LazyRoute>} />
+        <Route path="/dashboard/clientes" element={<LazyRoute><ProtectedDashboardModule><DashboardClientsPage /></ProtectedDashboardModule></LazyRoute>} />
         <Route path="/dashboard/clients" element={<Navigate to="/dashboard/clientes" replace />} />
-        <Route path="/dashboard/mediakits" element={<ProtectedDashboardModule><DashboardMediaKitPage /></ProtectedDashboardModule>} />
+        <Route path="/dashboard/mediakits" element={<LazyRoute><ProtectedDashboardModule><DashboardMediaKitPage /></ProtectedDashboardModule></LazyRoute>} />
 
         <Route element={<PageLayout />}>
-          <Route path="/nosotros" element={<MarketingSeoPage kind="nosotros" />} />
-          <Route path="/soluciones" element={<MarketingSeoPage kind="soluciones" />} />
-          <Route path="/soportes-publicitarios" element={<SupportSeoPage kind="base" />} />
-          <Route path="/soportes-publicitarios/pantallas-led" element={<SupportSeoPage kind="led" />} />
-          <Route path="/soportes-publicitarios/tradicional" element={<SupportSeoPage kind="tradicional" />} />
-          <Route path="/soportes-publicitarios/led-movil" element={<SupportSeoPage kind="movil" />} />
-          <Route path="/mediakit" element={<div className="py-16 px-4 max-w-4xl mx-auto"><ContactForm /></div>} />
+          <Route path="/nosotros" element={<LazyRoute><SeoPage.MarketingSeoPage kind="nosotros" /></LazyRoute>} />
+          <Route path="/soluciones" element={<LazyRoute><SeoPage.MarketingSeoPage kind="soluciones" /></LazyRoute>} />
+          <Route path="/soportes-publicitarios" element={<LazyRoute><SeoPage.SupportSeoPage kind="base" /></LazyRoute>} />
+          <Route path="/soportes-publicitarios/pantallas-led" element={<LazyRoute><SeoPage.SupportSeoPage kind="led" /></LazyRoute>} />
+          <Route path="/soportes-publicitarios/tradicional" element={<LazyRoute><SeoPage.SupportSeoPage kind="tradicional" /></LazyRoute>} />
+          <Route path="/soportes-publicitarios/led-movil" element={<LazyRoute><SeoPage.SupportSeoPage kind="movil" /></LazyRoute>} />
+          <Route path="/mediakit" element={<LazyRoute><div className="py-16 px-4 max-w-4xl mx-auto"><ContactForm /></div></LazyRoute>} />
           <Route path="/soportes" element={<Navigate to="/soportes-publicitarios" replace />} />
           <Route path="/soportes/led" element={<Navigate to="/soportes-publicitarios/pantallas-led" replace />} />
           <Route path="/soportes/tradicional" element={<Navigate to="/soportes-publicitarios/tradicional" replace />} />
           <Route path="/soportes/led-movil" element={<Navigate to="/soportes-publicitarios/led-movil" replace />} />
         </Route>
 
-        <Route path="/explorer" element={<ExplorerPage />} />
+        <Route path="/explorer" element={<LazyRoute><ExplorerPage /></LazyRoute>} />
         <Route path="*" element={<LandingPage />} />
       </Routes>
     </div>

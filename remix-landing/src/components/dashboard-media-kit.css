@@ -1,0 +1,17 @@
+.dashboard-media-kit-embedded > div.min-h-screen {
+  min-height: auto !important;
+  background: transparent !important;
+  padding: 0 !important;
+}
+
+.dashboard-media-kit-embedded > div.min-h-screen > div.mx-auto {
+  max-width: none !important;
+}
+
+.dashboard-media-kit-embedded > div.min-h-screen > div.mx-auto > div.mb-6 {
+  display: none !important;
+}
+
+.dashboard-media-kit-embedded .lg\:grid-cols-\[420px_1fr\] {
+  max-width: none;
+}

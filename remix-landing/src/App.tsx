@@ -1,9 +1,12 @@
 import { Navigate, Route, Routes, Outlet } from 'react-router-dom';
+import { useApp } from './context/AppContext';
 import { Navbar } from './components/Navbar';
 import { BrandLogo } from './components/BrandLogo';
 import { LandingPage } from './components/LandingPage';
 import { ExplorerPage } from './components/ExplorerPage';
 import { ContactForm } from './components/ContactForm';
+import { LoginView } from './components/LoginView';
+import { DashboardView } from './components/DashboardView';
 import { MarketingSeoPage, SupportSeoPage } from './components/SeoPage';
 
 const PageLayout = () => (
@@ -24,11 +27,18 @@ const PageLayout = () => (
   </>
 );
 
+const ProtectedDashboard = () => {
+  const { user } = useApp();
+  return user ? <DashboardView /> : <Navigate to="/login" replace />;
+};
+
 export default function App() {
   return (
     <div className="font-sans bg-gray-50 min-h-screen">
       <Routes>
         <Route path="/" element={<LandingPage />} />
+        <Route path="/login" element={<LoginView />} />
+        <Route path="/dashboard" element={<ProtectedDashboard />} />
 
         <Route element={<PageLayout />}>
           <Route path="/nosotros" element={<MarketingSeoPage kind="nosotros" />} />
@@ -38,7 +48,6 @@ export default function App() {
           <Route path="/soportes-publicitarios/tradicional" element={<SupportSeoPage kind="tradicional" />} />
           <Route path="/soportes-publicitarios/led-movil" element={<SupportSeoPage kind="movil" />} />
           <Route path="/mediakit" element={<div className="py-16 px-4 max-w-4xl mx-auto"><ContactForm /></div>} />
-
           <Route path="/soportes" element={<Navigate to="/soportes-publicitarios" replace />} />
           <Route path="/soportes/led" element={<Navigate to="/soportes-publicitarios/pantallas-led" replace />} />
           <Route path="/soportes/tradicional" element={<Navigate to="/soportes-publicitarios/tradicional" replace />} />

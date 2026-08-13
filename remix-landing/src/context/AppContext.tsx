@@ -21,6 +21,8 @@ interface AppContextType {
   leads: Lead[];
   mediaKits: MediaKit[];
   isLoading: boolean;
+  leadsLoading: boolean;
+  mediaKitsLoading: boolean;
   errorMsg: string | null;
 
   selectedSupports: Support[];
@@ -96,6 +98,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [mediaKits, setMediaKits] = useState<MediaKit[]>([]);
 
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [leadsLoading, setLeadsLoading] = useState<boolean>(false);
+  const [mediaKitsLoading, setMediaKitsLoading] = useState<boolean>(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const [currentPlaza, setCurrentPlaza] = useState<SupportPlazaFilter>('Todas');
@@ -157,13 +161,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setUser(JSON.parse(savedUser));
       setView('dashboard');
     }
-    fetchSupports();
+    void fetchSupports();
   }, []);
 
   useEffect(() => {
     if (token) {
-      fetchLeads();
-      fetchMediaKits();
+      void fetchLeads();
+      void fetchMediaKits();
+    } else {
+      setLeadsLoading(false);
+      setMediaKitsLoading(false);
     }
   }, [token]);
 
@@ -174,6 +181,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (!res.ok) throw new Error('Error al cargar soportes.');
       const data = await res.json();
       setSupports(data);
+      setErrorMsg(null);
     } catch (error: unknown) {
       setErrorMsg(error instanceof Error ? error.message : 'Error de conexión con el servidor.');
     } finally {
@@ -183,21 +191,31 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const fetchLeads = async () => {
     if (!token) return;
+    setLeadsLoading(true);
     try {
       const res = await fetch('/api/leads', { headers: { 'Authorization': `Bearer ${token}` } });
-      if (res.ok) setLeads(await res.json());
+      if (res.ok) {
+        setLeads(await res.json());
+      }
     } catch (error) {
       console.error('Error fetching leads:', error);
+    } finally {
+      setLeadsLoading(false);
     }
   };
 
   const fetchMediaKits = async () => {
     if (!token) return;
+    setMediaKitsLoading(true);
     try {
       const res = await fetch('/api/mediakits', { headers: { 'Authorization': `Bearer ${token}` } });
-      if (res.ok) setMediaKits(await res.json());
+      if (res.ok) {
+        setMediaKits(await res.json());
+      }
     } catch (error) {
       console.error('Error fetching mediakits:', error);
+    } finally {
+      setMediaKitsLoading(false);
     }
   };
 
@@ -224,6 +242,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const logout = () => {
     setToken(null);
     setUser(null);
+    setLeads([]);
+    setMediaKits([]);
+    setLeadsLoading(false);
+    setMediaKitsLoading(false);
     localStorage.removeItem('gc_token');
     localStorage.removeItem('gc_user');
     setView('landing');
@@ -273,7 +295,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       });
       if (res.ok) {
         clearSelection();
-        if (token) fetchLeads();
+        if (token) void fetchLeads();
         return true;
       }
       return false;
@@ -340,10 +362,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const refreshAllData = () => {
-    fetchSupports();
+    void fetchSupports();
     if (token) {
-      fetchLeads();
-      fetchMediaKits();
+      void fetchLeads();
+      void fetchMediaKits();
     }
   };
 
@@ -354,7 +376,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       currentDashboardTab, setDashboardTab,
       campaignStartDate, campaignEndDate, setCampaignDates,
       user, token, login, logout,
-      supports, leads, mediaKits, isLoading, errorMsg,
+      supports, leads, mediaKits, isLoading, leadsLoading, mediaKitsLoading, errorMsg,
       selectedSupports, toggleSupportSelection, clearSelection, selectionError, clearSelectionError, MAX_SELECTION_LIMIT, isSubmittingLead, submitLead,
       currentPlaza, setCurrentPlaza, currentType, setCurrentType,
       currentStatus, setCurrentStatus, searchQuery, setSearchQuery,

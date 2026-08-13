@@ -125,7 +125,7 @@ export function LandingPage() {
               </div>
             ) : featuredSupports.length > 0 ? (
               <div className="relative mt-8">
-                <div className="flex snap-x snap-mandatory gap-5 overflow-x-auto pb-5 pr-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                <div id="featured-supports-carousel" className="flex snap-x snap-mandatory gap-5 overflow-x-auto pb-5 pr-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                   {featuredSupports.map((support) => (
                     <Link key={support.id} to="/explorer" className="group w-[82vw] max-w-[360px] shrink-0 snap-start overflow-hidden rounded-2xl border border-[#DCE4DF] bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:border-[#049A41] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#049A41] sm:w-[300px]">
                       <div className="relative h-44 overflow-hidden bg-[#082028]">

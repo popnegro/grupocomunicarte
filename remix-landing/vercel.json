@@ -1,0 +1,24 @@
+{
+  "redirects": [
+    {
+      "source": "/soportes",
+      "destination": "/soportes-publicitarios",
+      "permanent": true
+    },
+    {
+      "source": "/soportes/led",
+      "destination": "/soportes-publicitarios/pantallas-led",
+      "permanent": true
+    },
+    {
+      "source": "/soportes/tradicional",
+      "destination": "/soportes-publicitarios/tradicional",
+      "permanent": true
+    },
+    {
+      "source": "/soportes/led-movil",
+      "destination": "/soportes-publicitarios/led-movil",
+      "permanent": true
+    }
+  ]
+}

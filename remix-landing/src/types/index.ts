@@ -49,6 +49,8 @@ export interface Support {
   orientation?: string;
   illumination?: string;
   audio?: string;
+  reservedFrom?: string;
+  reservedUntil?: string;
 }
 
 export interface SelectedSupport {

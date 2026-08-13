@@ -53,6 +53,8 @@ Prioridades:
 script → validación → resultado
 ```
 
+El proyecto dispone de `scripts/fix-qa-local.sh` para reconciliar correcciones repetibles de QA local sin editar múltiples archivos manualmente.
+
 ## 6. Criterio de decisión
 
 Preguntar:
@@ -127,6 +129,15 @@ Cuando la espera sea visible, usar skeleton con la misma estructura aproximada d
 
 No mostrar `0 registros` o columnas vacías mientras la consulta todavía está pendiente.
 
+Aplicado a:
+
+```text
+Dashboard Home       ✅ skeleton
+Dashboard Leads      ✅ skeleton Kanban
+Media Kit History    ✅ skeleton
+Explorer             ✅ skeleton inventario
+```
+
 ## 9. QA
 
 Cada bloque debe cerrar con:
@@ -141,6 +152,32 @@ Después realizar una prueba funcional concreta.
 Si pasa: continuar.
 
 Si falla: corregir el problema y volver a validar una vez.
+
+### Estado técnico conocido
+
+```text
+TypeScript / lint local              ✅ verificado
+Vite + esbuild build local           ✅ verificado anteriormente
+Auth APIs sin token                  ✅ 401 esperado
+Explorer skeleton                    ✅ implementado
+Dashboard skeleton                   ✅ implementado
+Automatización de QA local           ✅ implementada
+```
+
+### Condición de Release
+
+No declarar Release hasta confirmar en local:
+
+```text
+✓ npm run lint
+✓ npm run build
+✓ cero errores de compilación
+✓ cero warnings de sintaxis CSS
+✓ flujo principal Landing → cotización
+✓ flujo administrativo mínimo
+```
+
+El warning de tamaño de bundle >500 kB no bloquea el PMV por sí mismo; queda como optimización posterior mientras no afecte la experiencia o estabilidad.
 
 ## 10. Seguridad
 

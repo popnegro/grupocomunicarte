@@ -7,7 +7,10 @@ import { ExplorerPage } from './components/ExplorerPage';
 import { ContactForm } from './components/ContactForm';
 import { LoginView } from './components/LoginView';
 import { DashboardRoute } from './components/DashboardRoute';
-import { DashboardInventoryStatus } from './components/DashboardInventoryStatus';
+import { DashboardShell } from './components/DashboardShell';
+import { DashboardSupportsPage } from './components/DashboardSupportsPage';
+import { DashboardLeadsPage } from './components/DashboardLeadsPage';
+import { DashboardClientsPage } from './components/DashboardClientsPage';
 import { MediaKitStudio } from './components/MediaKitStudio';
 import { MarketingSeoPage, SupportSeoPage } from './components/SeoPage';
 
@@ -17,9 +20,7 @@ const PageLayout = () => (
     <main><Outlet /></main>
     <footer className="bg-white text-slate-600 text-xs py-8 px-6 border-t border-[#DCE4DF] mt-12 w-full">
       <div className="flex flex-col md:flex-row justify-between items-center gap-4 max-w-7xl mx-auto">
-        <div className="flex items-center space-x-3">
-          <BrandLogo size="sm" variant="full" />
-        </div>
+        <div className="flex items-center space-x-3"><BrandLogo size="sm" variant="full" /></div>
         <div className="text-center md:text-right text-[11px] text-slate-500 space-y-1">
           <p className="font-extrabold text-[#082028]">Grupo Comunicarte S.A. © 2026</p>
           <p>Mendoza - Buenos Aires, República Argentina • Todos los derechos reservados.</p>
@@ -35,24 +36,14 @@ const ProtectedDashboard = () => {
   return (
     <>
       <DashboardRoute />
-      <a
-        href="/dashboard/mediakits"
-        className="fixed bottom-5 right-5 z-40 inline-flex items-center gap-2 rounded-full bg-[#049A41] px-4 py-3 text-xs font-extrabold text-white shadow-lg transition hover:bg-[#037d34]"
-      >
-        Generar Media Kit
-      </a>
+      <a href="/dashboard/mediakits" className="fixed bottom-5 right-5 z-40 inline-flex items-center gap-2 rounded-full bg-[#049A41] px-4 py-3 text-xs font-extrabold text-white shadow-lg transition hover:bg-[#037d34]">Generar Media Kit</a>
     </>
   );
 };
 
-const ProtectedInventory = () => {
+const ProtectedDashboardModule = ({ children }: { children: React.ReactNode }) => {
   const { user } = useApp();
-  return user ? <DashboardInventoryStatus /> : <Navigate to="/login" replace />;
-};
-
-const ProtectedMediaKitStudio = () => {
-  const { user } = useApp();
-  return user ? <MediaKitStudio /> : <Navigate to="/login" replace />;
+  return user ? <DashboardShell>{children}</DashboardShell> : <Navigate to="/login" replace />;
 };
 
 export default function App() {
@@ -62,8 +53,11 @@ export default function App() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginView />} />
         <Route path="/dashboard" element={<ProtectedDashboard />} />
-        <Route path="/dashboard/inventario" element={<ProtectedInventory />} />
-        <Route path="/dashboard/mediakits" element={<ProtectedMediaKitStudio />} />
+        <Route path="/dashboard/soportes" element={<ProtectedDashboardModule><DashboardSupportsPage /></ProtectedDashboardModule>} />
+        <Route path="/dashboard/inventario" element={<Navigate to="/dashboard/soportes" replace />} />
+        <Route path="/dashboard/leads" element={<ProtectedDashboardModule><DashboardLeadsPage /></ProtectedDashboardModule>} />
+        <Route path="/dashboard/clients" element={<ProtectedDashboardModule><DashboardClientsPage /></ProtectedDashboardModule>} />
+        <Route path="/dashboard/mediakits" element={<ProtectedDashboardModule><MediaKitStudio /></ProtectedDashboardModule>} />
 
         <Route element={<PageLayout />}>
           <Route path="/nosotros" element={<MarketingSeoPage kind="nosotros" />} />

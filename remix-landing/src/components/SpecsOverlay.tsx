@@ -14,268 +14,60 @@ interface SpecsOverlayProps {
 export function SpecsOverlay({ support, onClose, onFocusOnMap }: SpecsOverlayProps) {
   const { selectedSupports, toggleSupportSelection, selectionError, clearSelectionError, setActiveSupportId } = useApp();
   const isSelected = selectedSupports.some(s => s.id === support.id);
+  const isReserved = support.status === 'reserved';
 
-  // Close on Escape key
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        onClose();
-      }
-    };
+    const handleKeyDown = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [onClose]);
 
   const handleViewOnMap = () => {
     setActiveSupportId(support.id);
-    if (onFocusOnMap) {
-      onFocusOnMap();
-    } else {
-      const mapEl = document.getElementById('interactive-map') || document.getElementById('inventory-grid');
-      if (mapEl) {
-        mapEl.scrollIntoView({ behavior: 'smooth' });
-      }
-    }
+    if (onFocusOnMap) onFocusOnMap();
+    else document.getElementById('interactive-map')?.scrollIntoView({ behavior: 'smooth' });
   };
 
   return (
     <>
-      {/* Mobile Backdrop Overlay - ONLY visible on mobile (< lg) */}
-      <div 
-        className="lg:hidden fixed inset-0 bg-[#082028]/30 backdrop-blur-xs z-40"
-        onClick={onClose}
-      />
-
-      {/* Contextual Right Panel - No backdrop on Desktop */}
-      <motion.div
-        initial={{ x: '100%' }}
-        animate={{ x: 0 }}
-        exit={{ x: '100%' }}
-        transition={{ type: 'spring', damping: 25, stiffness: 220 }}
-        className="fixed right-0 top-16 bottom-0 w-full sm:w-[380px] lg:w-[400px] xl:w-[420px] bg-white shadow-2xl overflow-hidden flex flex-col border-l border-[#DCE4DF] z-40"
-      >
-        {/* Header Panel */}
-        <div className="bg-[#082028] text-white p-4 sm:p-5 flex items-center justify-between border-b border-[#7C3AED]/30 shrink-0">
-          <div>
-            <span className="text-[10px] uppercase font-extrabold text-[#7C3AED] tracking-wider block">
-              Ficha Técnica
-            </span>
-            <h3 className="text-base sm:text-lg font-extrabold text-white">DETALLE DEL SOPORTE</h3>
-          </div>
-
-          <button
-            onClick={onClose}
-            className="p-1.5 hover:bg-white/10 rounded-full text-slate-300 hover:text-white transition-colors cursor-pointer"
-            aria-label="Cerrar panel de detalle"
-          >
-            <X className="w-5 h-5" />
-          </button>
+      <div className="fixed inset-0 z-40 bg-[#082028]/30 backdrop-blur-xs lg:hidden" onClick={onClose} />
+      <motion.div initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }} transition={{ type: 'spring', damping: 25, stiffness: 220 }} className="fixed right-0 top-16 bottom-0 z-40 flex w-full flex-col overflow-hidden border-l border-[#DCE4DF] bg-white shadow-2xl sm:w-[380px] lg:w-[400px] xl:w-[420px]">
+        <div className="flex shrink-0 items-center justify-between border-b border-[#DCE4DF] bg-[#082028] p-4 text-white sm:p-5">
+          <div><span className="block text-[10px] uppercase font-extrabold tracking-wider text-[#8FE3B1]">Ficha Técnica</span><h3 className="text-base font-extrabold text-white sm:text-lg">DETALLE DEL SOPORTE</h3></div>
+          <button onClick={onClose} className="cursor-pointer rounded-full p-1.5 text-slate-300 transition-colors hover:bg-white/10 hover:text-white" aria-label="Cerrar panel de detalle"><X className="h-5 w-5" /></button>
         </div>
 
-        {/* Media Preview Section */}
-        <div className="relative w-full h-48 sm:h-52 bg-[#082028] shrink-0">
-          {support.videoUrl ? (
-            <video
-              src={support.videoUrl}
-              autoPlay
-              loop
-              muted
-              playsInline
-              className="w-full h-full object-cover opacity-90"
-            />
-          ) : (
-            <SupportImage
-              src={support.imageUrl}
-              alt={support.name}
-              supportName={support.name}
-              supportType={support.type}
-              className="w-full h-full object-cover opacity-95"
-            />
-          )}
-
-          {support.videoUrl && (
-            <div className="absolute top-3 left-3 bg-[#7C3AED] text-white text-[9px] uppercase font-extrabold tracking-wider px-2.5 py-1 rounded-full flex items-center gap-1 shadow-md">
-              <Play className="w-2.5 h-2.5 fill-white" />
-              Loop Simulación
-            </div>
-          )}
-
-          {/* Estado Badge - VERDE para Disponible, NARANJA para Reservado */}
-          <div className="absolute top-3 right-3">
-            <span className={`text-[10px] uppercase font-extrabold px-2.5 py-1 rounded-full border shadow-sm ${
-              support.status === 'available'
-                ? 'bg-emerald-500 text-white border-emerald-400'
-                : 'bg-amber-500 text-white border-amber-400'
-            }`}>
-              {support.status === 'available' ? 'Disponible' : 'En reserva'}
-            </span>
-          </div>
-
-          <div className="absolute inset-0 bg-gradient-to-t from-[#082028] via-transparent to-transparent pointer-events-none" />
-          
-          <div className="absolute bottom-3 left-3 right-3 text-white">
-            <span className="text-[#7C3AED] text-[10px] uppercase font-extrabold tracking-wider block">{support.plaza}</span>
-            <h2 className="text-white text-sm sm:text-base font-extrabold leading-tight">{support.name}</h2>
-          </div>
+        <div className="relative h-48 w-full shrink-0 bg-[#082028] sm:h-52">
+          {support.videoUrl ? <video src={support.videoUrl} autoPlay loop muted playsInline className="h-full w-full object-cover opacity-90" /> : <SupportImage src={support.imageUrl} alt={support.name} supportName={support.name} supportType={support.type} className="h-full w-full object-cover opacity-95" />}
+          {support.videoUrl && <div className="absolute left-3 top-3 flex items-center gap-1 rounded-full bg-[#082028]/85 px-2.5 py-1 text-[9px] font-extrabold uppercase tracking-wider text-white shadow-md"><Play className="h-2.5 w-2.5 fill-white" /> Loop Simulación</div>}
+          <div className="absolute right-3 top-3"><span className={`rounded-full border px-2.5 py-1 text-[10px] font-extrabold uppercase shadow-sm ${isReserved ? 'border-amber-300 bg-amber-500 text-white' : 'border-emerald-300 bg-emerald-500 text-white'}`}>{isReserved ? 'Reservado' : 'Disponible'}</span></div>
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#082028] via-transparent to-transparent" />
+          <div className="absolute bottom-3 left-3 right-3 text-white"><span className="block text-[10px] font-extrabold uppercase tracking-wider text-[#8FE3B1]">{support.plaza}</span><h2 className="text-sm font-extrabold leading-tight text-white sm:text-base">{support.name}</h2></div>
         </div>
 
-        {/* Body Details Content (Internal Scroll) */}
-        <div className="p-4 sm:p-5 space-y-4 flex-1 overflow-y-auto bg-white">
-          {/* Error Notice */}
-          {selectionError && (
-            <div className="p-3 bg-amber-50 border border-amber-200 text-amber-800 text-xs rounded-xl flex items-start justify-between gap-2">
-              <div className="flex items-start gap-2">
-                <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-                <span>{selectionError}</span>
-              </div>
-              <button onClick={clearSelectionError} className="p-1 hover:bg-amber-100 rounded text-amber-700">
-                <X className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          )}
+        <div className="flex-1 space-y-4 overflow-y-auto bg-white p-4 sm:p-5">
+          {selectionError && <div className="flex items-start justify-between gap-2 rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-800"><div className="flex items-start gap-2"><AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" /><span>{selectionError}</span></div><button onClick={clearSelectionError} className="rounded p-1 text-amber-700 hover:bg-amber-100"><X className="h-3.5 w-3.5" /></button></div>}
 
-          {/* Ubicación & Tipo */}
-          <div className="bg-[#F7F9F7] p-3.5 rounded-xl border border-[#DCE4DF] space-y-2">
-            <div className="flex items-center space-x-2 text-xs text-[#082028]">
-              <MapPin className="w-4 h-4 text-[#7C3AED] shrink-0" />
-              <span className="font-extrabold leading-snug">{support.address}</span>
-            </div>
-            <div className="flex items-center gap-2 pt-1 border-t border-[#DCE4DF]">
-              <span className="text-[10px] uppercase font-extrabold bg-[#082028] text-white px-2.5 py-0.5 rounded-md">
-                {support.type}
-              </span>
-              <span className="text-[10px] font-mono font-bold text-[#40515A]">
-                Plaza {support.plaza}
-              </span>
-            </div>
+          {isReserved && <div className="flex items-start gap-2 rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900"><AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" /><div><p className="font-extrabold">Soporte reservado</p><p className="mt-0.5 leading-5">Esta ubicación sigue visible en el inventario, pero no está disponible para selección en este momento.</p></div></div>}
+
+          <div className="space-y-2 rounded-xl border border-[#DCE4DF] bg-[#F7F9F7] p-3.5">
+            <div className="flex items-center space-x-2 text-xs text-[#082028]"><MapPin className="h-4 w-4 shrink-0 text-[#049A41]" /><span className="font-extrabold leading-snug">{support.address}</span></div>
+            <div className="flex items-center gap-2 border-t border-[#DCE4DF] pt-1"><span className="rounded-md bg-[#082028] px-2.5 py-0.5 text-[10px] font-extrabold uppercase text-white">{support.type}</span><span className="font-mono text-[10px] font-bold text-[#40515A]">Plaza {support.plaza}</span><span className={`ml-auto rounded-full px-2 py-0.5 text-[9px] font-extrabold uppercase ${isReserved ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'}`}>{isReserved ? 'Reservado' : 'Disponible'}</span></div>
           </div>
 
-          {/* Technical Specifications Grid */}
-          <div>
-            <h4 className="text-[#40515A] text-[10px] uppercase font-extrabold tracking-wider mb-2">Especificaciones Técnicas</h4>
-            <div className="grid grid-cols-2 gap-2.5">
-              <div className="bg-[#F7F9F7] p-2.5 sm:p-3 rounded-xl border border-[#DCE4DF] flex items-center space-x-2.5">
-                <div className="p-2 bg-purple-100 text-[#7C3AED] rounded-lg shrink-0">
-                  <Maximize2 className="w-3.5 h-3.5" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-[#64748B] text-[9px] uppercase font-extrabold">Dimensiones</p>
-                  <p className="text-[#082028] text-xs font-extrabold truncate">{support.size}</p>
-                </div>
-              </div>
+          <div><h4 className="mb-2 text-[10px] font-extrabold uppercase tracking-wider text-[#40515A]">Especificaciones Técnicas</h4><div className="grid grid-cols-2 gap-2.5">
+            {[['Dimensiones', support.size, Maximize2], ['Tráfico Est.', support.contactsCount || 'Ver métricas', Eye], ['Resolución', support.resolution || (support.type.includes('LED') ? '1920x1080 (HD)' : 'Impresión Lona 300DPI'), Monitor], ['Iluminación', support.illumination || (support.type.includes('LED') ? 'LED Backlight 24/7' : 'Backlight Halógeno'), Sun], ['Orientación', support.orientation || 'Frontal a Tráfico Principal', Compass], ['Audio', support.audio || 'Sin Audio (Normativa OOH)', Volume2]].map(([label, value, Icon]) => { const IconComponent = Icon; return <div key={label as string} className="flex items-center space-x-2.5 rounded-xl border border-[#DCE4DF] bg-[#F7F9F7] p-2.5 sm:p-3"><div className="shrink-0 rounded-lg bg-[#E8F0E4] p-2 text-[#049A41]"><IconComponent className="h-3.5 w-3.5" /></div><div className="min-w-0"><p className="text-[9px] font-extrabold uppercase text-[#64748B]">{label}</p><p className="truncate text-xs font-extrabold text-[#082028]">{value}</p></div></div>; })}
+          </div></div>
 
-              <div className="bg-[#F7F9F7] p-2.5 sm:p-3 rounded-xl border border-[#DCE4DF] flex items-center space-x-2.5">
-                <div className="p-2 bg-purple-100 text-[#7C3AED] rounded-lg shrink-0">
-                  <Eye className="w-3.5 h-3.5" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-[#64748B] text-[9px] uppercase font-extrabold">Tráfico Est.</p>
-                  <p className="text-[#082028] text-xs font-extrabold truncate">{support.contactsCount || 'Ver métricas'}</p>
-                </div>
-              </div>
+          <div><h4 className="mb-1 text-[10px] font-extrabold uppercase tracking-wider text-[#40515A]">Descripción</h4><p className="rounded-xl border border-[#DCE4DF] bg-[#F7F9F7] p-3 text-xs leading-relaxed text-[#082028]">{support.description}</p></div>
 
-              <div className="bg-[#F7F9F7] p-2.5 sm:p-3 rounded-xl border border-[#DCE4DF] flex items-center space-x-2.5">
-                <div className="p-2 bg-purple-100 text-[#7C3AED] rounded-lg shrink-0">
-                  <Monitor className="w-3.5 h-3.5" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-[#64748B] text-[9px] uppercase font-extrabold">Resolución</p>
-                  <p className="text-[#082028] text-xs font-extrabold truncate">
-                    {support.resolution || (support.type.includes('LED') ? '1920x1080 (HD)' : 'Impresión Lona 300DPI')}
-                  </p>
-                </div>
-              </div>
-
-              <div className="bg-[#F7F9F7] p-2.5 sm:p-3 rounded-xl border border-[#DCE4DF] flex items-center space-x-2.5">
-                <div className="p-2 bg-purple-100 text-[#7C3AED] rounded-lg shrink-0">
-                  <Sun className="w-3.5 h-3.5" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-[#64748B] text-[9px] uppercase font-extrabold">Iluminación</p>
-                  <p className="text-[#082028] text-xs font-extrabold truncate">
-                    {support.illumination || (support.type.includes('LED') ? 'LED Backlight 24/7' : 'Backlight Halógeno')}
-                  </p>
-                </div>
-              </div>
-
-              <div className="bg-[#F7F9F7] p-2.5 sm:p-3 rounded-xl border border-[#DCE4DF] flex items-center space-x-2.5">
-                <div className="p-2 bg-purple-100 text-[#7C3AED] rounded-lg shrink-0">
-                  <Compass className="w-3.5 h-3.5" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-[#64748B] text-[9px] uppercase font-extrabold">Orientación</p>
-                  <p className="text-[#082028] text-xs font-extrabold truncate">
-                    {support.orientation || 'Frontal a Tráfico Principal'}
-                  </p>
-                </div>
-              </div>
-
-              <div className="bg-[#F7F9F7] p-2.5 sm:p-3 rounded-xl border border-[#DCE4DF] flex items-center space-x-2.5">
-                <div className="p-2 bg-purple-100 text-[#7C3AED] rounded-lg shrink-0">
-                  <Volume2 className="w-3.5 h-3.5" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-[#64748B] text-[9px] uppercase font-extrabold">Audio</p>
-                  <p className="text-[#082028] text-xs font-extrabold truncate">
-                    {support.audio || 'Sin Audio (Normativa OOH)'}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Description */}
-          <div>
-            <h4 className="text-[#40515A] text-[10px] uppercase font-extrabold tracking-wider mb-1">Descripción</h4>
-            <p className="text-[#082028] text-xs leading-relaxed bg-[#F7F9F7] p-3 rounded-xl border border-[#DCE4DF]">
-              {support.description}
-            </p>
-          </div>
-
-          {/* Ref Points */}
-          {support.refPoints && support.refPoints.length > 0 && (
-            <div>
-              <h4 className="text-[#40515A] text-[10px] uppercase font-extrabold tracking-wider mb-1">Puntos de Referencia</h4>
-              <div className="flex flex-wrap gap-1.5">
-                {support.refPoints.map((p, i) => (
-                  <span key={i} className="bg-[#F7F9F7] border border-[#DCE4DF] text-[#082028] text-[10px] px-2.5 py-1 rounded-lg font-medium">
-                    {p}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
+          {support.refPoints && support.refPoints.length > 0 && <div><h4 className="mb-1 text-[10px] font-extrabold uppercase tracking-wider text-[#40515A]">Puntos de Referencia</h4><div className="flex flex-wrap gap-1.5">{support.refPoints.map((p, i) => <span key={i} className="rounded-lg border border-[#DCE4DF] bg-[#F7F9F7] px-2.5 py-1 text-[10px] font-medium text-[#082028]">{p}</span>)}</div></div>}
         </div>
 
-        {/* Action Buttons in Footer */}
-        <div className="p-4 bg-white border-t border-[#DCE4DF] space-y-2 shrink-0">
-          <button
-            onClick={handleViewOnMap}
-            className="w-full py-2.5 bg-[#F7F9F7] hover:bg-purple-50 text-[#082028] hover:text-[#7C3AED] border border-[#DCE4DF] text-xs font-extrabold rounded-xl transition-all flex items-center justify-center gap-2 cursor-pointer"
-          >
-            <Navigation className="w-4 h-4 text-[#7C3AED]" />
-            <span>Ver en el mapa</span>
-          </button>
-
-          <button
-            onClick={() => toggleSupportSelection(support)}
-            className={`w-full py-3 text-xs font-extrabold rounded-xl flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer ${
-              isSelected
-                ? 'bg-[#082028] text-white'
-                : 'bg-[#7C3AED] hover:bg-[#6D28D9] text-white'
-            }`}
-          >
-            {isSelected ? (
-              <>
-                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                <span>Soporte Seleccionado</span>
-              </>
-            ) : (
-              <>
-                <Circle className="w-4 h-4" />
-                <span>Seleccionar soporte</span>
-              </>
-            )}
+        <div className="shrink-0 space-y-2 border-t border-[#DCE4DF] bg-white p-4">
+          <button onClick={handleViewOnMap} className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-[#DCE4DF] bg-[#F7F9F7] py-2.5 text-xs font-extrabold text-[#082028] transition-all hover:border-[#049A41] hover:text-[#049A41]"><Navigation className="h-4 w-4 text-[#049A41]" /><span>Ver en el mapa</span></button>
+          <button disabled={isReserved} onClick={() => toggleSupportSelection(support)} className={`flex w-full items-center justify-center gap-2 rounded-xl py-3 text-xs font-extrabold shadow-md transition-all ${isReserved ? 'cursor-not-allowed bg-amber-100 text-amber-800' : isSelected ? 'bg-[#082028] text-white' : 'cursor-pointer bg-[#049A41] text-white hover:bg-[#038537]'}`}>
+            {isReserved ? <><AlertCircle className="h-4 w-4" /><span>Soporte reservado</span></> : isSelected ? <><CheckCircle2 className="h-4 w-4 text-emerald-400" /><span>Soporte seleccionado</span></> : <><Circle className="h-4 w-4" /><span>Seleccionar soporte</span></>}
           </button>
         </div>
       </motion.div>

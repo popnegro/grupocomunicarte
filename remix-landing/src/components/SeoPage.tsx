@@ -2,7 +2,6 @@ import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, CheckCircle2, MapPin, Monitor, Smartphone } from 'lucide-react';
 import { useApp } from '../context/AppContext';
-import { SupportTypePage } from '../../server/SupportTypePage';
 
 const SITE_ORIGIN = 'https://grupocomunicarte.vercel.app';
 
@@ -143,13 +142,33 @@ const supportSeo = {
 
 type SupportSeoKind = keyof typeof supportSeo;
 
+type SupportFormatCard = {
+  heading: string;
+  body: string;
+  href: string;
+  icon: typeof Monitor;
+};
+
+const supportFormatCards: SupportFormatCard[] = [
+  { heading: 'Pantallas LED', body: 'Campañas dinámicas y de alta visibilidad.', href: '/soportes-publicitarios/pantallas-led', icon: Monitor },
+  { heading: 'Soportes tradicionales', body: 'Presencia urbana sostenida y gran formato.', href: '/soportes-publicitarios/tradicional', icon: MapPin },
+  { heading: 'LED Móvil', body: 'Movilidad para activaciones y recorridos.', href: '/soportes-publicitarios/led-movil', icon: Smartphone },
+];
+
+const supportTypeFilters: Record<Exclude<SupportSeoKind, 'base'>, string> = {
+  led: 'Pantallas LED',
+  tradicional: 'Soportes Tradicionales',
+  movil: 'LED Móvil',
+};
+
 export function SupportSeoPage({ kind }: { kind: SupportSeoKind }) {
   const page = supportSeo[kind];
   useSeoMeta(page);
   const { supports, isLoading } = useApp();
 
   if (kind !== 'base') {
-    const mapping = { led: 'led', tradicional: 'tradicional', movil: 'led-movil' } as const;
+    const supportFilter = supportTypeFilters[kind];
+
     return (
       <div className="bg-white">
         <section className="border-b border-[#DCE4DF] bg-[#F7F9F7]">
@@ -166,7 +185,7 @@ export function SupportSeoPage({ kind }: { kind: SupportSeoKind }) {
               <h1 className="mt-3 text-4xl font-black tracking-tight text-[#082028] sm:text-5xl">{page.heading}</h1>
               <p className="mt-6 max-w-3xl text-base leading-8 text-[#40515A] sm:text-lg">{page.intro}</p>
               <div className="mt-8 flex flex-wrap gap-3">
-                <Link to="/explorer" state={{ filters: { type: kind === 'led' ? 'Pantallas LED' : kind === 'tradicional' ? 'Soportes Tradicionales' : 'LED Móvil' } }} className="inline-flex items-center gap-2 rounded-xl bg-[#049A41] px-5 py-3 text-sm font-extrabold text-white hover:bg-[#038537]">Explorar ubicaciones <ArrowRight className="h-4 w-4" /></Link>
+                <Link to="/explorer" state={{ filters: { type: supportFilter } }} className="inline-flex items-center gap-2 rounded-xl bg-[#049A41] px-5 py-3 text-sm font-extrabold text-white hover:bg-[#038537]">Explorar ubicaciones <ArrowRight className="h-4 w-4" /></Link>
                 <Link to="/mediakit" className="inline-flex items-center gap-2 rounded-xl border border-[#DCE4DF] bg-white px-5 py-3 text-sm font-extrabold text-[#082028] hover:border-[#049A41] hover:text-[#049A41]">Solicitar cotización</Link>
               </div>
             </div>
@@ -195,8 +214,8 @@ export function SupportSeoPage({ kind }: { kind: SupportSeoKind }) {
               <p className="mt-3 text-sm leading-6 text-[#64748B]">Encontrá soportes de esta categoría en el inventario actual y revisá su ficha antes de solicitar una propuesta.</p>
             </div>
             <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {(isLoading ? [] : supports.filter((support) => support.type === (mapping[kind])) .slice(0, 6)).map((support) => (
-                <Link key={support.id} to="/explorer" className="rounded-2xl border border-[#DCE4DF] bg-white p-5 hover:border-[#049A41]">
+              {(isLoading ? [] : supports.filter((support) => String(support.type) === supportFilter).slice(0, 6)).map((support) => (
+                <Link key={support.id} to="/explorer" state={{ filters: { type: supportFilter } }} className="rounded-2xl border border-[#DCE4DF] bg-white p-5 hover:border-[#049A41]">
                   <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-[#049A41]">{support.plaza}</p>
                   <h3 className="mt-1 text-sm font-extrabold text-[#082028]">{support.name}</h3>
                   <p className="mt-2 text-xs text-[#64748B]">{support.address}</p>
@@ -205,10 +224,6 @@ export function SupportSeoPage({ kind }: { kind: SupportSeoKind }) {
             </div>
           </div>
         </section>
-
-        <div className="sr-only">
-          <SupportTypePage type={mapping[kind]} />
-        </div>
       </div>
     );
   }
@@ -232,21 +247,14 @@ export function SupportSeoPage({ kind }: { kind: SupportSeoKind }) {
 
       <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
         <div className="grid gap-5 md:grid-cols-3">
-          {[
-            ['Pantallas LED', 'Campañas dinámicas y de alta visibilidad.', '/soportes-publicitarios/pantallas-led', Monitor],
-            ['Soportes tradicionales', 'Presencia urbana sostenida y gran formato.', '/soportes-publicitarios/tradicional', MapPin],
-            ['LED Móvil', 'Movilidad para activaciones y recorridos.', '/soportes-publicitarios/led-movil', Smartphone],
-          ].map(([heading, body, href, Icon]) => {
-            const IconComponent = Icon as typeof Monitor;
-            return (
-              <Link key={heading as string} to={href as string} className="group rounded-2xl border border-[#DCE4DF] bg-white p-6 shadow-sm hover:-translate-y-0.5 hover:border-[#049A41]">
-                <IconComponent className="h-6 w-6 text-[#049A41]" aria-hidden="true" />
-                <h2 className="mt-4 text-lg font-extrabold text-[#082028]">{heading}</h2>
-                <p className="mt-2 text-sm leading-6 text-[#64748B]">{body}</p>
-                <span className="mt-5 inline-flex items-center gap-2 text-sm font-extrabold text-[#049A41]">Conocer formato <ArrowRight className="h-4 w-4" /></span>
-              </Link>
-            );
-          })}
+          {supportFormatCards.map(({ heading, body, href, icon: Icon }) => (
+            <Link key={heading} to={href} className="group rounded-2xl border border-[#DCE4DF] bg-white p-6 shadow-sm hover:-translate-y-0.5 hover:border-[#049A41]">
+              <Icon className="h-6 w-6 text-[#049A41]" aria-hidden="true" />
+              <h2 className="mt-4 text-lg font-extrabold text-[#082028]">{heading}</h2>
+              <p className="mt-2 text-sm leading-6 text-[#64748B]">{body}</p>
+              <span className="mt-5 inline-flex items-center gap-2 text-sm font-extrabold text-[#049A41]">Conocer formato <ArrowRight className="h-4 w-4" /></span>
+            </Link>
+          ))}
         </div>
       </section>
     </div>

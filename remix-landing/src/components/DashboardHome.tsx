@@ -1,9 +1,19 @@
 import { BarChart3, CalendarDays, FileText, MonitorSmartphone, Users } from 'lucide-react';
 import { useMemo } from 'react';
 import { useApp } from '../context/AppContext';
+import { DashboardHomeSkeleton } from './DashboardSkeleton';
 
 export function DashboardHome() {
-  const { supports, leads, mediaKits } = useApp();
+  const {
+    supports,
+    leads,
+    mediaKits,
+    isLoading: supportsLoading,
+    leadsLoading,
+    mediaKitsLoading,
+  } = useApp();
+
+  const dashboardLoading = supportsLoading || leadsLoading || mediaKitsLoading;
 
   const metrics = useMemo(() => ({
     totalSupports: supports.length,
@@ -12,6 +22,10 @@ export function DashboardHome() {
     pendingLeads: leads.filter((lead) => lead.status === 'pending').length,
     totalMediaKits: mediaKits.length,
   }), [supports, leads, mediaKits]);
+
+  if (dashboardLoading) {
+    return <DashboardHomeSkeleton />;
+  }
 
   const cards = [
     { label: 'Soportes', value: metrics.totalSupports, helper: `${metrics.available} disponibles · ${metrics.reserved} reservados`, icon: MonitorSmartphone },

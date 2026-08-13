@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, ChevronDown } from 'lucide-react';
+import { BrandLogo } from './BrandLogo';
 
 const navigation = [
   { name: 'Nosotros', href: '/nosotros' },
@@ -16,7 +17,11 @@ const navigation = [
   { name: 'Soluciones', href: '/soluciones' },
 ];
 
+const isActiveRoute = (pathname: string, href: string) =>
+  href === '/' ? pathname === '/' : pathname === href || pathname.startsWith(`${href}/`);
+
 export function Navbar() {
+  const { pathname } = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
@@ -26,28 +31,27 @@ export function Navbar() {
   };
 
   return (
-    <header className="bg-white shadow-sm">
-      <nav className="mx-auto flex max-w-7xl items-center justify-between p-6 lg:px-8" aria-label="Navegación principal">
-        <div className="flex lg:flex-1">
-          <Link to="/" onClick={closeMenus} className="-m-1.5 p-1.5">
-            <span className="sr-only">Grupo Comunicarte</span>
-            <span className="font-bold text-xl text-slate-800">Grupo Comunicarte</span>
-          </Link>
-        </div>
+    <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/95 shadow-sm backdrop-blur supports-[backdrop-filter]:bg-white/85">
+      <nav className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8" aria-label="Navegación principal">
+        <Link to="/" onClick={closeMenus} className="shrink-0 rounded-lg p-1.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#049A41]">
+          <span className="sr-only">Grupo Comunicarte</span>
+          <BrandLogo size="sm" variant="full" />
+        </Link>
 
         <div className="flex lg:hidden">
           <button
             type="button"
-            className="-m-2.5 inline-flex items-center justify-center rounded-md p-2.5 text-gray-700"
+            className="-m-2.5 inline-flex items-center justify-center rounded-md p-2.5 text-slate-700 hover:bg-slate-50"
             onClick={() => setMobileMenuOpen(true)}
             aria-label="Abrir menú principal"
             aria-expanded={mobileMenuOpen}
+            aria-controls="mobile-navigation"
           >
             <Menu className="h-6 w-6" aria-hidden="true" />
           </button>
         </div>
 
-        <div className="hidden lg:flex lg:gap-x-12">
+        <div className="hidden items-center gap-x-8 lg:flex">
           {navigation.map((item) =>
             item.dropdown ? (
               <div
@@ -58,21 +62,25 @@ export function Navbar() {
               >
                 <Link
                   to={item.href}
-                  className="flex items-center gap-x-1 text-sm font-semibold leading-6 text-gray-900"
+                  className={`flex items-center gap-x-1 rounded-lg px-2 py-2 text-sm font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#049A41] ${
+                    isActiveRoute(pathname, item.href) ? 'text-[#049A41]' : 'text-slate-800 hover:text-[#049A41]'
+                  }`}
                   aria-haspopup="menu"
                   aria-expanded={dropdownOpen}
                 >
                   {item.name}
-                  <ChevronDown className="h-5 w-5 flex-none text-gray-400" aria-hidden="true" />
+                  <ChevronDown className="h-4 w-4 flex-none text-slate-400" aria-hidden="true" />
                 </Link>
                 {dropdownOpen && (
-                  <div className="absolute -left-8 top-full z-10 mt-3 w-56 rounded-xl bg-white p-2 shadow-lg ring-1 ring-gray-900/5">
+                  <div className="absolute left-0 top-full z-10 mt-1 w-56 rounded-xl border border-slate-200 bg-white p-2 shadow-xl ring-1 ring-black/5">
                     {item.dropdown.map((subItem) => (
                       <Link
                         key={subItem.name}
                         to={subItem.href}
                         onClick={closeMenus}
-                        className="block rounded-lg px-3 py-2 text-sm font-semibold leading-6 text-gray-900 hover:bg-gray-50"
+                        className={`block rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#049A41] ${
+                          isActiveRoute(pathname, subItem.href) ? 'bg-[#E8F0E4] text-[#082028]' : 'text-slate-700 hover:bg-slate-50 hover:text-[#082028]'
+                        }`}
                       >
                         {subItem.name}
                       </Link>
@@ -84,7 +92,9 @@ export function Navbar() {
               <Link
                 key={item.name}
                 to={item.href}
-                className="text-sm font-semibold leading-6 text-gray-900"
+                className={`rounded-lg px-2 py-2 text-sm font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#049A41] ${
+                  isActiveRoute(pathname, item.href) ? 'text-[#049A41]' : 'text-slate-800 hover:text-[#049A41]'
+                }`}
               >
                 {item.name}
               </Link>
@@ -92,10 +102,10 @@ export function Navbar() {
           )}
         </div>
 
-        <div className="hidden lg:flex lg:flex-1 lg:justify-end">
+        <div className="hidden lg:flex lg:items-center lg:justify-end">
           <Link
             to="/mediakit"
-            className="text-sm font-semibold leading-6 text-white bg-[#049A41] hover:bg-[#038537] px-4 py-2 rounded-md"
+            className="rounded-xl bg-[#049A41] px-4 py-2.5 text-sm font-extrabold text-white shadow-sm transition-colors hover:bg-[#038537] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#049A41]"
           >
             Solicitar Media Kit <span aria-hidden="true">→</span>
           </Link>
@@ -103,17 +113,17 @@ export function Navbar() {
       </nav>
 
       {mobileMenuOpen && (
-        <div className="lg:hidden">
-          <div className="fixed inset-0 z-10 bg-black/20" onClick={closeMenus} aria-hidden="true" />
-          <div className="fixed inset-y-0 right-0 z-20 w-full overflow-y-auto bg-white px-6 py-6 sm:max-w-sm sm:ring-1 sm:ring-gray-900/10">
+        <div id="mobile-navigation" className="lg:hidden">
+          <div className="fixed inset-0 z-40 bg-slate-950/20" onClick={closeMenus} aria-hidden="true" />
+          <div className="fixed inset-y-0 right-0 z-50 w-full overflow-y-auto border-l border-slate-200 bg-white px-6 py-6 shadow-2xl sm:max-w-sm">
             <div className="flex items-center justify-between">
-              <Link to="/" onClick={closeMenus} className="-m-1.5 p-1.5">
+              <Link to="/" onClick={closeMenus} className="rounded-lg p-1.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#049A41]">
                 <span className="sr-only">Grupo Comunicarte</span>
-                <span className="font-bold text-xl text-slate-800">Grupo Comunicarte</span>
+                <BrandLogo size="sm" variant="full" />
               </Link>
               <button
                 type="button"
-                className="-m-2.5 rounded-md p-2.5 text-gray-700"
+                className="-m-2.5 rounded-md p-2.5 text-slate-700 hover:bg-slate-50"
                 onClick={closeMenus}
                 aria-label="Cerrar menú"
               >
@@ -122,43 +132,45 @@ export function Navbar() {
             </div>
 
             <div className="mt-6 flow-root">
-              <div className="-my-6 divide-y divide-gray-500/10">
-                <div className="space-y-2 py-6">
-                  {navigation.map((item) => (
-                    <div key={item.name}>
-                      <Link
-                        to={item.href}
-                        onClick={closeMenus}
-                        className="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50"
-                      >
-                        {item.name}
-                      </Link>
-                      {item.dropdown && (
-                        <div className="ml-3 mt-1 space-y-1 border-l border-gray-200 pl-3">
-                          {item.dropdown.map((subItem) => (
-                            <Link
-                              key={subItem.name}
-                              to={subItem.href}
-                              onClick={closeMenus}
-                              className="block rounded-lg px-3 py-1.5 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                            >
-                              {subItem.name}
-                            </Link>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-                <div className="py-6">
-                  <Link
-                    to="/mediakit"
-                    onClick={closeMenus}
-                    className="-mx-3 block rounded-lg px-3 py-2.5 text-base font-semibold leading-7 text-gray-900 hover:bg-gray-50"
-                  >
-                    Solicitar Media Kit
-                  </Link>
-                </div>
+              <div className="space-y-2">
+                {navigation.map((item) => (
+                  <div key={item.name}>
+                    <Link
+                      to={item.href}
+                      onClick={closeMenus}
+                      className={`block rounded-xl px-3 py-2.5 text-base font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#049A41] ${
+                        isActiveRoute(pathname, item.href) ? 'bg-[#E8F0E4] text-[#082028]' : 'text-slate-900 hover:bg-slate-50'
+                      }`}
+                    >
+                      {item.name}
+                    </Link>
+                    {item.dropdown && (
+                      <div className="ml-3 mt-1 space-y-1 border-l border-slate-200 pl-3">
+                        {item.dropdown.map((subItem) => (
+                          <Link
+                            key={subItem.name}
+                            to={subItem.href}
+                            onClick={closeMenus}
+                            className={`block rounded-lg px-3 py-2 text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#049A41] ${
+                              isActiveRoute(pathname, subItem.href) ? 'text-[#049A41]' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                            }`}
+                          >
+                            {subItem.name}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <div className="mt-6 border-t border-slate-200 pt-6">
+                <Link
+                  to="/mediakit"
+                  onClick={closeMenus}
+                  className="block rounded-xl bg-[#049A41] px-4 py-3 text-center text-base font-extrabold text-white shadow-sm hover:bg-[#038537] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#049A41]"
+                >
+                  Solicitar Media Kit
+                </Link>
               </div>
             </div>
           </div>

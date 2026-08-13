@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, CheckCircle2, MapPin, Monitor, Smartphone } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CheckCircle2, MapPin, Monitor, Smartphone } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { Navbar } from './Navbar';
 import { BrandCarousel } from './BrandCarousel';
@@ -28,7 +28,7 @@ const formats = [
 
 export function LandingPage() {
   const { supports, isLoading } = useApp();
-  const featuredSupports = supports.filter((support) => support.status === 'available').slice(0, 6);
+  const featuredSupports = supports.filter((support) => support.status === 'available').slice(0, 9);
 
   return (
     <div className="min-h-screen bg-white text-[#082028]">
@@ -108,42 +108,57 @@ export function LandingPage() {
 
         <section className="border-b border-[#DCE4DF] bg-white">
           <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8 lg:py-18">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
               <div>
-                <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-[#049A41]">Selección rápida</p>
-                <h2 className="mt-2 text-2xl font-black tracking-tight text-[#082028] sm:text-3xl">Soportes disponibles para explorar</h2>
-                <p className="mt-2 max-w-2xl text-sm leading-6 text-[#64748B]">Elegí una ubicación para ver su ficha, compararla y sumarla a tu selección.</p>
+                <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-[#049A41]">Soportes destacados</p>
+                <h2 className="mt-2 text-2xl font-black tracking-tight text-[#082028] sm:text-3xl">9 ubicaciones para explorar</h2>
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-[#64748B]">Recorré los soportes destacados y abrí el explorador para ver la ficha completa, ubicarlos en el mapa y sumarlos a tu selección.</p>
               </div>
-              <Link to="/explorer" className="inline-flex items-center gap-2 text-sm font-extrabold text-[#049A41] hover:text-[#038537]">
+              <Link to="/explorer" className="inline-flex shrink-0 items-center gap-2 text-sm font-extrabold text-[#049A41] hover:text-[#038537]">
                 Ver todo el inventario <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
 
             {isLoading ? (
-              <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {Array.from({ length: 3 }).map((_, index) => <div key={index} className="h-56 animate-pulse rounded-2xl bg-[#F7F9F7]" />)}
+              <div className="mt-8 flex gap-4 overflow-hidden pb-2">
+                {Array.from({ length: 4 }).map((_, index) => <div key={index} className="h-56 w-[82vw] max-w-[360px] shrink-0 animate-pulse rounded-2xl bg-[#F7F9F7] sm:w-[300px]" />)}
               </div>
             ) : featuredSupports.length > 0 ? (
-              <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                {featuredSupports.map((support) => (
-                  <Link key={support.id} to="/explorer" className="group overflow-hidden rounded-2xl border border-[#DCE4DF] bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:border-[#049A41] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#049A41]">
-                    <div className="relative h-44 overflow-hidden bg-[#082028]">
-                      <img src={support.imageUrl} alt={support.name} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-[#082028]/80 via-transparent to-transparent" />
-                      <div className="absolute bottom-3 left-3 right-3 flex items-end justify-between gap-3 text-white">
-                        <div className="min-w-0">
-                          <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-[#8FE3B1]">{support.plaza}</p>
-                          <h3 className="truncate text-sm font-extrabold">{support.name}</h3>
+              <div className="relative mt-8">
+                <div className="flex snap-x snap-mandatory gap-5 overflow-x-auto pb-5 pr-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                  {featuredSupports.map((support) => (
+                    <Link key={support.id} to="/explorer" className="group w-[82vw] max-w-[360px] shrink-0 snap-start overflow-hidden rounded-2xl border border-[#DCE4DF] bg-white shadow-sm transition-all hover:-translate-y-0.5 hover:border-[#049A41] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#049A41] sm:w-[300px]">
+                      <div className="relative h-44 overflow-hidden bg-[#082028]">
+                        <img src={support.imageUrl} alt={support.name} className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-[#082028]/80 via-transparent to-transparent" />
+                        <div className="absolute bottom-3 left-3 right-3 flex items-end justify-between gap-3 text-white">
+                          <div className="min-w-0">
+                            <p className="text-[10px] font-extrabold uppercase tracking-[0.14em] text-[#8FE3B1]">{support.plaza}</p>
+                            <h3 className="truncate text-sm font-extrabold">{support.name}</h3>
+                          </div>
+                          <span className="shrink-0 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-extrabold text-[#082028]">Ver ficha</span>
                         </div>
-                        <span className="shrink-0 rounded-full bg-white/90 px-2.5 py-1 text-[10px] font-extrabold text-[#082028]">Ver ficha</span>
                       </div>
-                    </div>
-                    <div className="p-4">
-                      <p className="text-xs font-bold text-[#40515A]">{support.type}</p>
-                      <p className="mt-1 truncate text-xs text-[#64748B]">{support.address}</p>
-                    </div>
-                  </Link>
-                ))}
+                      <div className="p-4">
+                        <p className="text-xs font-bold text-[#40515A]">{support.type}</p>
+                        <p className="mt-1 truncate text-xs text-[#64748B]">{support.address}</p>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+                <div className="mt-2 flex items-center justify-between text-[11px] font-bold text-[#64748B] sm:hidden">
+                  <span>Deslizá para explorar</span>
+                  <ArrowRight className="h-4 w-4 text-[#049A41]" aria-hidden="true" />
+                </div>
+                <div className="hidden items-center justify-center gap-3 pt-1 sm:flex">
+                  <button type="button" aria-label="Desplazar soportes hacia la izquierda" className="rounded-full border border-[#DCE4DF] p-2 text-[#082028] hover:border-[#049A41] hover:text-[#049A41] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#049A41]" onClick={() => document.getElementById('featured-supports-carousel')?.scrollBy({ left: -320, behavior: 'smooth' })}>
+                    <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+                  </button>
+                  <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#64748B]">9 soportes destacados</span>
+                  <button type="button" aria-label="Desplazar soportes hacia la derecha" className="rounded-full border border-[#DCE4DF] p-2 text-[#082028] hover:border-[#049A41] hover:text-[#049A41] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#049A41]" onClick={() => document.getElementById('featured-supports-carousel')?.scrollBy({ left: 320, behavior: 'smooth' })}>
+                    <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                  </button>
+                </div>
               </div>
             ) : (
               <div className="mt-8 rounded-2xl border border-dashed border-[#DCE4DF] bg-[#F7F9F7] p-8 text-center">

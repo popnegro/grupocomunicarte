@@ -20,5 +20,19 @@
       "destination": "/soportes-publicitarios/led-movil",
       "permanent": true
     }
+  ],
+  "rewrites": [
+    {
+      "source": "/explorer",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/explorer/:path*",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/api/inventory",
+      "destination": "/inventory.json"
+    }
   ]
 }

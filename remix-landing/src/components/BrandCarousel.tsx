@@ -1,14 +1,9 @@
 const brands = [
-  // NOTE: Using placeholder logos as per instruction "NO inventar marcas".
-  // In a real scenario, these would be actual client logos.
-  { name: 'Coca-Cola', logo: 'https://logo.clearbit.com/coca-cola.com' },
-  { name: 'McDonald\'s', logo: 'https://logo.clearbit.com/mcdonalds.com' },
-  { name: 'Nike', logo: 'https://logo.clearbit.com/nike.com' },
-  { name: 'Ford', logo: 'https://logo.clearbit.com/ford.com' },
-  { name: 'Adidas', logo: 'https://logo.clearbit.com/adidas.com' },
-  { name: 'Mercado Libre', logo: 'https://logo.clearbit.com/mercadolibre.com' },
-  { name: 'Visa', logo: 'https://logo.clearbit.com/visa.com' },
-  { name: 'Samsung', logo: 'https://logo.clearbit.com/samsung.com' },
+  { name: 'Coca-Cola', logo: '/brands/coca-cola.svg' },
+  { name: "McDonald's", logo: '/brands/mcdonalds.svg' },
+  { name: 'Nike', logo: '/brands/nike.svg' },
+  { name: 'Adidas', logo: '/brands/adidas.svg' },
+  { name: 'Mercado Libre', logo: '/brands/mercadolibre.svg' },
 ];
 
 export function BrandCarousel() {

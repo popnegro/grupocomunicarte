@@ -6,8 +6,8 @@ import { LandingPage } from './components/LandingPage';
 import { ExplorerPage } from './components/ExplorerPage';
 import { ContactForm } from './components/ContactForm';
 import { LoginView } from './components/LoginView';
-import { DashboardRoute } from './components/DashboardRoute';
 import { DashboardShell } from './components/DashboardShell';
+import { DashboardHome } from './components/DashboardHome';
 import { DashboardSupportsPage } from './components/DashboardSupportsPage';
 import { DashboardLeadsPage } from './components/DashboardLeadsPage';
 import { DashboardClientsPage } from './components/DashboardClientsPage';
@@ -30,17 +30,6 @@ const PageLayout = () => (
   </>
 );
 
-const ProtectedDashboard = () => {
-  const { user } = useApp();
-  if (!user) return <Navigate to="/login" replace />;
-  return (
-    <>
-      <DashboardRoute />
-      <a href="/dashboard/mediakits" className="fixed bottom-5 right-5 z-40 inline-flex items-center gap-2 rounded-full bg-[#049A41] px-4 py-3 text-xs font-extrabold text-white shadow-lg transition hover:bg-[#037d34]">Generar Media Kit</a>
-    </>
-  );
-};
-
 const ProtectedDashboardModule = ({ children }: { children: React.ReactNode }) => {
   const { user } = useApp();
   return user ? <DashboardShell>{children}</DashboardShell> : <Navigate to="/login" replace />;
@@ -52,11 +41,13 @@ export default function App() {
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginView />} />
-        <Route path="/dashboard" element={<ProtectedDashboard />} />
+
+        <Route path="/dashboard" element={<ProtectedDashboardModule><DashboardHome /></ProtectedDashboardModule>} />
         <Route path="/dashboard/soportes" element={<ProtectedDashboardModule><DashboardSupportsPage /></ProtectedDashboardModule>} />
         <Route path="/dashboard/inventario" element={<Navigate to="/dashboard/soportes" replace />} />
         <Route path="/dashboard/leads" element={<ProtectedDashboardModule><DashboardLeadsPage /></ProtectedDashboardModule>} />
-        <Route path="/dashboard/clients" element={<ProtectedDashboardModule><DashboardClientsPage /></ProtectedDashboardModule>} />
+        <Route path="/dashboard/clientes" element={<ProtectedDashboardModule><DashboardClientsPage /></ProtectedDashboardModule>} />
+        <Route path="/dashboard/clients" element={<Navigate to="/dashboard/clientes" replace />} />
         <Route path="/dashboard/mediakits" element={<ProtectedDashboardModule><DashboardMediaKitPage /></ProtectedDashboardModule>} />
 
         <Route element={<PageLayout />}>

@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
-import { Mail, Phone, CalendarDays, Building2 } from 'lucide-react';
+import { FileText, Mail, Phone, CalendarDays, Building2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import type { Lead } from '../types';
 
@@ -13,6 +14,7 @@ const columns: Array<{ key: Column; label: string }> = [
 
 export function DashboardLeadsPage() {
   const { leads, updateLeadStatus, supports } = useApp();
+  const navigate = useNavigate();
   const [draggingId, setDraggingId] = useState<string | null>(null);
 
   const grouped = useMemo(() => columns.reduce<Record<Column, Lead[]>>((acc, column) => {
@@ -23,6 +25,11 @@ export function DashboardLeadsPage() {
   const moveLead = async (id: string, status: Column) => {
     await updateLeadStatus(id, status);
     setDraggingId(null);
+  };
+
+  const openMediaKit = (lead: Lead) => {
+    const params = new URLSearchParams({ lead: lead.id });
+    navigate(`/dashboard/mediakits?${params.toString()}`);
   };
 
   return (
@@ -58,7 +65,10 @@ export function DashboardLeadsPage() {
                   >
                     <div className="flex items-start justify-between gap-3"><div className="min-w-0"><p className="truncate text-sm font-extrabold">{lead.name}</p><p className="mt-0.5 truncate text-xs font-semibold text-[#40515A]">{lead.company || 'Sin empresa'}</p></div><span className="rounded-lg bg-[#E8F0E4] px-2 py-1 text-[9px] font-extrabold text-[#049A41]">{supportCount} soportes</span></div>
                     <div className="mt-3 space-y-1.5 text-[10px] font-semibold text-[#64748B]"><div className="flex items-center gap-2"><Mail className="h-3.5 w-3.5" />{lead.email}</div><div className="flex items-center gap-2"><Phone className="h-3.5 w-3.5" />{lead.phone}</div><div className="flex items-center gap-2"><Building2 className="h-3.5 w-3.5" />{lead.plazaContext || 'Mendoza'}</div>{lead.campaignStartDate && lead.campaignEndDate && <div className="flex items-center gap-2"><CalendarDays className="h-3.5 w-3.5" />{lead.campaignStartDate} → {lead.campaignEndDate}</div>}</div>
-                    <div className="mt-3 flex gap-1.5">{columns.filter((item) => item.key !== column.key).map((item) => <button key={item.key} onClick={() => void moveLead(lead.id, item.key)} className="flex-1 rounded-lg border border-[#DCE4DF] px-2 py-1.5 text-[9px] font-extrabold hover:bg-[#F7F9F7]">→ {item.label}</button>)}</div>
+                    <div className="mt-3 grid grid-cols-1 gap-1.5 sm:grid-cols-3">
+                      {columns.filter((item) => item.key !== column.key).map((item) => <button key={item.key} onClick={() => void moveLead(lead.id, item.key)} className="rounded-lg border border-[#DCE4DF] px-2 py-1.5 text-[9px] font-extrabold hover:bg-[#F7F9F7]">→ {item.label}</button>)}
+                      <button onClick={() => openMediaKit(lead)} className="inline-flex items-center justify-center gap-1.5 rounded-lg bg-[#049A41] px-2 py-1.5 text-[9px] font-extrabold text-white hover:bg-[#037d34] sm:col-span-3"><FileText className="h-3 w-3" /> Generar Media Kit</button>
+                    </div>
                   </article>
                 );
               })}

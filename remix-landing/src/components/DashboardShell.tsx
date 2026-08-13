@@ -12,7 +12,7 @@ const items = [
   { to: '/dashboard', label: 'Dashboard', icon: BarChart3, end: true },
   { to: '/dashboard/soportes', label: 'Soportes', icon: Database },
   { to: '/dashboard/leads', label: 'Leads', icon: Mail },
-  { to: '/dashboard/clients', label: 'Clientes', icon: Users },
+  { to: '/dashboard/clientes', label: 'Clientes', icon: Users },
   { to: '/dashboard/mediakits', label: 'Media Kits', icon: FolderOpen },
 ];
 

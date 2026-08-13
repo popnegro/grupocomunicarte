@@ -1,16 +1,22 @@
 @import "tailwindcss";
 
-/* Grupo Comunicarte — dashboard light shell guardrails.
-   These overrides preserve existing CRUD/layout behavior while enforcing the DESIGN.md light theme. */
+/* Grupo Comunicarte — shared visual guardrails. */
 #dashboard-wrapper {
   background: #f7f9f7 !important;
   color: #082028;
 }
 
+/* =========================================================
+   DASHBOARD LIGHT SHELL
+   Preserve existing CRUD/state logic while normalizing the
+   administrative visual hierarchy.
+   ========================================================= */
 #dashboard-wrapper > header {
+  min-height: 68px;
   background: #ffffff !important;
   color: #082028 !important;
-  border-bottom-color: #dce4df !important;
+  border-bottom: 1px solid #dce4df !important;
+  box-shadow: 0 1px 10px rgba(8, 32, 40, 0.04);
 }
 
 #dashboard-wrapper > header .text-white,
@@ -45,11 +51,13 @@
 
 #dashboard-wrapper > div > aside {
   background: #ffffff !important;
+  border-color: #dce4df !important;
 }
 
 #dashboard-wrapper > div > aside .bg-\[\#082028\] {
   background: #e8f0e4 !important;
   color: #082028 !important;
+  box-shadow: inset 3px 0 0 #049a41;
 }
 
 #dashboard-wrapper > div > aside .text-white {
@@ -60,7 +68,61 @@
   color: #082028;
 }
 
-/* Keep brand green as the primary dashboard action/state accent. */
+/* Main workspace */
+#dashboard-wrapper main {
+  background: #f7f9f7;
+}
+
+#dashboard-wrapper main > div > h2,
+#dashboard-wrapper main h2 {
+  letter-spacing: -0.01em;
+}
+
+/* Cards and panels */
+#dashboard-wrapper .bg-white.border-slate-200,
+#dashboard-wrapper .bg-white.border-\[\#DCE4DF\] {
+  border-color: #dce4df !important;
+  box-shadow: 0 1px 2px rgba(8, 32, 40, 0.03), 0 8px 24px rgba(8, 32, 40, 0.035);
+}
+
+#dashboard-wrapper .shadow-xs,
+#dashboard-wrapper .shadow-2xs {
+  box-shadow: 0 1px 2px rgba(8, 32, 40, 0.03), 0 8px 24px rgba(8, 32, 40, 0.035) !important;
+}
+
+#dashboard-wrapper input,
+#dashboard-wrapper select,
+#dashboard-wrapper textarea {
+  border-color: #dce4df !important;
+  background: #ffffff !important;
+  color: #082028 !important;
+}
+
+#dashboard-wrapper input:focus,
+#dashboard-wrapper select:focus,
+#dashboard-wrapper textarea:focus {
+  border-color: #049a41 !important;
+  box-shadow: 0 0 0 3px rgba(4, 154, 65, 0.1) !important;
+}
+
+#dashboard-wrapper table {
+  border-color: #dce4df !important;
+}
+
+#dashboard-wrapper thead {
+  background: #f7f9f7 !important;
+}
+
+#dashboard-wrapper tbody tr {
+  border-color: #edf2ee !important;
+  transition: background-color 140ms ease;
+}
+
+#dashboard-wrapper tbody tr:hover {
+  background: #fbfdfb !important;
+}
+
+/* Brand green as primary admin accent. */
 #dashboard-wrapper .bg-\[\#7C3AED\] {
   background: #049a41 !important;
 }
@@ -75,4 +137,21 @@
 
 #dashboard-wrapper .border-\[\#7C3AED\] {
   border-color: #049a41 !important;
+}
+
+/* Make destructive actions visually secondary until confirmed. */
+#dashboard-wrapper button .text-red-400,
+#dashboard-wrapper button .text-red-500 {
+  color: #b42318 !important;
+}
+
+/* Mobile dashboard: preserve hierarchy and avoid cramped desktop treatment. */
+@media (max-width: 767px) {
+  #dashboard-wrapper > header {
+    min-height: 62px;
+  }
+
+  #dashboard-wrapper > div > aside {
+    box-shadow: 0 2px 10px rgba(8, 32, 40, 0.035);
+  }
 }

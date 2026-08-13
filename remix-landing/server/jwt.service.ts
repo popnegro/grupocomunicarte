@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import crypto from 'crypto';
 
 const JWT_SECRET = process.env.JWT_SECRET?.trim();

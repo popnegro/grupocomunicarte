@@ -31,7 +31,18 @@ const PageLayout = () => (
 
 const ProtectedDashboard = () => {
   const { user } = useApp();
-  return user ? <DashboardView /> : <Navigate to="/login" replace />;
+  if (!user) return <Navigate to="/login" replace />;
+  return (
+    <>
+      <DashboardView />
+      <a
+        href="/dashboard/mediakits"
+        className="fixed bottom-5 right-5 z-40 inline-flex items-center gap-2 rounded-full bg-[#049A41] px-4 py-3 text-xs font-extrabold text-white shadow-lg transition hover:bg-[#037d34]"
+      >
+        Generar Media Kit
+      </a>
+    </>
+  );
 };
 
 const ProtectedInventory = () => {

@@ -17,7 +17,7 @@
   width: 100%;
 }
 
-.dashboard-media-kit-embedded .lg\:grid-cols-\[420px_1fr\] {
+.dashboard-media-kit-embedded .lg\\:grid-cols-\\[420px_1fr\\] {
   grid-template-columns: minmax(320px, 380px) minmax(0, 1fr) !important;
   align-items: start;
 }
@@ -34,7 +34,7 @@
 }
 
 /* Availability becomes a deliberate commercial status block. */
-.dashboard-media-kit-embedded form .bg-\[\#F7F9F7\].p-3 {
+.dashboard-media-kit-embedded form .bg-\\[\\#F7F9F7\\].p-3 {
   border-color: #dce4df;
 }
 
@@ -43,7 +43,7 @@
   min-width: 0;
 }
 
-.dashboard-media-kit-embedded > section > section > div.rounded-2xl.bg-\[\#082028\] {
+.dashboard-media-kit-embedded > section > section > div.rounded-2xl.bg-\\[\\#082028\\] {
   min-height: 220px;
   display: flex;
   flex-direction: column;
@@ -93,12 +93,115 @@
     backdrop-filter: blur(10px);
   }
 
-  .dashboard-media-kit-embedded > section > section > div.rounded-2xl.bg-\[\#082028\] {
+  .dashboard-media-kit-embedded > section > section > div.rounded-2xl.bg-\\[\\#082028\\] {
     min-height: 200px;
     padding: 1.5rem !important;
   }
 
   .dashboard-media-kit-embedded > section > section > div.mt-5 > article {
     display: block;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   Media Kit audience templates
+   B2C = visual / premium proposal for direct clients.
+   B2B = compact / technical proposal for agencies and resellers.
+   Uses the selected audience option already present in the Studio form.
+   -------------------------------------------------------------------------- */
+
+/* B2C keeps the immersive hero and larger imagery. */
+.dashboard-media-kit-embedded:has(form select option:checked[value='B2C'])
+  > section > section > div.rounded-2xl.bg-\\[\\#082028\\] {
+  min-height: 260px;
+  padding: 2.25rem !important;
+}
+
+.dashboard-media-kit-embedded:has(form select option:checked[value='B2C'])
+  > section > section > div.mt-5 > article {
+  box-shadow: 0 12px 30px rgba(8, 32, 40, 0.07);
+}
+
+.dashboard-media-kit-embedded:has(form select option:checked[value='B2C'])
+  > section > section > div.mt-5 > article > div:first-child {
+  min-height: 190px;
+}
+
+/* B2B turns the preview into a media-planning document. */
+.dashboard-media-kit-embedded:has(form select option:checked[value='B2B'])
+  > section > section {
+  background: #fbfcfb;
+}
+
+.dashboard-media-kit-embedded:has(form select option:checked[value='B2B'])
+  > section > section > div.rounded-2xl.bg-\\[\\#082028\\] {
+  min-height: 180px;
+  background: #ffffff !important;
+  border: 1px solid #dce4df;
+  color: #082028;
+  box-shadow: none;
+}
+
+.dashboard-media-kit-embedded:has(form select option:checked[value='B2B'])
+  > section > section > div.rounded-2xl.bg-\\[\\#082028\\] > p:first-child {
+  color: #049a41 !important;
+}
+
+.dashboard-media-kit-embedded:has(form select option:checked[value='B2B'])
+  > section > section > div.rounded-2xl.bg-\\[\\#082028\\] p.text-slate-200,
+.dashboard-media-kit-embedded:has(form select option:checked[value='B2B'])
+  > section > section > div.rounded-2xl.bg-\\[\\#082028\\] p.text-slate-300 {
+  color: #64748b !important;
+}
+
+.dashboard-media-kit-embedded:has(form select option:checked[value='B2B'])
+  > section > section > div.mt-5 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.dashboard-media-kit-embedded:has(form select option:checked[value='B2B'])
+  > section > section > div.mt-5 > article {
+  display: grid;
+  grid-template-columns: 150px minmax(0, 1fr);
+  min-height: 150px;
+  box-shadow: none;
+  background: #ffffff;
+}
+
+.dashboard-media-kit-embedded:has(form select option:checked[value='B2B'])
+  > section > section > div.mt-5 > article > div:first-child {
+  height: 100% !important;
+  min-height: 150px;
+  width: auto !important;
+}
+
+.dashboard-media-kit-embedded:has(form select option:checked[value='B2B'])
+  > section > section > div.mt-5 > article h4 {
+  font-size: 0.8rem;
+}
+
+@media (max-width: 767px) {
+  .dashboard-media-kit-embedded:has(form select option:checked[value='B2B'])
+    > section > section > div.mt-5 {
+    display: block;
+  }
+
+  .dashboard-media-kit-embedded:has(form select option:checked[value='B2B'])
+    > section > section > div.mt-5 > article {
+    display: grid;
+    grid-template-columns: 112px minmax(0, 1fr);
+    min-height: 112px;
+  }
+
+  .dashboard-media-kit-embedded:has(form select option:checked[value='B2B'])
+    > section > section > div.mt-5 > article > div:first-child {
+    min-height: 112px;
+  }
+
+  .dashboard-media-kit-embedded:has(form select option:checked[value='B2C'])
+    > section > section > div.mt-5 > article > div:first-child {
+    min-height: 170px;
   }
 }

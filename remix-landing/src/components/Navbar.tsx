@@ -107,7 +107,7 @@ export function Navbar() {
             to="/mediakit"
             className="rounded-xl bg-[#049A41] px-4 py-2.5 text-sm font-extrabold text-white shadow-sm transition-colors hover:bg-[#038537] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#049A41]"
           >
-            Solicitar Media Kit <span aria-hidden="true">→</span>
+            Solicitar cotización <span aria-hidden="true">→</span>
           </Link>
         </div>
       </nav>
@@ -169,7 +169,7 @@ export function Navbar() {
                   onClick={closeMenus}
                   className="block rounded-xl bg-[#049A41] px-4 py-3 text-center text-base font-extrabold text-white shadow-sm hover:bg-[#038537] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#049A41]"
                 >
-                  Solicitar Media Kit
+                  Solicitar cotización
                 </Link>
               </div>
             </div>

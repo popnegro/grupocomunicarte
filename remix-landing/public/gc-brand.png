@@ -1,0 +1,12 @@
+<svg viewBox="0 0 500 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <g transform="translate(10, 10)">
+    <path d="M10 40L18 35V65L10 60V40Z" fill="#049A41" opacity="0.7" />
+    <path d="M22 34L30 29V71L22 66V34Z" fill="#049A41" opacity="0.85" />
+    <path d="M34 27L42 22V78L34 73V27Z" fill="#049A41" />
+    <path d="M46 20L56 14V86L46 80V20Z" fill="#049A41" />
+    <path d="M56 14L105 28V40L56 26V14Z" fill="#049A41" />
+    <path d="M56 86L105 72V60L56 74V86Z" fill="#049A41" />
+  </g>
+  <text x="130" y="68" fill="#082028" font-family="'Geist', 'Inter', sans-serif" font-weight="800" font-size="42" letter-spacing="-1.5">Grupo Comunicarte</text>
+  <text x="132" y="92" fill="#40515A" font-family="'Inter', sans-serif" font-weight="700" font-size="14" letter-spacing="3">PUBLICIDAD EXTERIOR • LED</text>
+</svg>

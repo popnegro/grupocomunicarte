@@ -1,0 +1,8 @@
+{
+  "name": "Remix Grupo Comunicarte",
+  "description": "Plataforma de planificación comercial de publicidad exterior y pantallas LED",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

@@ -7,6 +7,7 @@ import { ExplorerPage } from './components/ExplorerPage';
 import { ContactForm } from './components/ContactForm';
 import { LoginView } from './components/LoginView';
 import { DashboardView } from './components/DashboardView';
+import { DashboardInventoryStatus } from './components/DashboardInventoryStatus';
 import { MarketingSeoPage, SupportSeoPage } from './components/SeoPage';
 
 const PageLayout = () => (
@@ -32,6 +33,11 @@ const ProtectedDashboard = () => {
   return user ? <DashboardView /> : <Navigate to="/login" replace />;
 };
 
+const ProtectedInventory = () => {
+  const { user } = useApp();
+  return user ? <DashboardInventoryStatus /> : <Navigate to="/login" replace />;
+};
+
 export default function App() {
   return (
     <div className="font-sans bg-gray-50 min-h-screen">
@@ -39,6 +45,7 @@ export default function App() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/login" element={<LoginView />} />
         <Route path="/dashboard" element={<ProtectedDashboard />} />
+        <Route path="/dashboard/inventario" element={<ProtectedInventory />} />
 
         <Route element={<PageLayout />}>
           <Route path="/nosotros" element={<MarketingSeoPage kind="nosotros" />} />

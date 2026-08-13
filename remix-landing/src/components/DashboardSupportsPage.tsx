@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Copy, Edit3, Eye, Search, Trash2, Save, X, CalendarDays, MapPin, Video, Image as ImageIcon, Star, Plus, MonitorPlay } from 'lucide-react';
+import { Copy, Edit3, Eye, Search, Trash2, Save, X, CalendarDays, Video, Image as ImageIcon, Star, Plus, MonitorPlay } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../context/AppContext';
 import { FeaturedSupportCard } from './FeaturedSupportCard';

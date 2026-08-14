@@ -1,11 +1,13 @@
 import 'dotenv/config';
 import crypto from 'crypto';
 
-const JWT_SECRET = process.env.JWT_SECRET?.trim();
+const jwtSecret = process.env.JWT_SECRET?.trim();
 
-if (!JWT_SECRET || JWT_SECRET.length < 32) {
+if (!jwtSecret || jwtSecret.length < 32) {
   throw new Error('JWT_SECRET is required and must contain at least 32 characters. Configure it in the environment before starting the server.');
 }
+
+const JWT_SECRET: string = jwtSecret;
 
 function base64urlEncode(str: string): string {
   return Buffer.from(str)

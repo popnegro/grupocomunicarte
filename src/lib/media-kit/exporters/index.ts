@@ -1,22 +1,15 @@
 import type { MediaKitDocumentModel } from '../document-model';
+import { exportMediaKitPptx as exportPptx } from './pptx';
 
 export type MediaKitExportFormat = 'pdf' | 'pptx';
 
-/**
- * Opens the current Media Kit document in the browser print flow.
- * The browser's "Save as PDF" destination produces a PDF without adding
- * a renderer dependency to the application bundle.
- */
+/** Opens the current Media Kit document in the browser print flow. */
 export function exportMediaKitPdf(_document: MediaKitDocumentModel): void {
   if (typeof window === 'undefined') return;
   window.print();
 }
 
-/**
- * Explicit boundary for the editable presentation exporter.
- * Kept separate from the document model so a PPTX renderer can be added
- * without coupling presentation generation to the UI or business domain.
- */
-export async function exportMediaKitPptx(_document: MediaKitDocumentModel): Promise<void> {
-  throw new Error('PPTX exporter is not configured yet. Add the approved PPTX renderer before enabling this action.');
+/** Generates an editable PowerPoint presentation from the shared document model. */
+export function exportMediaKitPptx(document: MediaKitDocumentModel): Promise<void> {
+  return exportPptx(document);
 }

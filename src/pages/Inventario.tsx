@@ -72,8 +72,21 @@ function InventarioContent() {
   );
 
   const selectedItems = getSelectedItems(allItems);
-  const openMediakit = () => { setIsMediakitOpen(true); setIsMobileFiltersOpen(false); };
-  const closeMediakit = () => setIsMediakitOpen(false);
+
+  const openMediakit = () => {
+    const params = new URLSearchParams(searchParams);
+    params.set('mediakit', '1');
+    setSearchParams(params, { replace: true });
+    setIsMediakitOpen(true);
+    setIsMobileFiltersOpen(false);
+  };
+
+  const closeMediakit = () => {
+    const params = new URLSearchParams(searchParams);
+    params.delete('mediakit');
+    setSearchParams(params, { replace: true });
+    setIsMediakitOpen(false);
+  };
 
   return (
     <div className="flex h-[calc(100vh-80px)] relative overflow-hidden">

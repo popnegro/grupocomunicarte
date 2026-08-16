@@ -1,5 +1,4 @@
-import type { InventoryItem } from '../../types';
-import type { MediaKitRequest } from '../../lib/media-kit-repository';
+import type { InventoryItem, MediaKitRequest } from '../../types';
 import { createMediaKitDocumentModel } from '../../lib/media-kit/document-model';
 import { exportMediaKitPdf, exportMediaKitPptx } from '../../lib/media-kit/exporters';
 import { MediaKitDocument } from './MediaKitDocument';

@@ -68,7 +68,7 @@ export default function DashboardSoportes() {
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
                       <h2 className="truncate text-sm font-extrabold text-[#082028]">{item.name}</h2>
-                      <Badge variant={state === 'disponible' ? 'solid' : 'outline'}>{state === 'disponible' ? 'Disponible' : 'Reservado'}</Badge>
+                      <Badge variant={state === 'disponible' ? 'green' : 'outline'}>{state === 'disponible' ? 'Disponible' : 'Reservado'}</Badge>
                     </div>
                     <p className="mt-1 text-xs font-medium text-[#64748B]">{item.ciudad === 'mendoza' ? 'Mendoza' : 'Buenos Aires'} · {item.tipo_soporte}</p>
                   </div>

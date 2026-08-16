@@ -11,10 +11,21 @@ import Home from './pages/Home';
 import Inventario from './pages/Inventario';
 import Soportes from './pages/Soportes';
 import Nosotros from './pages/Nosotros';
+import Dashboard from './pages/Dashboard';
 import { SelectionProvider } from './context/SelectionContext';
 
 function AnimatedRoutes() {
   const location = useLocation();
+  const isDashboard = location.pathname.startsWith('/dashboard');
+
+  if (isDashboard) {
+    return (
+      <Routes location={location}>
+        <Route path="/dashboard" element={<Dashboard />} />
+      </Routes>
+    );
+  }
+
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>

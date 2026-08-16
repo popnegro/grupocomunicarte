@@ -126,8 +126,13 @@ export default function InventoryMap({ locations, routes, onOpenMediakit, locati
         <div className="absolute bottom-0 left-0 right-0 md:bottom-auto md:top-4 md:left-auto md:right-4 md:w-[400px] bg-white rounded-t-3xl md:rounded-2xl shadow-2xl md:shadow-xl z-[1000] md:border border-gray-100 overflow-hidden flex flex-col max-h-[75vh] md:max-h-[85vh] transition-transform">
           <div className="p-4 bg-white md:bg-gray-50 flex justify-between items-center border-b border-gray-100 shrink-0">
             <span className="text-xs font-bold uppercase tracking-wider text-gray-500">Detalle de Soporte</span>
-            <button onClick={handleCloseDetail} className="p-1.5 bg-gray-50 md:bg-white rounded-full text-gray-500 hover:text-black hover:bg-gray-100 transition-colors shadow-sm" aria-label="Cerrar">
-              <X className="w-4 h-4" />
+            <button
+              type="button"
+              onClick={handleCloseDetail}
+              className="p-1.5 bg-gray-50 md:bg-white rounded-full text-gray-500 hover:text-black hover:bg-gray-100 transition-colors shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-black focus-visible:ring-offset-2"
+              aria-label="Cerrar detalle de soporte"
+            >
+              <X className="w-4 h-4" aria-hidden="true" />
             </button>
           </div>
 
@@ -140,7 +145,7 @@ export default function InventoryMap({ locations, routes, onOpenMediakit, locati
       {validLocations.length === 0 && routes.length === 0 && (
         <div className="absolute inset-0 bg-white/80 backdrop-blur-sm z-[500] flex items-center justify-center p-4">
           <div className="bg-white p-8 rounded-2xl shadow-lg border border-gray-100 max-w-sm text-center">
-            <MapPin className="w-10 h-10 text-gray-300 mx-auto mb-4" />
+            <MapPin className="w-10 h-10 text-gray-300 mx-auto mb-4" aria-hidden="true" />
             <h3 className="text-lg font-bold mb-2">No hay soportes para mostrar</h3>
             <p className="text-sm text-gray-500">Ajustá los filtros para ver el inventario disponible en el mapa.</p>
           </div>

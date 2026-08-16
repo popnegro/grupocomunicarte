@@ -8,7 +8,7 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
   try {
     if (req.method === 'GET') {
       if (!requireSession(req, res)) return;
-      const leads = DBService.getLeads().map((lead) => ({ ...lead, status: lead.status === 'rejected' ? 'archived' : lead.status }));
+      const leads = DBService.getLeads();
       return res.status(200).json(leads);
     }
     if (req.method === 'POST') {

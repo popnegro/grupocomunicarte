@@ -18,6 +18,7 @@ function InventarioContent() {
 
   const plazaParam = searchParams.get('plaza') as Plaza | 'todos' | null;
   const tipoParam = searchParams.get('tipo') as TipoSoporte | 'todos' | null;
+  const locationParam = searchParams.get('location');
 
   const [selectedPlaza, setSelectedPlaza] = useState<Plaza | 'todos'>(plazaParam || 'todos');
   const [selectedTipo, setSelectedTipo] = useState<TipoSoporte | 'todos'>(tipoParam || 'todos');
@@ -122,7 +123,7 @@ function InventarioContent() {
       </div>
 
       <div className="flex-grow h-full relative z-0">
-        <InventoryMap locations={filteredLocations} routes={filteredRoutes} onOpenMediakit={openMediakit} />
+        <InventoryMap locations={filteredLocations} routes={filteredRoutes} locationId={locationParam} onOpenMediakit={openMediakit} />
         {isMediakitOpen && (
           <MediakitPanel selectedItems={selectedItems} onClose={closeMediakit} onGoToInventory={closeMediakit} />
         )}

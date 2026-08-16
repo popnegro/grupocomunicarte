@@ -3,16 +3,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { Layout } from './components/layout/Layout';
 import { AnimatePresence } from 'motion/react';
-import { useLocation } from 'react-router-dom';
 import { PageTransition } from './components/layout/PageTransition';
 import Home from './pages/Home';
 import Inventario from './pages/Inventario';
 import Soportes from './pages/Soportes';
 import Nosotros from './pages/Nosotros';
-
+import { SelectionProvider } from './context/SelectionContext';
 
 function AnimatedRoutes() {
   const location = useLocation();
@@ -31,9 +30,11 @@ function AnimatedRoutes() {
 export default function App() {
   return (
     <Router>
-      <Layout>
-        <AnimatedRoutes />
-      </Layout>
+      <SelectionProvider>
+        <Layout>
+          <AnimatedRoutes />
+        </Layout>
+      </SelectionProvider>
     </Router>
   );
 }

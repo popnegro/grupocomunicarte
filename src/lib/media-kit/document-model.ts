@@ -1,5 +1,5 @@
-import type { InventoryItem } from '../../types';
-import type { MediaKitRequest } from '../media-kit-repository';
+import type { InventoryItem, MediaKitRequest } from '../../types';
+import { isMobileRoute } from '../../types';
 
 export type MediaKitDocumentModel = {
   requestId: string;
@@ -7,14 +7,7 @@ export type MediaKitDocumentModel = {
   campaign: { start: string; end: string };
   contact: { name: string; company: string; email: string; phone: string };
   notes: string;
-  supports: Array<{
-    id: string;
-    name: string;
-    city: string;
-    address: string;
-    type: string;
-    images: string[];
-  }>;
+  supports: Array<{ id: string; name: string; city: string; address: string; type: string; images: string[] }>;
 };
 
 export function createMediaKitDocumentModel(request: MediaKitRequest, supports: InventoryItem[]): MediaKitDocumentModel {
@@ -22,15 +15,15 @@ export function createMediaKitDocumentModel(request: MediaKitRequest, supports: 
     requestId: request.id,
     issuedAt: request.createdAt,
     campaign: { start: request.campaignStart, end: request.campaignEnd },
-    contact: request.contact,
-    notes: request.notes,
+    contact: { name: request.name, company: request.company ?? '', email: request.email, phone: request.phone ?? '' },
+    notes: request.message ?? '',
     supports: supports.map((support) => ({
       id: support.canonical_id,
       name: support.name,
       city: support.ciudad === 'mendoza' ? 'Mendoza' : 'Buenos Aires',
-      address: support.address || 'Ubicación no especificada',
+      address: isMobileRoute(support) ? (support.waypoints[0]?.name ?? 'Ruta móvil') : support.address,
       type: support.tipo_soporte,
-      images: support.images ?? [],
+      images: support.imageUrls ?? [],
     })),
   };
 }

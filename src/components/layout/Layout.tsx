@@ -1,13 +1,14 @@
-import { ReactNode } from 'react';
+import { ReactNode, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { MapPin, Menu, X } from 'lucide-react';
-import { useState } from 'react';
+import { MapPin, Menu, X, FileText } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { buttonStyles } from '../ui/Button';
+import { useSelection } from '../../context/SelectionContext';
 
 export function Layout({ children }: { children: ReactNode }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const { selectedIds } = useSelection();
 
   const navLinks = [
     { name: 'Inicio', path: '/' },
@@ -15,6 +16,8 @@ export function Layout({ children }: { children: ReactNode }) {
     { name: 'Nosotros', path: '/nosotros' },
     { name: 'Inventario', path: '/inventario' }
   ];
+
+  const mediakitLabel = selectedIds.length > 0 ? `Mediakit (${selectedIds.length})` : 'Mediakit';
 
   return (
     <div className="min-h-screen flex flex-col w-full overflow-x-hidden">
@@ -28,61 +31,68 @@ export function Layout({ children }: { children: ReactNode }) {
               <span className="font-bold text-xl tracking-tight">GRUPO COMUNICARTE</span>
             </Link>
 
-            {/* Desktop Nav */}
             <nav className="hidden md:flex items-center gap-8">
               {navLinks.map((link) => {
                 const isActive = location.pathname === link.path;
                 return (
-                  <Link 
+                  <Link
                     key={link.path}
-                    to={link.path} 
+                    to={link.path}
                     className={cn(
-                      "text-sm font-medium transition-colors hover:text-black", 
-                      isActive ? "text-black" : "text-gray-500"
+                      'text-sm font-medium transition-colors hover:text-black',
+                      isActive ? 'text-black' : 'text-gray-500'
                     )}
                   >
                     {link.name}
                   </Link>
-                )
+                );
               })}
-              <a href="mailto:ventas@grupocomunicarte.com" className={buttonStyles({ size: "sm" })}>
-                Contacto
-              </a>
+              <Link
+                to="/inventario?mediakit=1"
+                className={buttonStyles({ size: 'sm', className: 'inline-flex items-center gap-2' })}
+              >
+                <FileText className="w-4 h-4" />
+                {mediakitLabel}
+              </Link>
             </nav>
 
-            {/* Mobile Menu Toggle */}
-            <button 
+            <button
               className="md:hidden p-2 -mr-2 text-gray-900"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               aria-label="Toggle menu"
+              aria-expanded={isMobileMenuOpen}
             >
               {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
           </div>
         </div>
 
-        {/* Mobile Nav */}
         {isMobileMenuOpen && (
           <div className="md:hidden bg-white border-b border-gray-100 py-4 px-4 space-y-4 shadow-lg absolute w-full left-0">
             {navLinks.map((link) => {
               const isActive = location.pathname === link.path;
               return (
-                <Link 
+                <Link
                   key={link.path}
-                  to={link.path} 
+                  to={link.path}
                   onClick={() => setIsMobileMenuOpen(false)}
                   className={cn(
-                    "block px-2 py-2 text-base font-medium", 
-                    isActive ? "text-black bg-gray-50 rounded" : "text-gray-500"
+                    'block px-2 py-2 text-base font-medium',
+                    isActive ? 'text-black bg-gray-50 rounded' : 'text-gray-500'
                   )}
                 >
                   {link.name}
                 </Link>
-              )
+              );
             })}
-            <a href="mailto:ventas@grupocomunicarte.com" className={buttonStyles({ className: "w-full mt-4" })}>
-              Contacto
-            </a>
+            <Link
+              to="/inventario?mediakit=1"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className={buttonStyles({ className: 'w-full mt-4 inline-flex items-center justify-center gap-2' })}
+            >
+              <FileText className="w-4 h-4" />
+              {mediakitLabel}
+            </Link>
           </div>
         )}
       </header>
@@ -100,20 +110,18 @@ export function Layout({ children }: { children: ReactNode }) {
               </div>
               <span className="font-bold text-lg tracking-tight">GRUPO COMUNICARTE</span>
             </div>
-            <p className="text-gray-500 text-sm">
-              Mendoza • Buenos Aires
-            </p>
+            <p className="text-gray-500 text-sm">Mendoza • Buenos Aires</p>
           </div>
-          
+
           <nav className="flex flex-col sm:flex-row gap-4 sm:gap-8">
             {navLinks.map((link) => (
               <Link key={link.path} to={link.path} className="text-sm font-medium text-gray-500 hover:text-black">
                 {link.name}
               </Link>
             ))}
-            <a href="mailto:ventas@grupocomunicarte.com" className="text-sm font-medium text-gray-500 hover:text-black">
-              Contacto
-            </a>
+            <Link to="/inventario?mediakit=1" className="text-sm font-medium text-gray-500 hover:text-black">
+              {mediakitLabel}
+            </Link>
           </nav>
         </div>
       </footer>

@@ -2,7 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { DBService } from '../../server/db.service.js';
 import { requireSession, withSecurityHeaders } from '../../server/api-auth.js';
 
-export default function handler(req: VercelRequest, res: VercelResponse) {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
   withSecurityHeaders(res);
   if (req.method === 'OPTIONS') return res.status(204).end();
   if (!requireSession(req, res)) return;
@@ -12,8 +12,7 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
     if (req.method === 'PUT') {
       const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body ?? {};
       if (!['pending', 'contacted', 'archived'].includes(body.status)) return res.status(400).json({ error: 'Estado de lead inválido.' });
-      const updated = DBService.updateLeadStatus(id, body.status);
-      return res.status(200).json(updated);
+      return res.status(200).json(await DBService.updateLeadStatus(id, body.status));
     }
     res.setHeader('Allow', 'PUT, OPTIONS');
     return res.status(405).json({ error: 'Método no permitido.' });

@@ -2,11 +2,12 @@ import { BarChart3, FileText, MonitorSmartphone, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { DashboardShell } from '../components/dashboard/DashboardShell';
 import { inventory } from '../data/inventory';
+import { getDisponibilidad } from '../types';
 
 export default function Dashboard() {
   const total = inventory.length;
-  const available = inventory.filter((item) => item.disponibilidad !== 'no_disponible' && item.disponibilidad !== 'reservado').length;
-  const reserved = inventory.filter((item) => item.disponibilidad === 'reservado').length;
+  const available = inventory.filter((item) => getDisponibilidad(item) === 'disponible').length;
+  const reserved = inventory.filter((item) => getDisponibilidad(item) === 'reservado').length;
 
   return (
     <DashboardShell>

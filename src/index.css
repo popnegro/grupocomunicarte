@@ -1,0 +1,17 @@
+@import "tailwindcss";
+@import "leaflet/dist/leaflet.css";
+
+@theme {
+  --color-primary: #1A1A1A;
+  --color-secondary: #404040;
+  --color-accent: #E53935;
+  --color-background: #F9F9F9;
+  --color-surface: #FFFFFF;
+}
+
+body {
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  color: var(--color-primary);
+  background-color: var(--color-background);
+}
+

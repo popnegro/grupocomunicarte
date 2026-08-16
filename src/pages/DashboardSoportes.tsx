@@ -1,20 +1,28 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Search, SlidersHorizontal } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { DashboardShell } from '../components/dashboard/DashboardShell';
 import { Badge } from '../components/ui/Badge';
-import { listInventory } from '../lib/inventory';
+import { inventoryRepository } from '../lib/inventory-repository';
 import { getDisponibilidad, type Disponibilidad, type InventoryItem } from '../types';
 
 export default function DashboardSoportes() {
   const [query, setQuery] = useState('');
   const [availability, setAvailability] = useState<'todos' | Disponibilidad>('todos');
   const [plaza, setPlaza] = useState<'todas' | InventoryItem['ciudad']>('todas');
+  const [items, setItems] = useState<InventoryItem[]>([]);
 
-  const items = useMemo(
-    () => listInventory({ query, availability, plaza }),
-    [query, availability, plaza],
-  );
+  useEffect(() => {
+    let cancelled = false;
+    inventoryRepository.list({ query, availability, plaza }).then((nextItems) => {
+      if (!cancelled) setItems(nextItems);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [query, availability, plaza]);
+
+  const countLabel = useMemo(() => `${items.length} soporte${items.length === 1 ? '' : 's'}`, [items.length]);
 
   return (
     <DashboardShell>
@@ -54,7 +62,7 @@ export default function DashboardSoportes() {
 
         <div className="overflow-hidden rounded-2xl border border-[#DCE4DF] bg-white shadow-sm">
           <div className="flex items-center justify-between border-b border-[#DCE4DF] px-4 py-3">
-            <p className="text-xs font-extrabold text-[#40515A]">{items.length} soportes</p>
+            <p className="text-xs font-extrabold text-[#40515A]">{countLabel}</p>
             <p className="text-[10px] font-semibold text-[#64748B]">Vista administrativa</p>
           </div>
           <div className="divide-y divide-[#DCE4DF]">

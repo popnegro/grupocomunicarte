@@ -11,12 +11,25 @@ export default function DashboardSoportes() {
   const [availability, setAvailability] = useState<'todos' | Disponibilidad>('todos');
   const [plaza, setPlaza] = useState<'todas' | InventoryItem['ciudad']>('todas');
   const [items, setItems] = useState<InventoryItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
-    inventoryRepository.list({ query, availability, plaza }).then((nextItems) => {
-      if (!cancelled) setItems(nextItems);
-    });
+    setLoading(true);
+    setError(null);
+
+    inventoryRepository.list({ query, availability, plaza })
+      .then((nextItems) => {
+        if (!cancelled) setItems(nextItems);
+      })
+      .catch(() => {
+        if (!cancelled) setError('No fue posible cargar el inventario.');
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
     return () => {
       cancelled = true;
     };
@@ -62,28 +75,32 @@ export default function DashboardSoportes() {
 
         <div className="overflow-hidden rounded-2xl border border-[#DCE4DF] bg-white shadow-sm">
           <div className="flex items-center justify-between border-b border-[#DCE4DF] px-4 py-3">
-            <p className="text-xs font-extrabold text-[#40515A]">{countLabel}</p>
+            <p className="text-xs font-extrabold text-[#40515A]">{loading ? 'Cargando…' : countLabel}</p>
             <p className="text-[10px] font-semibold text-[#64748B]">Vista administrativa</p>
           </div>
-          <div className="divide-y divide-[#DCE4DF]">
-            {items.map((item) => {
-              const state = getDisponibilidad(item);
-              return (
-                <article key={item.canonical_id} className="grid gap-3 px-4 py-4 md:grid-cols-[1fr_auto_auto] md:items-center">
-                  <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h2 className="truncate text-sm font-extrabold text-[#082028]">{item.name}</h2>
-                      <Badge variant={state === 'disponible' ? 'green' : 'outline'}>{state === 'disponible' ? 'Disponible' : 'Reservado'}</Badge>
+          {error ? (
+            <div className="px-4 py-12 text-center text-sm font-semibold text-[#B42318]" role="alert">{error}</div>
+          ) : (
+            <div className="divide-y divide-[#DCE4DF]">
+              {items.map((item) => {
+                const state = getDisponibilidad(item);
+                return (
+                  <article key={item.canonical_id} className="grid gap-3 px-4 py-4 md:grid-cols-[1fr_auto_auto] md:items-center">
+                    <div className="min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h2 className="truncate text-sm font-extrabold text-[#082028]">{item.name}</h2>
+                        <Badge variant={state === 'disponible' ? 'green' : 'outline'}>{state === 'disponible' ? 'Disponible' : 'Reservado'}</Badge>
+                      </div>
+                      <p className="mt-1 text-xs font-medium text-[#64748B]">{item.ciudad === 'mendoza' ? 'Mendoza' : 'Buenos Aires'} · {item.tipo_soporte}</p>
                     </div>
-                    <p className="mt-1 text-xs font-medium text-[#64748B]">{item.ciudad === 'mendoza' ? 'Mendoza' : 'Buenos Aires'} · {item.tipo_soporte}</p>
-                  </div>
-                  <p className="text-xs font-semibold text-[#64748B]">{item.address || 'Sin dirección'}</p>
-                  <Link to={`/inventario?location=${encodeURIComponent(item.canonical_id)}`} className="text-xs font-extrabold text-[#049A41] hover:underline">Ver soporte</Link>
-                </article>
-              );
-            })}
-            {!items.length && <div className="px-4 py-12 text-center text-sm font-semibold text-[#64748B]">No hay soportes que coincidan con los filtros.</div>}
-          </div>
+                    <p className="text-xs font-semibold text-[#64748B]">{item.address || 'Sin dirección'}</p>
+                    <Link to={`/inventario?location=${encodeURIComponent(item.canonical_id)}`} className="text-xs font-extrabold text-[#049A41] hover:underline">Ver soporte</Link>
+                  </article>
+                );
+              })}
+              {!loading && !items.length && <div className="px-4 py-12 text-center text-sm font-semibold text-[#64748B]">No hay soportes que coincidan con los filtros.</div>}
+            </div>
+          )}
         </div>
       </section>
     </DashboardShell>

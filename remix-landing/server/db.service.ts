@@ -2,9 +2,12 @@ import fs from 'fs';
 import path from 'path';
 import { Support, Lead, MediaKit } from '../src/types';
 
-const DB_PATH = path.join(process.cwd(), 'server-db.json');
+// Vercel Functions expose a read-only project filesystem. Use /tmp there so
+// CRUD operations don't fail with EROFS during PMV/QA. Local development keeps
+// the JSON file in the project directory. This is intentionally a PMV storage
+// layer; durable production persistence should be migrated to a real database.
+const DB_PATH = process.env.VERCEL ? path.join('/tmp', 'grupocomunicarte-server-db.json') : path.join(process.cwd(), 'server-db.json');
 
-// Realistic high-quality mock images of premium advertising screens
 const MOCK_IMAGES = {
   traditional: [
     'https://images.unsplash.com/photo-1540340561127-14e9f52f4aa1?w=800&auto=format&fit=crop&q=60',
@@ -30,26 +33,35 @@ const DEFAULT_SUPPORTS: Support[] = [
   { id:'ba-trad-2', name:'Soporte Av. del Libertador y Av. Monroe', plaza:'Buenos Aires', type:'Soportes Tradicionales', address:'Av. del Libertador 6400, Belgrano', latitude:-34.5518, longitude:-58.4502, description:'Soporte tipo cartelera estática Premium con iluminación backlight homogénea. Ubicado en el corredor norte residencial y comercial más exclusivo de la Ciudad de Buenos Aires.', imageUrl:MOCK_IMAGES.traditional[1], status:'available', size:'10x4m', refPoints:['Corredor Libertador Norte','Zona Clubes Belgrano','Cerca de Estadio Monumental'], contactsCount:'1.8M visualizaciones/mes' },
   { id:'ba-led-1', name:'Súper LED Obelisco BA', plaza:'Buenos Aires', type:'Pantallas LED', address:'Av. Corrientes y Av. 9 de Julio, San Nicolás', latitude:-34.6037, longitude:-58.3816, description:'Pantalla digital de última tecnología con visualización curva ultra premium en la esquina más icónica de la República Argentina. Tránsito peatonal y vehicular ininterrumpido las 24 horas.', imageUrl:MOCK_IMAGES.led[0], videoUrl:'https://assets.mixkit.co/videos/preview/mixkit-times-square-advertising-displays-at-night-42408-large.mp4', status:'available', size:'14x8m (Pantalla Curva P3)', refPoints:['Frente al Obelisco','Zona Teatros Calle Corrientes','Eje Turístico 9 de Julio'], contactsCount:'8.2M visualizaciones/mes' },
   { id:'ba-led-2', name:'Pantalla LED Plaza Serrano - Palermo Soho', plaza:'Buenos Aires', type:'Pantallas LED', address:'Honduras y Serrano, Palermo', latitude:-34.5885, longitude:-58.4306, description:'Pantalla digital de alta definición ubicada en el epicentro de la moda, el arte urbano y el polo gastronómico de Palermo Soho. Gran efectividad de impacto de marca.', imageUrl:MOCK_IMAGES.led[1], status:'available', size:'6x3.5m', refPoints:['Plaza Cortázar (Serrano)','Polo de Diseño Soho','Circuito de Bares de Palermo'], contactsCount:'1.9M visualizaciones/mes' },
-  { id:'ba-mobile-1', name:'LED Móvil Buenos Aires - Mega Truck', plaza:'Buenos Aires', type:'LED Móvil', address:'Recorrido Corredores de Alto Perfil, Buenos Aires', latitude:-34.5710, longitude:-58.4110, description:'Unidad móvil premium equipada con pantalla LED hidráulica que permite elevarse hasta 3 metros. Recorrido estratégico cubriendo Palermo, Recoleta, Barrio Norte y Puerto Madero.', imageUrl:MOCK_IMAGES.mobile[1], status:'available', size:'5x3m (Elevación Hidráulica)', refPoints:['Recorrido Palermo Soho','Av. del Libertador Recoleta','Plaza Francia / Museos'], contactsCount:'2.5M visualizaciones/mes', routePoints:[{lat:-34.5885,lng:-58.4306},{lat:-34.5805,lng:-58.4206},{lat:-34.5711,lng:-58.4062},{lat:-34.5891,lng:-58.3912},{lat:-34.5951,lng:-58.4202}] }
+  { id:'ba-mobile-1', name:'LED Móvil Buenos Aires - Mega Truck', plaza:'Buenos Aires', type:'LED Móvil', address:'Recorrido Corredores de Alto Perfil, Buenos Aires', latitude:-34.5710, longitude:-58.4110, description:'Unidad móvil premium equipada con pantalla LED hidráulica que permite elevarse hasta 3 metros. Recorrido estratégico cubriendo Palermo, Recoleta, Barrio Norte y Puerto Madero.', imageUrl:MOCK_IMAGES.mobile[1], status:'available', size:'5x3m (Elevación Hidráulica)', refPoints:['Recorrido Palermo Soho','Av. del Libertador Recoleta','Plaza Francia / Museos'], contactsCount:'2.5M visualizaciones/mes', routePoints:[{lat:-34.5885,lng:-68.4306},{lat:-34.5805,lng:-58.4206},{lat:-34.5711,lng:-58.4062},{lat:-34.5891,lng:-58.3912},{lat:-34.5951,lng:-58.4202}] }
 ];
 
 interface DatabaseSchema { supports: Support[]; leads: Lead[]; mediakits: MediaKit[]; }
 
 export class DBService {
   private static initDB(): DatabaseSchema {
-    if (!fs.existsSync(DB_PATH)) { const initialSchema:DatabaseSchema={supports:DEFAULT_SUPPORTS,leads:[],mediakits:[]}; fs.writeFileSync(DB_PATH,JSON.stringify(initialSchema,null,2),'utf-8'); return initialSchema; }
-    try { return JSON.parse(fs.readFileSync(DB_PATH,'utf-8')); }
-    catch(e) { console.error('Error reading database file, recreating schema...',e); const initialSchema:DatabaseSchema={supports:DEFAULT_SUPPORTS,leads:[],mediakits:[]}; fs.writeFileSync(DB_PATH,JSON.stringify(initialSchema,null,2),'utf-8'); return initialSchema; }
+    if (!fs.existsSync(DB_PATH)) {
+      const initialSchema: DatabaseSchema = { supports: DEFAULT_SUPPORTS, leads: [], mediakits: [] };
+      fs.writeFileSync(DB_PATH, JSON.stringify(initialSchema, null, 2), 'utf-8');
+      return initialSchema;
+    }
+    try { return JSON.parse(fs.readFileSync(DB_PATH, 'utf-8')) as DatabaseSchema; }
+    catch (error) {
+      console.error('Error reading database file, recreating schema...', error);
+      const initialSchema: DatabaseSchema = { supports: DEFAULT_SUPPORTS, leads: [], mediakits: [] };
+      fs.writeFileSync(DB_PATH, JSON.stringify(initialSchema, null, 2), 'utf-8');
+      return initialSchema;
+    }
   }
-  private static saveDB(data:DatabaseSchema) { fs.writeFileSync(DB_PATH,JSON.stringify(data,null,2),'utf-8'); }
-  public static getSupports():Support[] { return this.initDB().supports; }
-  public static addSupport(support:Omit<Support,'id'>):Support { const db=this.initDB(); const newSupport:Support={...support,id:`support-${Date.now()}`}; db.supports.push(newSupport); this.saveDB(db); return newSupport; }
-  public static updateSupport(id:string,updatedFields:Partial<Support>):Support { const db=this.initDB(); const index=db.supports.findIndex(s=>s.id===id); if(index===-1) throw new Error(`Support with id ${id} not found`); const updatedSupport={...db.supports[index],...updatedFields}; db.supports[index]=updatedSupport; this.saveDB(db); return updatedSupport; }
-  public static deleteSupport(id:string):boolean { const db=this.initDB(); const initialLength=db.supports.length; db.supports=db.supports.filter(s=>s.id!==id); this.saveDB(db); return db.supports.length<initialLength; }
+  private static saveDB(data: DatabaseSchema) { fs.writeFileSync(DB_PATH, JSON.stringify(data, null, 2), 'utf-8'); }
+  public static getSupports(): Support[] { return this.initDB().supports; }
+  public static addSupport(support: Omit<Support,'id'>): Support { const db=this.initDB(); const newSupport:Support={...support,id:`support-${Date.now()}`}; db.supports.push(newSupport); this.saveDB(db); return newSupport; }
+  public static updateSupport(id:string,updatedFields:Partial<Support>):Support { const db=this.initDB(); const index=db.supports.findIndex(s=>s.id===id); if(index===-1) throw new Error(`Support with id ${id} not found`); const updated={...db.supports[index],...updatedFields}; db.supports[index]=updated; this.saveDB(db); return updated; }
+  public static deleteSupport(id:string):boolean { const db=this.initDB(); const before=db.supports.length; db.supports=db.supports.filter(s=>s.id!==id); this.saveDB(db); return db.supports.length<before; }
   public static getLeads():Lead[] { return this.initDB().leads; }
   public static addLead(lead:Omit<Lead,'id'|'createdAt'|'status'>):Lead { const db=this.initDB(); const newLead:Lead={...lead,id:`lead-${Date.now()}`,createdAt:new Date().toISOString(),status:'pending'}; db.leads.unshift(newLead); this.saveDB(db); return newLead; }
   public static updateLeadStatus(id:string,status:'pending'|'contacted'|'archived'):Lead { const db=this.initDB(); const index=db.leads.findIndex(l=>l.id===id); if(index===-1) throw new Error(`Lead with id ${id} not found`); db.leads[index].status=status; this.saveDB(db); return db.leads[index]; }
   public static getMediaKits():MediaKit[] { return this.initDB().mediakits; }
   public static addMediaKit(mediaKit:Omit<MediaKit,'id'|'createdAt'>):MediaKit { const db=this.initDB(); const newMediaKit:MediaKit={...mediaKit,id:`mediakit-${Date.now()}`,createdAt:new Date().toISOString()}; db.mediakits.unshift(newMediaKit); this.saveDB(db); return newMediaKit; }
-  public static deleteMediaKit(id:string):boolean { const db=this.initDB(); const initialLength=db.mediakits.length; db.mediakits=db.mediakits.filter(m=>m.id!==id); this.saveDB(db); return db.mediakits.length<initialLength; }
+  public static deleteMediaKit(id:string):boolean { const db=this.initDB(); const before=db.mediakits.length; db.mediakits=db.mediakits.filter(m=>m.id!==id); this.saveDB(db); return db.mediakits.length<before; }
 }

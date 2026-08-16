@@ -28,12 +28,26 @@ export interface MobileRoute {
   schedule: string;
   duration: string;
   waypoints: { name: string; lat: number | null; lng: number | null }[];
-  routePath: [number, number][]; // coordinates for Polyline
+  routePath: [number, number][];
   imageUrls?: string[];
   disponibilidad?: Disponibilidad;
 }
 
 export type InventoryItem = LocationRecord | MobileRoute;
+
+export interface MediaKitRequest {
+  id: string;
+  supportIds: string[];
+  name: string;
+  company?: string;
+  email: string;
+  phone?: string;
+  message?: string;
+  campaignStart: string;
+  campaignEnd: string;
+  status: 'pending' | 'reviewed' | 'quoted' | 'confirmed' | 'rejected';
+  createdAt: string;
+}
 
 export function isMobileRoute(item: InventoryItem): item is MobileRoute {
   return 'waypoints' in item;

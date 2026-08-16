@@ -3,7 +3,7 @@ import { Search, SlidersHorizontal } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { DashboardShell } from '../components/dashboard/DashboardShell';
 import { Badge } from '../components/ui/Badge';
-import { inventory } from '../data/inventory';
+import { listInventory } from '../lib/inventory';
 import { getDisponibilidad, type Disponibilidad, type InventoryItem } from '../types';
 
 export default function DashboardSoportes() {
@@ -11,13 +11,10 @@ export default function DashboardSoportes() {
   const [availability, setAvailability] = useState<'todos' | Disponibilidad>('todos');
   const [plaza, setPlaza] = useState<'todas' | InventoryItem['ciudad']>('todas');
 
-  const items = useMemo(() => inventory.filter((item) => {
-    const haystack = `${item.name} ${item.address ?? ''} ${item.ciudad} ${item.tipo_soporte}`.toLowerCase();
-    const matchesQuery = haystack.includes(query.toLowerCase().trim());
-    const matchesAvailability = availability === 'todos' || getDisponibilidad(item) === availability;
-    const matchesPlaza = plaza === 'todas' || item.ciudad === plaza;
-    return matchesQuery && matchesAvailability && matchesPlaza;
-  }), [query, availability, plaza]);
+  const items = useMemo(
+    () => listInventory({ query, availability, plaza }),
+    [query, availability, plaza],
+  );
 
   return (
     <DashboardShell>

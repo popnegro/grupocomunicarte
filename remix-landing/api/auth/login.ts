@@ -7,8 +7,6 @@ const SUPERADMIN_PASSWORD = process.env.INITIAL_SUPERADMIN_PASSWORD;
 const ADMIN_EMAIL = process.env.INITIAL_ADMIN_EMAIL?.trim().toLowerCase();
 const ADMIN_PASSWORD = process.env.INITIAL_ADMIN_PASSWORD;
 
-// INITIAL_*_PASSWORD are bootstrap credentials, supplied as plaintext secrets.
-// Hash them once when the serverless module is initialized, matching server.ts.
 const SUPERADMIN_HASH = SUPERADMIN_PASSWORD ? hashPassword(SUPERADMIN_PASSWORD) : undefined;
 const ADMIN_HASH = ADMIN_PASSWORD ? hashPassword(ADMIN_PASSWORD) : undefined;
 
@@ -26,60 +24,29 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-  if (req.method === 'OPTIONS') {
-    res.status(204).end();
-    return;
-  }
-
-  if (req.method !== 'POST') {
-    sendJson(res, 405, { error: 'Método no permitido.' });
-    return;
-  }
+  if (req.method === 'OPTIONS') return res.status(204).end();
+  if (req.method !== 'POST') return sendJson(res, 405, { error: 'Método no permitido.' });
 
   if (!SUPERADMIN_EMAIL || !SUPERADMIN_PASSWORD || !ADMIN_EMAIL || !ADMIN_PASSWORD || !SUPERADMIN_HASH || !ADMIN_HASH) {
-    sendJson(res, 503, { error: 'Autenticación no configurada en producción.' });
-    return;
+    return sendJson(res, 503, { error: 'Autenticación no configurada en producción.' });
   }
 
   const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
   const email = typeof body?.email === 'string' ? body.email.trim().toLowerCase() : '';
   const password = typeof body?.password === 'string' ? body.password : '';
-
-  if (!email || !password) {
-    sendJson(res, 400, { error: 'Formato de credenciales de acceso inválido.' });
-    return;
-  }
+  if (!email || !password) return sendJson(res, 400, { error: 'Formato de credenciales de acceso inválido.' });
 
   let user: { uid: string; email: string; name: string; role: 'SúperAdmin' | 'Admin' } | null = null;
   let passwordMatches = false;
 
   if (email === SUPERADMIN_EMAIL) {
     passwordMatches = verifyPassword(password, SUPERADMIN_HASH);
-    if (passwordMatches) {
-      user = {
-        uid: 'sa1',
-        email: SUPERADMIN_EMAIL,
-        name: 'Director General',
-        role: 'SúperAdmin',
-      };
-    }
+    if (passwordMatches) user = { uid: 'sa1', email: SUPERADMIN_EMAIL, name: 'Director General', role: 'SúperAdmin' };
   } else if (email === ADMIN_EMAIL) {
     passwordMatches = verifyPassword(password, ADMIN_HASH);
-    if (passwordMatches) {
-      user = {
-        uid: 'a1',
-        email: ADMIN_EMAIL,
-        name: 'Operador Comercial',
-        role: 'Admin',
-      };
-    }
+    if (passwordMatches) user = { uid: 'a1', email: ADMIN_EMAIL, name: 'Operador Comercial', role: 'Admin' };
   }
 
-  if (!passwordMatches || !user) {
-    sendJson(res, 401, { error: 'Credenciales inválidas.' });
-    return;
-  }
-
-  const token = signToken(user);
-  sendJson(res, 200, { token, user });
+  if (!passwordMatches || !user) return sendJson(res, 401, { error: 'Credenciales inválidas.' });
+  return sendJson(res, 200, { token: signToken(user), user });
 }

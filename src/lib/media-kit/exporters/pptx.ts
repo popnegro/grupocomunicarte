@@ -7,6 +7,19 @@ const MUTED = '64748B';
 const BORDER = 'DCE4DF';
 const LIGHT = 'F7F9F8';
 
+async function imageUrlToDataUri(source: string): Promise<string> {
+  const response = await fetch(new URL(source, window.location.href));
+  if (!response.ok) throw new Error(`No se pudo cargar la imagen del soporte: ${source}`);
+  const blob = await response.blob();
+  const bytes = new Uint8Array(await blob.arrayBuffer());
+  let binary = '';
+  const chunkSize = 0x8000;
+  for (let offset = 0; offset < bytes.length; offset += chunkSize) {
+    binary += String.fromCharCode(...bytes.subarray(offset, Math.min(offset + chunkSize, bytes.length)));
+  }
+  return `data:${blob.type || 'image/jpeg'};base64,${btoa(binary)}`;
+}
+
 function addHeader(slide: pptxgen.Slide, title: string, subtitle?: string) {
   slide.addText('GRUPO COMUNICARTE', { x: 0.55, y: 0.42, w: 3.8, h: 0.22, fontFace: 'Arial', fontSize: 8, bold: true, color: GREEN, charSpacing: 1.5, margin: 0 });
   slide.addText(title, { x: 0.55, y: 0.72, w: 8.7, h: 0.42, fontFace: 'Arial', fontSize: 23, bold: true, color: INK, margin: 0 });
@@ -47,19 +60,26 @@ export async function exportMediaKitPptx(document: MediaKitDocumentModel): Promi
     summary.addShape(pptx.ShapeType.line, { x: 0.65, y: y + 0.35, w: 8.9, h: 0, line: { color: BORDER, width: 0.7 } });
   });
 
-  document.supports.forEach((support, index) => {
+  for (const [index, support] of document.supports.entries()) {
     const slide = pptx.addSlide();
     addHeader(slide, support.name, `${support.city} · ${support.type}`);
     slide.addShape(pptx.ShapeType.roundRect, { x: 0.55, y: 1.75, w: 4.75, h: 4.45, rectRadius: 0.08, fill: { color: LIGHT }, line: { color: BORDER, width: 1 } });
     const image = support.images[0];
-    if (image) slide.addImage({ path: image, x: 0.65, y: 1.85, w: 4.55, h: 4.25, sizingContain: false });
+    if (image) {
+      try {
+        const data = await imageUrlToDataUri(image);
+        slide.addImage({ data, x: 0.65, y: 1.85, w: 4.55, h: 4.25, sizingContain: true });
+      } catch {
+        slide.addText('Imagen no disponible', { x: 1.4, y: 3.7, w: 3, h: 0.3, fontFace: 'Arial', fontSize: 10, bold: true, color: MUTED, align: 'center', margin: 0 });
+      }
+    }
     slide.addText('UBICACIÓN', { x: 5.7, y: 1.85, w: 2, h: 0.2, fontFace: 'Arial', fontSize: 7, bold: true, color: MUTED, charSpacing: 0.8, margin: 0 });
     slide.addText(support.address, { x: 5.7, y: 2.15, w: 3.3, h: 0.7, fontFace: 'Arial', fontSize: 16, bold: true, color: INK, margin: 0, breakLine: false });
     slide.addText('TIPO DE SOPORTE', { x: 5.7, y: 3.15, w: 2.2, h: 0.2, fontFace: 'Arial', fontSize: 7, bold: true, color: MUTED, charSpacing: 0.8, margin: 0 });
     slide.addText(support.type, { x: 5.7, y: 3.45, w: 3.3, h: 0.3, fontFace: 'Arial', fontSize: 12, bold: true, color: INK, margin: 0 });
     slide.addShape(pptx.ShapeType.line, { x: 5.7, y: 4.05, w: 3.3, h: 0, line: { color: BORDER, width: 0.8 } });
     slide.addText(`Soporte ${index + 1} de ${document.supports.length}`, { x: 5.7, y: 4.35, w: 3.3, h: 0.25, fontFace: 'Arial', fontSize: 9, bold: true, color: GREEN, margin: 0 });
-  });
+  }
 
   const closing = pptx.addSlide();
   closing.background = { color: INK };

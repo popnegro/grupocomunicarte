@@ -1,11 +1,16 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { signToken } from '../../server/jwt.service.js';
-import { verifyPassword } from '../../server/crypto.service.js';
+import { hashPassword, verifyPassword } from '../../server/crypto.service.js';
 
 const SUPERADMIN_EMAIL = process.env.INITIAL_SUPERADMIN_EMAIL?.trim().toLowerCase();
 const SUPERADMIN_PASSWORD = process.env.INITIAL_SUPERADMIN_PASSWORD;
 const ADMIN_EMAIL = process.env.INITIAL_ADMIN_EMAIL?.trim().toLowerCase();
 const ADMIN_PASSWORD = process.env.INITIAL_ADMIN_PASSWORD;
+
+// INITIAL_*_PASSWORD are bootstrap credentials, supplied as plaintext secrets.
+// Hash them once when the serverless module is initialized, matching server.ts.
+const SUPERADMIN_HASH = SUPERADMIN_PASSWORD ? hashPassword(SUPERADMIN_PASSWORD) : undefined;
+const ADMIN_HASH = ADMIN_PASSWORD ? hashPassword(ADMIN_PASSWORD) : undefined;
 
 function sendJson(res: VercelResponse, status: number, body: unknown) {
   res.status(status).setHeader('Content-Type', 'application/json; charset=utf-8').json(body);
@@ -31,7 +36,7 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
     return;
   }
 
-  if (!SUPERADMIN_EMAIL || !SUPERADMIN_PASSWORD || !ADMIN_EMAIL || !ADMIN_PASSWORD) {
+  if (!SUPERADMIN_EMAIL || !SUPERADMIN_PASSWORD || !ADMIN_EMAIL || !ADMIN_PASSWORD || !SUPERADMIN_HASH || !ADMIN_HASH) {
     sendJson(res, 503, { error: 'Autenticación no configurada en producción.' });
     return;
   }
@@ -49,7 +54,7 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
   let passwordMatches = false;
 
   if (email === SUPERADMIN_EMAIL) {
-    passwordMatches = verifyPassword(password, SUPERADMIN_PASSWORD);
+    passwordMatches = verifyPassword(password, SUPERADMIN_HASH);
     if (passwordMatches) {
       user = {
         uid: 'sa1',
@@ -59,7 +64,7 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
       };
     }
   } else if (email === ADMIN_EMAIL) {
-    passwordMatches = verifyPassword(password, ADMIN_PASSWORD);
+    passwordMatches = verifyPassword(password, ADMIN_HASH);
     if (passwordMatches) {
       user = {
         uid: 'a1',

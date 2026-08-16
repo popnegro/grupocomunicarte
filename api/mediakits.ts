@@ -1,11 +1,10 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { db } from '../src/db/index';
 import { mediakits } from '../src/db/schema';
 import { eq, desc } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
 import { protect, type AuthRequest } from '../server/middleware/auth';
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export default async function handler(req: any, res: any) {
   await protect(req as AuthRequest, res, async () => {
     const authReq = req as AuthRequest;
     const tenantId = authReq.user?.tenant_id;

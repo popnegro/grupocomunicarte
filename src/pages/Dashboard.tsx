@@ -1,13 +1,10 @@
 import { BarChart3, FileText, MonitorSmartphone, Users } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { DashboardShell } from '../components/dashboard/DashboardShell';
-import { inventory } from '../data/inventory';
-import { getDisponibilidad } from '../types';
+import { getInventoryStats } from '../lib/inventory';
 
 export default function Dashboard() {
-  const total = inventory.length;
-  const available = inventory.filter((item) => getDisponibilidad(item) === 'disponible').length;
-  const reserved = inventory.filter((item) => getDisponibilidad(item) === 'reservado').length;
+  const { total, available, reserved } = getInventoryStats();
 
   return (
     <DashboardShell>
@@ -37,8 +34,8 @@ export default function Dashboard() {
           <article className="rounded-2xl border border-[#DCE4DF] bg-white p-5">
             <h2 className="text-sm font-extrabold">Accesos rápidos</h2>
             <div className="mt-4 grid gap-2">
+              <Link to="/dashboard/soportes" className="rounded-xl border border-[#DCE4DF] px-3 py-2.5 text-xs font-extrabold text-[#40515A] hover:bg-[#F7F9F7]">Gestionar soportes</Link>
               <Link to="/inventario" className="rounded-xl border border-[#DCE4DF] px-3 py-2.5 text-xs font-extrabold text-[#40515A] hover:bg-[#F7F9F7]">Ver inventario público</Link>
-              <Link to="/inventario" className="rounded-xl border border-[#DCE4DF] px-3 py-2.5 text-xs font-extrabold text-[#40515A] hover:bg-[#F7F9F7]">Gestionar selección</Link>
             </div>
           </article>
         </div>

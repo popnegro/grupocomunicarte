@@ -1,6 +1,6 @@
 import React from "react";
 import { Cpu } from "lucide-react";
-import { DoohScreen } from "../../types";
+import { DoohScreen } from "../types";
 
 interface TechnicalSpecsProps {
   screen: DoohScreen;

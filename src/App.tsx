@@ -127,6 +127,10 @@ export default function App() {
               <Route path="/soluciones/*" element={<LandingView />} />
               <Route path="/soportes/*" element={<LandingView />} />
               <Route path="/contacto" element={<LandingView />} />
+              <Route path="/ubicaciones/*" element={<LandingView />} />
+              <Route path="/mediakit/*" element={<LandingView />} />
+              <Route path="/servicios/*" element={<LandingView />} />
+              <Route path="/blog/*" element={<LandingView />} />
 
               {/* Login Route */}
               <Route path="/login" element={<LoginRoute />} />

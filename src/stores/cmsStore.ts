@@ -43,9 +43,14 @@ export const useCmsStore = create<CmsState>((set) => ({
     const res = await apiClient.post<{ success: boolean; data: Lead }>("/api/leads", leadData);
     set({ isLoading: false });
     if (res.ok && res.data?.success) {
-      // Opcional: se podría añadir a un estado de `leads` si fuera necesario.
       return res.data.data;
     }
-    return null;
+
+    const message =
+      res.error ||
+      res.errorDetail?.message ||
+      "No fue posible registrar la solicitud.";
+
+    throw new Error(message);
   },
 }));

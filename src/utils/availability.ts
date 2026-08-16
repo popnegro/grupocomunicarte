@@ -141,7 +141,7 @@ export const getScreenAvailability = (
   // Visual badges and colors matching requirements
   let badgeLabel = "Disponible";
   let badgeStyle = "bg-emerald-50 text-emerald-700 border-emerald-150";
-  let ctaLabel = "Solicitar presupuesto";
+  let ctaLabel = "Agregar al Media Kit";
 
   if (status === "reserved") {
     badgeLabel = "Reservado";
@@ -162,4 +162,29 @@ export const getScreenAvailability = (
     ctaLabel,
     daysRemaining: status !== "available" ? days : null,
   };
+};
+
+/**
+ * Commercial validation for a requested campaign duration.
+ * A support is commercially selectable only when its explicit status and
+ * every requested occupancy week are available.
+ */
+export const isScreenAvailableForWeeks = (
+  screen: DoohScreen,
+  occupancyMatrix: Record<string, string[]>,
+  weeks: number
+): boolean => {
+  const normalizedStatus = (screen.status || "").toLowerCase();
+  if (["reserved", "no disponible", "pausado", "upcoming"].includes(normalizedStatus)) {
+    return false;
+  }
+
+  const schedule = occupancyMatrix[screen.id];
+  const requestedWeeks = Math.max(1, Math.min(weeks, 8));
+
+  // Missing occupancy data is treated as available to preserve the existing
+  // public-inventory fallback behavior.
+  if (!schedule) return true;
+
+  return schedule.slice(0, requestedWeeks).every((status) => status === "available");
 };

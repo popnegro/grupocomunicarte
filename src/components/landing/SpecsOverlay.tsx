@@ -5,6 +5,7 @@ import { DoohScreen } from "../../types";
 import { optimizeImageUrl } from "@/src/lib/imageUtils";
 import { useCms } from "../CmsContext";
 import { getScreenAvailability, getDynamicReservationEndDate } from "../../utils/availability";
+import { FALLBACK_STREET_PHOTOS, getGalleryMedia } from "../../utils/screenMedia";
 
 interface SpecsOverlayProps {
   screen: DoohScreen;
@@ -12,28 +13,6 @@ interface SpecsOverlayProps {
   isInCart: boolean;
   toggleCart: () => void;
 }
-
-// Map screen IDs or zones to highly realistic outdoor advertising Unsplash pictures
-const STREET_PHOTOS_MAP: Record<string, string[]> = {
-  "sc-01": [
-    "https://images.unsplash.com/photo-1541535650810-10d26f5c2ab3?auto=format&fit=crop&w=800&q=80",
-    "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=800&q=80"
-  ],
-  "sc-02": [
-    "https://images.unsplash.com/photo-1568430462989-44163eb1752f?auto=format&fit=crop&w=800&q=80",
-    "https://images.unsplash.com/photo-1541535650810-10d26f5c2ab3?auto=format&fit=crop&w=800&q=80"
-  ],
-  "sc-03": [
-    "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=800&q=80",
-    "https://images.unsplash.com/photo-1568430462989-44163eb1752f?auto=format&fit=crop&w=800&q=80"
-  ],
-};
-
-const DEFAULT_STREET_PHOTOS = [
-  "https://images.unsplash.com/photo-1541535650810-10d26f5c2ab3?auto=format&fit=crop&w=800&q=80",
-  "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=800&q=80",
-  "https://images.unsplash.com/photo-1568430462989-44163eb1752f?auto=format&fit=crop&w=800&q=80"
-];
 
 // Dynamically generate location-specific benefits based on metadata (Feature 3)
 const getScreenLocationBenefits = (screen: DoohScreen) => {
@@ -145,7 +124,12 @@ export const SpecsOverlay: React.FC<SpecsOverlayProps> = ({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onClose]);
 
-  const photos = STREET_PHOTOS_MAP[screen.id] || DEFAULT_STREET_PHOTOS;
+  const gallery = getGalleryMedia(screen);
+  const photoAssets = gallery.filter((asset) => asset.type !== "video");
+  const videoAsset = gallery.find((asset) => asset.type === "video");
+  const photos = photoAssets.length > 0
+    ? photoAssets.map((asset) => asset.posterUrl || asset.url)
+    : FALLBACK_STREET_PHOTOS;
   const locationBenefits = getScreenLocationBenefits(screen);
 
   // Availability weeks loaded directly from the single source of truth (Feature 4)
@@ -171,7 +155,7 @@ export const SpecsOverlay: React.FC<SpecsOverlayProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 md:p-6 select-none bg-stone-900/60 backdrop-blur-xs">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 md:p-6 select-none bg-[#161d16]/55 backdrop-blur-sm">
       {/* Backdrop Click */}
       <div className="absolute inset-0 cursor-default" onClick={onClose} />
 
@@ -181,64 +165,77 @@ export const SpecsOverlay: React.FC<SpecsOverlayProps> = ({
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 15 }}
         transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-        className="relative w-full max-w-4xl bg-[#FAF9F5] rounded-3xl border border-stone-200 shadow-2xl overflow-hidden z-10 flex flex-col md:grid md:grid-cols-12 max-h-[90vh] md:max-h-[85vh] font-sans"
+        className="relative w-full max-w-4xl bg-[#f3fcef] rounded-2xl border border-[#bccbb9] shadow-2xl overflow-y-auto md:overflow-hidden z-10 flex flex-col md:grid md:grid-cols-12 max-h-[92vh] md:max-h-[85vh] font-sans"
       >
         {/* Close Button */}
         <button
           onClick={onClose}
           aria-label="Cerrar modal"
-          className="absolute top-4 right-4 z-20 p-2 rounded-full bg-white/80 border border-stone-200 text-stone-600 hover:text-stone-900 hover:bg-white shadow-2xs transition-all cursor-pointer"
+          className="absolute top-4 right-4 z-20 p-2 rounded-full bg-white/90 border border-[#bccbb9] text-[#3d4a3d] hover:text-[#006e2f] hover:bg-white shadow-sm transition-all cursor-pointer"
         >
           <LucideIcons.X className="h-4 w-4" />
         </button>
 
         {/* Column 1: Image Gallery (Span 5) */}
-        <div className="md:col-span-5 bg-stone-950 flex flex-col justify-between relative h-64 md:h-auto min-h-[300px]">
+        <div className="md:col-span-5 bg-[#161d16] flex flex-col justify-between relative h-64 md:h-auto min-h-75">
           
           {isPlayingVideo ? (
-            <div className="absolute inset-0 bg-stone-900 flex flex-col justify-between p-6 overflow-hidden">
-              <div className="absolute inset-0 bg-[radial-gradient(#111_1px,transparent_1px)] [background-size:4px_4px] opacity-25 pointer-events-none" />
-              <div className="absolute inset-0 bg-gradient-to-tr from-[#06434a] via-[#111] to-[#125e67] opacity-60 mix-blend-color-dodge animate-pulse duration-1000" />
+            videoAsset ? (
+              <video
+                src={videoAsset.url}
+                poster={photos[activePhotoIdx] || photos[0]}
+                controls
+                autoPlay
+                muted
+                loop
+                playsInline
+                className="absolute inset-0 h-full w-full object-cover"
+              />
+            ) : (
+              <div className="absolute inset-0 bg-stone-900 flex flex-col justify-between p-6 overflow-hidden">
+                <div className="absolute inset-0 bg-[radial-gradient(#111_1px,transparent_1px)] bg-size-[4px_4px] opacity-25 pointer-events-none" />
+                <div className="absolute inset-0 bg-linear-to-tr from-[#06434a] via-[#111] to-[#125e67] opacity-60 mix-blend-color-dodge animate-pulse duration-1000" />
 
-              <div className="relative z-10 flex items-center justify-between">
-                <span className="text-[8px] bg-red-600 text-white font-extrabold px-2 py-0.5 rounded-xs uppercase tracking-widest flex items-center gap-1 animate-pulse">
-                  <span className="h-1.5 w-1.5 rounded-full bg-white" />
-                  Spot Simulado
-                </span>
-                <button 
-                  onClick={() => setIsPlayingVideo(false)}
-                  className="text-white/80 hover:text-white bg-black/40 hover:bg-black/60 p-1.5 rounded-full text-[9px] font-bold flex items-center gap-1 transition-all cursor-pointer"
-                >
-                  <LucideIcons.Image className="h-3 w-3" />
-                  <span>Ver Foto</span>
-                </button>
-              </div>
+                <div className="relative z-10 flex items-center justify-between">
+                  <span className="text-[8px] bg-red-600 text-white font-extrabold px-2 py-0.5 rounded-xs uppercase tracking-widest flex items-center gap-1 animate-pulse">
+                    <span className="h-1.5 w-1.5 rounded-full bg-white" />
+                    Spot Simulado
+                  </span>
+                  <button 
+                    onClick={() => setIsPlayingVideo(false)}
+                    className="text-white/80 hover:text-white bg-black/40 hover:bg-black/60 p-1.5 rounded-full text-[9px] font-bold flex items-center gap-1 transition-all cursor-pointer"
+                  >
+                    <LucideIcons.Image className="h-3 w-3" />
+                    <span>Ver Foto</span>
+                  </button>
+                </div>
 
-              <div className="relative z-10 my-auto text-center space-y-4">
-                <motion.div
-                  animate={{ scale: [1, 1.04, 1], opacity: [0.9, 1, 0.9] }}
-                  transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
-                  className="space-y-2"
-                >
-                  <span className="text-stone-300 text-[10px] tracking-widest font-mono font-bold block uppercase">TU MARCA EN PANTALLA</span>
-                  <h2 className="text-2xl font-black text-amber-400 uppercase tracking-tight leading-none drop-shadow-md">
-                    ALTO IMPACTO <br/>
-                    <span className="text-white text-xl font-serif italic font-medium">VISUAL 24/7</span>
-                  </h2>
-                </motion.div>
-                
-                <div className="inline-block bg-black/55 px-3 py-1 rounded-md border border-white/10">
-                  <p className="text-[8.5px] font-mono text-stone-300 font-bold">
-                    Pauta: Spot de 15s en rotación constante
-                  </p>
+                <div className="relative z-10 my-auto text-center space-y-4">
+                  <motion.div
+                    animate={{ scale: [1, 1.04, 1], opacity: [0.9, 1, 0.9] }}
+                    transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
+                    className="space-y-2"
+                  >
+                    <span className="text-stone-300 text-[10px] tracking-widest font-mono font-bold block uppercase">TU MARCA EN PANTALLA</span>
+                    <h2 className="text-2xl font-black text-amber-400 uppercase tracking-tight leading-none drop-shadow-md">
+                      ALTO IMPACTO <br/>
+                      <span className="text-white text-xl font-serif italic font-medium">VISUAL 24/7</span>
+                    </h2>
+                  </motion.div>
+                  
+                  <div className="inline-block bg-black/55 px-3 py-1 rounded-md border border-white/10">
+                    <p className="text-[8.5px] font-mono text-stone-300 font-bold">
+                      Pauta: Spot de 15s en rotación constante
+                    </p>
+                  </div>
+                </div>
+
+                <div className="relative z-10 flex items-center justify-between pt-4 border-t border-white/10 text-stone-400 text-[8px] font-mono">
+                  <span>REPRODUCCIÓN DIGITAL</span>
+                  <span className="animate-pulse text-emerald-400 font-bold">● ONLINE</span>
                 </div>
               </div>
-
-              <div className="relative z-10 flex items-center justify-between pt-4 border-t border-white/10 text-stone-400 text-[8px] font-mono">
-                <span>REPRODUCCIÓN DIGITAL</span>
-                <span className="animate-pulse text-emerald-400 font-bold">● ONLINE</span>
-              </div>
-            </div>
+            )
           ) : (
             <>
               {/* Main Photo */}
@@ -250,7 +247,7 @@ export const SpecsOverlay: React.FC<SpecsOverlayProps> = ({
                   loading="lazy"
                   className="w-full h-full object-cover opacity-90 transition-all duration-300"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30 pointer-events-none" />
+                <div className="absolute inset-0 bg-linear-to-t from-black/80 via-transparent to-black/30 pointer-events-none" />
               </div>
 
               {/* Play Simulation Button Overlay */}
@@ -260,7 +257,7 @@ export const SpecsOverlay: React.FC<SpecsOverlayProps> = ({
                 className="absolute bottom-4 left-4 z-10 px-3 py-1.5 bg-[#06434a]/95 hover:bg-[#06434a] text-white text-[9px] font-black uppercase rounded-full flex items-center gap-1.5 shadow-md cursor-pointer transition-transform hover:scale-105"
               >
                 <LucideIcons.Play className="h-3 w-3 text-amber-400 fill-amber-400" />
-                Simular Video LED
+                {videoAsset ? "Ver video real" : "Simular Video LED"}
               </button>
             </>
           )}
@@ -323,7 +320,7 @@ export const SpecsOverlay: React.FC<SpecsOverlayProps> = ({
                 </span>
               </div>
               {isReserved && (
-                <div className="text-[10px] text-stone-600 font-medium leading-tight max-w-[240px] border-l-2 border-amber-300 pl-3.5 py-0.5">
+                <div className="text-[10px] text-stone-600 font-medium leading-tight max-w-60 border-l-2 border-amber-300 pl-3.5 py-0.5">
                   <span className="block font-black text-amber-800 uppercase text-[8px] tracking-wider mb-0.5">Soporte Reservado</span>
                   {availability.toastMessage}
                 </div>
@@ -458,7 +455,7 @@ export const SpecsOverlay: React.FC<SpecsOverlayProps> = ({
                   return (
                     <div
                       key={week}
-                      className={`border rounded-xl p-2.5 text-center flex flex-col justify-between gap-1.5 min-h-[56px] shadow-2xs ${statusColor}`}
+                      className={`border rounded-xl p-2.5 text-center flex flex-col justify-between gap-1.5 min-h-14 shadow-2xs ${statusColor}`}
                     >
                       <span className="text-[8px] font-extrabold uppercase tracking-widest opacity-85 block">
                         Semana {idx + 1}
@@ -474,25 +471,28 @@ export const SpecsOverlay: React.FC<SpecsOverlayProps> = ({
           </div>
 
           {/* Bottom Action Footer - Feature 1 Support (Encourages quoting if price is 0) */}
-          <div className="pt-4 border-t border-stone-200/60 flex items-center justify-between gap-4">
+          <div className="pt-4 border-t border-[#bccbb9] flex items-center justify-between gap-4">
             <div className="text-left">
               <span className="block text-[8px] font-bold text-stone-400 uppercase tracking-wider">Inversión Estimada</span>
-              <span className="text-sm font-black text-[#06434a] font-sans uppercase tracking-wide">
-                {screen.precio === 0 ? "Consultar" : `${screen.precio.toLocaleString()} / Semana`}
+              <span className="text-sm font-black text-[#006e2f] font-sans uppercase tracking-wide">
+                Tarifa bajo cotización
               </span>
             </div>
 
             <button
+              type="button"
+              disabled={isReserved && !isInCart}
               onClick={(e) => {
                 e.stopPropagation();
+                if (isReserved && !isInCart) return;
                 toggleCart();
               }}
               className={`px-5 py-3 rounded-full text-xs font-black uppercase tracking-wider transition-all duration-300 flex items-center gap-2 cursor-pointer ${
                 isInCart
                   ? "bg-stone-200 hover:bg-stone-300 text-stone-700 border border-stone-300"
                   : isReserved
-                  ? "bg-stone-800 hover:bg-stone-900 text-white shadow-md"
-                  : "bg-[#06434a] hover:bg-[#0b5e67] text-white shadow-md hover:shadow-lg hover:scale-102"
+                  ? "bg-stone-100 text-stone-500 border border-stone-200 cursor-not-allowed"
+                  : "bg-[#006e2f] hover:bg-[#005321] text-white shadow-md hover:shadow-lg hover:scale-102"
               }`}
             >
               {isInCart ? (
@@ -503,7 +503,7 @@ export const SpecsOverlay: React.FC<SpecsOverlayProps> = ({
               ) : (
                 <>
                   <LucideIcons.Plus className="h-4 w-4" />
-                  <span>{availability.ctaLabel}</span>
+                  <span>{isReserved ? "Consultar disponibilidad" : availability.ctaLabel}</span>
                 </>
               )}
             </button>

@@ -9,6 +9,7 @@ import { LocationBenefits } from "./LocationBenefits";
 import { AvailabilityTimeline } from "./AvailabilityTimeline";
 import { MobileRoute } from "./MobileRoute";
 import { TYPE_STYLES } from "../../constants/screencard";
+import { getGalleryMedia } from "../../utils/screenMedia";
 
 interface ScreenDetailDialogProps {
   isOpen: boolean;
@@ -25,6 +26,9 @@ export const ScreenDetailDialog = ({ isOpen, onOpenChange, screen, availability,
   const isInCart = cart.includes(screen.id);
   const isReserved = availability.status === "reserved";
   const typeStyle = TYPE_STYLES[screen.tipo] || TYPE_STYLES.default;
+  const gallery = getGalleryMedia(screen);
+  const heroMedia = gallery.find((asset) => asset.isHero) || gallery[0] || null;
+  const heroVideo = gallery.find((asset) => asset.type === "video");
 
   const handleFocusClick = () => {
     onFocusOnMap?.();
@@ -39,8 +43,10 @@ export const ScreenDetailDialog = ({ isOpen, onOpenChange, screen, availability,
 
         {/* Left Column: Visual Media Player & Stats Overview */}
         <div className="lg:col-span-6 bg-stone-950 text-white flex flex-col justify-between relative overflow-hidden h-75 lg:h-auto min-h-75 lg:rounded-l-[23px]">
-          {screen.video ? (
-            <video src={screen.video} autoPlay muted loop playsInline className="absolute inset-0 w-full h-full object-cover opacity-90" />
+          {heroVideo ? (
+            <video src={heroVideo.url} poster={heroMedia?.posterUrl || heroMedia?.url} autoPlay muted loop playsInline className="absolute inset-0 w-full h-full object-cover opacity-90" />
+          ) : heroMedia ? (
+            <img src={heroMedia.posterUrl || heroMedia.url} alt={screen.nombre} className="absolute inset-0 w-full h-full object-cover opacity-90" loading="lazy" referrerPolicy="no-referrer" />
           ) : (
             <div className="absolute inset-0 bg-gradient-to-br from-stone-950 via-stone-900 to-stone-800 flex flex-col items-center justify-center">
               <span className="text-4xl font-black tracking-widest text-white/5 select-none uppercase">{screen.nombre.substring(0, 3)}</span>

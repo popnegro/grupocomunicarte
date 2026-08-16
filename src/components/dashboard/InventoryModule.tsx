@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { DoohScreen } from "../../types";
 import { Role } from "./types";
+import { useCms } from "../CmsContext";
 import { motion, AnimatePresence } from "motion/react";
 import { 
   Plus, 
@@ -26,13 +27,16 @@ import {
 import { downloadMediaKitAsHtml } from "../../utils/mediaKitExport";
 import { MapPin } from "lucide-react";
 import { FileUpload } from "./FileUpload";
+import { formatPrice } from "../../utils/formatPrice";
+import { sortFeaturedScreens } from "../../utils/screenMedia";
 
 interface InventoryModuleProps {
   screens: DoohScreen[];
   userRole: Role;
-  onUpdateScreen: (id: string, data: Partial<DoohScreen>) => void;
+  onUpdateScreen: (id: string, data: Partial<DoohScreen>) => Promise<void>;
   onAddScreen: (screen: DoohScreen) => void;
   onDeleteScreen: (id: string) => void;
+  isLoading?: boolean;
 }
 
 export const InventoryModule: React.FC<InventoryModuleProps> = ({
@@ -41,7 +45,9 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
   onUpdateScreen,
   onAddScreen,
   onDeleteScreen,
+  isLoading = false,
 }) => {
+  const { isSavingScreen, savingScreenError } = useCms();
   // Filters state
   const [selectedCityFilter, setSelectedCityFilter] = useState<string>("Todas");
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>("Todas");
@@ -115,6 +121,10 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
     });
   }, [screens, selectedCityFilter, selectedCategoryFilter, searchQuery, showArchived, selectedTypeFilter, selectedStatusFilter]);
 
+  const sortedScreens = useMemo(() => {
+    return sortFeaturedScreens(filteredScreens, filteredScreens.length);
+  }, [filteredScreens]);
+
   const handleDuplicate = (screen: DoohScreen) => {
     const duplicated: DoohScreen = {
       ...screen,
@@ -147,6 +157,8 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
       refreshRate: newScreenForm.refreshRate,
       formato: newScreenForm.formato,
       cobertura: newScreenForm.cobertura,
+      isFeatured: false,
+      featuredOrder: null,
     };
 
     onAddScreen(screen);
@@ -288,7 +300,7 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
 
         {/* Grid listing */}
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {filteredScreens.map((screen) => (
+          {sortedScreens.map((screen) => (
             <div
               key={screen.id}
               onClick={() => setActiveScreenId(screen.id)}
@@ -342,7 +354,7 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
                 <div className="text-right">
                   <span className="block text-[8px] text-stone-400 font-bold uppercase tracking-wider">Tarifa</span>
                   <span className="font-mono text-[#06434a] mt-0.5 block">
-                    ${screen.precio.toLocaleString()}
+                    {formatPrice(screen.precio)}
                   </span>
                 </div>
               </div>
@@ -394,7 +406,7 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
             </div>
           ))}
 
-          {filteredScreens.length === 0 && (
+          {sortedScreens.length === 0 && (
             <div className="col-span-full py-16 text-center border border-dashed border-stone-200 rounded-3xl space-y-3">
               <EyeOff className="h-10 w-10 text-stone-300 mx-auto" />
               <p className="text-xs font-bold text-stone-800">No se encontraron soportes que coincidan con la búsqueda.</p>
@@ -470,6 +482,7 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
                         type="text"
                         value={selectedScreen.nombre}
                         onChange={(e) => onUpdateScreen(selectedScreen.id, { nombre: e.target.value })}
+                        disabled={isSavingScreen}
                         className="w-full px-2.5 py-1.5 text-[11px] border border-stone-200 rounded-lg bg-stone-50/50 focus:outline-none"
                       />
                     </div>
@@ -480,6 +493,7 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
                         <select
                           value={selectedScreen.ciudad}
                           onChange={(e) => onUpdateScreen(selectedScreen.id, { ciudad: e.target.value as any })}
+                          disabled={isSavingScreen}
                           className="w-full px-2 py-1.5 text-[11px] border border-stone-200 rounded-lg bg-stone-50 cursor-pointer"
                         >
                           <option value="Mendoza">Mendoza</option>
@@ -493,7 +507,44 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
                           type="text"
                           value={selectedScreen.zona}
                           onChange={(e) => onUpdateScreen(selectedScreen.id, { zona: e.target.value })}
+                          disabled={isSavingScreen}
                           className="w-full px-2.5 py-1.5 text-[11px] border border-stone-200 rounded-lg bg-stone-50/50 focus:outline-none"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <label className="block text-[8px] font-extrabold text-stone-400 uppercase tracking-widest">⭐ Destacada</label>
+                        <button
+                          type="button"
+                          onClick={() => onUpdateScreen(selectedScreen.id, {
+                            isFeatured: !selectedScreen.isFeatured,
+                            featuredOrder: !selectedScreen.isFeatured ? (selectedScreen.featuredOrder ?? 1) : null,
+                          })}
+                          disabled={isSavingScreen}
+                          className={`w-full px-2.5 py-1.5 text-[11px] font-extrabold rounded-lg border transition-colors ${
+                            selectedScreen.isFeatured
+                              ? "bg-amber-50 text-amber-800 border-amber-200"
+                              : "bg-stone-50 text-stone-500 border-stone-200"
+                          }`}
+                        >
+                          {selectedScreen.isFeatured ? "Sí, está destacada" : "No destacada"}
+                        </button>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="block text-[8px] font-extrabold text-stone-400 uppercase tracking-widest">Orden destacado</label>
+                        <input
+                          type="number"
+                          min={1}
+                          disabled={!selectedScreen.isFeatured || isSavingScreen}
+                          value={selectedScreen.featuredOrder ?? ""}
+                          onChange={(e) => onUpdateScreen(selectedScreen.id, {
+                            featuredOrder: e.target.value ? Number(e.target.value) : null,
+                          })}
+                          className="w-full px-2.5 py-1.5 text-[11px] border border-stone-200 rounded-lg bg-stone-50/50 focus:outline-none font-mono disabled:opacity-50 disabled:cursor-not-allowed"
+                          placeholder="1"
                         />
                       </div>
                     </div>
@@ -505,6 +556,7 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
                           type="number"
                           value={selectedScreen.precio}
                           onChange={(e) => onUpdateScreen(selectedScreen.id, { precio: Number(e.target.value) })}
+                          disabled={isSavingScreen}
                           className="w-full px-2.5 py-1.5 text-[11px] border border-stone-200 rounded-lg bg-stone-50/50 focus:outline-none font-mono"
                         />
                       </div>
@@ -515,6 +567,7 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
                           type="number"
                           value={selectedScreen.impactos}
                           onChange={(e) => onUpdateScreen(selectedScreen.id, { impactos: Number(e.target.value) })}
+                          disabled={isSavingScreen}
                           className="w-full px-2.5 py-1.5 text-[11px] border border-stone-200 rounded-lg bg-stone-50/50 focus:outline-none font-mono"
                         />
                       </div>
@@ -527,6 +580,7 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
                           type="text"
                           value={selectedScreen.dimensiones || ""}
                           onChange={(e) => onUpdateScreen(selectedScreen.id, { dimensiones: e.target.value })}
+                          disabled={isSavingScreen}
                           className="w-full px-2.5 py-1.5 text-[11px] border border-stone-200 rounded-lg bg-stone-50/50 focus:outline-none"
                           placeholder="Ej: 4m x 3m"
                         />
@@ -538,6 +592,7 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
                           type="text"
                           value={selectedScreen.brillo || ""}
                           onChange={(e) => onUpdateScreen(selectedScreen.id, { brillo: e.target.value })}
+                          disabled={isSavingScreen}
                           className="w-full px-2.5 py-1.5 text-[11px] border border-stone-200 rounded-lg bg-stone-50/50 focus:outline-none"
                           placeholder="Ej: 5500 nits"
                         />
@@ -550,6 +605,7 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
                         type="text"
                         value={selectedScreen.formato || ""}
                         onChange={(e) => onUpdateScreen(selectedScreen.id, { formato: e.target.value })}
+                        disabled={isSavingScreen}
                         className="w-full px-2.5 py-1.5 text-[11px] border border-stone-200 rounded-lg bg-stone-50/50 focus:outline-none font-semibold"
                         placeholder="Ej: MP4, JPG"
                       />
@@ -561,9 +617,22 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
                         rows={3}
                         value={selectedScreen.nota || ""}
                         onChange={(e) => onUpdateScreen(selectedScreen.id, { nota: e.target.value })}
+                        disabled={isSavingScreen}
                         className="w-full px-2.5 py-1.5 text-[11px] border border-stone-200 rounded-lg bg-stone-50/50 focus:outline-none leading-relaxed"
                       />
                     </div>
+
+                    {selectedScreen.isFeatured && (
+                      <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-3 text-[10px] font-semibold text-amber-800">
+                        Esta ubicación aparecerá en la sección pública de destacadas con prioridad #{selectedScreen.featuredOrder ?? 1}.
+                      </div>
+                    )}
+
+                    {savingScreenError && (
+                      <div className="rounded-xl border border-red-200 bg-red-50/70 p-3 text-[10px] font-semibold text-red-800">
+                        Error al guardar: {savingScreenError}
+                      </div>
+                    )}
 
                     {/* PDF/Print Export Action for Single Asset */}
                     <div className="pt-2">
@@ -605,6 +674,7 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
                           type="number"
                           step="0.000001"
                           value={selectedScreen.lat}
+                          disabled={isSavingScreen}
                           onChange={(e) => onUpdateScreen(selectedScreen.id, { lat: Number(e.target.value) })}
                           className="w-full px-2.5 py-1.5 text-[11px] border border-stone-200 rounded-lg bg-stone-50/50 focus:outline-none font-mono"
                         />
@@ -616,6 +686,7 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
                           type="number"
                           step="0.000001"
                           value={selectedScreen.lng}
+                          disabled={isSavingScreen}
                           onChange={(e) => onUpdateScreen(selectedScreen.id, { lng: Number(e.target.value) })}
                           className="w-full px-2.5 py-1.5 text-[11px] border border-stone-200 rounded-lg bg-stone-50/50 focus:outline-none font-mono"
                         />
@@ -627,6 +698,7 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
                       <input
                         type="text"
                         value={selectedScreen.nombre}
+                        disabled={isSavingScreen}
                         onChange={(e) => onUpdateScreen(selectedScreen.id, { nombre: e.target.value })}
                         className="w-full px-2.5 py-1.5 text-[11px] border border-stone-200 rounded-lg bg-stone-50/50 focus:outline-none"
                       />
@@ -637,6 +709,7 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
                       <input
                         type="text"
                         value={selectedScreen.cobertura || ""}
+                        disabled={isSavingScreen}
                         onChange={(e) => onUpdateScreen(selectedScreen.id, { cobertura: e.target.value })}
                         className="w-full px-2.5 py-1.5 text-[11px] border border-stone-200 rounded-lg bg-stone-50/50 focus:outline-none"
                       />
@@ -668,8 +741,9 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
                       <input
                         type="text"
                         value={selectedScreen.video || ""}
+                        disabled={isSavingScreen}
                         onChange={(e) => onUpdateScreen(selectedScreen.id, { video: e.target.value })}
-                        className="w-full px-2.5 py-1.5 text-[11px] border border-stone-200 rounded-lg bg-stone-50/50 focus:outline-none font-mono text-[10px]"
+                        className="w-full px-2.5 py-1.5 text-[11px] border border-stone-200 rounded-lg bg-stone-50/50 focus:outline-none font-mono"
                         placeholder="https://..."
                       />
                     </div>
@@ -678,7 +752,7 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
                       <label className="block text-[8px] font-extrabold text-stone-400 uppercase tracking-widest">PDF Ficha Técnica Oficial (URL)</label>
                       <input
                         type="text"
-                        className="w-full px-2.5 py-1.5 text-[11px] border border-stone-200 rounded-lg bg-stone-50/50 focus:outline-none font-mono text-[10px]"
+                        className="w-full px-2.5 py-1.5 text-[11px] border border-stone-200 rounded-lg bg-stone-50/50 focus:outline-none font-mono"
                         defaultValue="https://grupocomunicarte.com/mediakit/pdf-ficha.pdf"
                       />
                     </div>
@@ -736,19 +810,19 @@ export const InventoryModule: React.FC<InventoryModuleProps> = ({
 
                     <div className="space-y-3 pl-1.5 border-l border-stone-100">
                       <div className="relative pl-4">
-                        <span className="absolute left-[-21px] top-1.5 h-2 w-2 rounded-full bg-primary" />
+                        <span className="absolute -left-5.25 top-1.5 h-2 w-2 rounded-full bg-primary" />
                         <span className="block text-[8px] font-bold text-stone-400 uppercase">Hoy, 10:45 hs • Director Comercial</span>
                         <p className="text-[10px] text-stone-700 font-semibold mt-0.5">Tarifa base actualizada de $145k a $155k</p>
                       </div>
 
                       <div className="relative pl-4">
-                        <span className="absolute left-[-21px] top-1.5 h-2 w-2 rounded-full bg-stone-300" />
+                        <span className="absolute -left-5.25 top-1.5 h-2 w-2 rounded-full bg-stone-300" />
                         <span className="block text-[8px] font-bold text-stone-400 uppercase">28 de Julio • Operaciones</span>
                         <p className="text-[10px] text-stone-600 mt-0.5">Calibrado automático de brillo auto-dimming completado</p>
                       </div>
 
                       <div className="relative pl-4">
-                        <span className="absolute left-[-21px] top-1.5 h-2 w-2 rounded-full bg-stone-300" />
+                        <span className="absolute -left-5.25 top-1.5 h-2 w-2 rounded-full bg-stone-300" />
                         <span className="block text-[8px] font-bold text-stone-400 uppercase">14 de Junio • Administrador</span>
                         <p className="text-[10px] text-stone-600 mt-0.5">Soporte creado e integrado al catálogo de Mendoza</p>
                       </div>

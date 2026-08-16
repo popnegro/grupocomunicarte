@@ -1,7 +1,7 @@
 import React from "react";
 import { Calendar } from "lucide-react";
-import { DoohScreen } from "../../types";
-import { getDynamicReservationEndDate } from "../../utils/availability";
+import { DoohScreen } from "../types";
+import { getDynamicReservationEndDate } from "../utils/availability";
 
 interface AvailabilityTimelineProps {
   screen: DoohScreen;

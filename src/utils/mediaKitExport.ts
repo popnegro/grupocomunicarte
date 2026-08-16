@@ -1,5 +1,6 @@
 import { DoohScreen } from "../types";
 import { MediaKit } from "../components/dashboard/types";
+import { formatPrice } from "./formatPrice";
 
 /**
  * Generates a clean, modern, standalone HTML string representing the MediaKit presentation.
@@ -139,7 +140,7 @@ export function generateMediaKitHtml(
         ${(screen.impactos / 1000).toFixed(1)}k / día
       </td>
       <td class="font-mono text-right font-bold" style="padding: 12px 16px; font-size: 12px; color: #06434a;">
-        $${screen.precio.toLocaleString()}
+        ${formatPrice(screen.precio)}
       </td>
     </tr>
   `

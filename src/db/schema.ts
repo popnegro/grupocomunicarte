@@ -25,6 +25,7 @@ export const permissions = pgTable('permissions', {
   id: text('id').primaryKey(),
   name: text('name').notNull(),
   slug: text('slug').unique().notNull(),
+  description: text('description'),
 });
 
 export const users = pgTable('users', {
@@ -77,20 +78,20 @@ export const screens = pgTable('screens', {
   tenantId: text('tenant_id').references(() => tenants.id, { onDelete: 'cascade' }),
   nombre: text('nombre').notNull(),
   zona: text('zona'),
-  tipo: text('tipo'), // Peatonal, Vehicular, Mixto o Móvil
-  categoria: text('categoria'), // Pantallas LED, Tradicionales, LED Móvil
+  tipo: text('tipo'),
+  categoria: text('categoria'),
   ciudad: text('ciudad').notNull(),
-  impactos: integer('impactos'), // Cantidad promedio de impresiones semanales
-  precio: integer('precio'), // Tarifa semanal sugerida
-  status: text('status').default('Activo').notNull(), // Activo, Mantenimiento, etc.
+  impactos: integer('impactos'),
+  precio: integer('precio'),
+  status: text('status').default('Activo').notNull(),
   dimensiones: text('dimensiones'),
   brillo: text('brillo'),
   refreshRate: text('refresh_rate'),
   formato: text('formato'),
   cobertura: text('cobertura'),
-  ruta: text('ruta'), // Polígono de recorrido (en caso de soportes móviles)
-  lat: doublePrecision('lat'), // Coordenadas GPS
-  lng: doublePrecision('lng'), // Coordenadas GPS
+  ruta: text('ruta'),
+  lat: doublePrecision('lat'),
+  lng: doublePrecision('lng'),
   nota: text('nota'),
   video: text('video'),
   horarios: text('horarios'),
@@ -98,6 +99,8 @@ export const screens = pgTable('screens', {
   hash: text('hash'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
+  isFeatured: boolean("is_featured").notNull().default(false),
+  featuredOrder: integer("featured_order"),
 });
 
 // 2.4. Clientes y Campañas Publicitarias
@@ -108,7 +111,7 @@ export const clientes = pgTable('clientes', {
   empresa: text('empresa').notNull(),
   email: text('email').notNull(),
   telefono: text('telefono'),
-  categoria: text('categoria'), // Corporativo, Agencia o Directo
+  categoria: text('categoria'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
@@ -120,15 +123,42 @@ export const mediakits = pgTable('mediakits', {
   clienteId: text('cliente_id').references(() => clientes.id, { onDelete: 'cascade' }),
   clienteNombre: text('cliente_nombre'),
   ciudad: text('ciudad'),
-  screenIds: text('screen_ids'), // JSON stringified array of screen ids
+  screenIds: text('screen_ids'), // Legacy JSON; retained during migration only.
   version: integer('version').default(1),
-  estado: text('estado').default('Borrador'), // Borrador, Cotizando, Aprobado
+  estado: text('estado').default('Borrador'),
   fecha: text('fecha'),
   presupuesto: integer('presupuesto'),
   objetivo: text('objetivo'),
-  comentarios: text('comentarios'), // JSON stringified comments
-  historial: text('historial'), // JSON stringified history
-  soportesEdicionInline: text('soportes_edicion_inline'), // JSON stringified inline support info
+  comentarios: text('comentarios'), // Legacy JSON; retained during migration only.
+  historial: text('historial'), // Legacy JSON; retained during migration only.
+  soportesEdicionInline: text('soportes_edicion_inline'), // Legacy JSON; retained during migration only.
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+});
+
+/**
+ * Normalized MediaKit ↔ inventory relation.
+ *
+ * These tables are the target source of truth for selected inventory and
+ * collaboration data. Legacy JSON columns above remain temporarily so the
+ * existing API/frontend can be migrated without a destructive deployment.
+ */
+export const mediaKitScreens = pgTable('media_kit_screens', {
+  mediaKitId: text('media_kit_id').references(() => mediakits.id, { onDelete: 'cascade' }).notNull(),
+  screenId: text('screen_id').references(() => screens.id, { onDelete: 'cascade' }).notNull(),
+  position: integer('position').notNull().default(0),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+}, (t) => [
+  primaryKey({ columns: [t.mediaKitId, t.screenId] })
+]);
+
+/** Normalized MediaKit comments; legacy JSON comments remain temporarily. */
+export const mediaKitComments = pgTable('media_kit_comments', {
+  id: text('id').primaryKey(),
+  mediaKitId: text('media_kit_id').references(() => mediakits.id, { onDelete: 'cascade' }).notNull(),
+  userId: integer('user_id').references(() => users.id, { onDelete: 'set null' }),
+  authorName: text('author_name'),
+  body: text('body').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
@@ -140,7 +170,7 @@ export const campaigns = pgTable('campaigns', {
   mediaKitId: text('media_kit_id').references(() => mediakits.id),
   nombre: text('nombre').notNull(),
   presupuesto: integer('presupuesto'),
-  estado: text('estado'), // Planificación, Activa, Finalizada, Pausada
+  estado: text('estado'),
   fechaInicio: text('fecha_inicio'),
   fechaFin: text('fecha_fin'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
@@ -165,6 +195,10 @@ export const leads = pgTable('leads', {
   email: text('email').notNull(),
   phone: text('phone'),
   message: text('message').notNull(),
+  company: text('company'),
+  source: text('source').notNull().default('Formulario Web'),
+  status: text('status').notNull().default('new'),
+  value: integer('value').default(0),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
@@ -185,7 +219,7 @@ export const screenTags = pgTable('screen_tags', {
 export const media = pgTable('media', {
   id: text('id').primaryKey(),
   screenId: text('screen_id').references(() => screens.id, { onDelete: 'cascade' }),
-  type: text('type'), // "image", "video", "drone"
+  type: text('type'),
   url: text('url').notNull(),
   title: text('title'),
   sizeBytes: integer('size_bytes'),
@@ -196,7 +230,7 @@ export const media = pgTable('media', {
 export const metrics = pgTable('metrics', {
   id: text('id').primaryKey(),
   screenId: text('screen_id').references(() => screens.id, { onDelete: 'cascade' }),
-  metricType: text('metric_type'), // "impressions", "occupancy_rate", "ctr", "views"
+  metricType: text('metric_type'),
   value: doublePrecision('value').notNull(),
   recordedAt: timestamp('recorded_at').defaultNow().notNull(),
 });
@@ -215,7 +249,7 @@ export const syncHistory = pgTable('sync_history', {
   id: text('id').primaryKey(),
   userId: integer('user_id').references(() => users.id, { onDelete: 'cascade' }),
   userName: text('user_name'),
-  status: text('status'), // "running", "success", "failed"
+  status: text('status'),
   presentationId: text('presentation_id'),
   presentationTitle: text('presentation_title'),
   durationMs: integer('duration_ms'),
@@ -232,9 +266,9 @@ export const syncErrors = pgTable('sync_errors', {
   syncId: text('sync_id').references(() => syncHistory.id, { onDelete: 'cascade' }),
   slideIndex: integer('slide_index'),
   slideId: text('slide_id'),
-  errorType: text('error_type'), // "validation", "parser", "api"
+  errorType: text('error_type'),
   errorMessage: text('error_message'),
-  severity: text('severity'), // "warning", "error"
+  severity: text('severity'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 

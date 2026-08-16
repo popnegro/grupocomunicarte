@@ -108,9 +108,11 @@ export const GmailModule: React.FC<GmailModuleProps> = ({ token }) => {
         } else if (res.isRateLimited) { // Access directly from ApiResponse
           toast.error("Límite de peticiones alcanzado. Reintentando en unos segundos.");
         } else if (res.error) { // Access directly from ApiResponse
-          const errorMessage = typeof res.error === 'object' 
-            ? res.error.message 
-            : res.error;
+          const errorMessage = res.error == null
+        ? 'Error desconocido'
+        : typeof res.error === 'string'
+          ? res.error
+          : JSON.stringify(res.error)
 
           toast.error(errorMessage || "No se pudieron obtener los correos.", "Error de Bandeja");
         }
@@ -135,11 +137,13 @@ export const GmailModule: React.FC<GmailModuleProps> = ({ token }) => {
       if (res.data?.success && res.data.data) {
         setSelectedMessage(res.data.data);
       } else {
-        const errorMessage = typeof res.error === 'object' ? res.error.message : res.error // Access directly from ApiResponse
-        toast.error(errorMessage || "No se pudo cargar el detalle del correo.", "Error de Lectura");
+        const errorMessage =
+          res.error == null
+            ? 'Error desconocido'
+            : typeof res.error === 'string'
+              ? res.error
+              : JSON.stringify(res.error); // The 'else' block was missing its closing brace.
       }
-    } catch (err) {
-      toast.error("Error al cargar el contenido del correo.");
     } finally {
       setLoadingDetail(false);
     }
@@ -178,13 +182,18 @@ export const GmailModule: React.FC<GmailModuleProps> = ({ token }) => {
         // Reload messages after brief delay
         setTimeout(() => fetchMessages(searchQuery), 1000);
       } else {
-        const errorMessage = typeof res.error === 'object' ? res.error.message : res.error // Access directly from ApiResponse
-        toast.error(errorMessage || "Error al enviar el correo.", "Fallo de Envío");
-      }
-    } catch (err) {
-      console.error("Error sending email:", err);
-      toast.error("Error de red al intentar enviar el correo.");
-    } finally {
+        const errorMessage =
+          res.error == null
+            ? 'Error desconocido'
+            : typeof res.error === 'string'
+              ? res.error
+              : JSON.stringify(res.error); // The 'else' block was missing its closing brace.
+        toast.error(errorMessage); // Use the specific error message here
+      } // Close the else block
+    } catch (err: any) { // Catch block starts here
+      toast.error(err.message || "Error de red al intentar enviar el correo."); // General network error toast
+    }
+    finally { // Finally block starts here
       setSendingEmail(false);
     }
   };

@@ -1,25 +1,46 @@
 // src/lib/apiClient.ts
 
+import { auth } from "./firebase";
+
 interface ApiResponse<T> {
   ok: boolean;
   status: number;
   data?: T;
-  error?: string; // Change to simple string for wide-ranging type safety
-  errorDetail?: { // Keep rich structured details separate
+  error?: string;
+  errorDetail?: {
     code: string;
     message: string;
   };
   errorType?: "network" | "server" | "validation" | "unknown";
-  isRateLimited?: boolean; // Added for consistency with GmailModule
+  isRateLimited?: boolean;
 }
 
-// Resolve API Base URL from environment variable
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, "") || "";
 
 /**
+ * Adds the Firebase ID token to authenticated API requests.
+ * Public endpoints remain unauthenticated when no Firebase user exists.
+ */
+async function withAuthHeader(options?: RequestInit): Promise<RequestInit> {
+  const currentUser = auth.currentUser;
+  const headers = new Headers(options?.headers);
+
+  if (currentUser) {
+    const token = await currentUser.getIdToken();
+    if (token) {
+      headers.set("Authorization", `Bearer ${token}`);
+    }
+  }
+
+  return {
+    ...options,
+    headers,
+  };
+}
+
+/**
  * Generic fetch wrapper that handles JSON parsing, error responses,
- * and consistent API response formatting.
- * It also prepends the API_BASE_URL if configured.
+ * authentication and consistent API response formatting.
  */
 export async function safeFetchJson<T>(
   path: string,
@@ -28,44 +49,71 @@ export async function safeFetchJson<T>(
   const url = `${API_BASE_URL}${path}`;
 
   try {
-    const response = await fetch(url, options);
+    const authenticatedOptions = await withAuthHeader(options);
+    const response = await fetch(url, authenticatedOptions);
 
-    // Handle non-OK responses
     if (!response.ok) {
       let errorData: any = {};
       try {
-        // Attempt to parse JSON error from server
         errorData = await response.json();
-      } catch (e) {
-        // If not JSON, use statusText or a generic message
+      } catch {
         errorData = { message: response.statusText || "Server error" };
       }
 
+      const status = response.status;
+      const errorMessage =
+        errorData?.message ||
+        errorData?.error?.message ||
+        `Request failed with status ${status}`;
+      const errorCode =
+        errorData?.code ||
+        errorData?.error?.code ||
+        `HTTP_ERROR_${status}`;
+      const errorType: ApiResponse<T>["errorType"] =
+        status === 429
+          ? "server"
+          : status >= 400 && status < 500
+            ? "validation"
+            : "server";
+
+      return {
+        ok: false,
+        status,
+        error: errorMessage,
+        errorDetail: {
+          code: errorCode,
+          message: errorMessage,
+        },
+        errorType,
+        isRateLimited: status === 429,
+      };
+    }
+
+    if (response.status === 204) {
+      return { ok: true, status: response.status, data: undefined };
+    }
+
+    const contentType = response.headers.get("content-type") || "";
+    if (!contentType.toLowerCase().includes("application/json")) {
       return {
         ok: false,
         status: response.status,
-        error: errorData.message || `Request failed with status ${response.status}`,
+        error: "La API devolvió una respuesta no JSON inesperada.",
         errorDetail: {
-          code: errorData.code || `HTTP_ERROR_${response.status}`,
-          message: errorData.message || `Request failed with status ${response.status}`,
+          code: "INVALID_RESPONSE_FORMAT",
+          message: "La API devolvió una respuesta no JSON inesperada.",
         },
         errorType: "server",
       };
     }
 
-    // Handle successful responses, including those with no content (204)
-    if (response.status === 204 || response.headers.get("Content-Length") === "0") {
-      return { ok: true, status: response.status, data: undefined };
-    }
-
-    // Attempt to parse JSON
     const data = await response.json();
     return { ok: true, status: response.status, data };
   } catch (e: any) {
     console.error(`[safeFetchJson] Network or parsing error for ${url}:`, e);
     return {
       ok: false,
-      status: 0, // No HTTP status for network errors
+      status: 0,
       error: e.message || "Network request failed",
       errorDetail: {
         code: "NETWORK_ERROR",
@@ -76,18 +124,32 @@ export async function safeFetchJson<T>(
   }
 }
 
-// Simple wrapper for GET and POST requests
 export const apiClient = {
-  get: <T>(path: string, options?: RequestInit) => safeFetchJson<T>(path, { ...options, method: "GET" }),
-  post: <T>(path: string, data?: any, options?: RequestInit) => {
-    return safeFetchJson<T>(path, {
+  get: <T>(path: string, options?: RequestInit) =>
+    safeFetchJson<T>(path, { ...options, method: "GET" }),
+
+  post: <T>(path: string, data?: any, options?: RequestInit) =>
+    safeFetchJson<T>(path, {
       ...options,
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         ...(options?.headers || {}),
       },
-      body: data ? JSON.stringify(data) : undefined,
-    });
-  },
+      body: data === undefined ? undefined : JSON.stringify(data),
+    }),
+
+  put: <T>(path: string, data?: any, options?: RequestInit) =>
+    safeFetchJson<T>(path, {
+      ...options,
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        ...(options?.headers || {}),
+      },
+      body: data === undefined ? undefined : JSON.stringify(data),
+    }),
+
+  delete: <T>(path: string, options?: RequestInit) =>
+    safeFetchJson<T>(path, { ...options, method: "DELETE" }),
 };

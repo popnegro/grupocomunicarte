@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import * as LucideIcons from "lucide-react";
-import { DoohScreen } from "../../types";
+import { DoohScreen } from "../types";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { InteractiveMap } from "./InteractiveMap";

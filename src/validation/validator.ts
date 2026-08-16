@@ -33,7 +33,10 @@ export function validatePaginationQuery(query: any): PaginationQueryDTO {
 export function validateSpaceDTO(body: any) {
   const errors: Record<string, string> = {};
 
-  if (!body.nombre || typeof body.nombre !== "string" || body.nombre.trim() === "") {
+  // Name is only required if it's explicitly part of the body for an update.
+  // For creation, the API handler should enforce it separately.
+  // For partial updates, it might not be present.
+  if (body.nombre !== undefined && (typeof body.nombre !== "string" || body.nombre.trim() === "")) {
     errors.nombre = "Name (nombre) is required and must be a non-empty string";
   }
 
@@ -51,8 +54,21 @@ export function validateSpaceDTO(body: any) {
     }
   }
 
-  if (body.status && !["Activo", "Mantenimiento", "Inactivo"].includes(body.status)) {
-    errors.status = "Status must be either 'Activo', 'Mantenimiento' or 'Inactivo'";
+  const allowedStatuses = ["Activo", "Pausado", "Disponible", "No disponible", "available", "reserved", "upcoming"];
+  if (body.status && !allowedStatuses.includes(body.status)) {
+    errors.status = `Status must be one of: ${allowedStatuses.join(", ")}`;
+
+  }
+
+  if (body.isFeatured !== undefined && typeof body.isFeatured !== "boolean" && body.isFeatured !== "true" && body.isFeatured !== "false") {
+    errors.isFeatured = "Featured flag (isFeatured) must be a boolean";
+  }
+
+  if (body.featuredOrder !== undefined && body.featuredOrder !== null && body.featuredOrder !== "") {
+    const val = Number(body.featuredOrder);
+    if (!Number.isFinite(val) || val < 1) {
+      errors.featuredOrder = "Featured order (featuredOrder) must be a positive number";
+    }
   }
 
   if (Object.keys(errors).length > 0) {
@@ -60,7 +76,7 @@ export function validateSpaceDTO(body: any) {
   }
 
   return {
-    nombre: String(body.nombre).trim(),
+    nombre: body.nombre ? String(body.nombre).trim() : undefined,
     zona: body.zona ? String(body.zona).trim() : null,
     tipo: body.tipo ? String(body.tipo).trim() : null,
     categoria: body.categoria ? String(body.categoria).trim() : null,
@@ -74,6 +90,11 @@ export function validateSpaceDTO(body: any) {
     formato: body.formato ? String(body.formato).trim() : null,
     cobertura: body.cobertura ? String(body.cobertura).trim() : null,
     ruta: body.ruta ? String(body.ruta).trim() : null,
+    video: body.video ? String(body.video).trim() : null,
+    isFeatured: body.isFeatured === true || body.isFeatured === "true",
+    featuredOrder: body.featuredOrder === undefined || body.featuredOrder === null || body.featuredOrder === ""
+      ? null
+      : Number(body.featuredOrder),
     tenantId: body.tenantId ? String(body.tenantId).trim() : "tenant-default"
   };
 }

@@ -1,0 +1,538 @@
+{
+  "city": "Mendoza",
+  "sourceDeck": "mendoza.pptx",
+  "supports": [
+    {
+      "id": "mza-gm-01",
+      "source": {
+        "deck": "mendoza.pptx",
+        "originalId": "01",
+        "slides": "3-5"
+      },
+      "name": "Columna Acc. Sur casi R. Peña (cara Sur / cara Norte)",
+      "type": "Tradicional, monocolumna",
+      "city": "Mendoza",
+      "zone": "Acceso Sur / R. Peña",
+      "address": null,
+      "description": null,
+      "technicalData": null,
+      "dimensions": null,
+      "latitude": null,
+      "longitude": null,
+      "mapUrl": "https://maps.app.goo.gl/hoXBQT7xCbpXhvxW8",
+      "isFeatured": null,
+      "featuredOrder": null,
+      "status": null,
+      "media": [],
+      "mediaSummary": {
+        "images": true,
+        "videos": false
+      },
+      "notes": "Dos caras; mismo mapa para ambas caras"
+    },
+    {
+      "id": "mza-gm-02",
+      "source": {
+        "deck": "mendoza.pptx",
+        "originalId": "02",
+        "slides": "6-8"
+      },
+      "name": "Top Site Panamericana casi rotonda fte a Chango Más (ambas caras)",
+      "type": "Tradicional, monocolumna",
+      "city": "Mendoza",
+      "zone": "Panamericana / Godoy Cruz",
+      "address": null,
+      "description": null,
+      "technicalData": null,
+      "dimensions": null,
+      "latitude": null,
+      "longitude": null,
+      "mapUrl": "https://maps.app.goo.gl/TDo3iZyJykrSfZyMA",
+      "isFeatured": null,
+      "featuredOrder": null,
+      "status": null,
+      "media": [],
+      "mediaSummary": {
+        "images": true,
+        "videos": false
+      },
+      "notes": "Dos caras; nombre repetido en slides técnicas"
+    },
+    {
+      "id": "mza-gm-03",
+      "source": {
+        "deck": "mendoza.pptx",
+        "originalId": "03",
+        "slides": "9-10"
+      },
+      "name": "Columna Corredor del Oeste casi Palmares Valley (cara Norte / cara Sur)",
+      "type": "Tradicional, monocolumna",
+      "city": "Mendoza",
+      "zone": "Corredor del Oeste / Palmares Valley",
+      "address": null,
+      "description": null,
+      "technicalData": null,
+      "dimensions": null,
+      "latitude": null,
+      "longitude": null,
+      "mapUrl": "https://maps.app.goo.gl/aykdux5KmGktw6G36",
+      "isFeatured": null,
+      "featuredOrder": null,
+      "status": null,
+      "media": [],
+      "mediaSummary": {
+        "images": true,
+        "videos": false
+      },
+      "notes": "Dos caras"
+    },
+    {
+      "id": "mza-gm-04",
+      "source": {
+        "deck": "mendoza.pptx",
+        "originalId": "04",
+        "slides": "11-12"
+      },
+      "name": "Columna Carril Nacional y Tirasso (cara Sur / cara Norte)",
+      "type": "Tradicional, monocolumna",
+      "city": "Mendoza",
+      "zone": "Carril Nacional / Tirasso",
+      "address": null,
+      "description": null,
+      "technicalData": null,
+      "dimensions": null,
+      "latitude": null,
+      "longitude": null,
+      "mapUrl": "https://maps.app.goo.gl/x3LtEodMDbSZB7z49",
+      "isFeatured": null,
+      "featuredOrder": null,
+      "status": null,
+      "media": [],
+      "mediaSummary": {
+        "images": true,
+        "videos": false
+      },
+      "notes": "Dos caras"
+    },
+    {
+      "id": "mza-gm-05",
+      "source": {
+        "deck": "mendoza.pptx",
+        "originalId": "05",
+        "slides": "13-14"
+      },
+      "name": "Columna Acc. Norte - Aeropuerto (cara Norte / cara Sur)",
+      "type": "Tradicional, monocolumna",
+      "city": "Mendoza",
+      "zone": "Acceso Norte / Aeropuerto",
+      "address": null,
+      "description": null,
+      "technicalData": null,
+      "dimensions": null,
+      "latitude": null,
+      "longitude": null,
+      "mapUrl": "https://maps.app.goo.gl/nXgWqWuXrY3AeUqh8",
+      "isFeatured": null,
+      "featuredOrder": null,
+      "status": null,
+      "media": [],
+      "mediaSummary": {
+        "images": true,
+        "videos": false
+      },
+      "notes": "Dos caras"
+    },
+    {
+      "id": "mza-gm-06",
+      "source": {
+        "deck": "mendoza.pptx",
+        "originalId": "06",
+        "slides": "15"
+      },
+      "name": "Top Site Salida Aeropuerto hacia Ciudad – Acceso Norte",
+      "type": "Tradicional, monocolumna",
+      "city": "Mendoza",
+      "zone": "Salida Aeropuerto / Acceso Norte",
+      "address": null,
+      "description": null,
+      "technicalData": null,
+      "dimensions": null,
+      "latitude": null,
+      "longitude": null,
+      "mapUrl": "https://maps.app.goo.gl/5sih7TgpQCL8pkES8",
+      "isFeatured": null,
+      "featuredOrder": null,
+      "status": null,
+      "media": [],
+      "mediaSummary": {
+        "images": true,
+        "videos": false
+      },
+      "notes": "Un solo soporte"
+    },
+    {
+      "id": "mza-gm-07",
+      "source": {
+        "deck": "mendoza.pptx",
+        "originalId": "07",
+        "slides": "16"
+      },
+      "name": "Top Site llegando a Aeropuerto – Acceso Norte",
+      "type": "Tradicional, monocolumna",
+      "city": "Mendoza",
+      "zone": "Acceso Norte / Aeropuerto",
+      "address": null,
+      "description": null,
+      "technicalData": null,
+      "dimensions": null,
+      "latitude": null,
+      "longitude": null,
+      "mapUrl": "https://maps.app.goo.gl/5sih7TgpQCL8pkES8",
+      "isFeatured": null,
+      "featuredOrder": null,
+      "status": null,
+      "media": [],
+      "mediaSummary": {
+        "images": true,
+        "videos": false
+      },
+      "notes": "Un solo soporte"
+    },
+    {
+      "id": "mza-gm-08",
+      "source": {
+        "deck": "mendoza.pptx",
+        "originalId": "08",
+        "slides": "17-19"
+      },
+      "name": "Columna San Martín Sur y Panamericana (cara Sur / cara Norte)",
+      "type": "Tradicional, monocolumna",
+      "city": "Mendoza",
+      "zone": "San Martín Sur / Panamericana",
+      "address": null,
+      "description": null,
+      "technicalData": null,
+      "dimensions": null,
+      "latitude": null,
+      "longitude": null,
+      "mapUrl": "https://maps.app.goo.gl/TDo3iZyJykrSfZyMA",
+      "isFeatured": null,
+      "featuredOrder": null,
+      "status": null,
+      "media": [],
+      "mediaSummary": {
+        "images": true,
+        "videos": false
+      },
+      "notes": "Dos caras; una slide técnica muestra CARAS incompleto"
+    },
+    {
+      "id": "mza-gm-09",
+      "source": {
+        "deck": "mendoza.pptx",
+        "originalId": "09",
+        "slides": "20-22"
+      },
+      "name": "Columna Acc. Este y Acc. Sur (cara Este / cara Oeste)",
+      "type": "Tradicional, monocolumna",
+      "city": "Mendoza",
+      "zone": "Acceso Este / Acceso Sur",
+      "address": null,
+      "description": null,
+      "technicalData": null,
+      "dimensions": null,
+      "latitude": null,
+      "longitude": null,
+      "mapUrl": "https://maps.app.goo.gl/pZUVjbinXdCR4AUP9",
+      "isFeatured": null,
+      "featuredOrder": null,
+      "status": null,
+      "media": [],
+      "mediaSummary": {
+        "images": true,
+        "videos": false
+      },
+      "notes": "Dos caras"
+    },
+    {
+      "id": "mza-gm-10",
+      "source": {
+        "deck": "mendoza.pptx",
+        "originalId": "10",
+        "slides": "23-24"
+      },
+      "name": "Sobre techo Acceso Norte y Rotonda del Avión",
+      "type": "Tradicional, sobretecho",
+      "city": "Mendoza",
+      "zone": "Acceso Norte / Rotonda del Avión",
+      "address": null,
+      "description": null,
+      "technicalData": null,
+      "dimensions": null,
+      "latitude": null,
+      "longitude": null,
+      "mapUrl": "https://maps.app.goo.gl/5MBzjZgJ15r7p2ha7",
+      "isFeatured": null,
+      "featuredOrder": null,
+      "status": null,
+      "media": [],
+      "mediaSummary": {
+        "images": true,
+        "videos": false
+      },
+      "notes": "Un solo soporte"
+    },
+    {
+      "id": "mza-gm-11",
+      "source": {
+        "deck": "mendoza.pptx",
+        "originalId": "11",
+        "slides": "25-26"
+      },
+      "name": "Corredor del Oeste, De Volea Pádel – Godoy Cruz",
+      "type": "Tradicional, monocolumna",
+      "city": "Mendoza",
+      "zone": "Corredor del Oeste / Godoy Cruz",
+      "address": null,
+      "description": null,
+      "technicalData": null,
+      "dimensions": null,
+      "latitude": null,
+      "longitude": null,
+      "mapUrl": "https://maps.app.goo.gl/Nb9eedRdQiXwnM1B6",
+      "isFeatured": null,
+      "featuredOrder": null,
+      "status": null,
+      "media": [],
+      "mediaSummary": {
+        "images": true,
+        "videos": false
+      },
+      "notes": "Un solo soporte"
+    },
+    {
+      "id": "mza-ext-01",
+      "source": {
+        "deck": "mendoza.pptx",
+        "originalId": "01",
+        "slides": "28"
+      },
+      "name": "4x4 Lat. Panamericana casi YPF - Luján",
+      "type": "Tradicional, 4x4",
+      "city": "Mendoza",
+      "zone": "Panamericana / Luján",
+      "address": null,
+      "description": null,
+      "technicalData": null,
+      "dimensions": null,
+      "latitude": null,
+      "longitude": null,
+      "mapUrl": "https://maps.app.goo.gl/qWcz6Z8amXJx9vXQ8",
+      "isFeatured": null,
+      "featuredOrder": null,
+      "status": null,
+      "media": [],
+      "mediaSummary": {
+        "images": true,
+        "videos": false
+      },
+      "notes": "Soporte extra fuera del bloque principal"
+    },
+    {
+      "id": "mza-ext-02",
+      "source": {
+        "deck": "mendoza.pptx",
+        "originalId": "02",
+        "slides": "29-31"
+      },
+      "name": "Supersextuple Panamericana y Antártida Argentina – Luján de Cuyo",
+      "type": "Tradicional, superséxtuple",
+      "city": "Mendoza",
+      "zone": "Panamericana / Antártida Argentina",
+      "address": null,
+      "description": null,
+      "technicalData": null,
+      "dimensions": null,
+      "latitude": null,
+      "longitude": null,
+      "mapUrl": "https://maps.app.goo.gl/ErdJcjPW9BRvVC719",
+      "isFeatured": null,
+      "featuredOrder": null,
+      "status": null,
+      "media": [],
+      "mediaSummary": {
+        "images": true,
+        "videos": false
+      },
+      "notes": "Mismo soporte en más de una slide"
+    },
+    {
+      "id": "mza-ext-03",
+      "source": {
+        "deck": "mendoza.pptx",
+        "originalId": "03",
+        "slides": "32"
+      },
+      "name": "Boedo entre Terrada y Rotonda Acc. Sur – Luján de Cuyo",
+      "type": "Tradicional, superséxtuple",
+      "city": "Mendoza",
+      "zone": "Boedo / Terrada / Rotonda Acc. Sur",
+      "address": null,
+      "description": null,
+      "technicalData": null,
+      "dimensions": null,
+      "latitude": null,
+      "longitude": null,
+      "mapUrl": "https://maps.app.goo.gl/wbedJvgbzY3fLtFMA",
+      "isFeatured": null,
+      "featuredOrder": null,
+      "status": null,
+      "media": [],
+      "mediaSummary": {
+        "images": true,
+        "videos": false
+      },
+      "notes": "Descripción larga; no hay address estructurada"
+    },
+    {
+      "id": "mza-ext-04",
+      "source": {
+        "deck": "mendoza.pptx",
+        "originalId": "04",
+        "slides": "33"
+      },
+      "name": "Terrada",
+      "type": "Tradicional, superséxtuple",
+      "city": "Mendoza",
+      "zone": "Terrada",
+      "address": null,
+      "description": null,
+      "technicalData": null,
+      "dimensions": null,
+      "latitude": null,
+      "longitude": null,
+      "mapUrl": "https://maps.app.goo.gl/wbedJvgbzY3fLtFMA",
+      "isFeatured": null,
+      "featuredOrder": null,
+      "status": null,
+      "media": [],
+      "mediaSummary": {
+        "images": true,
+        "videos": false
+      },
+      "notes": "Mismo mapa base del soporte anterior"
+    },
+    {
+      "id": "mza-ext-05",
+      "source": {
+        "deck": "mendoza.pptx",
+        "originalId": "05",
+        "slides": "34"
+      },
+      "name": "Ruta 60 y Ozamis, Maipú",
+      "type": "Tradicional, rutero",
+      "city": "Mendoza",
+      "zone": "Ruta 60 / Ozamis / Maipú",
+      "address": null,
+      "description": null,
+      "technicalData": null,
+      "dimensions": null,
+      "latitude": null,
+      "longitude": null,
+      "mapUrl": "https://maps.app.goo.gl/1ACB8fQ5oCPZpcVr8",
+      "isFeatured": null,
+      "featuredOrder": null,
+      "status": null,
+      "media": [],
+      "mediaSummary": {
+        "images": true,
+        "videos": false
+      },
+      "notes": "Un solo soporte"
+    },
+    {
+      "id": "mza-led-01",
+      "source": {
+        "deck": "mendoza.pptx",
+        "originalId": "01",
+        "slides": "36-37"
+      },
+      "name": "Pantalla Led Acceso Este y Dorrego – Ingreso a la Ciudad de Mendoza",
+      "type": "Pantalla LED",
+      "city": "Mendoza",
+      "zone": "Acceso Este / Dorrego",
+      "address": null,
+      "description": null,
+      "technicalData": null,
+      "dimensions": null,
+      "latitude": null,
+      "longitude": null,
+      "mapUrl": "sin mapa explícito",
+      "isFeatured": null,
+      "featuredOrder": null,
+      "status": null,
+      "media": [],
+      "mediaSummary": {
+        "images": true,
+        "videos": false
+      },
+      "notes": "Slide técnico agrega resolución 576 x 336 y medidas 9 x 6,4"
+    },
+    {
+      "id": "mza-led-02",
+      "source": {
+        "deck": "mendoza.pptx",
+        "originalId": "02",
+        "slides": "38-39"
+      },
+      "name": "Ruta Panamericana y Pueyrredón – Luján de Cuyo",
+      "type": "Pantalla LED",
+      "city": "Mendoza",
+      "zone": "Panamericana / Pueyrredón",
+      "address": null,
+      "description": null,
+      "technicalData": null,
+      "dimensions": null,
+      "latitude": null,
+      "longitude": null,
+      "mapUrl": "https://maps.app.goo.gl/PmZp6A5vKDB1X29w5",
+      "isFeatured": null,
+      "featuredOrder": null,
+      "status": null,
+      "media": [],
+      "mediaSummary": {
+        "images": true,
+        "videos": false
+      },
+      "notes": "Slide técnico agrega medidas 7 x 4"
+    },
+    {
+      "id": "mza-mov-01",
+      "source": {
+        "deck": "mendoza.pptx",
+        "originalId": "LED MOVIL",
+        "slides": "40-41"
+      },
+      "name": "Camión LED / LED Móvil",
+      "type": "LED móvil / servicio",
+      "city": "Mendoza",
+      "zone": "Recorrido Gran Mendoza",
+      "address": null,
+      "description": null,
+      "technicalData": null,
+      "dimensions": null,
+      "latitude": null,
+      "longitude": null,
+      "mapUrl": "no existe",
+      "isFeatured": null,
+      "featuredOrder": null,
+      "status": null,
+      "media": [],
+      "mediaSummary": {
+        "images": true,
+        "videos": false
+      },
+      "notes": "No es soporte estático; es pauta móvil con recorrido y horarios"
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 import React from "react";
 import { Compass } from "lucide-react";
-import { ICON_COMPONENTS } from "../../constants/screencard";
+import { ICON_COMPONENTS } from "../constants/screencard";
 
 interface LocationBenefit {
   label: string;

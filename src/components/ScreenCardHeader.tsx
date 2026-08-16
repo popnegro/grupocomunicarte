@@ -1,6 +1,7 @@
 import React from "react";
 import { MapPin, Maximize2 } from "lucide-react";
-import { DoohScreen } from "../../types";
+import { DoohScreen } from "../types";
+import { getGalleryMedia } from "../utils/screenMedia";
 
 interface ScreenCardHeaderProps {
   screen: DoohScreen;
@@ -17,6 +18,9 @@ export const ScreenCardHeader = React.memo(({ screen, typeStyle, isReserved, ava
   };
 
   const isMobile = screen.tipo === "LeadMóvil" || screen.tipo === "Móvil";
+  const gallery = getGalleryMedia(screen);
+  const heroMedia = gallery.find((asset) => asset.isHero) || gallery[0] || null;
+  const heroVideo = gallery.find((asset) => asset.type === "video");
 
   return (
     <div className={`relative aspect-[1.5/1] bg-stone-900 flex items-center justify-center text-white overflow-hidden shrink-0 rounded-t-[19px] transition-all duration-300 ${isReserved ? "grayscale saturate-50 opacity-80" : ""}`}>
@@ -25,8 +29,10 @@ export const ScreenCardHeader = React.memo(({ screen, typeStyle, isReserved, ava
           🕒 {availabilityMessage}
         </div>
       )}
-      {screen.video ? (
-        <video src={screen.video} autoPlay muted loop playsInline className="absolute inset-0 w-full h-full object-cover opacity-90 transition-transform duration-700 ease-out group-hover:scale-103" />
+      {heroVideo ? (
+        <video src={heroVideo.url} poster={heroMedia?.posterUrl || heroMedia?.url} autoPlay muted loop playsInline className="absolute inset-0 w-full h-full object-cover opacity-90 transition-transform duration-700 ease-out group-hover:scale-103" />
+      ) : heroMedia ? (
+        <img src={heroMedia.posterUrl || heroMedia.url} alt={screen.nombre} className="absolute inset-0 w-full h-full object-cover opacity-90 transition-transform duration-700 ease-out group-hover:scale-103" loading="lazy" referrerPolicy="no-referrer" />
       ) : (
         <div className="absolute inset-0 bg-gradient-to-br from-stone-950 to-stone-800 flex items-center justify-center transition-transform duration-700 ease-out group-hover:scale-103">
           <span className="text-3xl font-extrabold tracking-tight text-white/5 select-none uppercase">{screen.nombre.substring(0, 3).toUpperCase()}</span>

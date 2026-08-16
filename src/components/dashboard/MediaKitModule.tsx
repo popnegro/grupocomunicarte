@@ -5,6 +5,8 @@ import { downloadMediaKitAsHtml } from "../../utils/mediaKitExport";
 import { useAuth } from "../AuthContext";
 import { GoogleAuthProvider } from "firebase/auth";
 import { safeFetchJson } from "../../lib/apiClient";
+import { formatPrice } from "../../utils/formatPrice";
+
 import { 
   FileText, 
   Sparkles, 
@@ -667,7 +669,7 @@ export const MediaKitModule: React.FC<MediaKitModuleProps> = ({
               <div className="text-left space-y-1">
                 <span className="block text-[8px] font-bold text-stone-400 uppercase tracking-widest">Inversión mensual</span>
                 <span className="text-sm font-black text-stone-850 font-mono block">
-                  ${activeMediaKitCost.toLocaleString()}
+                  {formatPrice(activeMediaKitCost)}
                 </span>
               </div>
 
@@ -756,7 +758,7 @@ export const MediaKitModule: React.FC<MediaKitModuleProps> = ({
                             <span className="text-[10px] text-stone-400 font-bold">sem.</span>
                           </div>
                           <span className="block text-[9px] font-bold text-[#06434a]/80 pt-1 font-mono">
-                            Subtotal: ${(screen.precio * item.duracionSem).toLocaleString()}
+                            Subtotal: {formatPrice(screen.precio * item.duracionSem)}
                           </span>
                         </div>
 
@@ -973,7 +975,7 @@ export const MediaKitModule: React.FC<MediaKitModuleProps> = ({
                         />
                         <div className="flex-1 flex items-center justify-between min-w-0 pr-1">
                           <span className="truncate text-stone-800 font-semibold">{s.nombre} ({s.zona})</span>
-                          <span className="shrink-0 font-mono text-stone-500 font-bold">${s.precio.toLocaleString()}/s</span>
+                          <span className="shrink-0 font-mono text-stone-500 font-bold">{formatPrice(s.precio)}/s</span>
                         </div>
                       </label>
                     ))}
@@ -995,7 +997,7 @@ export const MediaKitModule: React.FC<MediaKitModuleProps> = ({
                   <div className="text-right">
                     <span className="block text-[8px] font-bold text-stone-400 uppercase">Tarifa Total / Sem</span>
                     <span className="text-xs font-black font-mono text-[#06434a]">
-                      ${wizardTotalCost.toLocaleString()}
+                      {formatPrice(wizardTotalCost)}
                     </span>
                   </div>
                 </div>
@@ -1205,7 +1207,7 @@ export const MediaKitModule: React.FC<MediaKitModuleProps> = ({
                     <div className="bg-stone-50 border-l-4 border-amber-600 p-3 rounded-r-lg">
                       <span className="block text-[8px] font-bold text-stone-400 uppercase tracking-widest">Inversión Mensual</span>
                       <span className="text-sm font-black text-stone-850 mt-1 block">
-                        ${(activeMediaKitScreens.reduce((sum, s) => sum + s.precio, 0) * 4).toLocaleString()}
+                        {formatPrice(activeMediaKitScreens.reduce((sum, s) => sum + s.precio, 0) * 4)}
                       </span>
                     </div>
                   </div>
@@ -1245,7 +1247,7 @@ export const MediaKitModule: React.FC<MediaKitModuleProps> = ({
                             <td className="p-2.5 font-bold text-stone-900">{scr.nombre}</td>
                             <td className="p-2.5 text-stone-500">{scr.dimensiones || "Estándar"}</td>
                             <td className="p-2.5 text-right text-emerald-600 font-bold">{(scr.impactos / 1000).toFixed(1)}k</td>
-                            <td className="p-2.5 text-right text-[#06434a] font-bold">${scr.precio.toLocaleString()}</td>
+                            <td className="p-2.5 text-right text-[#06434a] font-bold">{formatPrice(scr.precio)}</td>
                           </tr>
                         ))}
                       </tbody>

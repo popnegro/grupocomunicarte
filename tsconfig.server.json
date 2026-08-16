@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "noEmit": true
+  },
+  "include": [
+    "server.ts",
+    "src/db/**/*.ts",
+    "src/middleware/**/*.ts",
+    "src/repositories/**/*.ts",
+    "src/validation/**/*.ts"
+  ]
+}

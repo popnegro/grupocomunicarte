@@ -1,0 +1,286 @@
+{
+  "city": "Buenos Aires",
+  "sourceDeck": "buenos-aires.pptx",
+  "supports": [
+    {
+      "id": "ba-01",
+      "source": {
+        "deck": "buenos-aires.pptx",
+        "originalId": "01",
+        "slides": "3"
+      },
+      "name": "Av. San Juan 1981 - San Crístobal - Capital Federal",
+      "type": "Tradicional, medianera",
+      "city": "Buenos Aires",
+      "zone": "San Cristóbal / Capital Federal",
+      "address": null,
+      "description": null,
+      "technicalData": null,
+      "dimensions": null,
+      "latitude": null,
+      "longitude": null,
+      "mapUrl": "https://maps.app.goo.gl/c5UV1djaCvFH2Bdj9",
+      "isFeatured": null,
+      "featuredOrder": null,
+      "status": null,
+      "media": [],
+      "mediaSummary": {
+        "images": true,
+        "videos": false
+      },
+      "notes": "Texto extra: cercanía a Av. 9 de Julio y San Telmo"
+    },
+    {
+      "id": "ba-02",
+      "source": {
+        "deck": "buenos-aires.pptx",
+        "originalId": "02",
+        "slides": "4"
+      },
+      "name": "Autopista 25 de Mayo y San Pedrito – Flores",
+      "type": "Tradicional, medianera",
+      "city": "Buenos Aires",
+      "zone": "Flores",
+      "address": null,
+      "description": null,
+      "technicalData": null,
+      "dimensions": null,
+      "latitude": null,
+      "longitude": null,
+      "mapUrl": "https://maps.app.goo.gl/kDu9L7MkvrvTpMxy8",
+      "isFeatured": null,
+      "featuredOrder": null,
+      "status": null,
+      "media": [],
+      "mediaSummary": {
+        "images": true,
+        "videos": false
+      },
+      "notes": "Texto extra: subte San Pedrito / Pre Metro"
+    },
+    {
+      "id": "ba-03",
+      "source": {
+        "deck": "buenos-aires.pptx",
+        "originalId": "03",
+        "slides": "5"
+      },
+      "name": "Av. Libertador y Lavalle Vicente López",
+      "type": "Tradicional, medianera",
+      "city": "Buenos Aires",
+      "zone": "Vicente López",
+      "address": null,
+      "description": null,
+      "technicalData": null,
+      "dimensions": null,
+      "latitude": null,
+      "longitude": null,
+      "mapUrl": "https://maps.app.goo.gl/Jb1yEkdfDpfcTHaH7",
+      "isFeatured": null,
+      "featuredOrder": null,
+      "status": null,
+      "media": [],
+      "mediaSummary": {
+        "images": true,
+        "videos": false
+      },
+      "notes": "Texto extra: cercanía a Lugones/Gral. Paz"
+    },
+    {
+      "id": "ba-04",
+      "source": {
+        "deck": "buenos-aires.pptx",
+        "originalId": "04",
+        "slides": "6"
+      },
+      "name": "Av. Los Incas 4560, Casi Combatientes de Malvinas, Hacia Triunvirato – Villa Urquiza",
+      "type": "Tradicional, medianera",
+      "city": "Buenos Aires",
+      "zone": "Villa Urquiza",
+      "address": null,
+      "description": null,
+      "technicalData": null,
+      "dimensions": null,
+      "latitude": null,
+      "longitude": null,
+      "mapUrl": "https://maps.app.goo.gl/yZk7G5WZgCe1qNRW7",
+      "isFeatured": null,
+      "featuredOrder": null,
+      "status": null,
+      "media": [],
+      "mediaSummary": {
+        "images": true,
+        "videos": false
+      },
+      "notes": "El PPT marca disponible a partir del 20 de junio"
+    },
+    {
+      "id": "ba-05",
+      "source": {
+        "deck": "buenos-aires.pptx",
+        "originalId": "05",
+        "slides": "7"
+      },
+      "name": "Av. J. B. Justo y Lope de Vega Liniers",
+      "type": "Tradicional, medianera",
+      "city": "Buenos Aires",
+      "zone": "Liniers",
+      "address": null,
+      "description": null,
+      "technicalData": null,
+      "dimensions": null,
+      "latitude": null,
+      "longitude": null,
+      "mapUrl": "https://maps.app.goo.gl/ZvHK8X9KLB4T7wXS8",
+      "isFeatured": null,
+      "featuredOrder": null,
+      "status": null,
+      "media": [],
+      "mediaSummary": {
+        "images": true,
+        "videos": false
+      },
+      "notes": "Texto extra: cercanía Estadio Vélez"
+    },
+    {
+      "id": "ba-06",
+      "source": {
+        "deck": "buenos-aires.pptx",
+        "originalId": "06",
+        "slides": "8"
+      },
+      "name": "Av. Zabala y J. M. de Rosas - Morón",
+      "type": "Tradicional, medianera",
+      "city": "Buenos Aires",
+      "zone": "Morón",
+      "address": null,
+      "description": null,
+      "technicalData": null,
+      "dimensions": null,
+      "latitude": null,
+      "longitude": null,
+      "mapUrl": "https://maps.app.goo.gl/GkoM7NxKiwEVN8f38",
+      "isFeatured": null,
+      "featuredOrder": null,
+      "status": null,
+      "media": [],
+      "mediaSummary": {
+        "images": true,
+        "videos": false
+      },
+      "notes": "Texto extra: Shopping Oeste Plaza"
+    },
+    {
+      "id": "ba-07",
+      "source": {
+        "deck": "buenos-aires.pptx",
+        "originalId": "07",
+        "slides": "9"
+      },
+      "name": "Olazabal y Triunvirato Villa Urquiza",
+      "type": "Tradicional, medianera",
+      "city": "Buenos Aires",
+      "zone": "Villa Urquiza",
+      "address": null,
+      "description": null,
+      "technicalData": null,
+      "dimensions": null,
+      "latitude": null,
+      "longitude": null,
+      "mapUrl": "https://maps.app.goo.gl/b4t2NAvYgzmyduhr7",
+      "isFeatured": null,
+      "featuredOrder": null,
+      "status": null,
+      "media": [],
+      "mediaSummary": {
+        "images": true,
+        "videos": false
+      },
+      "notes": "Texto extra: centro comercial"
+    },
+    {
+      "id": "ba-08",
+      "source": {
+        "deck": "buenos-aires.pptx",
+        "originalId": "08",
+        "slides": "10"
+      },
+      "name": "Av. Donado y Ruiz Huidobro Saavedra",
+      "type": "Tradicional, medianera",
+      "city": "Buenos Aires",
+      "zone": "Saavedra",
+      "address": null,
+      "description": null,
+      "technicalData": null,
+      "dimensions": null,
+      "latitude": null,
+      "longitude": null,
+      "mapUrl": "https://maps.app.goo.gl/xmFCLkURyLZLuesP9",
+      "isFeatured": null,
+      "featuredOrder": null,
+      "status": null,
+      "media": [],
+      "mediaSummary": {
+        "images": true,
+        "videos": false
+      },
+      "notes": "Texto extra: Bajada de Gral. Paz / DOT"
+    },
+    {
+      "id": "ba-09",
+      "source": {
+        "deck": "buenos-aires.pptx",
+        "originalId": "09",
+        "slides": "11"
+      },
+      "name": "Av. Rivadavia 6646 - Caballito",
+      "type": "Tradicional, medianera",
+      "city": "Buenos Aires",
+      "zone": "Caballito",
+      "address": null,
+      "description": null,
+      "technicalData": null,
+      "dimensions": null,
+      "latitude": null,
+      "longitude": null,
+      "mapUrl": "https://maps.app.goo.gl/7hnH4E42k5C2Mbrs7",
+      "isFeatured": null,
+      "featuredOrder": null,
+      "status": null,
+      "media": [],
+      "mediaSummary": {
+        "images": true,
+        "videos": false
+      },
+      "notes": "El PPT marca no disponible por el momento"
+    },
+    {
+      "id": "ba-10",
+      "source": {
+        "deck": "buenos-aires.pptx",
+        "originalId": "10",
+        "slides": "12"
+      },
+      "name": "Autopista 25 de Mayo y Membrillar – Flores",
+      "type": "Tradicional, sobretecho",
+      "city": "Buenos Aires",
+      "zone": "Flores",
+      "address": null,
+      "description": null,
+      "technicalData": null,
+      "dimensions": null,
+      "latitude": null,
+      "longitude": null,
+      "mapUrl": "https://maps.app.goo.gl/RqKX2iHdXKQJ3gez5",
+      "isFeatured": null,
+      "featuredOrder": null,
+      "status": null,
+      "media": [],
+      "mediaSummary": {
+        "images": true,
+        "videos": false
+      },
+      "notes": "El PPT marca no disponible por el momento"
+    }
+  ]
+}

@@ -240,21 +240,26 @@ ${proposalDetails}
 Mensaje del cliente: ${checkoutForm.message || "Sin mensaje adicional."}
     `;
 
-    await addLead({
-      name: checkoutForm.name,
-      email: checkoutForm.email,
-      company: checkoutForm.company || "Pyme / Independiente",
-      source: `MediaKit Web Marketplace (${selectedCity})`,
-      status: "qualified",
-      value: 2500, // estimated lead strategic value
-    });
+    try {
+      await addLead({
+        name: checkoutForm.name,
+        email: checkoutForm.email,
+        company: checkoutForm.company || "Pyme / Independiente",
+        source: `MediaKit Web Marketplace (${selectedCity})`,
+        status: "qualified",
+        value: 2500, // estimated lead strategic value
+      });
 
-    // Simulate database receipt
-    setTimeout(() => {
+      // Preserve the existing success transition after confirmed persistence.
+      setTimeout(() => {
+        setIsSubmitting(false);
+        setIsSubmitted(true);
+        clearCart();
+      }, 1200);
+    } catch (error) {
+      console.error("[InventoryCatalog] Proposal submission failed:", error);
       setIsSubmitting(false);
-      setIsSubmitted(true);
-      clearCart();
-    }, 1200);
+    }
   };
 
   return (
@@ -684,7 +689,11 @@ Mensaje del cliente: ${checkoutForm.message || "Sin mensaje adicional."}
                             </div>
 
                             <button
-                              onClick={() => toggleCart(s.id)}
+                              onClick={() => {
+                                const status = (s.status || "").toLowerCase();
+                                if (["reserved", "no disponible", "pausado"].includes(status)) return;
+                                toggleCart(s.id);
+                              }}
                               className="text-stone-400 hover:text-stone-600 p-1 rounded-full hover:bg-stone-100"
                             >
                               <X className="h-4 w-4" />
@@ -952,7 +961,11 @@ Mensaje del cliente: ${checkoutForm.message || "Sin mensaje adicional."}
                               </div>
 
                               <button
-                                onClick={() => toggleCart(s.id)}
+                                onClick={() => {
+                                const status = (s.status || "").toLowerCase();
+                                if (["reserved", "no disponible", "pausado"].includes(status)) return;
+                                toggleCart(s.id);
+                              }}
                                 className="mt-4 w-full py-2 bg-stone-950 hover:bg-[#06434a] text-white rounded-xl text-[9px] font-bold uppercase tracking-wider flex items-center justify-center gap-1.5 cursor-pointer transition-all"
                               >
                                 <Plus className="h-3 w-3" />
@@ -978,7 +991,7 @@ Mensaje del cliente: ${checkoutForm.message || "Sin mensaje adicional."}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 100 }}
             transition={{ type: "spring", stiffness: 100 }}
-            className="fixed bottom-6 left-6 right-6 lg:left-auto lg:right-12 z-40 bg-white border border-stone-200/80 p-4 rounded-2xl shadow-2xl shadow-stone-900/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4 max-w-2xl select-none"
+            className="fixed bottom-4 left-3 right-3 sm:bottom-6 sm:left-6 sm:right-6 lg:left-auto lg:right-12 z-40 bg-white border border-stone-200/80 p-4 rounded-2xl shadow-2xl shadow-stone-900/10 flex flex-col sm:flex-row sm:items-center justify-between gap-4 max-w-2xl select-none"
           >
             <div className="flex items-center gap-3">
               <div className="p-2 bg-[#06434a]/10 text-[#06434a] rounded-xl">
@@ -1113,7 +1126,11 @@ Mensaje del cliente: ${checkoutForm.message || "Sin mensaje adicional."}
                     {/* MediaKit trigger */}
                     <div className="pt-2">
                       <button
-                        onClick={() => toggleCart(s.id)}
+                        onClick={() => {
+                                const status = (s.status || "").toLowerCase();
+                                if (["reserved", "no disponible", "pausado"].includes(status)) return;
+                                toggleCart(s.id);
+                              }}
                         className={`w-full py-2 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
                           inCart
                             ? "bg-stone-100 text-stone-700 hover:bg-stone-200 border border-stone-200"

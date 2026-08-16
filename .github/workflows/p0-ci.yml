@@ -1,0 +1,50 @@
+name: PMV CI — Fase 02
+
+on:
+  push:
+    branches:
+      - feat/fase-02-ubicaciones-destacadas
+  pull_request:
+    branches:
+      - feat/fase-02-ubicaciones-destacadas
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: TypeScript
+        run: npx tsc --noEmit
+
+      - name: Production build
+        run: npm run build
+
+      - name: P0 mock inventory audit
+        shell: bash
+        run: |
+          if grep -R -n --exclude-dir=node_modules --exclude-dir=.git --exclude-dir=dist "SEED_SCREENS" src; then
+            echo "SEED_SCREENS remains in src"
+            exit 1
+          fi
+          if grep -R -n --exclude-dir=node_modules --exclude-dir=.git --exclude-dir=dist "smartweb_dooh_screens" src; then
+            echo "smartweb_dooh_screens remains in src"
+            exit 1
+          fi
+
+      - name: Diff hygiene
+        run: git diff --check

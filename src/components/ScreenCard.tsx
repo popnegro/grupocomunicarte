@@ -10,6 +10,7 @@ import { ScreenCardBody } from "./screencard/ScreenCardBody";
 import { ScreenCardFooter } from "./screencard/ScreenCardFooter";
 import { ScreenDetailDialog } from "./screencard/ScreenDetailDialog";
 import { getScreenLocationBenefits } from "../utils/screencard";
+import { TYPE_STYLES } from "../constants/screencard";
 
 interface ScreenCardProps {
   screen: DoohScreen;
@@ -33,6 +34,7 @@ export const ScreenCard = ({
   const isReserved = availability.status === "reserved";
 
   const locationBenefits = useMemo(() => getScreenLocationBenefits(screen), [screen]);
+  const typeStyle = TYPE_STYLES[screen.tipo] || TYPE_STYLES.default;
 
   const cardClasses = [
     "group relative flex flex-col h-full bg-white border rounded-[20px] overflow-hidden transition-all duration-300 cursor-pointer",
@@ -49,7 +51,7 @@ export const ScreenCard = ({
     <>
       <motion.div layout="position" initial={{ opacity: 0, scale: 0.96, y: 15 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: -15 }} transition={{ type: "spring", stiffness: 300, damping: 28, opacity: { duration: 0.25 } }} className="h-full">
         <div onClick={() => setIsModalOpen(true)} className={cardClasses}>
-          <ScreenCardHeader screen={screen} isReserved={isReserved} availabilityMessage={availability.toastMessage} onFocusOnMap={onFocusOnMap} />
+          <ScreenCardHeader screen={screen} typeStyle={typeStyle} isReserved={isReserved} availabilityMessage={availability.toastMessage} onFocusOnMap={onFocusOnMap} />
           <ScreenCardBody screen={screen} availability={availability} />
           <ScreenCardFooter screenId={screen.id} ctaLabel={availability.ctaLabel} isReserved={isReserved} isInCart={isInCart} isComparing={isComparing} onCompareToggle={onCompareToggle} />
         </div>

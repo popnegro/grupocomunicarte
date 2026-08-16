@@ -21,6 +21,7 @@ import {
   AlertCircle
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
+import { formatPrice } from "../../utils/formatPrice";
 
 interface AiPlannerModuleProps {
   screens: DoohScreen[];
@@ -275,7 +276,7 @@ export const AiPlannerModule: React.FC<AiPlannerModuleProps> = ({
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0 }}
-                className="bg-white border border-stone-200 rounded-lg p-12 text-center flex flex-col items-center justify-center space-y-4 h-[350px]"
+                className="bg-white border border-stone-200 rounded-lg p-12 text-center flex flex-col items-center justify-center space-y-4 h-87.5"
               >
                 <Loader2 className="h-8 w-8 text-[#06434a] animate-spin" />
                 <div className="space-y-1">
@@ -303,7 +304,7 @@ export const AiPlannerModule: React.FC<AiPlannerModuleProps> = ({
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                className="bg-stone-50 border border-dashed border-stone-200 rounded-lg p-16 text-center space-y-3 h-[350px] flex flex-col items-center justify-center"
+                className="bg-stone-50 border border-dashed border-stone-200 rounded-lg p-16 text-center space-y-3 h-87.5 flex flex-col items-center justify-center"
               >
                 <Cpu className="h-10 w-10 text-stone-300" />
                 <h3 className="text-xs font-bold text-stone-850">Esperando Parámetros</h3>
@@ -399,7 +400,7 @@ export const AiPlannerModule: React.FC<AiPlannerModuleProps> = ({
                           </span>
                           <h5 className="text-xs font-bold text-stone-900 truncate font-display">{screen.nombre}</h5>
                           <div className="flex gap-4 text-[9px] font-mono text-stone-400 font-bold">
-                            <span>Tarifa: <strong className="text-stone-700">${screen.precio.toLocaleString()} /sem</strong></span>
+                            <span>Tarifa:{" "}<strong className="text-stone-700">{`${formatPrice(screen.precio)} /sem`}</strong></span>
                             <span>Impacto: <strong className="text-stone-700">{screen.impactos.toLocaleString()} /sem</strong></span>
                           </div>
                         </div>

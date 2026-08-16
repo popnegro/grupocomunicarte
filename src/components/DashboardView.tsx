@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-import { Routes, Route, useNavigate, useLocation, Navigate } from "react-router-dom";
+import { Routes, Route, useNavigate, useLocation, Navigate, } from "react-router-dom";
 import { useAuth } from "./AuthContext";
 import { useCms } from "./CmsContext";
 import { DoohScreen } from "../types";
@@ -7,12 +7,7 @@ import { useToast } from "./ui/Toast";
 import { safeFetchJson } from "../lib/apiClient";
 
 // Shared types and local helpers
-import { Role, MediaKit, Cliente, ChangeLog, Cotizacion, Reserva, Campaña } from "./dashboard/types";
-import { 
-  INITIAL_COTIZACIONES, 
-  INITIAL_RESERVAS, 
-  INITIAL_CAMPAÑAS, 
-} from "./dashboard/mockData";
+import { Role, MediaKit, Cliente, ChangeLog } from "./dashboard/types";
 
 // Modular sub-views
 import { DashboardHeader } from "./dashboard/DashboardHeader";
@@ -61,34 +56,53 @@ export const NavGroups = [
   {
     groupName: "GENERAL",
     items: [
-      { id: "home", label: "Dashboard", icon: HomeIcon, path: "/dashboard", desc: "Métricas generales y centro de control comercial" },
-      { id: "leads", label: "Leads", icon: Inbox, path: "/dashboard/leads", desc: "Gestión de leads y prospección comercial" },
-      { id: "gmail", label: "Contactos", icon: MailIcon, path: "/dashboard/gmail", desc: "Bandeja de entrada y envío de correos integrados con Gmail" }
-    ]
+      {
+        id: "home",
+        label: "Dashboard",
+        icon: HomeIcon,
+        path: "/dashboard",
+        desc: "Centro de control comercial",
+      },
+      {
+        id: "leads",
+        label: "Leads",
+        icon: Inbox,
+        path: "/dashboard/leads",
+        desc: "Gestión de solicitudes comerciales",
+      },
+    ],
   },
   {
     groupName: "OPERACIÓN",
     items: [
-      { id: "ai-planner", label: "Campañas", icon: Sparkles, path: "/dashboard/ai-planner", desc: "Optimización inteligente de campañas y ROI mediante Inteligencia Artificial" },
-      { id: "clientes", label: "Clientes", icon: Users, path: "/dashboard/clients", desc: "Registro de contactos de ventas, agencias y corporativos" },
-      { id: "locations", label: "Ubicaciones", icon: MapPin, path: "/dashboard/locations", desc: "Georreferenciación y cobertura de soportes en tiempo real" },
-      { id: "inventario", label: "Inventario", icon: Tv, path: "/dashboard/inventory", desc: "Edición y administración del catálogo de soportes físicos y pantallas LED" }
-    ]
-  },
-  {
-    groupName: "ANÁLISIS",
-    items: [
-      { id: "reports", label: "Analytics", icon: BarChart3, path: "/dashboard/reports", desc: "Métricas de conversión y rendimiento comercial" },
-      { id: "mediakit", label: "Reportes", icon: FileText, path: "/dashboard/mediakits", desc: "Diseño Notion-style y generación de propuestas comerciales inteligentes con IA" }
-    ]
+      {
+        id: "inventario",
+        label: "Soportes",
+        icon: Tv,
+        path: "/dashboard/inventory",
+        desc: "Catálogo y disponibilidad de soportes",
+      },
+      {
+        id: "mediakit",
+        label: "Media Kits",
+        icon: FileText,
+        path: "/dashboard/mediakits",
+        desc: "Propuestas y circuitos comerciales",
+      },
+    ],
   },
   {
     groupName: "CONFIGURACIÓN",
     items: [
-      { id: "settings", label: "Configuración", icon: Settings, path: "/dashboard/settings", desc: "Control de usuario y preferencias del sistema" },
-      { id: "admin", label: "Usuarios", icon: Shield, path: "/dashboard/admin", desc: "Gobernanza de seguridad, usuarios, roles, logs, storage y SEO técnico" }
-    ]
-  }
+      {
+        id: "admin",
+        label: "Usuarios",
+        icon: Shield,
+        path: "/dashboard/admin",
+        desc: "Usuarios, roles y administración",
+      },
+    ],
+  },
 ];
 
 // Flat navigation list for routing and active tab checks
@@ -96,8 +110,7 @@ export const NavItems: NavItem[] = NavGroups.reduce<NavItem[]>((acc, group) => [
 
 export const DashboardView: React.FC = () => {
   const { token, user, userRole: authUserRole } = useAuth();
-  const { setActiveView, setScreens: setCmsScreens } = useCms();
-  const navigate = useNavigate();
+  const { setActiveView, setScreens: setCmsScreens, screens, loadingScreens, addScreen, updateScreen, deleteScreen } = useCms();
   const location = useLocation();
   const { toast } = useToast();
 
@@ -112,21 +125,17 @@ export const DashboardView: React.FC = () => {
 
   // Sidebar navigation state
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const navigate = useNavigate();
 
   // States fetched dynamically from PostgreSQL
-  const [screens, setScreens] = useState<DoohScreen[]>([]);
   const [mediaKits, setMediaKits] = useState<MediaKit[]>([]);
   const [clientes, setClientes] = useState<Cliente[]>([]);
   const [logs, setLogs] = useState<ChangeLog[]>([]);
 
   // States initialized from mock templates for analytical simulation
-  const [cotizaciones, setCotizaciones] = useState<Cotizacion[]>(INITIAL_COTIZACIONES);
-  const [reservas, setReservas] = useState<Reserva[]>(INITIAL_RESERVAS);
-  const [campanas, setCampanas] = useState<Campaña[]>(INITIAL_CAMPAÑAS);
-
+ 
   // General loading flag
   const [loading, setLoading] = useState(true);
-  const [loadingScreens, setLoadingScreens] = useState(true);
 
   // Load state from PostgreSQL APIs
   const fetchDashboardData = useCallback(async () => {
@@ -146,7 +155,6 @@ export const DashboardView: React.FC = () => {
       ]);
 
       if (screensRes.data?.success && Array.isArray(screensRes.data.data)) {
-        setScreens(screensRes.data.data);
         setCmsScreens(screensRes.data.data);
       }
       if (clientsRes.data?.success && Array.isArray(clientsRes.data.data)) setClientes(clientsRes.data.data);
@@ -159,131 +167,10 @@ export const DashboardView: React.FC = () => {
     }
   }, [token, setCmsScreens]);
 
+  // Initial data fetch on component mount
   useEffect(() => {
     fetchDashboardData();
   }, [fetchDashboardData]);
-
-  // On mount, load screens from Firestore under centralized management (with local fallback)
-  useEffect(() => {
-    const loadScreensFromFirestore = async () => {
-      setLoadingScreens(true);
-      try {
-        const { collection, getDocs, doc, setDoc } = await import("firebase/firestore");
-        const { db } = await import("../lib/firebase");
-        const snapshot = await getDocs(collection(db, "screens"));
-        const fsScreens: DoohScreen[] = [];
-        snapshot.forEach((docSnap) => {
-          const data = docSnap.data();
-          fsScreens.push({
-            id: docSnap.id,
-            nombre: data.nombre || "",
-            zona: data.zona || "",
-            tipo: data.tipo || "Peatonal",
-            categoria: data.categoria || "Pantallas LED",
-            ciudad: data.ciudad || "Mendoza",
-            impactos: Number(data.impactos) || 0,
-            precio: Number(data.precio) || 0,
-            status: data.status || "Activo",
-            lat: Number(data.lat) || 0,
-            lng: Number(data.lng) || 0,
-            nota: data.nota || "",
-            dimensiones: data.dimensiones || "",
-            brillo: data.brillo || "",
-            refreshRate: data.refreshRate || "",
-            formato: data.formato || "",
-            cobertura: data.cobertura || "",
-          });
-        });
-
-        if (fsScreens.length > 0) {
-          setScreens(fsScreens);
-          setCmsScreens(fsScreens);
-        } else {
-          // If Firestore contains no screens yet, seed it with local store screens
-          const { useCmsStore } = await import("./CmsContext");
-          const defaultScreens = useCmsStore.getState().screens || [];
-          for (const s of defaultScreens) {
-            await setDoc(doc(db, "screens", s.id), s);
-          }
-          setScreens(defaultScreens);
-          setCmsScreens(defaultScreens);
-        }
-      } catch (err) {
-        console.warn("[DashboardView] Firestore screens load failed, falling back:", err);
-        const { useCmsStore } = await import("./CmsContext");
-        const defaultScreens = useCmsStore.getState().screens || [];
-        setScreens(defaultScreens);
-      } finally {
-        // Explicit slight delay for a realistic loading feel to show the skeleton
-        setTimeout(() => {
-          setLoadingScreens(false);
-        }, 1200);
-      }
-    };
-    loadScreensFromFirestore();
-  }, [setCmsScreens]);
-
-  // 1. On mount, load campaigns from Firestore for centralized management
-  useEffect(() => {
-    const loadCampaignsFromFirestore = async () => {
-      try {
-        const { collection, getDocs } = await import("firebase/firestore");
-        const { db } = await import("../lib/firebase");
-        const snapshot = await getDocs(collection(db, "campaigns"));
-        const fsCamps: Campaña[] = [];
-        snapshot.forEach((docSnap) => {
-          const data = docSnap.data();
-          fsCamps.push({
-            id: docSnap.id,
-            reservaId: data.reservaId || "",
-            clienteNombre: data.clienteNombre || "",
-            nombre: data.nombre || "",
-            screenId: data.screenId || "",
-            screenNombre: data.screenNombre || "",
-            fechaInicio: data.fechaInicio || "",
-            fechaFin: data.fechaFin || "",
-            progreso: Number(data.progreso) || 0,
-            estado: data.estado || "Planificada",
-          });
-        });
-        if (fsCamps.length > 0) {
-          setCampanas(fsCamps);
-        }
-      } catch (err) {
-        console.warn("[DashboardView] Firestore campaigns load failed, using local mock data:", err);
-      }
-    };
-    loadCampaignsFromFirestore();
-  }, []);
-
-  // 2. Whenever campanas state changes, sync the latest elements to Firestore
-  useEffect(() => {
-    const syncCampaignsToFirestore = async () => {
-      if (campanas === INITIAL_CAMPAÑAS) return;
-      try {
-        const { doc, setDoc } = await import("firebase/firestore");
-        const { db } = await import("../lib/firebase");
-        
-        for (const c of campanas) {
-          await setDoc(doc(db, "campaigns", c.id), {
-            id: c.id,
-            reservaId: c.reservaId || "",
-            clienteNombre: c.clienteNombre || "",
-            nombre: c.nombre || "",
-            screenId: c.screenId || "",
-            screenNombre: c.screenNombre || "",
-            fechaInicio: c.fechaInicio || "",
-            fechaFin: c.fechaFin || "",
-            progreso: Number(c.progreso) || 0,
-            estado: c.estado || "Planificada",
-          }, { merge: true });
-        }
-      } catch (err) {
-        console.warn("[DashboardView] Firestore campaigns sync failed:", err);
-      }
-    };
-    syncCampaignsToFirestore();
-  }, [campanas]);
 
   // DB-Connected Changelog Logger
   const addLog = useCallback(async (action: string) => {
@@ -317,260 +204,50 @@ export const DashboardView: React.FC = () => {
 
   // Inventory Screen Add
   const handleAddScreen = useCallback(async (screen: DoohScreen) => {
-    // 1. Save to Firebase Firestore directly for immediate centralized updates
-    let fsAdded = false;
+    if (!token) return toast.error("No hay token de autenticación.");
     try {
-      const { doc, setDoc } = await import("firebase/firestore");
-      const { db } = await import("../lib/firebase");
-      await setDoc(doc(db, "screens", screen.id), screen);
-      fsAdded = true;
-    } catch (fsErr) {
-      console.warn("Direct Firestore screen save failed:", fsErr);
+      await addScreen(screen);
+      addLog(`Agregó un nuevo soporte al catálogo comercial: ${screen.nombre}`);
+      toast.success(`Soporte "${screen.nombre}" agregado correctamente.`);
+    } catch (err: any) {
+      toast.error(err.message || "No se pudo agregar el soporte comercial.");
     }
-
-    if (!token) {
-      if (fsAdded) {
-        setScreens((prev) => {
-          const next = [...prev.filter(s => s.id !== screen.id), screen];
-          setCmsScreens(next);
-          return next;
-        });
-        addLog(`Agregó un nuevo soporte al catálogo comercial: ${screen.nombre}`);
-        toast.success(`Soporte "${screen.nombre}" agregado correctamente.`);
-      } else {
-        toast.error("No hay token disponible ni se pudo conectar a Firestore.");
-      }
-      return;
-    }
-
-    try {
-      const res = await safeFetchJson<{ success: boolean; data: DoohScreen; error?: string }>("/api/screens", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
-          "X-User-Role": userRole
-        },
-        body: JSON.stringify(screen),
-      });
-      if (res.data?.success && res.data.data) {
-        const added = res.data.data;
-        setScreens((prev) => {
-          const next = [...prev.filter(s => s.id !== added.id), added];
-          setCmsScreens(next);
-          return next;
-        });
-        addLog(`Agregó un nuevo soporte al catálogo comercial: ${screen.nombre}`);
-        toast.success(`Soporte "${screen.nombre}" agregado correctamente.`);
-      } else {
-        // If PostgreSQL API fails, keep the Firestore version if it succeeded!
-        if (fsAdded) {
-          setScreens((prev) => {
-            const next = [...prev.filter(s => s.id !== screen.id), screen];
-            setCmsScreens(next);
-            return next;
-          });
-          addLog(`Agregó un nuevo soporte al catálogo comercial: ${screen.nombre}`);
-          toast.success(`Soporte "${screen.nombre}" agregado correctamente.`);
-        } else {
-          toast.error(res.data?.error || res.error || "No se pudo agregar el soporte comercial.");
-        }
-      }
-    } catch (err) {
-      if (fsAdded) {
-        setScreens((prev) => {
-          const next = [...prev.filter(s => s.id !== screen.id), screen];
-          setCmsScreens(next);
-          return next;
-        });
-        addLog(`Agregó un nuevo soporte al catálogo comercial: ${screen.nombre}`);
-        toast.success(`Soporte "${screen.nombre}" agregado correctamente.`);
-      } else {
-        toast.error("Error de red al intentar agregar el soporte.");
-      }
-    }
-  }, [token, userRole, setCmsScreens, addLog, toast]);
+  }, [token, addScreen, addLog, toast]);
 
   // Inventory Screen Update
   const handleUpdateScreen = useCallback(async (id: string, updatedFields: Partial<DoohScreen>) => {
-    let fsUpdated = false;
-    try {
-      const { doc, updateDoc } = await import("firebase/firestore");
-      const { db } = await import("../lib/firebase");
-      await updateDoc(doc(db, "screens", id), updatedFields);
-      fsUpdated = true;
-    } catch (fsErr) {
-      console.warn("Direct Firestore screen update failed:", fsErr);
-    }
-
     const screenName = screens.find((s) => s.id === id)?.nombre || id;
-
-    if (!token) {
-      if (fsUpdated) {
-        setScreens((prev) => {
-          const next = prev.map((s) => (s.id === id ? { ...s, ...updatedFields } : s));
-          setCmsScreens(next);
-          return next;
-        });
-        if (updatedFields.status === "Pausado") {
-          addLog(`Archivó temporalmente el soporte comercial: ${screenName}`);
-          toast.info(`Soporte "${screenName}" pausado (archivado).`);
-        } else if (updatedFields.status === "Disponible") {
-          addLog(`Restauró y activó el soporte comercial: ${screenName}`);
-          toast.success(`Soporte "${screenName}" activado y disponible.`);
-        } else {
-          addLog(`Editó especificaciones en soporte comercial: ${screenName}`);
-          toast.success(`Soporte "${screenName}" actualizado correctamente.`);
-        }
-      } else {
-        toast.error("No hay token disponible ni se pudo conectar a Firestore.");
-      }
-      return;
-    }
-
+    if (!token) return toast.error("No hay token de autenticación.");
     try {
-      const res = await safeFetchJson<{ success: boolean; data: DoohScreen; error?: string }>(`/api/screens/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
-          "X-User-Role": userRole
-        },
-        body: JSON.stringify(updatedFields),
-      });
-      if (res.data?.success && res.data.data) {
-        const updated = res.data.data;
-        setScreens((prev) => {
-          const next = prev.map((s) => (s.id === id ? updated : s));
-          setCmsScreens(next);
-          return next;
-        });
-        if (updatedFields.status === "Pausado") {
-          addLog(`Archivó temporalmente el soporte comercial: ${screenName}`);
-          toast.info(`Soporte "${screenName}" pausado (archivado).`);
-        } else if (updatedFields.status === "Disponible") {
-          addLog(`Restauró y activó el soporte comercial: ${screenName}`);
-          toast.success(`Soporte "${screenName}" activado y disponible.`);
-        } else {
-          addLog(`Editó especificaciones en soporte comercial: ${screenName}`);
-          toast.success(`Soporte "${screenName}" actualizado correctamente.`);
-        }
+      await updateScreen(id, updatedFields);
+      // This runs only after the API call is successful and Zustand is updated.
+      if (updatedFields.status === "Pausado") {
+        addLog(`Archivó temporalmente el soporte comercial: ${screenName}`);
+        toast.info(`Soporte "${screenName}" pausado (archivado).`);
+      } else if (updatedFields.status === "Disponible") {
+        addLog(`Restauró y activó el soporte comercial: ${screenName}`);
+        toast.success(`Soporte "${screenName}" activado y disponible.`);
       } else {
-        if (fsUpdated) {
-          setScreens((prev) => {
-            const next = prev.map((s) => (s.id === id ? { ...s, ...updatedFields } : s));
-            setCmsScreens(next);
-            return next;
-          });
-          if (updatedFields.status === "Pausado") {
-            addLog(`Archivó temporalmente el soporte comercial: ${screenName}`);
-            toast.info(`Soporte "${screenName}" pausado (archivado).`);
-          } else if (updatedFields.status === "Disponible") {
-            addLog(`Restauró y activó el soporte comercial: ${screenName}`);
-            toast.success(`Soporte "${screenName}" activado y disponible.`);
-          } else {
-            addLog(`Editó especificaciones en soporte comercial: ${screenName}`);
-            toast.success(`Soporte "${screenName}" actualizado correctamente.`);
-          }
-        } else {
-          toast.error(res.data?.error || res.error || "No se pudo actualizar el soporte comercial.");
-        }
+        // For other fields, a generic success message is enough.
+        toast.success(`Soporte "${screenName}" actualizado correctamente.`);
       }
-    } catch (err) {
-      if (fsUpdated) {
-        setScreens((prev) => {
-          const next = prev.map((s) => (s.id === id ? { ...s, ...updatedFields } : s));
-          setCmsScreens(next);
-          return next;
-        });
-        if (updatedFields.status === "Pausado") {
-          addLog(`Archivó temporalmente el soporte comercial: ${screenName}`);
-          toast.info(`Soporte "${screenName}" pausado (archivado).`);
-        } else if (updatedFields.status === "Disponible") {
-          addLog(`Restauró y activó el soporte comercial: ${screenName}`);
-          toast.success(`Soporte "${screenName}" activado y disponible.`);
-        } else {
-          addLog(`Editó especificaciones en soporte comercial: ${screenName}`);
-          toast.success(`Soporte "${screenName}" actualizado correctamente.`);
-        }
-      } else {
-        toast.error("Error de red al intentar actualizar el soporte.");
-      }
+    } catch (err: any) {
+      toast.error(err.message || "No se pudo actualizar el soporte comercial.");
     }
-  }, [token, userRole, screens, setCmsScreens, addLog, toast]);
+  }, [token, screens, updateScreen, addLog, toast]);
 
   // Inventory Screen Delete
   const handleDeleteScreen = useCallback(async (id: string) => {
-    let fsDeleted = false;
-    try {
-      const { doc, deleteDoc } = await import("firebase/firestore");
-      const { db } = await import("../lib/firebase");
-      await deleteDoc(doc(db, "screens", id));
-      fsDeleted = true;
-    } catch (fsErr) {
-      console.warn("Direct Firestore screen delete failed:", fsErr);
-    }
-
     const screenName = screens.find((s) => s.id === id)?.nombre || id;
-
-    if (!token) {
-      if (fsDeleted) {
-        setScreens((prev) => {
-          const next = prev.filter((s) => s.id !== id);
-          setCmsScreens(next);
-          return next;
-        });
-        addLog(`Eliminó de manera permanente el soporte comercial: ${screenName}`);
-        toast.success(`Soporte "${screenName}" eliminado definitivamente.`);
-      } else {
-        toast.error("No hay token disponible ni se pudo conectar a Firestore.");
-      }
-      return;
-    }
-
+    if (!token) return toast.error("No hay token de autenticación.");
     try {
-      const res = await safeFetchJson<{ success: boolean; error?: string }>(`/api/screens/${id}`, {
-        method: "DELETE",
-        headers: {
-          "Authorization": `Bearer ${token}`,
-          "X-User-Role": userRole
-        },
-      });
-      if (res.data?.success) {
-        setScreens((prev) => {
-          const next = prev.filter((s) => s.id !== id);
-          setCmsScreens(next);
-          return next;
-        });
-        addLog(`Eliminó de manera permanente el soporte comercial: ${screenName}`);
-        toast.success(`Soporte "${screenName}" eliminado definitivamente.`);
-      } else {
-        if (fsDeleted) {
-          setScreens((prev) => {
-            const next = prev.filter((s) => s.id !== id);
-            setCmsScreens(next);
-            return next;
-          });
-          addLog(`Eliminó de manera permanente el soporte comercial: ${screenName}`);
-          toast.success(`Soporte "${screenName}" eliminado definitivamente.`);
-        } else {
-          toast.error(`Error de permisos: ${res.data?.error || res.error || "No tienes privilegios para realizar esta acción."}`);
-        }
-      }
+      await deleteScreen(id);
+      addLog(`Eliminó de manera permanente el soporte comercial: ${screenName}`);
+      toast.success(`Soporte "${screenName}" eliminado definitivamente.`);
     } catch (err: any) {
-      if (fsDeleted) {
-        setScreens((prev) => {
-          const next = prev.filter((s) => s.id !== id);
-          setCmsScreens(next);
-          return next;
-        });
-        addLog(`Eliminó de manera permanente el soporte comercial: ${screenName}`);
-        toast.success(`Soporte "${screenName}" eliminado definitivamente.`);
-      } else {
-        toast.error("Error de conexión al intentar eliminar el soporte.");
-      }
+      toast.error(err.message || "No se pudo eliminar el soporte comercial.");
     }
-  }, [token, userRole, screens, setCmsScreens, addLog, toast]);
+  }, [token, screens, deleteScreen, addLog, toast]);
 
   // Clients CRM Add
   const handleAddCliente = useCallback(async (cliente: Cliente) => {
@@ -705,20 +382,6 @@ export const DashboardView: React.FC = () => {
   }, [mediaKits, screens, handleUpdateMediaKit, addLog]);
 
   // Interactive UI workflows: Approval bookings
-  const handleApproveReserva = useCallback((id: string) => {
-    setReservas((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, estado: "Confirmada" } : r))
-    );
-    addLog(`Aprobó y reservó de forma permanente la reserva comercial #${id}`);
-  }, [addLog]);
-
-  // Interactive UI workflows: Approval quotations
-  const handleApproveCotizacion = useCallback((id: string) => {
-    setCotizaciones((prev) =>
-      prev.map((q) => (q.id === id ? { ...q, estado: "Aceptada" } : q))
-    );
-    addLog(`Aprobó propuesta de tarifa comercial en Cotización #${id}`);
-  }, [addLog]);
 
   const handleNavigateToTab = useCallback((tabId: string) => {
     const matchedTab = NavItems.find(item => item.id === tabId);
@@ -734,7 +397,7 @@ export const DashboardView: React.FC = () => {
     };
   }, [location.pathname]);
 
-  if (loading) {
+  if (loading || loadingScreens) {
     return (
       <div className="min-h-screen bg-[#FAF9F5] flex flex-col items-center justify-center font-sans">
         <Loader className="h-8 w-8 animate-spin text-[#06434a]" />
@@ -846,21 +509,12 @@ export const DashboardView: React.FC = () => {
               path="/"
               element={
                 <DashboardHome
-                  mediaKits={mediaKits}
-                  cotizaciones={cotizaciones}
-                  reservas={reservas}
-                  campañas={campanas}
-                  clientes={clientes}
-                  userRole={userRole}
-                  onNavigateToTab={handleNavigateToTab}
-                  onApproveReserva={handleApproveReserva}
-                  onApproveCotizacion={handleApproveCotizacion}
-                  setCampañas={setCampanas}
-                  setClientes={setClientes}
-                  setCotizaciones={setCotizaciones}
-                  setReservas={setReservas}
-                  addLog={addLog}
-                />
+  mediaKits={mediaKits}
+  clientes={clientes}
+  userRole={userRole}
+  onNavigateToTab={handleNavigateToTab}
+  addLog={addLog}
+/>
               }
             />
 
@@ -873,7 +527,7 @@ export const DashboardView: React.FC = () => {
                   onUpdateScreen={handleUpdateScreen}
                   onAddScreen={handleAddScreen}
                   onDeleteScreen={handleDeleteScreen}
-                  isLoading={loadingScreens}
+                  isLoading={loadingScreens} // Use loadingScreens from useCms
                 />
               }
             />
@@ -932,7 +586,7 @@ export const DashboardView: React.FC = () => {
               path="/sync"
               element={
                 <SlidesSyncModule
-                  token={token}
+                  token={token as string}
                   onRefreshInventory={fetchDashboardData}
                 />
               }
@@ -942,7 +596,7 @@ export const DashboardView: React.FC = () => {
               path="/gmail"
               element={
                 <GmailModule
-                  token={token}
+                  token={token as string}
                 />
               }
             />
@@ -990,4 +644,3 @@ export const DashboardView: React.FC = () => {
     </div>
   );
 };
-

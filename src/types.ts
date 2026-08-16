@@ -47,6 +47,7 @@ export interface Lead {
   status: "new" | "contacted" | "qualified" | "closed";
   date: string;
   value?: number;
+  message?: string;
 }
 
 export interface OnboardingAnswers {
@@ -74,6 +75,18 @@ export interface GrowthRecommendation {
   impact: string; // "Bajo" | "Medio" | "Alto"
 }
 
+export interface ScreenMedia {
+  id: string;
+  screenId: string;
+  type: "image" | "video" | "drone";
+  url: string;
+  title?: string;
+  sizeBytes?: number;
+  isHero?: boolean;
+  createdAt?: string;
+  posterUrl?: string;
+}
+
 export interface DoohScreen {
   id: string;
   nombre: string;
@@ -96,7 +109,13 @@ export interface DoohScreen {
   cobertura?: string;
   horarios?: string;
   ruta?: { lat: number; lng: number; nombre: string }[];
+  isFeatured?: boolean;
+  featuredOrder?: number | null;
+  media?: ScreenMedia[] | null;
 }
+
+// A public-facing version of the screen, which must not include the price.
+export type PublicDoohScreen = Omit<DoohScreen, 'precio'>;
 
 export interface City {
   id: string;

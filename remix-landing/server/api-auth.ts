@@ -7,7 +7,8 @@ export function requireSession(req: VercelRequest, res: VercelResponse, allowedR
   const token = typeof header === 'string' && header.startsWith('Bearer ') ? header.slice(7).trim() : '';
   if (!token) { res.status(401).json({ error: 'Acceso no autorizado: Token de sesión faltante.' }); return null; }
   try {
-    const session = verifyToken(token) as UserSession;
+    const payload = verifyToken(token);
+    const session = payload as unknown as UserSession;
     if (!session?.uid || !session.role || !allowedRoles.includes(session.role)) { res.status(403).json({ error: 'Permisos insuficientes para realizar esta operación.' }); return null; }
     return session;
   } catch { res.status(401).json({ error: 'Sesión inválida o expirada.' }); return null; }

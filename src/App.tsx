@@ -12,6 +12,7 @@ import Inventario from './pages/Inventario';
 import Soportes from './pages/Soportes';
 import Nosotros from './pages/Nosotros';
 import Dashboard from './pages/Dashboard';
+import DashboardSoportes from './pages/DashboardSoportes';
 import { SelectionProvider } from './context/SelectionContext';
 
 function PublicRoutes() {
@@ -37,6 +38,7 @@ function AppRoutes() {
     return (
       <Routes location={location}>
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/dashboard/soportes" element={<DashboardSoportes />} />
       </Routes>
     );
   }

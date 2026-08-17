@@ -1,0 +1,70 @@
+name: PMV DB Repair — Featured Screens
+
+on:
+  push:
+    branches:
+      - automate/pmv-db-repair
+    paths:
+      - drizzle/0002_screens_featured_fields.sql
+      - .github/workflows/pmv-db-repair.yml
+
+permissions:
+  contents: read
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Apply idempotent PMV schema repair
+        run: |
+          test -n "$DATABASE_URL" || { echo "DATABASE_URL GitHub secret is not configured"; exit 1; }
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import pg from 'pg';
+
+          const { Client } = pg;
+          const sql = fs.readFileSync('drizzle/0002_screens_featured_fields.sql', 'utf8');
+          const client = new Client({ connectionString: process.env.DATABASE_URL });
+
+          try {
+            await client.connect();
+            await client.query('BEGIN');
+            await client.query(sql);
+            const result = await client.query(`
+              SELECT column_name
+              FROM information_schema.columns
+              WHERE table_schema = 'public'
+                AND table_name = 'screens'
+                AND column_name IN ('is_featured', 'featured_order')
+              ORDER BY column_name
+            `);
+            await client.query('COMMIT');
+
+            const columns = result.rows.map((row) => row.column_name);
+            if (columns.length !== 2) {
+              throw new Error(`Schema verification failed: ${columns.join(', ')}`);
+            }
+            console.log(`PMV DB repair verified: ${columns.join(', ')}`);
+          } catch (error) {
+            try { await client.query('ROLLBACK'); } catch {}
+            console.error(error);
+            process.exitCode = 1;
+          } finally {
+            await client.end();
+          }
+          NODE

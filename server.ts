@@ -7,7 +7,7 @@ import path from 'path';
 import { db } from './src/db/index';
 import { apiV1Router } from './server/api/v1/router';
 import { leads, screens, clientes, mediakits, changelogs } from './src/db/schema';
-import { eq, desc, and, or } from 'drizzle-orm';
+import { eq, desc, and, or, sql } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
 import { protect, AuthRequest } from './server/middleware/auth'; // Import the protect middleware and AuthRequest type
 import { validateSpaceDTO } from './server/validation/validator';
@@ -522,20 +522,40 @@ app.all('/api/sync/*', (req, res) => res.status(200).json({ success: true, messa
 app.all('/api/auth/*', (req, res) => res.status(200).json({ success: true, message: `${req.method} ${req.originalUrl} placeholder` }));
 app.all('/api/gmail/*', (req, res) => res.status(200).json({ success: true, message: `${req.method} ${req.originalUrl} placeholder` }));
 
-// Lightweight production health endpoint. It reports configuration readiness
-// without exposing secret values or database credentials.
-app.get('/api/health', (_req, res) => {
-  const checks = {
+// Production health endpoint, combining configuration checks with a live database query.
+app.get('/api/health', async (_req, res) => {
+  // 1. Static configuration checks
+  const configChecks = {
     database: Boolean(process.env.DATABASE_URL || process.env.POSTGRES_URL),
     tenant: Boolean(process.env.DEFAULT_TENANT_ID),
     firebase: Boolean(process.env.FIREBASE_PROJECT_ID),
     resend: Boolean(process.env.RESEND_API_KEY && process.env.SALES_NOTIFY_EMAIL),
   };
-  const ready = checks.database && checks.tenant && checks.firebase;
+
+  // 2. Live database connectivity and data check
+  let dbOk = false;
+  let supportCount = 0;
+  try {
+    // Perform a simple query to check DB connectivity and count supports.
+    const result = await db.select({ count: sql<number>`count(*)` }).from(screens);
+    supportCount = Number(result[0].count);
+    dbOk = true;
+  } catch (error) {
+    console.error("[API GET /api/health] Database check failed:", error);
+    dbOk = false;
+  }
+
+  // 3. Determine overall readiness
+  const ready = configChecks.database && configChecks.tenant && configChecks.firebase && dbOk;
+
+  // 4. Construct and send the final response
   return res.status(ready ? 200 : 503).json({
     success: ready,
+    status: ready ? "ok" : "error",
     environment: process.env.VERCEL === '1' ? 'vercel' : 'node',
-    checks,
+    persistence: "neon",
+    supports: supportCount,
+    checks: { ...configChecks, dbConnection: dbOk },
   });
 });
 

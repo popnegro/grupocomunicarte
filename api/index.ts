@@ -1,7 +1,6 @@
 // Vercel Node Function entrypoint.
-// Use a uniquely named root module because the repository also contains a
-// `server/` directory. Vercel transpiles this function to `api/index.js` and
-// extensionless ESM resolution otherwise collides with that directory.
-import app from "../vercel-server.ts";
+// Keep the import target explicit so Node never resolves the repository's
+// `server/` directory when the function is bundled as api/index.js.
+import app from "../dist/server.cjs";
 
 export default app;

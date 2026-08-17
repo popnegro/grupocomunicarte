@@ -1,0 +1,70 @@
+name: PMV Final CI
+
+on:
+  push:
+    branches:
+      - automate/pmv-final
+  pull_request:
+    branches:
+      - automate/pmv-final
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  root:
+    name: Root app — typecheck and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: TypeScript
+        run: npm run lint
+
+      - name: Production build
+        run: npm run build
+
+      - name: Diff hygiene
+        run: git diff --check
+
+  remix_landing:
+    name: Remix landing — typecheck and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: remix-landing
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: remix-landing/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: TypeScript
+        run: npm run lint
+
+      - name: Production build
+        run: npm run build
+
+      - name: Diff hygiene
+        run: git diff --check

@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - automate/pmv-db-repair
+      - automate/pmv-final
     paths:
       - drizzle/0002_screens_featured_fields.sql
       - .github/workflows/pmv-db-repair.yml

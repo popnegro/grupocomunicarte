@@ -27,7 +27,7 @@ jobs:
         run: npm install --no-audit --no-fund
 
       - name: Persist generated lockfile
-        if: github.event_name == 'push' && github.ref == 'refs/heads/integrate/canonical-public-dashboard-v2' && !hashFiles('package-lock.json') == ''
+        if: github.event_name == 'push' && github.ref == 'refs/heads/integrate/canonical-public-dashboard-v2' && hashFiles('package-lock.json') == ''
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"

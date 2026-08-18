@@ -4,7 +4,9 @@ on:
   pull_request:
     branches: [main]
   push:
-    branches: [fix/stabilize-main]
+    branches:
+      - fix/stabilize-main
+      - integrate/canonical-public-dashboard-v2
 
 jobs:
   quality:

@@ -1,0 +1,41 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Layout } from './components/layout/Layout';
+import { AnimatePresence } from 'motion/react';
+import { useLocation } from 'react-router-dom';
+import { PageTransition } from './components/layout/PageTransition';
+import Home from './pages/Home';
+import Inventario from './pages/Inventario';
+import Soportes from './pages/Soportes';
+import Nosotros from './pages/Nosotros';
+import Soluciones from './pages/Soluciones';
+
+
+function AnimatedRoutes() {
+  const location = useLocation();
+  return (
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
+        <Route path="/" element={<PageTransition><Home /></PageTransition>} />
+        <Route path="/soportes" element={<PageTransition><Soportes /></PageTransition>} />
+        <Route path="/nosotros" element={<PageTransition><Nosotros /></PageTransition>} />
+        <Route path="/soluciones" element={<PageTransition><Soluciones /></PageTransition>} />
+        <Route path="/inventario" element={<PageTransition><Inventario /></PageTransition>} />
+      </Routes>
+    </AnimatePresence>
+  );
+}
+
+export default function App() {
+  return (
+    <Router>
+      <Layout>
+        <AnimatedRoutes />
+      </Layout>
+    </Router>
+  );
+}

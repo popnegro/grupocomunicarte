@@ -15,10 +15,14 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-// V1 API: dashboard, inventory/spaces, campaigns, Media Kits, media,
-// cities/categories, search and RBAC-protected administration.
-// Keep the public compatibility endpoints below for the landing/PMV flows.
+// V1 API: canonical dashboard, inventory/spaces, campaigns, Media Kits,
+// media, cities/categories, search and RBAC-protected administration.
 app.use('/api/v1', apiV1Router);
+
+// Compatibility mount for the existing PMV frontend, which still consumes
+// /api/* for dashboard resources. Canonical endpoints remain available at
+// /api/v1/*; this mount avoids a needless frontend rewrite during PMV closeout.
+app.use('/api', apiV1Router);
 
 // Legacy/compatibility placeholders retained for existing PMV clients.
 app.all('/api/ai/*', (req, res) => res.status(200).json({ success: true, message: `${req.method} ${req.originalUrl} placeholder` }));
@@ -42,10 +46,7 @@ app.get('/api/leads', protect, async (req: AuthRequest, res) => {
     return res.status(200).json({ success: true, data: allLeads });
   } catch (error) {
     console.error('[API GET /api/leads]', error);
-    return res.status(500).json({
-      success: false,
-      error: { code: 'DB_ERROR', message: 'Error al obtener los leads.' }
-    });
+    return res.status(500).json({ success: false, error: { code: 'DB_ERROR', message: 'Error al obtener los leads.' } });
   }
 });
 
@@ -117,10 +118,7 @@ app.get('/api/public/screens', async (req, res) => {
     const publicScreens = await db
       .select()
       .from(screens)
-      .where(and(
-        eq(screens.tenantId, defaultTenantId),
-        eq(screens.status, 'Activo')
-      ));
+      .where(and(eq(screens.tenantId, defaultTenantId), eq(screens.status, 'Activo')));
 
     return res.status(200).json({ success: true, data: publicScreens });
   } catch (error) {
@@ -136,27 +134,18 @@ app.use('/api/*', (req, res) => {
 
 async function startServer() {
   if (process.env.NODE_ENV !== 'production') {
-    const vite = await createViteServer({
-      server: { middlewareMode: true },
-      appType: 'spa',
-    });
+    const vite = await createViteServer({ server: { middlewareMode: true }, appType: 'spa' });
     app.use(vite.middlewares);
   } else {
     const distPath = path.join(process.cwd(), 'dist');
     app.use(express.static(distPath));
-    app.get('*', (req, res) => {
-      res.sendFile(path.join(distPath, 'index.html'));
-    });
+    app.get('*', (req, res) => res.sendFile(path.join(distPath, 'index.html')));
   }
 
   const PORT = 3000;
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server running on http://0.0.0.0:${PORT}`);
-  });
+  app.listen(PORT, '0.0.0.0', () => console.log(`Server running on http://0.0.0.0:${PORT}`));
 }
 
-if (!process.env.VERCEL) {
-  startServer();
-}
+if (!process.env.VERCEL) startServer();
 
 export default app;

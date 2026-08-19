@@ -1,0 +1,1 @@
+The public PMV visual layer follows experiment/pmv-inventory-explorer. Backend, auth, persistence and dashboard remain sourced from main.

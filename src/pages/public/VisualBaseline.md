@@ -1,0 +1,1 @@
+Visual source of truth: experiment/pmv-inventory-explorer. Canonical runtime/backend: main. This public layer is intentionally integrated without replacing the authenticated dashboard or API architecture.

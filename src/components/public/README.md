@@ -1,0 +1,1 @@
+Public visual shell restored from the protected experiment/pmv-inventory-explorer visual baseline. This layer intentionally stays separate from the canonical backend and dashboard architecture.

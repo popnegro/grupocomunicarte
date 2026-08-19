@@ -8,73 +8,74 @@ import { db } from './src/db';
 import { leads, screens } from './src/db/schema';
 import { eq, desc, and } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
-import { protect, AuthRequest } from './src/middleware/auth'; // Import the protect middleware and AuthRequest type
+import { protect, AuthRequest } from './src/middleware/auth';
+import { apiV1Router } from './src/api/v1/router';
 
 const app = express();
 app.use(express.json());
-app.use(cors()); // Consider more restrictive CORS in production
+app.use(cors());
 
-// Placeholder for existing routes (e.g., AI, Google Sync, Auth)
-// These are generic handlers to prevent 404s for routes not explicitly defined yet.
+// V1 API: dashboard, inventory/spaces, campaigns, Media Kits, media,
+// cities/categories, search and RBAC-protected administration.
+// Keep the public compatibility endpoints below for the landing/PMV flows.
+app.use('/api/v1', apiV1Router);
+
+// Legacy/compatibility placeholders retained for existing PMV clients.
 app.all('/api/ai/*', (req, res) => res.status(200).json({ success: true, message: `${req.method} ${req.originalUrl} placeholder` }));
 app.all('/api/sync/*', (req, res) => res.status(200).json({ success: true, message: `${req.method} ${req.originalUrl} placeholder` }));
 app.all('/api/auth/*', (req, res) => res.status(200).json({ success: true, message: `${req.method} ${req.originalUrl} placeholder` }));
 app.all('/api/gmail/*', (req, res) => res.status(200).json({ success: true, message: `${req.method} ${req.originalUrl} placeholder` }));
 
-// Ensure Firebase Admin SDK is initialized
+// Ensure Firebase Admin SDK is initialized for protected and lead flows.
 import './src/lib/firebase-admin';
 
 // GET /api/leads
-app.get('/api/leads', protect, async (req: AuthRequest, res) => { // Apply protect middleware
+app.get('/api/leads', protect, async (req: AuthRequest, res) => {
   try {
-    const tenantId = req.user?.tenant_id; // Get tenantId from authenticated user's decoded token
+    const tenantId = req.user?.tenant_id;
 
     if (!tenantId) {
-      // This should ideally not happen if Firebase custom claims are set up correctly
-      // or if a user-tenant mapping is done after token verification.
-      return res.status(403).json({ success: false, error: { code: "FORBIDDEN", message: "Acceso denegado: Tenant no identificado para el usuario." } });
+      return res.status(403).json({ success: false, error: { code: 'FORBIDDEN', message: 'Acceso denegado: Tenant no identificado para el usuario.' } });
     }
 
     const allLeads = await db.select().from(leads).where(eq(leads.tenantId, tenantId)).orderBy(desc(leads.createdAt)).limit(100);
     return res.status(200).json({ success: true, data: allLeads });
   } catch (error) {
-    console.error("[API GET /api/leads]", error);
-    return res.status(500).json({ 
-      success: false, 
-      error: { code: "DB_ERROR", message: "Error al obtener los leads." } 
+    console.error('[API GET /api/leads]', error);
+    return res.status(500).json({
+      success: false,
+      error: { code: 'DB_ERROR', message: 'Error al obtener los leads.' }
     });
   }
 });
 
-// 7. POST /api/leads
+// POST /api/leads
 app.post('/api/leads', async (req, res) => {
   try {
     const { name, email, phone, message } = req.body;
     const defaultTenantId = process.env.DEFAULT_TENANT_ID;
 
-    // Basic validation
     if (!name || typeof name !== 'string' || name.trim().length === 0) {
-      return res.status(400).json({ success: false, error: { code: "VALIDATION_ERROR", message: "El nombre es obligatorio." } });
+      return res.status(400).json({ success: false, error: { code: 'VALIDATION_ERROR', message: 'El nombre es obligatorio.' } });
     }
     if (!email || typeof email !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      return res.status(400).json({ success: false, error: { code: "VALIDATION_ERROR", message: "El correo electrónico no es válido." } });
+      return res.status(400).json({ success: false, error: { code: 'VALIDATION_ERROR', message: 'El correo electrónico no es válido.' } });
     }
 
     const newLead = {
       id: uuidv4(),
-      tenantId: defaultTenantId || null, // Associate with default tenant or null
+      tenantId: defaultTenantId || null,
       name: name.trim(),
       email: email.trim(),
       phone: phone ? phone.trim() : null,
-      message: message ? message.trim() : "Sin mensaje.",
+      message: message ? message.trim() : 'Sin mensaje.',
     };
 
     const insertedLeads = await db.insert(leads).values(newLead).returning();
     if (insertedLeads.length === 0) {
-      return res.status(500).json({ success: false, error: { code: "DB_INSERT_FAILED", message: "No se pudo registrar el lead." } });
+      return res.status(500).json({ success: false, error: { code: 'DB_INSERT_FAILED', message: 'No se pudo registrar el lead.' } });
     }
 
-    // Sync to Firestore under centralized management (safe wrap)
     try {
       const { adminDb } = await import('./src/lib/firebase-admin');
       if (adminDb) {
@@ -90,26 +91,26 @@ app.post('/api/leads', async (req, res) => {
         });
       }
     } catch (fsErr) {
-      console.warn("Backend: Failed to sync lead to Firestore:", fsErr);
+      console.warn('Backend: Failed to sync lead to Firestore:', fsErr);
     }
 
     return res.status(201).json({ success: true, data: insertedLeads[0] });
   } catch (error: any) {
-    console.error("[API POST /api/leads]", error);
-    if (error.code === '23505') { // PostgreSQL unique violation
-        return res.status(409).json({ success: false, error: { code: "CONFLICT", message: "Este correo electrónico ya ha sido registrado." } });
+    console.error('[API POST /api/leads]', error);
+    if (error.code === '23505') {
+      return res.status(409).json({ success: false, error: { code: 'CONFLICT', message: 'Este correo electrónico ya ha sido registrado.' } });
     }
-    return res.status(500).json({ success: false, error: { code: "INTERNAL_SERVER_ERROR", message: "Error interno al crear el lead." } });
+    return res.status(500).json({ success: false, error: { code: 'INTERNAL_SERVER_ERROR', message: 'Error interno al crear el lead.' } });
   }
 });
 
-// 8. GET /api/public/screens
+// GET /api/public/screens
 app.get('/api/public/screens', async (req, res) => {
   const defaultTenantId = process.env.DEFAULT_TENANT_ID;
 
   if (!defaultTenantId) {
     console.error('CRITICAL: DEFAULT_TENANT_ID is not set in environment variables.');
-    return res.status(500).json({ success: false, error: { code: "CONFIG_ERROR", message: "Error de configuración del servidor." } });
+    return res.status(500).json({ success: false, error: { code: 'CONFIG_ERROR', message: 'Error de configuración del servidor.' } });
   }
 
   try {
@@ -123,14 +124,14 @@ app.get('/api/public/screens', async (req, res) => {
 
     return res.status(200).json({ success: true, data: publicScreens });
   } catch (error) {
-    console.error("[API GET /api/public/screens]", error);
-    return res.status(500).json({ success: false, error: { code: "DB_ERROR", message: "Error al obtener las pantallas públicas." } });
+    console.error('[API GET /api/public/screens]', error);
+    return res.status(500).json({ success: false, error: { code: 'DB_ERROR', message: 'Error al obtener las pantallas públicas.' } });
   }
 });
 
-// Generic error handler for unmatched /api routes
+// Generic error handler for unmatched /api routes.
 app.use('/api/*', (req, res) => {
-  res.status(404).json({ success: false, error: { code: "NOT_FOUND", message: `El endpoint ${req.method} ${req.originalUrl} no fue encontrado.` } });
+  res.status(404).json({ success: false, error: { code: 'NOT_FOUND', message: `El endpoint ${req.method} ${req.originalUrl} no fue encontrado.` } });
 });
 
 async function startServer() {
@@ -148,7 +149,7 @@ async function startServer() {
     });
   }
 
-  const PORT = 3000; // Hardcoded port 3000 required by the infrastructure proxy
+  const PORT = 3000;
   app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on http://0.0.0.0:${PORT}`);
   });

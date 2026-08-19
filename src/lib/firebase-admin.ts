@@ -1,19 +1,17 @@
-import { initializeApp, getApps, cert, App } from 'firebase-admin/app';
-import { getAuth } from 'firebase-admin/auth';
-import { getFirestore } from 'firebase-admin/firestore';
+import { initializeApp, getApps, cert, type App } from 'firebase-admin/app';
+import { getAuth, type Auth } from 'firebase-admin/auth';
+import { getFirestore, type Firestore } from 'firebase-admin/firestore';
 
-let app: App;
+let app: App | null = null;
 
-// Singleton pattern to initialize Firebase Admin SDK only once.
-function initializeAdminApp() {
+function initializeAdminApp(): App | null {
+  if (app) return app;
   if (getApps().length > 0) {
-    return getApps()[0];
+    app = getApps()[0];
+    return app;
   }
 
-  const privateKey = process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY?.replace(
-    /\\n/g,
-    '\n'
-  );
+  const privateKey = process.env.GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY?.replace(/\\n/g, '\n');
   const clientEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
   const projectId = process.env.FIREBASE_PROJECT_ID;
 
@@ -22,27 +20,28 @@ function initializeAdminApp() {
       !privateKey && 'GOOGLE_SERVICE_ACCOUNT_PRIVATE_KEY',
       !clientEmail && 'GOOGLE_SERVICE_ACCOUNT_EMAIL',
       !projectId && 'FIREBASE_PROJECT_ID',
-    ]
-      .filter(Boolean)
-      .join(', ');
-    console.error(
-      `Firebase Admin SDK: Missing environment variables for initialization. Check: ${missingVars}`
-    );
-    // In a production environment, we might want to throw to prevent the server from starting in a bad state.
-    // For now, we log the error and let the lazy-loaded services handle the uninitialized state.
+    ].filter(Boolean).join(', ');
+    console.error(`Firebase Admin SDK: missing environment variables: ${missingVars}`);
     return null;
   }
 
-  return initializeApp({
-    credential: cert({
-      projectId,
-      clientEmail,
-      privateKey,
-    }),
-  });
+  try {
+    app = initializeApp({
+      credential: cert({ projectId, clientEmail, privateKey }),
+    });
+    return app;
+  } catch (error) {
+    console.error('Firebase Admin SDK initialization failed:', error);
+    return null;
+  }
 }
 
-app = initializeAdminApp()!;
+export function getAdminAuth(): Auth | null {
+  const currentApp = initializeAdminApp();
+  return currentApp ? getAuth(currentApp) : null;
+}
 
-export const adminAuth = app ? getAuth(app) : null;
-export const adminDb = app ? getFirestore(app) : null;
+export function getAdminDb(): Firestore | null {
+  const currentApp = initializeAdminApp();
+  return currentApp ? getFirestore(currentApp) : null;
+}

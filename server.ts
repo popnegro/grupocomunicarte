@@ -30,6 +30,29 @@ app.all('/api/sync/*', (req, res) => res.status(200).json({ success: true, messa
 app.all('/api/auth/*', (req, res) => res.status(200).json({ success: true, message: `${req.method} ${req.originalUrl} placeholder` }));
 app.all('/api/gmail/*', (req, res) => res.status(200).json({ success: true, message: `${req.method} ${req.originalUrl} placeholder` }));
 
+// Dashboard compatibility endpoints retained until the legacy modules are
+// fully migrated to V1. They return the same envelope expected by the PMV UI
+// instead of generating 404/HTML responses that break dashboard hydration.
+app.get('/api/clients', protect, async (_req, res) => {
+  return res.status(200).json({ success: true, data: [] });
+});
+
+app.get('/api/changelogs', protect, async (_req, res) => {
+  return res.status(200).json({ success: true, data: [] });
+});
+
+app.post('/api/changelogs', protect, async (req, res) => {
+  return res.status(201).json({
+    success: true,
+    data: {
+      id: req.body?.id || uuidv4(),
+      user: req.body?.user || 'Usuario',
+      action: req.body?.action || 'Actividad registrada',
+      date: req.body?.date || 'Justo ahora',
+    },
+  });
+});
+
 // Ensure Firebase Admin SDK is initialized for protected and lead flows.
 import './src/lib/firebase-admin';
 

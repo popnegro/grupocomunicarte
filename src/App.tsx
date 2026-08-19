@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { motion } from "motion/react";
 import { AuthProvider, useAuth } from "./components/AuthContext";
 import { CmsProvider } from "./components/CmsContext";
-import { LandingView } from "./components/LandingView";
+import { PublicSite } from "./components/PublicSite";
 import { DashboardView } from "./components/DashboardView";
 import { LoginView } from "./components/LoginView";
 import { ToastProvider } from "./components/ui/Toast";
@@ -16,7 +16,7 @@ function LoadingScreen({ message }: { message?: string }) {
   let defaultMessage = "Verificando autenticación y configuración...";
   if (authContext?.loading) defaultMessage = "Sincronizando estado de sesión...";
   else if (authContext?.user) defaultMessage = authContext.isAdmin ? "Cargando panel de administración..." : "Cargando sesión de usuario...";
-  return <motion.div initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} className="min-h-screen bg-[#FAF9F5] flex flex-col items-center justify-center p-6 text-center font-sans"><div className="h-12 w-12 animate-spin rounded-full border-4 border-[#06434a] border-t-transparent" /><p className="mt-5 text-xs font-bold text-[#06434a] uppercase tracking-widest">{message || defaultMessage}</p></motion.div>;
+  return <motion.div initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} className="min-h-screen bg-white flex flex-col items-center justify-center p-6 text-center font-sans"><div className="h-12 w-12 animate-spin rounded-full border-4 border-black border-t-transparent" /><p className="mt-5 text-xs font-bold text-black uppercase tracking-widest">{message || defaultMessage}</p></motion.div>;
 }
 
 function ProtectedRoute({ children, requireAdmin = false }: { children: React.ReactNode; requireAdmin?: boolean }) {
@@ -42,12 +42,10 @@ export default function App() {
           <CmsProvider>
             <SelectionProvider>
               <Routes>
-                <Route path="/" element={<LandingView />} />
-                <Route path="/nosotros/*" element={<LandingView />} />
-                <Route path="/espacios-publicitarios/*" element={<LandingView />} />
-                <Route path="/soluciones/*" element={<LandingView />} />
-                <Route path="/soportes/*" element={<LandingView />} />
-                <Route path="/contacto" element={<LandingView />} />
+                <Route path="/" element={<PublicSite />} />
+                <Route path="/nosotros/*" element={<PublicSite />} />
+                <Route path="/soluciones/*" element={<PublicSite />} />
+                <Route path="/soportes/*" element={<PublicSite />} />
                 <Route path="/inventario" element={<Inventario />} />
                 <Route path="/login" element={<LoginRoute />} />
                 <Route path="/dashboard/*" element={<ProtectedRoute><DashboardView /></ProtectedRoute>} />

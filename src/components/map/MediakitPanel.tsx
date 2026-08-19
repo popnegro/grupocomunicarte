@@ -9,6 +9,12 @@ interface MediakitPanelProps {
 
 type SubmissionState = 'IDLE' | 'LOADING' | 'SUCCESS' | 'ERROR';
 
+type AvailabilityConflict = {
+  status?: string;
+  message?: string;
+  unavailableIds?: string[];
+};
+
 export default function MediakitPanel({ selectedItems, onClose }: MediakitPanelProps) {
   const { removeSelected, clearSelection } = useSelection();
   const [name, setName] = useState('');
@@ -57,13 +63,26 @@ export default function MediakitPanel({ selectedItems, onClose }: MediakitPanelP
           selectedIds: selectedItems.map((item) => item.canonical_id),
         }),
       });
-      const payload = await response.json().catch(() => null);
+
+      const payload = await response.json().catch(() => null) as AvailabilityConflict | null;
+
       if (!response.ok) {
-        setErrorMessage(payload?.message || payload?.error?.message || 'No pudimos enviar tu solicitud. Intentá nuevamente.');
+        if (payload?.status === 'availability_conflict') {
+          const unavailableIds = Array.isArray(payload.unavailableIds) ? payload.unavailableIds : [];
+          unavailableIds.forEach(removeSelected);
+          setErrorMessage(
+            unavailableIds.length > 0
+              ? 'Uno o más soportes cambiaron de disponibilidad. Los retiramos de tu selección; revisá el listado antes de volver a enviar.'
+              : 'La disponibilidad de uno o más soportes cambió. Revisá el listado antes de volver a enviar.'
+          );
+        } else {
+          setErrorMessage(payload?.message || 'No pudimos enviar tu solicitud. Intentá nuevamente.');
+        }
         setState('ERROR');
         return;
       }
-      setRequestId(payload?.requestId || payload?.data?.requestId || 'REQ-CONFIRMADA');
+
+      setRequestId(payload?.requestId || 'REQ-CONFIRMADA');
       setState('SUCCESS');
     } catch {
       setErrorMessage('No pudimos enviar tu solicitud. Verificá tu conexión e intentá nuevamente.');
@@ -120,7 +139,7 @@ export default function MediakitPanel({ selectedItems, onClose }: MediakitPanelP
               </div>}
             </section>
 
-            {state === 'ERROR' && <div className="mb-4 flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 p-3 text-xs text-red-700"><AlertCircle className="mt-0.5 h-4 w-4 shrink-0" /><span>{errorMessage}</span></div>}
+            {state === 'ERROR' && <div role="alert" className="mb-4 flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 p-3 text-xs text-red-700"><AlertCircle className="mt-0.5 h-4 w-4 shrink-0" /><span>{errorMessage}</span></div>}
 
             <form onSubmit={submit} className="space-y-3.5">
               <label className="block text-xs font-semibold text-gray-700">Nombre completo *<input value={name} onChange={(e) => setName(e.target.value)} disabled={state === 'LOADING'} className={`mt-1 w-full rounded-lg border px-3 py-2.5 text-sm outline-none ${errors.name ? 'border-red-500' : 'border-gray-200'}`} placeholder="Tu nombre y apellido" /></label>

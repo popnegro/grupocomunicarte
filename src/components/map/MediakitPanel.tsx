@@ -12,6 +12,7 @@ type SubmissionState = 'IDLE' | 'LOADING' | 'SUCCESS' | 'ERROR';
 type AvailabilityConflict = {
   status?: string;
   message?: string;
+  requestId?: string;
   unavailableIds?: string[];
 };
 

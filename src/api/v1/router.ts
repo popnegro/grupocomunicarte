@@ -25,7 +25,6 @@ router.post("/auth/sync", async (req, res) => {
   if (!adminAuth) {
     return res.status(503).json({ success: false, error: { code: "FIREBASE_NOT_INITIALIZED", message: "El servicio de autenticación no está disponible." } });
   }
-
   const authorization = req.headers.authorization;
   if (!authorization?.startsWith("Bearer ")) {
     return res.status(401).json({ success: false, error: { code: "UNAUTHORIZED", message: "Token de autenticación no proporcionado." } });
@@ -38,13 +37,9 @@ router.post("/auth/sync", async (req, res) => {
       return res.status(400).json({ success: false, error: { code: "EMAIL_REQUIRED", message: "La cuenta de Firebase no tiene un correo válido." } });
     }
 
-    const adminEmails = (process.env.ADMIN_EMAILS || "")
-      .split(",")
-      .map((value) => value.trim().toLowerCase())
-      .filter(Boolean);
+    const adminEmails = (process.env.ADMIN_EMAILS || "").split(",").map((value) => value.trim().toLowerCase()).filter(Boolean);
     const isBootstrapAdmin = adminEmails.includes(email);
     const defaultTenantId = process.env.DEFAULT_TENANT_ID || null;
-
     let [dbUser] = await db.select().from(users).where(eq(users.uid, decoded.uid)).limit(1);
 
     // Only explicitly configured admin accounts may bootstrap themselves.
@@ -52,12 +47,7 @@ router.post("/auth/sync", async (req, res) => {
       if (!isBootstrapAdmin || !defaultTenantId) {
         return res.status(403).json({ success: false, error: { code: "USER_NOT_PROVISIONED", message: "La cuenta no está provisionada para esta plataforma." } });
       }
-      const inserted = await db.insert(users).values({
-        uid: decoded.uid,
-        tenantId: defaultTenantId,
-        email,
-        displayName: decoded.name || null,
-      }).returning();
+      const inserted = await db.insert(users).values({ uid: decoded.uid, tenantId: defaultTenantId, email, displayName: decoded.name || null }).returning();
       dbUser = inserted[0];
     }
 
@@ -74,12 +64,7 @@ router.post("/auth/sync", async (req, res) => {
     if (isBootstrapAdmin && !assignedRoles.some((role) => role.roleSlug === "admin")) {
       let [adminRole] = await db.select().from(roles).where(eq(roles.slug, "admin")).limit(1);
       if (!adminRole) {
-        const created = await db.insert(roles).values({
-          id: "role-admin",
-          name: "Admin",
-          slug: "admin",
-          description: "Administrador de la plataforma",
-        }).returning();
+        const created = await db.insert(roles).values({ id: "role-admin", name: "Admin", slug: "admin", description: "Administrador de la plataforma" }).returning();
         adminRole = created[0];
       }
       if (adminRole) {
@@ -112,25 +97,25 @@ router.get("/dashboard/stats", cacheMiddleware(5000), DashboardController.getSta
 router.get("/search", SearchController.search);
 
 router.get("/spaces", cacheMiddleware(10000), SpacesController.getAll);
-router.get("/spaces/:id", cacheMiddleware(10000), SpacesController.getSpaceDetails);
+router.get("/spaces/:id", cacheMiddleware(10000), SpacesController.getById);
 router.post("/spaces", requirePermission("sync_slides"), SpacesController.create);
 router.put("/spaces/:id", requirePermission("sync_slides"), SpacesController.update);
 router.delete("/spaces/:id", requirePermission("sync_slides"), SpacesController.delete);
 
 router.get("/screens", cacheMiddleware(10000), SpacesController.getAll);
-router.get("/screens/:id", cacheMiddleware(10000), SpacesController.getSpaceDetails);
+router.get("/screens/:id", cacheMiddleware(10000), SpacesController.getById);
 router.post("/screens", requirePermission("sync_slides"), SpacesController.create);
 router.put("/screens/:id", requirePermission("sync_slides"), SpacesController.update);
 router.delete("/screens/:id", requirePermission("sync_slides"), SpacesController.delete);
 
 router.get("/campaigns", cacheMiddleware(10000), CampaignsController.getAll);
-router.get("/campaigns/:id", cacheMiddleware(10000), CampaignsController.getCampaignDetails);
+router.get("/campaigns/:id", cacheMiddleware(10000), CampaignsController.getById);
 router.post("/campaigns", requirePermission("edit_campaigns"), CampaignsController.create);
 router.put("/campaigns/:id", requirePermission("edit_campaigns"), CampaignsController.update);
 router.delete("/campaigns/:id", requirePermission("edit_campaigns"), CampaignsController.delete);
 
 router.get("/mediakits", cacheMiddleware(10000), MediaKitsController.getAll);
-router.get("/mediakits/:id", cacheMiddleware(10000), MediaKitsController.getMediaKitDetails);
+router.get("/mediakits/:id", cacheMiddleware(10000), MediaKitsController.getById);
 router.post("/mediakits", requirePermission("edit_campaigns"), MediaKitsController.create);
 router.put("/mediakits/:id", requirePermission("edit_campaigns"), MediaKitsController.update);
 router.delete("/mediakits/:id", requirePermission("edit_campaigns"), MediaKitsController.delete);

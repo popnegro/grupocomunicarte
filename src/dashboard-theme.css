@@ -1,0 +1,185 @@
+/* PMV visual alignment: dashboard + login inherit the public landing language. */
+
+.dashboard-shell,
+.login-shell {
+  --pmv-primary: #06434a;
+  --pmv-primary-hover: #0a545d;
+  --pmv-secondary: #07be8a;
+  --pmv-ink: #172023;
+  --pmv-muted: #78716c;
+  --pmv-bg: #fafaf9;
+  --pmv-card: #ffffff;
+  --pmv-border: #e7e5e4;
+  --pmv-soft: #f5f5f4;
+  font-family: var(--text-body, "Inter", system-ui, sans-serif);
+}
+
+.dashboard-shell h1,
+.dashboard-shell h2,
+.dashboard-shell h3,
+.dashboard-shell h4,
+.dashboard-shell h5,
+.dashboard-shell h6,
+.login-shell h1,
+.login-shell h2,
+.login-shell h3,
+.login-shell h4 {
+  font-family: var(--text-display, "Poppins", system-ui, sans-serif);
+}
+
+.dashboard-shell {
+  background: var(--pmv-bg);
+  color: var(--pmv-ink);
+}
+
+.dashboard-shell aside {
+  background: rgba(255,255,255,.94) !important;
+  border-color: var(--pmv-border) !important;
+  box-shadow: 10px 0 30px rgba(23,32,35,.035) !important;
+}
+
+.dashboard-shell aside > div:first-child > div:first-child {
+  background: linear-gradient(180deg, #fff 0%, #fbfbfa 100%);
+}
+
+.dashboard-shell aside button {
+  transition: background-color .18s ease, color .18s ease, transform .18s ease, box-shadow .18s ease;
+}
+
+.dashboard-shell aside nav button:hover {
+  transform: translateX(1px);
+}
+
+.dashboard-shell aside nav button[class*="bg-[#06434a]"] {
+  background: var(--pmv-primary) !important;
+  box-shadow: 0 8px 20px rgba(6,67,74,.14) !important;
+}
+
+.dashboard-shell header {
+  background: rgba(255,255,255,.92) !important;
+  border-color: var(--pmv-border) !important;
+  box-shadow: 0 1px 0 rgba(23,32,35,.025), 0 8px 24px rgba(23,32,35,.025);
+  backdrop-filter: blur(14px);
+}
+
+.dashboard-shell main > div:last-child {
+  background: var(--pmv-bg) !important;
+}
+
+.dashboard-shell .bg-white {
+  box-shadow: 0 1px 2px rgba(23,32,35,.025);
+}
+
+.dashboard-shell .border-stone-200,
+.dashboard-shell .border-stone-200\/80,
+.dashboard-shell .border-stone-200\/60 {
+  border-color: var(--pmv-border) !important;
+}
+
+.dashboard-shell button[class*="bg-[#06434a]"],
+.dashboard-shell a[class*="bg-[#06434a]"] {
+  background-color: var(--pmv-primary) !important;
+}
+
+.dashboard-shell button[class*="bg-[#06434a]"]:hover,
+.dashboard-shell a[class*="bg-[#06434a]"]:hover {
+  background-color: var(--pmv-primary-hover) !important;
+}
+
+.dashboard-shell button[class*="border-[#06434a]"],
+.dashboard-shell a[class*="text-[#06434a]"] {
+  border-color: var(--pmv-primary);
+}
+
+.dashboard-shell .text-\[\#06434a\] {
+  color: var(--pmv-primary) !important;
+}
+
+.dashboard-shell .text-emerald-800,
+.dashboard-shell .text-emerald-700 {
+  color: var(--pmv-primary) !important;
+}
+
+.dashboard-shell .bg-emerald-50 {
+  background-color: rgba(7,190,138,.08) !important;
+}
+
+.dashboard-shell .text-amber-300 {
+  color: #f4b942 !important;
+}
+
+.dashboard-shell [class*="rounded-2xl"],
+.dashboard-shell [class*="rounded-xl"] {
+  border-radius: 14px;
+}
+
+.dashboard-shell input,
+.dashboard-shell select,
+.dashboard-shell textarea {
+  border-color: var(--pmv-border);
+  background-color: #fff;
+}
+
+.dashboard-shell input:focus,
+.dashboard-shell select:focus,
+.dashboard-shell textarea:focus {
+  border-color: rgba(6,67,74,.45) !important;
+  box-shadow: 0 0 0 3px rgba(6,67,74,.08) !important;
+  outline: none;
+}
+
+.dashboard-shell ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.dashboard-shell ::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.dashboard-shell ::-webkit-scrollbar-thumb {
+  background: #d6d3d1;
+  border-radius: 999px;
+}
+
+.login-shell {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 12% 15%, rgba(7,190,138,.10), transparent 28%),
+    radial-gradient(circle at 88% 80%, rgba(6,67,74,.10), transparent 30%),
+    var(--pmv-bg);
+}
+
+.login-shell > div:first-child {
+  position: relative;
+}
+
+.login-shell .bg-white {
+  border-color: var(--pmv-border) !important;
+  border-radius: 20px !important;
+  box-shadow: 0 24px 70px rgba(23,32,35,.08) !important;
+}
+
+.login-shell button[id="google-signin-btn"] {
+  border-color: var(--pmv-border) !important;
+  background: #fff !important;
+}
+
+.login-shell button[id="google-signin-btn"]:hover {
+  border-color: #cbd5d1 !important;
+  background: #fafaf9 !important;
+}
+
+.login-shell button[id="demo-signin-btn"] {
+  background: var(--pmv-primary) !important;
+  border-color: var(--pmv-primary) !important;
+  box-shadow: 0 10px 24px rgba(6,67,74,.16) !important;
+}
+
+.login-shell button[id="demo-signin-btn"]:hover {
+  background: var(--pmv-primary-hover) !important;
+}
+
+.login-shell a {
+  color: var(--pmv-primary) !important;
+}

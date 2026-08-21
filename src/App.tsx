@@ -1,5 +1,5 @@
-import React from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import React, { useEffect } from "react";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { motion } from "motion/react";
 import { AuthProvider, useAuth } from "./components/AuthContext";
 import { CmsProvider } from "./components/CmsContext";
@@ -34,6 +34,15 @@ function LoginRoute() {
   return <LoginView />;
 }
 
+function DashboardShell() {
+  const location = useLocation();
+  useEffect(() => {
+    document.body.classList.add("dashboard-route");
+    return () => document.body.classList.remove("dashboard-route");
+  }, [location.pathname]);
+  return <div className="dashboard-shell"><DashboardView /></div>;
+}
+
 export default function App() {
   return (
     <AuthProvider>
@@ -48,7 +57,7 @@ export default function App() {
                 <Route path="/soportes/*" element={<PublicSite />} />
                 <Route path="/inventario" element={<Inventario />} />
                 <Route path="/login" element={<LoginRoute />} />
-                <Route path="/dashboard/*" element={<ProtectedRoute><DashboardView /></ProtectedRoute>} />
+                <Route path="/dashboard/*" element={<ProtectedRoute><DashboardShell /></ProtectedRoute>} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </SelectionProvider>

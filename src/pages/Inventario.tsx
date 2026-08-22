@@ -58,7 +58,6 @@ export default function Inventario() {
   const { selectedCount, isSelected, toggleSelect, clearSelection, selectedIds, reconcileSelection } = useSelection();
 
   useEffect(() => {
-    reconcileSelection(FALLBACK_INVENTORY);
     let cancelled = false;
 
     fetch('/api/public/screens')
@@ -75,6 +74,7 @@ export default function Inventario() {
       })
       .catch(() => {
         // Keep the PMV fallback inventory available when the public database is unavailable.
+        reconcileSelection(FALLBACK_INVENTORY);
       })
       .finally(() => {
         if (!cancelled) setLoading(false);

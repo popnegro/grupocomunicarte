@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useEffect, useState } from "react";
 import { User, onAuthStateChanged, signOut, GoogleAuthProvider } from "firebase/auth";
 import { auth, googleAuthProvider, signInWithRedirect, getRedirectResult } from "../lib/firebase";
 import { safeFetchJson } from "../lib/apiClient";
@@ -11,173 +11,127 @@ interface AuthContextProps {
   isAdmin: boolean;
   userRole: string;
   loginWithGoogle: () => Promise<void>;
-  loginAsDemo: () => Promise<void>;
   logout: () => Promise<void>;
   setGoogleAccessToken: (token: string | null) => void;
 }
 
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
 
-// Configurable list of admin emails (reads from env var or defaults to main admin email)
-const getAdminEmails = (): string[] => {
-  const envAdmins = (import.meta as any).env?.VITE_ADMIN_EMAILS || "";
-  const list = envAdmins.split(",").map((e: string) => e.trim().toLowerCase()).filter(Boolean);
-  if (!list.includes("grupo.comunicarte.dev@gmail.com")) {
-    list.push("grupo.comunicarte.dev@gmail.com");
-  }
-  return list;
+type AuthSyncData = {
+  roles?: string[];
+  isAdmin?: boolean;
+  tenantId?: string | null;
 };
+
+async function syncFirebaseIdentity(idToken: string): Promise<AuthSyncData> {
+  const response = await safeFetchJson<AuthSyncData>("/api/auth/sync", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${idToken}`,
+    },
+  });
+
+  if (!response.ok || !response.data) {
+    throw new Error(response.errorDetail?.message || response.error || "No se pudo sincronizar la identidad con el servidor.");
+  }
+
+  return response.data;
+}
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [googleAccessToken, setGoogleAccessToken] = useState<string | null>(null);
+  const [userRoles, setUserRoles] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const adminEmails = getAdminEmails();
-  const isAdmin = Boolean(user?.email && adminEmails.includes(user.email.toLowerCase()));
-  const userRole = isAdmin ? "admin" : "viewer";
+  const isAdmin = userRoles.includes("admin");
+  const userRole = userRoles[0] || "viewer";
+
+  const applyAuthenticatedUser = async (currentUser: User, accessToken?: string | null) => {
+    const idToken = await currentUser.getIdToken(true);
+    const syncData = await syncFirebaseIdentity(idToken);
+    setUser(currentUser);
+    setToken(idToken);
+    setUserRoles(syncData.roles || []);
+    if (accessToken) setGoogleAccessToken(accessToken);
+  };
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(
-      auth,
-      async (currentUser) => {
-        setLoading(true);
-        if (currentUser) {
-          setUser(currentUser);
-          try {
-            const idToken = await currentUser.getIdToken(true);
-            setToken(idToken);
-            
-            // Sync with PostgreSQL
-            await safeFetchJson("/api/auth/sync", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${idToken}`,
-              },
-            });
-          } catch (error) {
-            console.error("Error fetching or syncing token:", error);
-          }
-        } else {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      setLoading(true);
+      try {
+        if (!currentUser) {
           setUser(null);
           setToken(null);
           setGoogleAccessToken(null);
+          setUserRoles([]);
+          return;
         }
-        setLoading(false);
-      },
-      (error) => {
-        console.error("Auth state change error:", error);
+        await applyAuthenticatedUser(currentUser);
+      } catch (error) {
+        console.error("Authentication/RBAC synchronization failed:", error);
         setUser(null);
         setToken(null);
         setGoogleAccessToken(null);
+        setUserRoles([]);
+        try { await signOut(auth); } catch {}
+      } finally {
         setLoading(false);
       }
-    );
+    });
 
     return () => unsubscribe();
   }, []);
-
 
   useEffect(() => {
     const handleRedirectResult = async () => {
       try {
         const result = await getRedirectResult(auth);
-        if (result) {
-          const credential = GoogleAuthProvider.credentialFromResult(result);
-          if (credential?.accessToken) {
-            setGoogleAccessToken(credential.accessToken);
-          }
-          
-          const idToken = await result.user.getIdToken(true);
-          setToken(idToken);
-          setUser(result.user);
-
-          // Sync with PostgreSQL
-          await safeFetchJson("/api/auth/sync", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": `Bearer ${idToken}`,
-            },
-          });
-        }
+        if (!result) return;
+        const credential = GoogleAuthProvider.credentialFromResult(result);
+        await applyAuthenticatedUser(result.user, credential?.accessToken || null);
       } catch (error) {
         console.error("Google redirect login failed:", error);
+        setUser(null);
+        setToken(null);
+        setGoogleAccessToken(null);
+        setUserRoles([]);
+        try { await signOut(auth); } catch {}
       } finally {
         setLoading(false);
       }
     };
 
-    handleRedirectResult();
+    void handleRedirectResult();
   }, []);
 
   const loginWithGoogle = async () => {
     setLoading(true);
-    await signInWithRedirect(auth, googleAuthProvider);
-  };
-
-  const loginAsDemo = async () => {
-    setLoading(true);
     try {
-      const demoUser = {
-        uid: "demo-user-123",
-        email: "grupo.comunicarte.dev@gmail.com",
-        displayName: "Usuario Demo",
-        emailVerified: true,
-        isAnonymous: false,
-        metadata: {},
-        providerData: [],
-        getIdToken: async () => "demo-token-abc-123",
-        getIdTokenResult: async () => ({ token: "demo-token-abc-123", claims: {} }),
-        reload: async () => {},
-        toJSON: () => ({}),
-      } as any as User;
-
-      setUser(demoUser);
-      setToken("demo-token-abc-123");
-      setGoogleAccessToken("demo-google-access-token");
-      
-      // Sync with auth placeholder
-      await safeFetchJson("/api/auth/sync", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer demo-token-abc-123",
-        },
-      });
-    } catch (err) {
-      console.error("Demo login error:", err);
-    } finally {
+      await signInWithRedirect(auth, googleAuthProvider);
+    } catch (error) {
       setLoading(false);
+      throw error;
     }
   };
 
   const logout = async () => {
     setLoading(true);
     try {
-      if (user?.uid === "demo-user-123") {
-        setUser(null);
-        setToken(null);
-        setGoogleAccessToken(null);
-        setLoading(false);
-        return;
-      }
       await signOut(auth);
       setUser(null);
       setToken(null);
       setGoogleAccessToken(null);
+      setUserRoles([]);
+    } finally {
       setLoading(false);
-    } catch (error) {
-      setLoading(false);
-      console.error("Logout failed:", error);
-      throw error;
     }
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, token, googleAccessToken, isAdmin, userRole, loginWithGoogle, loginAsDemo, logout, setGoogleAccessToken }}>
+    <AuthContext.Provider value={{ user, loading, token, googleAccessToken, isAdmin, userRole, loginWithGoogle, logout, setGoogleAccessToken }}>
       {children}
     </AuthContext.Provider>
   );
@@ -185,8 +139,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
+  if (!context) throw new Error("useAuth must be used within an AuthProvider");
   return context;
 };

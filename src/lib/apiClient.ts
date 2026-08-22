@@ -23,6 +23,29 @@ const JSON_BACKED_ARRAY_FIELDS = new Set([
   "historial",
 ]);
 
+function coerceJsonBackedArray(value: string): unknown[] | null {
+  try {
+    const parsed = JSON.parse(value);
+
+    if (Array.isArray(parsed)) return parsed;
+
+    if (parsed && typeof parsed === "object") {
+      const record = parsed as Record<string, unknown>;
+      if (Array.isArray(record.data)) return record.data;
+      if (Array.isArray(record.items)) return record.items;
+
+      const values = Object.values(record);
+      if (values.length > 0 && values.every((item) => item && typeof item === "object")) {
+        return values;
+      }
+    }
+  } catch {
+    // Keep invalid/non-JSON strings out of array consumers by returning null.
+  }
+
+  return null;
+}
+
 function parseJsonBackedArrays(value: unknown): unknown {
   if (Array.isArray(value)) {
     return value.map(parseJsonBackedArrays);
@@ -33,13 +56,17 @@ function parseJsonBackedArrays(value: unknown): unknown {
     const normalized: Record<string, unknown> = { ...record };
 
     for (const [key, fieldValue] of Object.entries(record)) {
-      if (JSON_BACKED_ARRAY_FIELDS.has(key) && typeof fieldValue === "string") {
-        try {
-          const parsed = JSON.parse(fieldValue);
-          normalized[key] = Array.isArray(parsed) ? parsed.map(parseJsonBackedArrays) : fieldValue;
+      if (JSON_BACKED_ARRAY_FIELDS.has(key)) {
+        if (typeof fieldValue === "string") {
+          const parsed = coerceJsonBackedArray(fieldValue);
+          normalized[key] = parsed ? parsed.map(parseJsonBackedArrays) : [];
           continue;
-        } catch {
-          // Keep the original string when the stored value is not valid JSON.
+        }
+
+        if (!Array.isArray(fieldValue) && fieldValue && typeof fieldValue === "object") {
+          const values = Object.values(fieldValue as Record<string, unknown>);
+          normalized[key] = values.map(parseJsonBackedArrays);
+          continue;
         }
       }
 

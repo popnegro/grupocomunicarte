@@ -58,7 +58,6 @@ export default function Inventario() {
   const { selectedCount, isSelected, toggleSelect, clearSelection, selectedIds, reconcileSelection } = useSelection();
 
   useEffect(() => {
-    reconcileSelection(FALLBACK_INVENTORY);
     let cancelled = false;
 
     fetch('/api/public/screens')
@@ -68,13 +67,18 @@ export default function Inventario() {
         const normalized = Array.isArray(payload?.data)
           ? payload.data.map(normalizeScreen).filter(Boolean) as InventoryItem[]
           : [];
-        if (!cancelled && normalized.length > 0) {
-          setInventory(normalized);
-          reconcileSelection(normalized);
+        if (!cancelled) {
+          if (normalized.length > 0) {
+            setInventory(normalized);
+            reconcileSelection(normalized);
+          } else {
+            reconcileSelection(FALLBACK_INVENTORY);
+          }
         }
       })
       .catch(() => {
         // Keep the PMV fallback inventory available when the public database is unavailable.
+        reconcileSelection(FALLBACK_INVENTORY);
       })
       .finally(() => {
         if (!cancelled) setLoading(false);

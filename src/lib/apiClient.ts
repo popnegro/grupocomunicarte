@@ -1,7 +1,5 @@
 // src/lib/apiClient.ts
 
-import { auth } from "./firebase";
-
 interface ApiResponse<T> {
   ok: boolean;
   status: number;
@@ -18,26 +16,45 @@ interface ApiResponse<T> {
 // Resolve API Base URL from environment variable
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, "") || "";
 
-const buildHeaders = async (headers?: HeadersInit): Promise<Headers> => {
-  const result = new Headers(headers);
-  const currentUser = auth.currentUser;
+const JSON_BACKED_ARRAY_FIELDS = new Set([
+  "screenIds",
+  "soportesEdicionInline",
+  "comentarios",
+  "historial",
+]);
 
-  if (currentUser && !result.has("Authorization")) {
-    try {
-      const idToken = await currentUser.getIdToken();
-      result.set("Authorization", `Bearer ${idToken}`);
-    } catch (error) {
-      console.warn("[safeFetchJson] Unable to obtain Firebase ID token:", error);
-    }
+function parseJsonBackedArrays(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map(parseJsonBackedArrays);
   }
 
-  return result;
-};
+  if (value && typeof value === "object") {
+    const record = value as Record<string, unknown>;
+    const normalized: Record<string, unknown> = { ...record };
+
+    for (const [key, fieldValue] of Object.entries(record)) {
+      if (JSON_BACKED_ARRAY_FIELDS.has(key) && typeof fieldValue === "string") {
+        try {
+          const parsed = JSON.parse(fieldValue);
+          normalized[key] = Array.isArray(parsed) ? parsed.map(parseJsonBackedArrays) : fieldValue;
+          continue;
+        } catch {
+          // Keep the original string when the stored value is not valid JSON.
+        }
+      }
+
+      normalized[key] = parseJsonBackedArrays(fieldValue);
+    }
+
+    return normalized;
+  }
+
+  return value;
+}
 
 /**
  * Generic fetch wrapper that handles JSON parsing, error responses,
- * and consistent API response formatting.
- * It also prepends the API_BASE_URL if configured.
+ * authentication and normalization of JSON-backed PostgreSQL fields.
  */
 export async function safeFetchJson<T>(
   path: string,
@@ -46,14 +63,33 @@ export async function safeFetchJson<T>(
   const url = `${API_BASE_URL}${path}`;
 
   try {
-    const headers = await buildHeaders(options?.headers);
-    const response = await fetch(url, { ...options, headers });
+    const requestHeaders = new Headers(options?.headers || {});
+
+    // Attach the Firebase ID token automatically to authenticated API calls.
+    // Import lazily so public routes remain usable before Firebase initializes.
+    if (!requestHeaders.has("Authorization")) {
+      try {
+        const { auth } = await import("./firebase");
+        const currentUser = auth.currentUser;
+        if (currentUser) {
+          const idToken = await currentUser.getIdToken();
+          requestHeaders.set("Authorization", `Bearer ${idToken}`);
+        }
+      } catch {
+        // Public endpoints and unauthenticated calls continue without a token.
+      }
+    }
+
+    const response = await fetch(url, {
+      ...options,
+      headers: requestHeaders,
+    });
 
     if (!response.ok) {
       let errorData: any = {};
       try {
         errorData = await response.json();
-      } catch {
+      } catch (e) {
         errorData = { message: response.statusText || "Server error" };
       }
 
@@ -74,7 +110,11 @@ export async function safeFetchJson<T>(
     }
 
     const data = await response.json();
-    return { ok: true, status: response.status, data };
+    return {
+      ok: true,
+      status: response.status,
+      data: parseJsonBackedArrays(data) as T,
+    };
   } catch (e: any) {
     console.error(`[safeFetchJson] Network or parsing error for ${url}:`, e);
     return {
@@ -91,8 +131,7 @@ export async function safeFetchJson<T>(
 }
 
 export const apiClient = {
-  get: <T>(path: string, options?: RequestInit) =>
-    safeFetchJson<T>(path, { ...options, method: "GET" }),
+  get: <T>(path: string, options?: RequestInit) => safeFetchJson<T>(path, { ...options, method: "GET" }),
   post: <T>(path: string, data?: any, options?: RequestInit) => {
     return safeFetchJson<T>(path, {
       ...options,

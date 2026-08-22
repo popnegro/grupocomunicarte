@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { User, onIdTokenChanged, signOut, GoogleAuthProvider } from "firebase/auth";
-import { auth, googleAuthProvider, signInWithRedirect, getRedirectResult } from "../lib/firebase";
+import { auth, googleAuthProvider, signInWithPopup } from "../lib/firebase";
 import { safeFetchJson } from "../lib/apiClient";
 
 interface AuthContextProps {
@@ -103,27 +103,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => unsubscribe();
   }, []);
 
-  useEffect(() => {
-    const handleRedirectResult = async () => {
-      try {
-        const result = await getRedirectResult(auth);
-        if (result) {
-          const credential = GoogleAuthProvider.credentialFromResult(result);
-          if (credential?.accessToken) {
-            setGoogleAccessToken(credential.accessToken);
-          }
-        }
-      } catch (error) {
-        console.error("Google redirect login failed:", error);
-      }
-    };
-
-    handleRedirectResult();
-  }, []);
-
   const loginWithGoogle = async () => {
     setLoading(true);
-    await signInWithRedirect(auth, googleAuthProvider);
+    try {
+      const result = await signInWithPopup(auth, googleAuthProvider);
+      const credential = GoogleAuthProvider.credentialFromResult(result);
+      if (credential?.accessToken) {
+        setGoogleAccessToken(credential.accessToken);
+      }
+    } catch (error) {
+      setLoading(false);
+      throw error;
+    }
   };
 
   const logout = async () => {

@@ -51,10 +51,7 @@ export default function App() {
           <CmsProvider>
             <SelectionProvider>
               <Routes>
-                <Route path="/" element={<PublicSite />} />
-                <Route path="/nosotros/*" element={<PublicSite />} />
-                <Route path="/soluciones/*" element={<PublicSite />} />
-                <Route path="/soportes/*" element={<PublicSite />} />
+                <Route path="/*" element={<PublicSite />} />
                 <Route path="/inventario" element={<Inventario />} />
                 <Route path="/login" element={<LoginRoute />} />
                 <Route path="/dashboard/*" element={<ProtectedRoute><DashboardShell /></ProtectedRoute>} />

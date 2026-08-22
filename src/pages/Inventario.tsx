@@ -67,9 +67,13 @@ export default function Inventario() {
         const normalized = Array.isArray(payload?.data)
           ? payload.data.map(normalizeScreen).filter(Boolean) as InventoryItem[]
           : [];
-        if (!cancelled && normalized.length > 0) {
-          setInventory(normalized);
-          reconcileSelection(normalized);
+        if (!cancelled) {
+          if (normalized.length > 0) {
+            setInventory(normalized);
+            reconcileSelection(normalized);
+          } else {
+            reconcileSelection(FALLBACK_INVENTORY);
+          }
         }
       })
       .catch(() => {

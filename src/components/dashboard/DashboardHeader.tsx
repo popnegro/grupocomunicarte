@@ -1,17 +1,15 @@
 import React from "react";
 import { Role } from "./types";
-import { Shield, Sparkles, User, Bell, ChevronDown } from "lucide-react";
+import { Shield, Sparkles, User, Bell } from "lucide-react";
 
 interface DashboardHeaderProps {
   userRole: Role;
-  setUserRole: (role: Role) => void;
   title: string;
   description: string;
 }
 
 export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
   userRole,
-  setUserRole,
   title,
   description,
 }) => {
@@ -61,31 +59,6 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
             </span>
           </div>
 
-          <div className="relative group">
-            <button className="p-1 px-2.5 rounded-full bg-white hover:bg-stone-50 text-stone-700 text-[10px] font-bold flex items-center gap-1 border border-stone-100 cursor-pointer shadow-xs transition-all">
-              <span>Cambiar</span>
-              <ChevronDown className="h-2.5 w-2.5" />
-            </button>
-            
-            {/* dropdown list */}
-            <div className="absolute right-0 top-full mt-1.5 bg-white border border-stone-200 rounded-xl shadow-lg py-1.5 w-44 hidden group-hover:block z-50 animate-in fade-in slide-in-from-top-1 duration-150">
-              <span className="block px-3 py-1 text-[8px] font-extrabold text-stone-400 uppercase tracking-widest border-b border-stone-100 pb-1 mb-1">
-                Roles de Sistema
-              </span>
-              {(["admin", "comercial_dir", "comercial_exec", "ops", "viewer"] as Role[]).map((r) => (
-                <button
-                  key={r}
-                  onClick={() => setUserRole(r)}
-                  className={`w-full px-3 py-1.5 text-left text-[11px] font-semibold hover:bg-stone-50 flex items-center gap-2 transition-colors cursor-pointer ${
-                    userRole === r ? "text-[#06434a] bg-[#06434a]/5 font-bold" : "text-stone-600"
-                  }`}
-                >
-                  <span className={`h-1.5 w-1.5 rounded-full ${userRole === r ? "bg-[#06434a] animate-pulse" : "bg-stone-300"}`} />
-                  <span className="capitalize">{r.replace("_", " ")}</span>
-                </button>
-              ))}
-            </div>
-          </div>
         </div>
 
         {/* Action icons */}

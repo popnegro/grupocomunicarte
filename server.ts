@@ -27,7 +27,15 @@ app.use('/api', apiV1Router);
 // Legacy/compatibility placeholders retained for existing PMV clients.
 app.all('/api/ai/*', (req, res) => res.status(200).json({ success: true, message: `${req.method} ${req.originalUrl} placeholder` }));
 app.all('/api/sync/*', (req, res) => res.status(200).json({ success: true, message: `${req.method} ${req.originalUrl} placeholder` }));
-app.all('/api/auth/*', (req, res) => res.status(200).json({ success: true, message: `${req.method} ${req.originalUrl} placeholder` }));
+// The authentication sync endpoint confirms that the Firebase ID token is valid.
+// It intentionally does not provision tenants or roles: those remain controlled
+// by the existing RBAC administration flow.
+app.post('/api/auth/sync', protect, (req: AuthRequest, res) => {
+  return res.status(200).json({
+    success: true,
+    data: { uid: req.user?.uid ?? null },
+  });
+});
 app.all('/api/gmail/*', (req, res) => res.status(200).json({ success: true, message: `${req.method} ${req.originalUrl} placeholder` }));
 
 // Dashboard compatibility endpoints retained until the legacy modules are

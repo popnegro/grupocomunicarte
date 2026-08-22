@@ -1,5 +1,6 @@
 {
   "version": 2,
+  "installCommand": "rm -f package-lock.json && npm install --no-audit --no-fund",
   "rewrites": [
     {
       "source": "/api/(.*)",

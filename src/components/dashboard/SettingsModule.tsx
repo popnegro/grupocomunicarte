@@ -4,10 +4,9 @@ import { User, Shield, LogOut, Key, Mail, Calendar, Settings } from "lucide-reac
 
 interface SettingsModuleProps {
   userRole: string;
-  setUserRole: (role: any) => void;
 }
 
-export const SettingsModule: React.FC<SettingsModuleProps> = ({ userRole, setUserRole }) => {
+export const SettingsModule: React.FC<SettingsModuleProps> = ({ userRole }) => {
   const { user, logout } = useAuth();
 
   const getRoleBadge = (role: string) => {
@@ -16,7 +15,7 @@ export const SettingsModule: React.FC<SettingsModuleProps> = ({ userRole, setUse
         return "Administrador Global";
       case "comercial_dir":
         return "Director Comercial (RBAC)";
-      case "comercial_ejec":
+      case "comercial_exec":
         return "Comercial Ejecutivo";
       default:
         return role;
@@ -53,46 +52,14 @@ export const SettingsModule: React.FC<SettingsModuleProps> = ({ userRole, setUse
           </div>
         </div>
 
-        {/* Roles Selector for RBAC demonstration */}
+        {/* Roles are assigned by the authenticated identity provider. */}
         <div className="space-y-3">
           <h4 className="text-xs font-bold text-stone-900 flex items-center gap-2 uppercase tracking-wider">
-            Conmutador de Roles (Simulador de Permisos)
+            Permisos de acceso
           </h4>
           <p className="text-xs text-stone-500 leading-relaxed">
-            Como Tech Lead / Product Manager, puedes alternar de forma segura entre los perfiles autorizados de la empresa para auditar la interfaz según la matriz de accesos (RBAC).
+            Tu perfil y permisos son administrados por la organización y se aplican al iniciar sesión.
           </p>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
-            <button
-              onClick={() => setUserRole("comercial_dir")}
-              className={`p-3.5 rounded-xl border text-xs font-bold transition-all text-center cursor-pointer ${
-                userRole === "comercial_dir"
-                  ? "border-[#06434a] bg-[#06434a]/5 text-[#06434a]"
-                  : "border-stone-200 hover:bg-stone-50 text-stone-600"
-              }`}
-            >
-              Director Comercial
-            </button>
-            <button
-              onClick={() => setUserRole("comercial_ejec")}
-              className={`p-3.5 rounded-xl border text-xs font-bold transition-all text-center cursor-pointer ${
-                userRole === "comercial_ejec"
-                  ? "border-[#06434a] bg-[#06434a]/5 text-[#06434a]"
-                  : "border-stone-200 hover:bg-stone-50 text-stone-600"
-              }`}
-            >
-              Comercial Ejecutivo
-            </button>
-            <button
-              onClick={() => setUserRole("admin")}
-              className={`p-3.5 rounded-xl border text-xs font-bold transition-all text-center cursor-pointer ${
-                userRole === "admin"
-                  ? "border-[#06434a] bg-[#06434a]/5 text-[#06434a]"
-                  : "border-stone-200 hover:bg-stone-50 text-stone-600"
-              }`}
-            >
-              Administrador Global
-            </button>
-          </div>
         </div>
 
         {/* Action Logout Block */}

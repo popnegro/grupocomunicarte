@@ -102,13 +102,14 @@ export const DashboardView: React.FC = () => {
   const { toast } = useToast();
 
   // Active User Profile (RBAC state)
-  const [userRole, setUserRole] = useState<Role>("comercial_dir");
-
-  useEffect(() => {
-    if (authUserRole === "admin") {
-      setUserRole("admin");
-    }
-  }, [authUserRole]);
+  const userRole = authUserRole as Role;
+  const navigationGroups = useMemo(
+    () => NavGroups.map((group) => ({
+      ...group,
+      items: group.items.filter((item) => item.id !== "admin" || userRole === "admin"),
+    })).filter((group) => group.items.length > 0),
+    [userRole],
+  );
 
   // Sidebar navigation state
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -767,7 +768,7 @@ export const DashboardView: React.FC = () => {
 
           {/* Links navigation group */}
           <nav className="p-4 flex-1 space-y-4">
-            {NavGroups.map((group) => (
+            {navigationGroups.map((group) => (
               <div key={group.groupName} className="space-y-1">
                 {!sidebarCollapsed && (
                   <span className="block px-2 text-[9px] font-black tracking-widest text-stone-400 uppercase font-mono mb-1.5">
@@ -834,7 +835,6 @@ export const DashboardView: React.FC = () => {
       <main className="flex-1 flex flex-col overflow-hidden">
         <DashboardHeader
           userRole={userRole}
-          setUserRole={setUserRole}
           title={currentRouteMeta.title}
           description={currentRouteMeta.desc}
         />
@@ -911,7 +911,6 @@ export const DashboardView: React.FC = () => {
               element={
                 <SettingsModule
                   userRole={userRole}
-                  setUserRole={setUserRole}
                 />
               }
             />
@@ -950,13 +949,15 @@ export const DashboardView: React.FC = () => {
             <Route
               path="/admin"
               element={
-                <AdministrationModule
-                  logs={logs}
-                  userRole={userRole}
-                  screens={screens}
-                  onUpdateScreen={handleUpdateScreen}
-                  addLog={addLog}
-                />
+                userRole === "admin" ? (
+                  <AdministrationModule
+                    logs={logs}
+                    userRole={userRole}
+                    screens={screens}
+                    onUpdateScreen={handleUpdateScreen}
+                    addLog={addLog}
+                  />
+                ) : <Navigate to="/dashboard" replace />
               }
             />
 
@@ -990,4 +991,3 @@ export const DashboardView: React.FC = () => {
     </div>
   );
 };
-

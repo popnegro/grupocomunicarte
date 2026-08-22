@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { useAuth } from "./AuthContext";
-import { LogIn, Globe, Shield, ArrowRight } from "lucide-react";
+import { Globe, Shield, ArrowRight } from "lucide-react";
 
 export const LoginView: React.FC = () => {
-  const { loginWithGoogle, loginAsDemo } = useAuth();
+  const { loginWithGoogle } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -18,20 +18,20 @@ export const LoginView: React.FC = () => {
       if (err?.code === "auth/unauthorized-domain") {
         const currentDomain = window.location.hostname;
         setError(
-          `El dominio actual ("${currentDomain}") no está en la lista de dominios autorizados de Firebase Auth. Por favor, utiliza el botón "Acceder en Modo Demo" a continuación para ingresar al sistema de inmediato.`
+          `El dominio actual ("${currentDomain}") no está en la lista de dominios autorizados de Firebase Auth. Contactá al administrador para habilitarlo.`
         );
       } else if (err?.code === "auth/internal-error") {
         setError(
-          "Error de autenticación. Por favor, utiliza el botón 'Acceder en Modo Demo' para ingresar al sistema de inmediato."
+          "Error de autenticación. Intentá nuevamente o contactá al administrador."
         );
       } else if (err?.code === "auth/popup-closed-by-user") {
-        setError("Se cerró la ventana de inicio de sesión antes de completar el proceso. Puedes usar el 'Modo Demo' para ingresar sin autenticación real.");
+        setError("Se cerró el inicio de sesión antes de completarse. Intentá nuevamente.");
       } else if (err?.code === "auth/popup-blocked") {
         setError(
-          "El navegador o el iframe de vista previa bloqueó la ventana emergente. Por favor, haz clic en 'Acceder en Modo Demo' para ingresar de forma directa."
+          "El navegador o el iframe de vista previa bloqueó la ventana emergente. Abrí esta página en una pestaña nueva para continuar."
         );
       } else {
-        setError(err?.message || "No se pudo iniciar sesión. Puedes usar el Modo Demo para ingresar.");
+        setError(err?.message || "No se pudo iniciar sesión. Intentá nuevamente o contactá al administrador.");
       }
     } finally {
       setLoading(false);
@@ -95,26 +95,6 @@ export const LoginView: React.FC = () => {
                 />
               </svg>
               <span>{loading ? "Iniciando..." : "Iniciar Sesión con Google"}</span>
-            </button>
-
-            <button
-              id="demo-signin-btn"
-              onClick={async () => {
-                setError(null);
-                setLoading(true);
-                try {
-                  await loginAsDemo();
-                } catch (err: any) {
-                  setError("Error al iniciar sesión en modo demo.");
-                } finally {
-                  setLoading(false);
-                }
-              }}
-              disabled={loading}
-              className="w-full flex items-center justify-center gap-3 px-5 py-4 border border-[#06434a] rounded-full text-xs font-extrabold text-white bg-[#06434a] hover:bg-[#05373d] active:scale-[0.98] transition-all cursor-pointer shadow-md uppercase tracking-wider leading-none"
-            >
-              <LogIn className="h-4 w-4 shrink-0" />
-              <span>{loading ? "Accediendo..." : "Acceder en Modo Demo (Recomendado)"}</span>
             </button>
 
             <div className="relative flex py-2 items-center">

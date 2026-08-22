@@ -5,7 +5,7 @@ import { createServer as createViteServer } from 'vite';
 import path from 'path';
 
 import { db } from './src/db';
-import { leads, screens } from './src/db/schema';
+import { leads, screens, users, userRoles, roles } from './src/db/schema';
 import { eq, desc, and, inArray } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
 import { protect, AuthRequest } from './src/middleware/auth';
@@ -27,7 +27,56 @@ app.use('/api', apiV1Router);
 // Legacy/compatibility placeholders retained for existing PMV clients.
 app.all('/api/ai/*', (req, res) => res.status(200).json({ success: true, message: `${req.method} ${req.originalUrl} placeholder` }));
 app.all('/api/sync/*', (req, res) => res.status(200).json({ success: true, message: `${req.method} ${req.originalUrl} placeholder` }));
-app.all('/api/auth/*', (req, res) => res.status(200).json({ success: true, message: `${req.method} ${req.originalUrl} placeholder` }));
+
+// Authentication sync validates the Firebase ID token and returns the
+// authoritative dashboard role from the existing PostgreSQL RBAC assignment.
+// It never trusts role data supplied by the client and never changes RBAC state.
+app.post('/api/auth/sync', protect, async (req: AuthRequest, res) => {
+  try {
+    const uid = req.user?.uid;
+    if (!uid) {
+      return res.status(401).json({
+        success: false,
+        error: { code: 'UNAUTHORIZED', message: 'Usuario autenticado no identificado.' },
+      });
+    }
+
+    const [dbUser] = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.uid, uid))
+      .limit(1);
+
+    if (!dbUser) {
+      return res.status(403).json({
+        success: false,
+        error: { code: 'USER_NOT_REGISTERED', message: 'No existe un usuario registrado para esta cuenta.' },
+      });
+    }
+
+    const assignedRoles = await db
+      .select({ slug: roles.slug })
+      .from(userRoles)
+      .innerJoin(roles, eq(userRoles.roleId, roles.id))
+      .where(eq(userRoles.userId, dbUser.id));
+
+    const rolePriority = ['admin', 'comercial_dir', 'comercial_exec', 'ops', 'viewer'] as const;
+    const assignedRoleSlugs = new Set(assignedRoles.map(({ slug }) => slug));
+    const role = rolePriority.find((candidate) => assignedRoleSlugs.has(candidate)) ?? 'viewer';
+
+    return res.status(200).json({
+      success: true,
+      data: { uid, role },
+    });
+  } catch (error) {
+    console.error('[API POST /api/auth/sync]', error);
+    return res.status(500).json({
+      success: false,
+      error: { code: 'AUTH_SYNC_ERROR', message: 'No se pudo sincronizar la identidad del usuario.' },
+    });
+  }
+});
+
 app.all('/api/gmail/*', (req, res) => res.status(200).json({ success: true, message: `${req.method} ${req.originalUrl} placeholder` }));
 
 // Dashboard compatibility endpoints retained until the legacy modules are

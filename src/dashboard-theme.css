@@ -1,0 +1,28 @@
+/* PMV visual alignment: dashboard and login use the landing-page design language. */
+.dashboard-shell { --pmv-primary:#06434a; --pmv-primary-hover:#0a545d; --pmv-secondary:#07be8a; --pmv-ink:#172023; --pmv-bg:#fafaf9; --pmv-border:#e7e5e4; font-family:var(--text-body,"Inter",system-ui,sans-serif); background:var(--pmv-bg); color:var(--pmv-ink); }
+.dashboard-shell h1,.dashboard-shell h2,.dashboard-shell h3,.dashboard-shell h4,.dashboard-shell h5,.dashboard-shell h6,body:has(#google-signin-btn) h1,body:has(#google-signin-btn) h2,body:has(#google-signin-btn) h3,body:has(#google-signin-btn) h4 { font-family:var(--text-display,"Poppins",system-ui,sans-serif); }
+.dashboard-shell aside { background:rgba(255,255,255,.95)!important; border-color:var(--pmv-border)!important; box-shadow:10px 0 30px rgba(23,32,35,.035)!important; }
+.dashboard-shell aside nav button { transition:background-color .18s ease,color .18s ease,transform .18s ease,box-shadow .18s ease; }
+.dashboard-shell aside nav button:hover { transform:translateX(1px); }
+.dashboard-shell aside nav button[class*="bg-[#06434a]"] { background:var(--pmv-primary)!important; box-shadow:0 8px 20px rgba(6,67,74,.14)!important; }
+.dashboard-shell header { background:rgba(255,255,255,.92)!important; border-color:var(--pmv-border)!important; box-shadow:0 1px 0 rgba(23,32,35,.025),0 8px 24px rgba(23,32,35,.025); backdrop-filter:blur(14px); }
+.dashboard-shell main > div:last-child { background:var(--pmv-bg)!important; }
+.dashboard-shell .bg-white { box-shadow:0 1px 2px rgba(23,32,35,.025); }
+.dashboard-shell .border-stone-200,.dashboard-shell .border-stone-200\/80,.dashboard-shell .border-stone-200\/60 { border-color:var(--pmv-border)!important; }
+.dashboard-shell button[class*="bg-[#06434a]"],.dashboard-shell a[class*="bg-[#06434a]"] { background:var(--pmv-primary)!important; }
+.dashboard-shell button[class*="bg-[#06434a]"]:hover,.dashboard-shell a[class*="bg-[#06434a]"]:hover { background:var(--pmv-primary-hover)!important; }
+.dashboard-shell .text-\[\#06434a\] { color:var(--pmv-primary)!important; }
+.dashboard-shell .text-emerald-800,.dashboard-shell .text-emerald-700 { color:var(--pmv-primary)!important; }
+.dashboard-shell .bg-emerald-50 { background:rgba(7,190,138,.08)!important; }
+.dashboard-shell [class*="rounded-2xl"],.dashboard-shell [class*="rounded-xl"] { border-radius:14px; }
+.dashboard-shell input,.dashboard-shell select,.dashboard-shell textarea { border-color:var(--pmv-border); background:#fff; }
+.dashboard-shell input:focus,.dashboard-shell select:focus,.dashboard-shell textarea:focus { border-color:rgba(6,67,74,.45)!important; box-shadow:0 0 0 3px rgba(6,67,74,.08)!important; outline:none; }
+.dashboard-shell ::-webkit-scrollbar { width:8px; height:8px; }
+.dashboard-shell ::-webkit-scrollbar-thumb { background:#d6d3d1; border-radius:999px; }
+body:has(#google-signin-btn) { background:radial-gradient(circle at 12% 15%,rgba(7,190,138,.10),transparent 28%),radial-gradient(circle at 88% 80%,rgba(6,67,74,.10),transparent 30%),#fafaf9; }
+body:has(#google-signin-btn) .bg-white { border-color:var(--pmv-border)!important; border-radius:20px!important; box-shadow:0 24px 70px rgba(23,32,35,.08)!important; }
+body:has(#google-signin-btn) button[id="google-signin-btn"] { border-color:var(--pmv-border)!important; background:#fff!important; }
+body:has(#google-signin-btn) button[id="google-signin-btn"]:hover { border-color:#cbd5d1!important; background:#fafaf9!important; }
+body:has(#google-signin-btn) button[id="demo-signin-btn"] { background:#06434a!important; border-color:#06434a!important; box-shadow:0 10px 24px rgba(6,67,74,.16)!important; }
+body:has(#google-signin-btn) button[id="demo-signin-btn"]:hover { background:#0a545d!important; }
+body:has(#google-signin-btn) a { color:#06434a!important; }

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { User, onAuthStateChanged, signOut, GoogleAuthProvider } from "firebase/auth";
+import { User, onIdTokenChanged, signOut, GoogleAuthProvider } from "firebase/auth";
 import { auth, googleAuthProvider, signInWithRedirect, getRedirectResult } from "../lib/firebase";
 import { safeFetchJson } from "../lib/apiClient";
 
@@ -15,14 +15,23 @@ interface AuthContextProps {
   setGoogleAccessToken: (token: string | null) => void;
 }
 
+interface AuthSyncResponse {
+  success: boolean;
+  data?: {
+    uid: string;
+    role: string;
+  };
+}
+
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
 
 const DASHBOARD_ROLES = ["admin", "comercial_dir", "comercial_exec", "ops", "viewer"] as const;
 type DashboardRole = (typeof DASHBOARD_ROLES)[number];
 
-const getDashboardRole = (claims: Record<string, unknown>): DashboardRole => {
-  const role = typeof claims.role === "string" ? claims.role : "";
-  return (DASHBOARD_ROLES as readonly string[]).includes(role) ? role as DashboardRole : "viewer";
+const getDashboardRole = (role: unknown): DashboardRole => {
+  return typeof role === "string" && (DASHBOARD_ROLES as readonly string[]).includes(role)
+    ? role as DashboardRole
+    : "viewer";
 };
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -35,36 +44,51 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const isAdmin = userRole === "admin";
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(
+    const unsubscribe = onIdTokenChanged(
       auth,
       async (currentUser) => {
         setLoading(true);
-        if (currentUser) {
-          setUser(currentUser);
-          try {
-            const tokenResult = await currentUser.getIdTokenResult();
-            const idToken = tokenResult.token;
-            setToken(idToken);
-            setUserRole(getDashboardRole(tokenResult.claims));
-            
-            // Sync with PostgreSQL
-            await safeFetchJson("/api/auth/sync", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${idToken}`,
-              },
-            });
-          } catch (error) {
-            console.error("Error fetching or syncing token:", error);
-          }
-        } else {
+
+        if (!currentUser) {
           setUser(null);
           setToken(null);
           setGoogleAccessToken(null);
           setUserRole("viewer");
+          setLoading(false);
+          return;
         }
-        setLoading(false);
+
+        setUser(currentUser);
+
+        try {
+          const tokenResult = await currentUser.getIdTokenResult();
+          const idToken = tokenResult.token;
+          setToken(idToken);
+
+          // Server RBAC is authoritative for the dashboard role. Firebase
+          // token claims remain useful for identity, but never override the
+          // role stored in PostgreSQL.
+          const syncResponse = await safeFetchJson<AuthSyncResponse>("/api/auth/sync", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${idToken}`,
+            },
+          });
+
+          if (syncResponse.ok && syncResponse.data?.data?.role) {
+            setUserRole(getDashboardRole(syncResponse.data.data.role));
+          } else {
+            // Fail closed if authoritative RBAC cannot be obtained.
+            setUserRole("viewer");
+          }
+        } catch (error) {
+          console.error("Error fetching or syncing authentication state:", error);
+          setToken(null);
+          setUserRole("viewer");
+        } finally {
+          setLoading(false);
+        }
       },
       (error) => {
         console.error("Auth state change error:", error);
@@ -79,7 +103,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => unsubscribe();
   }, []);
 
-
   useEffect(() => {
     const handleRedirectResult = async () => {
       try {
@@ -89,26 +112,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (credential?.accessToken) {
             setGoogleAccessToken(credential.accessToken);
           }
-          
-          const tokenResult = await result.user.getIdTokenResult();
-          const idToken = tokenResult.token;
-          setToken(idToken);
-          setUser(result.user);
-          setUserRole(getDashboardRole(tokenResult.claims));
-
-          // Sync with PostgreSQL
-          await safeFetchJson("/api/auth/sync", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Authorization": `Bearer ${idToken}`,
-            },
-          });
         }
       } catch (error) {
         console.error("Google redirect login failed:", error);
-      } finally {
-        setLoading(false);
       }
     };
 

@@ -9,6 +9,7 @@ import { LoginView } from "./components/LoginView";
 import { ToastProvider } from "./components/ui/Toast";
 import Inventario from "./pages/Inventario";
 import { SelectionProvider } from "./context/SelectionContext";
+import "./dashboard-theme.css";
 
 function LoadingScreen({ message }: { message?: string }) {
   let authContext: ReturnType<typeof useAuth> | null = null;
